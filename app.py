@@ -209,18 +209,38 @@ def format_html_time(heure_str, data_freshness):
     
     return (delta, f"<span class='text-green'>{delta} min</span>")
 
+# ----- REMPLACER TOUTE LA FONCTION get_all_changelogs -----
 def get_all_changelogs():
+    """Lit les fichiers .md, les trie intelligemment par numéro de version décroissant."""
     log_dir = "changelogs"
     all_notes = []
     if not os.path.exists(log_dir): return ["*Aucune note de version trouvée.*"]
+    
     files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
-    files.sort(reverse=True)
+    
+    # --- NOUVEAU : TRI INTELLIGENT DES VERSIONS ---
+    # Fonction clé pour extraire le numéro de version (ex: "v0.10.md" -> (0, 10))
+    # Cela permet de trier correctement "0.10" après "0.9"
+    def version_key(filename):
+        # On cherche les chiffres et les points, optionnellement après un 'v'
+        match = re.search(r'v?(\d+(?:\.\d+)*)', filename)
+        if match:
+             # On convertit "0.10" en un tuple d'entiers (0, 10) pour la comparaison
+             return tuple(map(int, match.group(1).split('.')))
+        return (0,) # Sécurité pour les fichiers mal nommés
+
+    # On trie la liste des fichiers en utilisant cette clé, en ordre inverse (récent en haut)
+    files.sort(key=version_key, reverse=True)
+    # ----------------------------------------------
+
     for filename in files:
         filepath = os.path.join(log_dir, filename)
         try:
             with open(filepath, "r", encoding="utf-8") as f: all_notes.append(f.read())
         except Exception as e: all_notes.append(f"Erreur de lecture de {filename}: {e}")
+        
     return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
+# ----------------------------------------------------------
 
 # ==========================================
 #              INTERFACE GLOBALE
@@ -461,5 +481,6 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
