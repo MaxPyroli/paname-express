@@ -465,30 +465,31 @@ def afficher_tableau_live(stop_id, stop_name):
                 if p3: render_rer_group("AUTRES DIRECTIONS", p3)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    # ============================================================
-    # 4. FOOTER INTELLIGENT (Correction définitive des doublons)
+   # ============================================================
+    # 4. FOOTER INTELLIGENT (Correction SyntaxError guillemets)
     # ============================================================
     missing_lines_by_mode = {}
-    # On compare le théorique avec ce qui a été trouvé dans le temps réel
+    # On compare le théorique avec ce qui a été affiché dans le tableau principal
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
-        if (mode_theo, code_theo) not in realtime_lines_keys:
+        if (mode_theo, code_theo) not in displayed_lines_keys:
             if mode_theo not in missing_lines_by_mode: missing_lines_by_mode[mode_theo] = []
             missing_lines_by_mode[mode_theo].append({'code': code_theo, 'color': info['color']})
 
     if missing_lines_by_mode:
-        st.markdown(f'<div style="margin-bottom: 8px;"><span class="small-mode-tag" style="margin-right: 10px; font-size: 13px;">{ICONES_TITRE[mode]}</span>{html_badges}</div>', unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         for mode in ordre_affichage:
             if mode in missing_lines_by_mode:
                 html_badges = ""
-                seen_codes_footer = set() # Sécurité supplémentaire pour le footer lui-même
+                seen_codes_footer = set()
                 sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
                 for line in sorted_lines:
                     if line['code'] not in seen_codes_footer:
                         html_badges += f'<span class="line-badge" style="background-color:#{line["color"]}; font-size:12px; padding: 2px 8px; min-width: 30px;">{line["code"]}</span>'
                         seen_codes_footer.add(line['code'])
                 if html_badges:
-                    st.markdown(f"<div style="display: flex; align-items: center; margin-bottom: 8px;"><span style='margin-right: 10px; font-size: 14px;'>{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>", unsafe_allow_html=True)
+                    # C'EST CETTE LIGNE QUI ÉTAIT CASSÉE. UTILISATION DE TRIPLES GUILLEMETS """ ICI :
+                    st.markdown(f"""<div style="display: flex; align-items: center; margin-bottom: 8px;"><span style='margin-right: 10px; font-size: 14px;'>{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 
     if not has_displayed_something and not missing_lines_by_mode:
         st.info("Aucune information trouvée pour cet arrêt (ni théorique, ni temps réel).")
@@ -496,6 +497,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
