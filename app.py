@@ -246,18 +246,18 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.title("🚆 Grand Paname")
+st.title("🚆 Grand Paname Express")
 st.caption("v0.9 - Milk")
 
-with st.expander("📜 Historique des versions"):
-    # On récupère toutes les notes
-    notes_history = get_all_changelogs()
-    # On les affiche une par une séparées par une ligne
-    for i, note in enumerate(notes_history):
-        st.markdown(note)
-        # Ajoute un séparateur sauf après la dernière note
-        if i < len(notes_history) - 1:
-             st.divider()
+with st.sidebar:
+    st.header("🗄️ Informations")
+    st.markdown("---")
+    with st.expander("📜 Historique des versions"):
+        notes_history = get_all_changelogs()
+        for i, note in enumerate(notes_history):
+            st.markdown(note)
+            if i < len(notes_history) - 1:
+                 st.divider()
 # ----------------------------------------------------
 
 # --- GESTION DE LA RECHERCHE ---
@@ -487,6 +487,7 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
