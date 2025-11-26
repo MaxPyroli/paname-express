@@ -286,37 +286,50 @@ if search_query:
                 st.rerun()
 
 # ========================================================
-#        FRAGMENT DYNAMIQUE (LOGIQUE COMPLÈTE REBÂTIE)
+#        FRAGMENT DYNAMIQUE (VERSION v1.1.6 CORRIGÉE)
 # ========================================================
-# ----- REMPLACER TOUTE LA FONCTION DU FRAGMENT -----
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
-    
-    clean_name = stop_name.split('(')[0].strip()
-    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    # Nettoyage du nom de la gare
+    clean_name = re.sub(r'\s*\(.*?\)$', '', stop_name)
+    st.markdown(f"## 📍 {clean_name}")
     
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
+    # Utilisation d'un petit conteneur pour aligner le point live et le texte
+    st.markdown(f"""
+        <div style="display: flex; align-items: center; color: #888; font-size: 0.9em; margin-bottom: 20px;">
+            <div class="live-indicator-container">
+                <div class="live-indicator"></div>
+            </div>
+            Dernière M.A.J : {heure_actuelle}
+        </div>
+        """, unsafe_allow_html=True)
 
-    # 1. Récupérer TOUTES les lignes théoriques (Pour le RER C et le footer)
+    # ============================================================
+    # 1. RÉCUPÉRATION DES DONNÉES THÉORIQUES (Lignes censées passer ici)
+    # ============================================================
     data_lines = demander_lignes_arret(stop_id)
-    all_lines_at_stop = {}
+    all_lines_at_stop = {} # Clé: (mode, code), Valeur: info {color, name}
+    modes_theoriques_presents = set()
+
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
             mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
             code = line.get('code', '?')
             color = line.get('color', '666666')
-            # Clé unique: (mode, code)
-            all_lines_at_stop[(mode, code)] = {'color': color}
+            name = line.get('name', '')
+            all_lines_at_stop[(mode, code)] = {'color': color, 'name': name}
+            modes_theoriques_presents.add(mode)
 
-    # 2. Récupérer les départs TEMPS RÉEL
+    # ============================================================
+    # 2. RÉCUPÉRATION ET TRAITEMENT DES DONNÉES TEMPS RÉEL
+    # ============================================================
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
+    # Buckets pour grouper les départs temps réel par mode, puis par ligne
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
-    # Set crucial pour éviter les doublons dans le footer
-    displayed_lines_keys = set()
-
+    
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
             info = d['display_informations']
@@ -324,185 +337,208 @@ def afficher_tableau_live(stop_id, stop_name):
             code = info.get('code', '?')
             color = info.get('color', '666666')
             
+            # Nettoyage de la destination
             raw_dest = info.get('direction', '')
-            if mode == "BUS": dest = raw_dest
-            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            # Pour les BUS, on garde la ville si elle est entre parenthèses à la fin
+            if mode == "BUS":
+                 dest = raw_dest
+            # Pour les ferrés, on enlève tout ce qui est entre parenthèses à la fin
+            else:
+                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             
+            # Calcul du temps d'attente
             freshness = d.get('data_freshness', 'realtime')
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
             
-            if val_tri < -5: continue 
+            # On ignore les trains déjà passés depuis longtemps
+            if val_tri < -2: continue 
 
-            # Si l'API renvoie un départ (même "Service terminé"), on considère la ligne comme "active"
-            displayed_lines_keys.add((mode, code))
-
+            # Remplissage des buckets
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    # 3. Affichage principal
-    # NOUVEL ORDRE : CABLE est maintenant entre METRO et TRAM
-    ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
-    has_data = False
+
+    # ============================================================
+    # 3. AFFICHAGE PRINCIPAL (Logique corrigée v1.1.6)
+    # ============================================================
+    ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "CABLE", "BUS", "AUTRE"]
+    has_displayed_anything = False
 
     for mode_actuel in ordre_affichage:
-        lignes_du_mode = buckets[mode_actuel]
-        if not lignes_du_mode: continue
+        # On n'affiche le mode que s'il existe en théorie OU s'il y a des données temps réel dessus
+        if mode_actuel not in modes_theoriques_presents and not buckets[mode_actuel]:
+            continue
             
-        has_data = True
-        st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
+        # --- AFFICHER LE TITRE DU MODE UNE SEULE FOIS ---
+        st.markdown(f"### {ICONES_TITRE[mode_actuel]}")
+        st.markdown("---")
+        has_displayed_anything = True
 
-        # Fonction de tri intelligente pour les numéros de ligne (ex: N32, 1, 10, T3a)
-        def smart_sort_key(cle_ligne):
-            mode, code, _ = cle_ligne
-            # On utilise une regex pour séparer les lettres du début et les chiffres
-            match = re.match(r"([a-zA-Z]*)(\d*)(.*)", code)
-            if match:
-                prefix, number, suffix = match.groups()
-                # On trie d'abord par préfixe (ex: 'N' après ''), puis par numéro (entier), puis par suffixe
-                num_val = int(number) if number else 0
-                return (prefix, num_val, suffix)
-            return (code, 0, "") # Fallback au cas où
+        lignes_temps_reel = buckets[mode_actuel]
+        codes_temps_reel_vus = set() # Pour identifier les lignes manquantes plus tard
 
-        # On applique le tri intelligent aux clés (mode, code, color)
-        sorted_keys = sorted(lignes_du_mode.keys(), key=smart_sort_key)
-        
-        for cle in sorted(lignes_du_mode.keys(), key=sort_key):
-            _, code, color = cle
-            departs = lignes_du_mode[cle]
+        # --- A) D'ABORD, LES LIGNES AVEC DONNÉES TEMPS RÉEL ---
+        if lignes_temps_reel:
+            # Fonction de tri pour les numéros de ligne (ex: 1, 2, 10 avant B, C)
+            def sort_key_lines(k): 
+                try: return (0, int(k[1])) # Tente de convertir le code en nombre
+                except: return (1, k[1])    # Sinon tri alphabétique
+            
+            for cle in sorted(lignes_temps_reel.keys(), key=sort_key_lines):
+                _, code, color = cle
+                departs = lignes_temps_reel[cle]
+                codes_temps_reel_vus.add(code) # On note que cette ligne est affichée
 
-            # Séparation : proches vs lointains (service terminé, tri >= 3000)
-            proches = [d for d in departs if d['tri'] < 3000]
-            # S'il n'y a pas de proches, on crée un départ fictif "Service terminé"
-            if not proches:
-                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
+                # On ne garde que les départs "proches" (< 2h) pour l'affichage principal
+                proches = [d for d in departs if d['tri'] < 3000]
 
+                # --- MODES URBAINS (BUS, MÉTRO, TRAM...) ---
+                if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
+                    
+                    # Si pas de départs proches, on met une ligne "Info indisponible"
+                    final_departs = proches if proches else [{'dest': 'Info indisponible / Fin de service', 'html': '<span class="time-no-service">--</span>', 'tri': 3000}]
 
-           # ----- REMPLACER TOUT LE BLOC "if mode_actuel in [...]" DANS LE FRAGMENT -----
-            # --- AFFICHAGE STANDARD (BUS/MÉTRO/CÂBLE...) ---
-            # ----- REMPLACER TOUT LE BLOC "if mode_actuel in [...]" DANS LE FRAGMENT -----
-            # --- AFFICHAGE STANDARD (BUS/MÉTRO/CÂBLE...) ---
-            if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
-                # 1. Regroupement : on stocke TOUT l'objet départ (avec le 'tri')
-                dest_map_raw = {}
-                for d in proches:
-                    if d['dest'] not in dest_map_raw: dest_map_raw[d['dest']] = []
-                    dest_map_raw[d['dest']].append(d)
+                    # Regroupement par destination
+                    dest_map = {}
+                    for d in final_departs:
+                        if d['dest'] not in dest_map: dest_map[d['dest']] = []
+                        # Max 2 horaires par destination
+                        if len(dest_map[d['dest']]) < 2: dest_map[d['dest']].append(d['html'])
+                    
+                    # Tri alphabétique des destinations
+                    sorted_dests = sorted(dest_map.items(), key=lambda i: i[0]) 
+                    
+                    rows_html = ""
+                    for i, (dest_name, times) in enumerate(sorted_dests):
+                        times_str = " ".join(times)
+                        # Ajout d'une classe 'last-row' à la dernière ligne pour le CSS
+                        row_class = "bus-row last-row" if i == len(sorted_dests) - 1 else "bus-row"
+                        
+                        # Si c'est la ligne "Info indisponible", on grise la destination
+                        dest_style_class = "bus-dest bus-dest-no-service" if dest_name.startswith("Info indisponible") else "bus-dest"
 
-                # 2. Fonction de tri intelligente
-                def bus_sort_key(item):
-                    dest_name, departures_list = item
-                    # On trouve le meilleur temps (le plus petit 'tri') pour cette destination
-                    best_tri = min(d['tri'] for d in departures_list)
-
-                    # Clé 1 : Groupe (0 = Actif, 1 = Service terminé)
-                    group = 0 if best_tri < 3000 else 1
-                    # Clé 2 : Le temps lui-même (pour trier les actifs entre eux)
-                    # Clé 3 : Le nom (pour trier les "Service terminé" entre eux)
-                    return (group, best_tri, dest_name)
-
-                # 3. Application du tri
-                sorted_dests_raw = sorted(dest_map_raw.items(), key=bus_sort_key)
-
-                # 4. Génération du HTML
-                rows_html = ""
-                for dest_name, departures_list in sorted_dests_raw:
-                    # On retrie les horaires d'une même destination pour être sûr
-                    departures_list.sort(key=lambda x: x['tri'])
-                    # On ne garde que les 3 premiers horaires et on prend leur HTML
-                    times_html = [d['html'] for d in departures_list[:3]]
-                    times_str = "<span class='time-sep'>|</span>".join(times_html)
-                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
-                
-                st.markdown(f"""
-                <div class="bus-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                        rows_html += f"""
+                        <div class="{row_class}">
+                            <span class="{dest_style_class}">→ {dest_name}</span>
+                            <span class="bus-time-group">{times_str}</span>
+                        </div>
+                        """
+                    
+                    # Affichage du bloc complet pour la ligne
+                    st.markdown(f"""
+                    <div class="bus-container" style="border-left-color: #{color};">
+                        <div class="bus-line-info">
+                            <span class="line-badge" style="background-color:#{color};">{code}</span>
+                        </div>
+                        <div class="bus-rows-container">
+                            {rows_html}
+                        </div>
                     </div>
-                    {rows_html}
-                </div>
-                """, unsafe_allow_html=True)
-# -----------------------------------------------------------------------------
+                    """, unsafe_allow_html=True)
 
-            # --- AFFICHAGE RER/TRAIN ---
-            elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                st.markdown(f"""
-                <div class="rail-card">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                geo = GEOGRAPHIE_RER[code]
-                # On filtre sur les départs "proches" (qui incluent le "Service terminé" générique si besoin)
-                p1 = [d for d in proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
-                p2 = [d for d in proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
-                p3 = [d for d in proches if d not in p1 and d not in p2]
-                
-                def render_rer_group(titre, liste_proches):
-                    st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
-                    # Si la liste est vide OU si elle ne contient que du "Service terminé" (tri>=3000)
-                    if not liste_proches or all(d['tri'] >= 3000 for d in liste_proches):
-                        st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                # --- MODES FERROVIAIRES LOURDS (RER, TRAIN) ---
+                elif mode_actuel in ["RER", "TRAIN"]:
+                    # Configuration géographique (si dispo)
+                    geo = GEOGRAPHIE_RER.get(code, {})
+                    mots_1 = geo.get('mots_1', [])
+                    mots_2 = geo.get('mots_2', [])
+                    label_1 = geo.get('label_1', "↔️ DIRECTIONS PRINCIPALES")
+                    label_2 = geo.get('label_2', "↔️ AUTRES DIRECTIONS")
+
+                    # Répartition des trains dans les groupes
+                    p1 = [d for d in proches if any(k in d['dest'].upper() for k in mots_1)]
+                    # Si p1 est rempli, ce qui reste va dans p2. Sinon, tout va dans p1 par défaut.
+                    remaining = [d for d in proches if d not in p1]
+                    p2 = [d for d in remaining if any(k in d['dest'].upper() for k in mots_2)] if mots_1 else remaining
+                    # p3 récupère les miettes s'il y a une config géo complète
+                    p3 = [d for d in remaining if d not in p2] if mots_1 and mots_2 else []
+
+                    # Fonction interne pour afficher un groupe de RER
+                    def render_rer_group(titre, liste_proches):
+                        st.markdown(f"<div class='rer-direction-title'>{titre}</div>", unsafe_allow_html=True)
+                        if not liste_proches:
+                            st.markdown(f"""
+                            <div class="rer-row-container">
+                                <div class='rer-row'>
+                                    <span class='rer-dest rer-dest-no-service'>Info indisponible / Fin de service</span>
+                                    <span class='time-no-service'>--</span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            liste_proches.sort(key=lambda x: x['tri'])
+                            html_rows = ""
+                            # Max 4 trains par direction
+                            for item in liste_proches[:4]:
+                                html_rows += f"""
+                                <div class='rer-row'>
+                                    <span class='rer-dest'>{item['dest']}</span>
+                                    <span>{item['html']}</span>
+                                </div>
+                                """
+                            st.markdown(f"""<div class="rer-row-container">{html_rows}</div>""", unsafe_allow_html=True)
+
+                    # Affichage du conteneur principal RER
+                    st.markdown(f"""
+                    <div class="rer-container" style="border-left-color: #{color};">
+                        <div class="rer-line-badge-container">
+                            <span class="line-badge" style="background-color:#{color};">{code}</span>
+                        </div>
+                        <div class="rer-content">
+                    """, unsafe_allow_html=True)
+                    
+                    # Logique d'affichage des groupes
+                    if not proches:
+                        # Cas où aucun train n'est proche
+                         st.markdown("""
+                            <div class='rer-row' style='color:#888; font-style:italic; padding: 10px 0;'>
+                                Info indisponible ou fin de service pour cette ligne.
+                            </div>
+                            """, unsafe_allow_html=True)
+                    elif not mots_1:
+                        # Pas de config géo : tout dans le premier groupe
+                        render_rer_group(label_1, p1)
                     else:
-                        # On ne trie et n'affiche que les vrais horaires
-                        vrais_proches = [d for d in liste_proches if d['tri'] < 3000]
-                        vrais_proches.sort(key=lambda x: x['tri'])
-                        for item in vrais_proches[:4]:
-                            st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                        # Config géo présente : on affiche les groupes
+                        render_rer_group(label_1, p1)
+                        if mots_2 or p2: render_rer_group(label_2, p2)
+                        if p3: render_rer_group("AUTRES", p3)
 
-                # Logique RER optimisée : si les deux directions principales sont vides ou terminées
-                p1_active = any(d['tri'] < 3000 for d in p1)
-                p2_active = any(d['tri'] < 3000 for d in p2)
+                    st.markdown("</div></div>", unsafe_allow_html=True)
 
-                if not p1_active and not p2_active:
-                     st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
-                else:
-                    render_rer_group(geo['label_1'], p1)
-                    render_rer_group(geo['label_2'], p2)
-
-                if p3: render_rer_group("AUTRES DIRECTIONS", p3)
-
-                st.markdown("</div>", unsafe_allow_html=True)
-
-    # 4. Calcul et affichage du FOOTER INTELLIGENT HIÉRARCHISÉ
-    missing_lines_by_mode = {}
-    # On compare le théorique avec ce qui a été affiché
-    for (mode_theo, code_theo), info in all_lines_at_stop.items():
-        # Si la clé (mode, code) n'est PAS dans celles qui ont eu des données temps réel
-        if (mode_theo, code_theo) not in displayed_lines_keys:
-            if mode_theo not in missing_lines_by_mode: missing_lines_by_mode[mode_theo] = []
-            missing_lines_by_mode[mode_theo].append({'code': code_theo, 'color': info['color']})
-
-    if missing_lines_by_mode:
-        st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
-        st.caption("Autres lignes desservant cet arrêt :")
+        # --- B) ENSUITE, LES LIGNES THÉORIQUES MANQUANTES ---
+        # On cherche les lignes théoriques de ce mode qui n'ont pas été affichées en temps réel
+        lignes_manquantes = []
+        for (m_t, c_t), info_t in all_lines_at_stop.items():
+            if m_t == mode_actuel and c_t not in codes_temps_reel_vus:
+                lignes_manquantes.append({'code': c_t, 'color': info_t['color']})
         
-        # On utilise l'ordre d'affichage pour structurer le footer
-        for mode in ordre_affichage:
-            if mode in missing_lines_by_mode:
-                # NOUVEAU : Petit titre pour chaque mode dans le footer
-                st.markdown(f"<div class='footer-mode-title'>{ICONES_TITRE[mode]}</div>", unsafe_allow_html=True)
-                
-                html_badges = ""
-                seen_codes = set() # Sécurité visuelle
-                sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
-                
-                for line in sorted_lines:
-                    if line['code'] not in seen_codes:
-                        # Utilisation de la nouvelle classe footer-badge
-                        html_badges += f'<span class="line-badge footer-badge" style="background-color:#{line["color"]};">{line["code"]}</span>'
-                        seen_codes.add(line['code'])
-                
-                if html_badges:
-                    st.markdown(f"<div>{html_badges}</div>", unsafe_allow_html=True)
+        # Si on en trouve, on les affiche comme des blocs "Info indisponible"
+        if lignes_manquantes:
+            # Tri pour l'affichage
+            lignes_manquantes.sort(key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
+            
+            for ligne in lignes_manquantes:
+                 # On utilise le style des BUS/METRO pour la cohérence
+                 st.markdown(f"""
+                    <div class="bus-container" style="border-left-color: #{ligne['color']};">
+                        <div class="bus-line-info">
+                            <span class="line-badge" style="background-color:#{ligne['color']};">{ligne['code']}</span>
+                            <span class="bus-dest bus-dest-no-service">→ Info indisponible / Fin de service</span>
+                        </div>
+                        <div class="bus-time"><span class="time-no-service">--</span></div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-    if not has_data and not missing_lines_by_mode:
-        st.info("Aucune information trouvée pour cet arrêt.")
-# --------------------------------------------------
+    # Message si absolument aucune donnée n'a été affichée
+    if not has_displayed_anything:
+        st.info("Aucune information d'arrêt disponible pour le moment.")
+        
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
