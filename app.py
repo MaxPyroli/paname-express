@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 from datetime import datetime
 import re
-import time
 
 # ==========================================
 #              CONFIGURATION
@@ -21,18 +20,6 @@ st.markdown("""
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
     
-    /* Indicateur LIVE */
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-    }
-    .live-dot {
-        display: inline-block; width: 10px; height: 10px;
-        background-color: #e74c3c; border-radius: 50%;
-        margin-right: 8px; animation: pulse 2s infinite;
-    }
-
     /* Couleurs Texte */
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
@@ -59,10 +46,10 @@ st.markdown("""
     
     /* Titre Gare */
     .station-title {
-        font-size: 28px; font-weight: 800; color: #fff;
-        text-align: center; margin: 20px 0; text-transform: uppercase;
+        font-size: 24px; font-weight: 800; color: #fff;
+        text-align: center; margin: 10px 0 20px 0; text-transform: uppercase;
         background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-        padding: 15px; border-radius: 10px;
+        padding: 12px; border-radius: 10px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
@@ -171,26 +158,22 @@ def format_html_time(heure_str, data_freshness):
     return (delta, f"<span class='text-green'>{delta} min</span>")
 
 # ==========================================
-#              INTERFACE
+#              INTERFACE GLOBALE
 # ==========================================
 
-# En-tête minimaliste
-col_logo, col_live = st.columns([0.8, 0.2])
-with col_logo:
-    st.caption("Grand Paname Express v3.0")
-with col_live:
-    auto_refresh = st.toggle("LIVE", value=True)
+# Titre principal (Statique)
+st.title("🚆 Grand Paname")
+st.caption("v3.1 - Smooth Operator")
 
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
 
-# Barre de recherche (Toujours visible)
+# Barre de recherche (Statique)
 search_query = st.text_input("🔍 Rechercher une gare :", placeholder="Tapez le nom ici...")
 
 if search_query:
-    # Si on tape quelque chose, on cherche
     with st.spinner("Recherche..."):
         data = demander_api(f"places?q={search_query}")
     
@@ -202,25 +185,28 @@ if search_query:
                 label = f"{p['name']} ({ville})" if ville else p['name']
                 opts[label] = p['stop_area']['id']
         
-        # Menu déroulant de choix
         choice = st.selectbox("Choisir l'arrêt :", list(opts.keys()))
         
-        # Bouton de validation
         if st.button("Voir les horaires 🚀", type="primary", use_container_width=True):
             st.session_state.selected_stop = opts[choice]
             st.session_state.selected_name = choice
             st.rerun()
 
-# --- AFFICHAGE DU TABLEAU DE BORD ---
-if st.session_state.selected_stop:
-    stop_id = st.session_state.selected_stop
-    stop_name = st.session_state.selected_name.split('(')[0].strip() # Juste le nom court
+# ========================================================
+#        FRAGMENT DYNAMIQUE (C'est ça la magie !)
+# ========================================================
+# Cette fonction se relance toute seule toutes les 15s
+# SANS recharger le reste de la page (titre, recherche...)
+@st.fragment(run_every=15)
+def afficher_tableau_live(stop_id, stop_name):
     
-    # GROS TITRE DE LA GARE
-    st.markdown(f"<div class='station-title'>📍 {stop_name}</div>", unsafe_allow_html=True)
+    # Nom de la gare (Nettoyé)
+    clean_name = stop_name.split('(')[0].strip()
+    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    if auto_refresh:
-        st.markdown("<div style='text-align:center; margin-bottom:10px;'><span class='live-dot'></span>Données temps réel</div>", unsafe_allow_html=True)
+    # Indicateur de mise à jour discret
+    heure_actuelle = datetime.now().strftime('%H:%M:%S')
+    st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
     # Appel API
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
@@ -355,9 +341,8 @@ if st.session_state.selected_stop:
                 st.markdown("</div>", unsafe_allow_html=True)
 
     if not has_data:
-        st.info("Aucun passage trouvé.")
+        st.info("Aucun passage trouvé ou erreur API.")
 
-    # Auto-Refresh Logic
-    if auto_refresh:
-        time.sleep(15)
-        st.rerun()
+# --- APPEL DU FRAGMENT ---
+if st.session_state.selected_stop:
+    afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
