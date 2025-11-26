@@ -3,46 +3,38 @@ import requests
 from datetime import datetime
 import re
 import time
-import pytz # Nouvelle librairie indispensable
+import pytz
+from PIL import Image # <--- IMPORTANT : On importe la gestion d'image
 
 # ==========================================
 #              CONFIGURATION
 # ==========================================
-# ... tes imports ...
-
-# Configuration de base (pour l'onglet du navigateur)
-st.set_page_config(page_title="Grand Paname Express", page_icon="🚆", layout="centered")
-
-# --- LE HACK POUR ANDROID / IPHONE ---
-# Remplace l'URL ci-dessous par le lien "Raw" de ton image sur GitHub
-URL_ICONE = "https://github.com/MaxPyroli/paname-express/blob/2d739aeba2277b7901a3c22b90c7f9890cb2dc66/app_icon.png"
-
-st.markdown(
-    f"""
-    <head>
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        
-        <link rel="icon" type="image/png" sizes="192x192" href="{URL_ICONE}">
-        <link rel="icon" type="image/png" sizes="512x512" href="{URL_ICONE}">
-        
-        <link rel="apple-touch-icon" href="{URL_ICONE}">
-        <link rel="shortcut icon" href="{URL_ICONE}">
-    </head>
-    """,
-    unsafe_allow_html=True
-)
-# -------------------------------------
-
-# ... le reste de ton code CSS et l'application ...
-
+# On cherche la clé dans les secrets
 try:
     API_KEY = st.secrets["IDFM_API_KEY"]
 except FileNotFoundError:
-    st.error("❌ Erreur : Le fichier .streamlit/secrets.toml est introuvable ou la clé est manquante.")
-    st.stop()
+    # Pour le développement local si pas de secrets.toml
+    API_KEY = "TA_CLE_ICI_SI_BESOIN_EN_LOCAL"
 
 BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
+
+# --- CHARGEMENT DE L'ICÔNE ---
+# Essaie de charger l'image 'app_icon.png' si elle existe, sinon met un émoji
+try:
+    icon_image = Image.open("app_icon.png") # Assure-toi que le fichier est là !
+except FileNotFoundError:
+    icon_image = "🚆" # Icône de secours
+
+# CONFIGURATION DE LA PAGE (C'est la seule ligne qui compte vraiment)
+st.set_page_config(
+    page_title="Grand Paname Express",
+    page_icon=icon_image, # On utilise l'image chargée
+    layout="centered"
+)
+
+# ==========================================
+#              STYLE CSS
+# ... la suite du code ne change pas ...
 
 # ==========================================
 #              STYLE CSS
@@ -382,6 +374,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
