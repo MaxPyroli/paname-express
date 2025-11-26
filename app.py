@@ -428,6 +428,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
                 
+               # ----- REMPLACER LA FONCTION INTERNE render_rer_group -----
                 # Fonction de rendu interne
                 def render_rer_group(titre, liste_proches):
                     st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
@@ -440,7 +441,8 @@ def afficher_tableau_live(stop_id, stop_name):
                         """, unsafe_allow_html=True)
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
-                        for item in liste_proches[:6]:
+                        # MODIFICATION ICI : On repasse à 4
+                        for item in liste_proches[:4]:
                             st.markdown(f"""
                             <div class='rail-row'>
                                 <span class='rail-dest'>{item['dest']}</span>
@@ -448,6 +450,7 @@ def afficher_tableau_live(stop_id, stop_name):
                             </div>
                             <div class='rail-sep'></div>
                             """, unsafe_allow_html=True)
+# ----------------------------------------------------------
 
                 # NOUVELLE LOGIQUE : Si les deux directions principales sont vides
                 if not p1 and not p2:
@@ -467,12 +470,21 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    # 4. Calcul et affichage du FOOTER INTELLIGENT
+   # ----- REMPLACER TOUTE LA PARTIE 4 DU FRAGMENT -----
+    # 4. Calcul et affichage du FOOTER INTELLIGENT (Corrigé pour de bon)
+    
+    # On crée un set des CODES de lignes déjà affichées (ex: {'A', '1', '409'})
+    displayed_codes = set(code for mode, code in displayed_lines_keys)
+
     missing_lines_by_mode = {}
+    # On parcourt toutes les lignes théoriques de l'arrêt
     for (mode, code), info in all_lines_at_stop.items():
-        if (mode, code) not in displayed_lines_keys:
+        # Si le CODE de la ligne n'est pas dans celles affichées
+        if code not in displayed_codes:
             if mode not in missing_lines_by_mode: missing_lines_by_mode[mode] = []
-            missing_lines_by_mode[mode].append({'code': code, 'color': info['color']})
+            # On l'ajoute si elle n'y est pas déjà pour ce mode (double sécurité)
+            if not any(l['code'] == code for l in missing_lines_by_mode[mode]):
+                missing_lines_by_mode[mode].append({'code': code, 'color': info['color']})
 
     if missing_lines_by_mode:
         st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
@@ -481,13 +493,10 @@ def afficher_tableau_live(stop_id, stop_name):
         for mode in ordre_affichage:
             if mode in missing_lines_by_mode:
                 html_badges = ""
-                seen_codes = set()
                 sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
                 
                 for line in sorted_lines:
-                    if line['code'] not in seen_codes:
-                        html_badges += f'<span class="line-badge" style="background-color:#{line["color"]}; font-size:12px; padding: 2px 8px; min-width: 30px;">{line["code"]}</span>'
-                        seen_codes.add(line['code'])
+                    html_badges += f'<span class="line-badge" style="background-color:#{line["color"]}; font-size:12px; padding: 2px 8px; min-width: 30px;">{line["code"]}</span>'
                 
                 if html_badges:
                     st.markdown(f"""
@@ -499,9 +508,10 @@ def afficher_tableau_live(stop_id, stop_name):
 
     if not has_data and not missing_lines_by_mode:
         st.info("Aucune information trouvée pour cet arrêt.")
-# --------------------------------------------------
+# ---------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
