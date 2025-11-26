@@ -200,18 +200,21 @@ def format_html_time(heure_str, data_freshness):
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.8 - Milk")
+st.caption("v0.8.5 - Milk")
 
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
 
-search_query = st.text_input("🔍 Rechercher une gare :", placeholder="Tapez le nom ici...")
+# ----- REMPLACER TOUT LE BLOC DE RECHERCHE PAR CECI -----
+
+# Barre de recherche (Statique)
+search_query = st.text_input("🔍 Rechercher puis sélectionner :", placeholder="Tapez le nom ici...")
 
 if search_query:
-    with st.spinner("Recherche..."):
+    with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
-    
+
     if data and 'places' in data:
         opts = {}
         for p in data['places']:
@@ -219,13 +222,17 @@ if search_query:
                 ville = p.get('administrative_regions', [{}])[0].get('name', '')
                 label = f"{p['name']} ({ville})" if ville else p['name']
                 opts[label] = p['stop_area']['id']
-        
-        choice = st.selectbox("Choisir l'arrêt :", list(opts.keys()))
-        
-        if st.button("Voir les horaires 🚀", type="primary", use_container_width=True):
+
+        # Le menu déroulant. Si l'utilisateur change la sélection, le script se relance.
+        choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
+
+        # V3.3 : Validation immédiate (plus de bouton)
+        # Si un choix est fait ET qu'il est différent de celui déjà affiché, on met à jour immédiatement.
+        if choice and st.session_state.selected_name != choice:
             st.session_state.selected_stop = opts[choice]
             st.session_state.selected_name = choice
-            st.rerun()
+            st.rerun() # Force le rechargement pour afficher le tableau tout de suite
+# -------------------------------------------------------
 
 # ========================================================
 #        FRAGMENT DYNAMIQUE
@@ -252,9 +259,19 @@ def afficher_tableau_live(stop_id, stop_name):
             code = info.get('code', '?')
             color = info.get('color', '666666')
             
+            # ----- DANS LE FRAGMENT, REMPLACER LES LIGNES QUI DÉFINISSENT 'dest' -----
+
             raw_dest = info.get('direction', '')
-            if mode == "BUS": dest = raw_dest.split('(')[0]
-            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+
+            # V3.3 : Logique corrigée pour les destinations
+            if mode == "BUS":
+                # Pour les BUS, on garde TOUT (y compris la ville entre parenthèses)
+                dest = raw_dest
+            else:
+                # Pour les RER/Métros, on nettoie la ville à la fin
+                dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+
+# -------------------------------------------------------------------------
             
             freshness = d.get('data_freshness', 'realtime')
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
@@ -374,6 +391,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
