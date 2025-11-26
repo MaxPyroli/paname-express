@@ -238,7 +238,7 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.8.7 - Milk")
+st.caption("v0.8.6 - Milk")
 
 with st.expander("📜 Historique des versions"):
     # On récupère toutes les notes
@@ -454,6 +454,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
