@@ -9,7 +9,7 @@ import pytz # Nouvelle librairie indispensable
 #              CONFIGURATION
 # ==========================================
 # On cherche la clé dans les secrets sécurisés de Streamlit
-st.set_page_config(page_title="Grand Paname Express", page_icon="🚆", layout="centered")
+st.set_page_config(page_title="Grand Paname", page_icon="🚆", layout="centered")
 
 try:
     API_KEY = st.secrets["IDFM_API_KEY"]
@@ -357,5 +357,6 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
