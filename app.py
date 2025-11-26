@@ -370,34 +370,38 @@ def afficher_tableau_live(stop_id, stop_name):
 
            # ----- REMPLACER TOUT LE BLOC "if mode_actuel in [...]" DANS LE FRAGMENT -----
             # --- AFFICHAGE STANDARD (BUS/MÉTRO/CÂBLE...) ---
+            # ----- REMPLACER TOUT LE BLOC "if mode_actuel in [...]" DANS LE FRAGMENT -----
+            # --- AFFICHAGE STANDARD (BUS/MÉTRO/CÂBLE...) ---
             if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
-                dest_map = {}
-                # Dictionnaire pour retenir le meilleur temps (tri) de chaque destination
-                dest_best_tri = {}
-
+                # 1. Regroupement : on stocke TOUT l'objet départ (avec le 'tri')
+                dest_map_raw = {}
                 for d in proches:
-                    if d['dest'] not in dest_map:
-                        dest_map[d['dest']] = []
-                        dest_best_tri[d['dest']] = 3001 # Initialisation haute
+                    if d['dest'] not in dest_map_raw: dest_map_raw[d['dest']] = []
+                    dest_map_raw[d['dest']].append(d)
 
-                    # On garde le meilleur tri (le plus petit) pour cette destination
-                    if d['tri'] < dest_best_tri[d['dest']]:
-                         dest_best_tri[d['dest']] = d['tri']
-                    
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
-                
-                # CORRECTION DU TRI :
-                # La clé est un tuple (Groupe, Valeur de tri).
-                # Groupe 0 = Actifs (tri < 3000), triés par temps.
-                # Groupe 1 = Terminés (tri >= 3000), triés par nom.
-                sorted_dests = sorted(dest_map.items(), key=lambda i: (
-                    0 if dest_best_tri[i[0]] < 3000 else 1, # Clé primaire : le groupe
-                    dest_best_tri[i[0]] if dest_best_tri[i[0]] < 3000 else i[0] # Clé secondaire : temps ou nom
-                )) 
-                
+                # 2. Fonction de tri intelligente
+                def bus_sort_key(item):
+                    dest_name, departures_list = item
+                    # On trouve le meilleur temps (le plus petit 'tri') pour cette destination
+                    best_tri = min(d['tri'] for d in departures_list)
+
+                    # Clé 1 : Groupe (0 = Actif, 1 = Service terminé)
+                    group = 0 if best_tri < 3000 else 1
+                    # Clé 2 : Le temps lui-même (pour trier les actifs entre eux)
+                    # Clé 3 : Le nom (pour trier les "Service terminé" entre eux)
+                    return (group, best_tri, dest_name)
+
+                # 3. Application du tri
+                sorted_dests_raw = sorted(dest_map_raw.items(), key=bus_sort_key)
+
+                # 4. Génération du HTML
                 rows_html = ""
-                for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
+                for dest_name, departures_list in sorted_dests_raw:
+                    # On retrie les horaires d'une même destination pour être sûr
+                    departures_list.sort(key=lambda x: x['tri'])
+                    # On ne garde que les 3 premiers horaires et on prend leur HTML
+                    times_html = [d['html'] for d in departures_list[:3]]
+                    times_str = "<span class='time-sep'>|</span>".join(times_html)
                     rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
                 st.markdown(f"""
@@ -488,6 +492,7 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
