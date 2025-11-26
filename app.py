@@ -476,7 +476,7 @@ def afficher_tableau_live(stop_id, stop_name):
             missing_lines_by_mode[mode_theo].append({'code': code_theo, 'color': info['color']})
 
     if missing_lines_by_mode:
-        st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown(f'<div style="margin-bottom: 8px;"><span class="small-mode-tag" style="margin-right: 10px; font-size: 13px;">{ICONES_TITRE[mode]}</span>{html_badges}</div>', unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         for mode in ordre_affichage:
             if mode in missing_lines_by_mode:
@@ -496,6 +496,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
