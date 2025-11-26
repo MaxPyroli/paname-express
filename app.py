@@ -368,6 +368,7 @@ def afficher_tableau_live(stop_id, stop_name):
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
 
+           # ----- REMPLACER TOUT LE BLOC "if mode_actuel in [...]" DANS LE FRAGMENT -----
             # --- AFFICHAGE STANDARD (BUS/MÉTRO/CÂBLE...) ---
             if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
                 dest_map = {}
@@ -385,9 +386,14 @@ def afficher_tableau_live(stop_id, stop_name):
                     
                     if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
                 
-                # NOUVEAU TRI BUS : On trie d'abord par "est-ce que c'est terminé ?" (1 si oui, 0 si non), puis par nom.
-                # Les destinations actives (0) passent avant les terminées (1).
-                sorted_dests = sorted(dest_map.items(), key=lambda i: (1 if dest_best_tri[i[0]] >= 3000 else 0, i[0])) 
+                # CORRECTION DU TRI :
+                # La clé est un tuple (Groupe, Valeur de tri).
+                # Groupe 0 = Actifs (tri < 3000), triés par temps.
+                # Groupe 1 = Terminés (tri >= 3000), triés par nom.
+                sorted_dests = sorted(dest_map.items(), key=lambda i: (
+                    0 if dest_best_tri[i[0]] < 3000 else 1, # Clé primaire : le groupe
+                    dest_best_tri[i[0]] if dest_best_tri[i[0]] < 3000 else i[0] # Clé secondaire : temps ou nom
+                )) 
                 
                 rows_html = ""
                 for dest_name, times in sorted_dests:
@@ -402,6 +408,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     {rows_html}
                 </div>
                 """, unsafe_allow_html=True)
+# -----------------------------------------------------------------------------
 
             # --- AFFICHAGE RER/TRAIN ---
             elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
@@ -481,6 +488,7 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
