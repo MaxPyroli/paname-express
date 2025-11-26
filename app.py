@@ -66,7 +66,15 @@ st.markdown("""
         margin-right: 12px; font-size: 16px; text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    
+    /* NOUVEAU : Tag pour les modes sans horaires en bas */
+    .small-mode-tag {
+        display: inline-block; background: #262730; color: #999;
+        padding: 4px 10px; border-radius: 15px; font-size: 11px;
+        margin-right: 6px; margin-bottom: 6px; border: 1px solid #444;
+    }
+    /* --------------------------- */
+
+    /* Séparateur temps */
     .time-sep { color: #555; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
@@ -146,12 +154,13 @@ GEOGRAPHIE_RER = {
 
 ICONES_TITRE = {
     "RER": "🚆 RER", "TRAIN": "🚆 TRAIN", "METRO": "🚇 MÉTRO", 
-    "TRAM": "🚋 TRAMWAY", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
+    "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
 }
 
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "TRAM": 4, "BUS": 5, "AUTRE": 99}
 
 def demander_api(suffixe):
+    # (Pas de changement ici, je le mets juste pour le repère)
     headers = {'apiKey': API_KEY.strip()}
     try:
         r = requests.get(f"{BASE_URL}/{suffixe}", headers=headers)
@@ -161,6 +170,8 @@ def demander_api(suffixe):
 def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
+    # Ajout de la détection CABLE
+    if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
     if "RER" in m: return "RER"
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
@@ -208,8 +219,9 @@ if 'selected_stop' not in st.session_state:
 
 # ----- REMPLACER TOUT LE BLOC DE RECHERCHE PAR CECI -----
 
-# Barre de recherche (Statique)
-search_query = st.text_input("🔍 Rechercher puis sélectionner :", placeholder="Tapez le nom ici...")
+# ----- REMPLACER LA LIGNE st.text_input -----
+search_query = st.text_input("🔍 Rechercher une gare (tapez puis sélectionnez) :", placeholder="Ex: Noisiel, Châtelet, Funiculaire...")
+# --------------------------------------------
 
 if search_query:
     with st.spinner("Recherche des arrêts..."):
@@ -237,20 +249,21 @@ if search_query:
 # ========================================================
 #        FRAGMENT DYNAMIQUE
 # ========================================================
+# ----- REMPLACER TOUTE LA FONCTION DU FRAGMENT -----
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
     
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    # Heure Parisienne pour l'affichage "Dernière mise à jour"
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
-    buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
+    # Ajout du bucket CABLE ici
+    buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
     
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
@@ -259,19 +272,11 @@ def afficher_tableau_live(stop_id, stop_name):
             code = info.get('code', '?')
             color = info.get('color', '666666')
             
-            # ----- DANS LE FRAGMENT, REMPLACER LES LIGNES QUI DÉFINISSENT 'dest' -----
-
             raw_dest = info.get('direction', '')
-
-            # V3.3 : Logique corrigée pour les destinations
             if mode == "BUS":
-                # Pour les BUS, on garde TOUT (y compris la ville entre parenthèses)
                 dest = raw_dest
             else:
-                # Pour les RER/Métros, on nettoie la ville à la fin
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
-
-# -------------------------------------------------------------------------
             
             freshness = d.get('data_freshness', 'realtime')
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
@@ -283,14 +288,20 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "BUS", "AUTRE"]
+    # Ajout de CABLE dans l'ordre
+    ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "CABLE", "BUS", "AUTRE"]
     has_data = False
+    # Nouvelle liste pour le footer
+    modes_sans_arret = []
 
     for mode_actuel in ordre_affichage:
         lignes_du_mode = buckets[mode_actuel]
-        if not lignes_du_mode: continue
+        if not lignes_du_mode:
+            # Si le mode est vide, on le note pour le footer
+            modes_sans_arret.append(ICONES_TITRE[mode_actuel])
+            continue
+            
         has_data = True
-
         st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
 
         def sort_key(k): 
@@ -359,7 +370,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 render_rer_group("AUTRES DIRECTIONS", p3)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # --- STANDARD ---
+            # --- STANDARD (Inclut maintenant le Câble) ---
             else:
                 st.markdown(f"""
                 <div class="rail-card">
@@ -386,11 +397,24 @@ def afficher_tableau_live(stop_id, stop_name):
                     """, unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    if not has_data:
+    # --- NOUVEAU FOOTER DES MODES ABSENTS ---
+    if modes_sans_arret:
+        st.markdown("<div style='margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;'></div>", unsafe_allow_html=True)
+        st.caption("Autres modes disponibles ici (sans départs proches) :")
+        tags_html = ""
+        for m in modes_sans_arret:
+            tags_html += f"<span class='small-mode-tag'>{m}</span>"
+        st.markdown(f"<div>{tags_html}</div>", unsafe_allow_html=True)
+
+    if not has_data and not modes_sans_arret:
         st.info("Aucun passage trouvé ou erreur API.")
+    elif not has_data and modes_sans_arret:
+         st.info("Aucun départ proche détecté pour les modes de cette gare.")
+# --------------------------------------------------
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
