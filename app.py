@@ -4,7 +4,8 @@ from datetime import datetime
 import re
 import time
 import pytz
-from PIL import Image # <--- IMPORTANT : On importe la gestion d'image
+import os  # <--- AJOUTER CET IMPORT ICI
+from PIL import Image
 
 # ==========================================
 #              CONFIGURATION
@@ -205,14 +206,53 @@ def format_html_time(heure_str, data_freshness):
         return (delta, f"<span class='text-orange'>{delta} min</span>")
     
     return (delta, f"<span class='text-green'>{delta} min</span>")
-
+# ----- NOUVELLE FONCTION POUR LIRE L'HISTORIQUE -----
+def get_all_changelogs():
+    """Lit tous les fichiers .md dans le dossier 'changelogs' et les trie."""
+    log_dir = "changelogs"
+    all_notes = []
+    
+    # Vérifie si le dossier existe
+    if not os.path.exists(log_dir):
+        return ["*Aucune note de version trouvée.*"]
+        
+    # Liste les fichiers .md
+    files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
+    
+    # Trie inversé pour avoir les versions les plus récentes en premier
+    # (Suppose que les fichiers sont nommés v0.8.6.md, v0.8.5.md etc.)
+    files.sort(reverse=True)
+    
+    for filename in files:
+        filepath = os.path.join(log_dir, filename)
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                all_notes.append(f.read())
+        except Exception as e:
+             all_notes.append(f"Erreur de lecture de {filename}: {e}")
+             
+    return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
+# ----------------------------------------------------
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.8.5 - Milk")
+st.caption("v0.8.7 - Milk")
 
+with st.expander("📜 Historique des versions"):
+    # On récupère toutes les notes
+    notes_history = get_all_changelogs()
+    # On les affiche une par une séparées par une ligne
+    for i, note in enumerate(notes_history):
+        st.markdown(note)
+        # Ajoute un séparateur sauf après la dernière note
+        if i < len(notes_history) - 1:
+             st.divider()
+# ----------------------------------------------------
+
+# --- GESTION DE LA RECHERCHE ---
+# ... la suite du code ...
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
@@ -414,6 +454,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
