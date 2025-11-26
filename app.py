@@ -4,38 +4,29 @@ from datetime import datetime
 import re
 import time
 import pytz
-import os  # <--- AJOUTER CET IMPORT ICI
+import os
 from PIL import Image
 
 # ==========================================
 #              CONFIGURATION
 # ==========================================
-# On cherche la clé dans les secrets
 try:
     API_KEY = st.secrets["IDFM_API_KEY"]
 except FileNotFoundError:
-    # Pour le développement local si pas de secrets.toml
     API_KEY = "TA_CLE_ICI_SI_BESOIN_EN_LOCAL"
 
 BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
 
-# --- CHARGEMENT DE L'ICÔNE ---
-# Essaie de charger l'image 'app_icon.png' si elle existe, sinon met un émoji
 try:
-    icon_image = Image.open("app_icon.png") # Assure-toi que le fichier est là !
+    icon_image = Image.open("app_icon.png")
 except FileNotFoundError:
-    icon_image = "🚆" # Icône de secours
+    icon_image = "🚆"
 
-# CONFIGURATION DE LA PAGE (C'est la seule ligne qui compte vraiment)
 st.set_page_config(
     page_title="Grand Paname Express",
-    page_icon=icon_image, # On utilise l'image chargée
+    page_icon=icon_image,
     layout="centered"
 )
-
-# ==========================================
-#              STYLE CSS
-# ... la suite du code ne change pas ...
 
 # ==========================================
 #              STYLE CSS
@@ -45,17 +36,6 @@ st.markdown("""
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
     
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-    }
-    .live-dot {
-        display: inline-block; width: 10px; height: 10px;
-        background-color: #e74c3c; border-radius: 50%;
-        margin-right: 8px; animation: pulse 2s infinite;
-    }
-
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
@@ -67,15 +47,19 @@ st.markdown("""
         margin-right: 12px; font-size: 16px; text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    /* NOUVEAU : Tag pour les modes sans horaires en bas */
-    .small-mode-tag {
-        display: inline-block; background: #262730; color: #999;
-        padding: 4px 10px; border-radius: 15px; font-size: 11px;
-        margin-right: 6px; margin-bottom: 6px; border: 1px solid #444;
+    
+    /* --- CSS POUR LE NOUVEAU FOOTER --- */
+    .footer-container {
+        display: flex; align-items: center; margin-bottom: 8px;
     }
-    /* --------------------------- */
+    .footer-icon {
+        margin-right: 10px; font-size: 14px; color: #ccc;
+    }
+    .footer-badge {
+        font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important;
+    }
+    /* ---------------------------------- */
 
-    /* Séparateur temps */
     .time-sep { color: #555; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
@@ -113,6 +97,9 @@ st.markdown("""
     .rail-dest { font-weight: 500; font-size: 15px; color: #e0e0e0; }
     .rail-row { display: flex; justify-content: space-between; padding: 4px 0; }
     .rail-sep { border-top: 1px solid #222; margin: 4px 0; }
+
+    /* Style pour "Service terminé" */
+    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -161,17 +148,24 @@ ICONES_TITRE = {
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "TRAM": 4, "BUS": 5, "AUTRE": 99}
 
 def demander_api(suffixe):
-    # (Pas de changement ici, je le mets juste pour le repère)
     headers = {'apiKey': API_KEY.strip()}
     try:
         r = requests.get(f"{BASE_URL}/{suffixe}", headers=headers)
         return r.json()
     except: return None
 
+# NOUVELLE FONCTION POUR LE FOOTER INTELLIGENT
+def demander_lignes_arret(stop_id):
+    """Récupère toutes les lignes théoriques desservant un arrêt."""
+    headers = {'apiKey': API_KEY.strip()}
+    try:
+        r = requests.get(f"{BASE_URL}/stop_areas/{stop_id}/lines", headers=headers)
+        return r.json()
+    except: return None
+
 def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
-    # Ajout de la détection CABLE
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
     if "RER" in m: return "RER"
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m: return "TRAIN"
@@ -181,23 +175,20 @@ def normaliser_mode(mode_brut):
     return "AUTRE"
 
 def format_html_time(heure_str, data_freshness):
-    # --- CORRECTION FUSEAU HORAIRE ---
     paris_tz = pytz.timezone('Europe/Paris')
-    
-    # L'API renvoie l'heure sans info de zone, mais c'est l'heure locale de Paris
-    # On force donc l'interprétation en "Paris Time"
     obj_naive = datetime.strptime(heure_str, '%Y%m%dT%H%M%S')
     obj = paris_tz.localize(obj_naive)
-    
-    # On récupère l'heure actuelle à Paris aussi
     now = datetime.now(paris_tz)
-    
     delta = int((obj - now).total_seconds() / 60)
-    # ---------------------------------
     
     if data_freshness == 'base_schedule':
         return (2000, f"<span class='text-blue'>~{obj.strftime('%H:%M')}</span>")
     
+    # GESTION DU SERVICE TERMINÉ (> 2 heures)
+    if delta > 120:
+         # On renvoie 3000 pour le trier à la fin, et le style "service-end"
+         return (3000, "<span class='service-end'>Service terminé</span>")
+
     if delta <= 0:
         return (0, "<span class='text-red'>À quai</span>")
     if delta == 1:
@@ -206,90 +197,66 @@ def format_html_time(heure_str, data_freshness):
         return (delta, f"<span class='text-orange'>{delta} min</span>")
     
     return (delta, f"<span class='text-green'>{delta} min</span>")
-# ----- NOUVELLE FONCTION POUR LIRE L'HISTORIQUE -----
+
 def get_all_changelogs():
-    """Lit tous les fichiers .md dans le dossier 'changelogs' et les trie."""
     log_dir = "changelogs"
     all_notes = []
-    
-    # Vérifie si le dossier existe
-    if not os.path.exists(log_dir):
-        return ["*Aucune note de version trouvée.*"]
-        
-    # Liste les fichiers .md
+    if not os.path.exists(log_dir): return ["*Aucune note de version trouvée.*"]
     files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
-    
-    # Trie inversé pour avoir les versions les plus récentes en premier
-    # (Suppose que les fichiers sont nommés v0.8.6.md, v0.8.5.md etc.)
     files.sort(reverse=True)
-    
     for filename in files:
         filepath = os.path.join(log_dir, filename)
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                all_notes.append(f.read())
-        except Exception as e:
-             all_notes.append(f"Erreur de lecture de {filename}: {e}")
-             
+            with open(filepath, "r", encoding="utf-8") as f: all_notes.append(f.read())
+        except Exception as e: all_notes.append(f"Erreur de lecture de {filename}: {e}")
     return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
-# ----------------------------------------------------
+
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.8.6 - Milk")
+st.caption("v0.9 - Milk") # Version mise à jour
 
-with st.expander("📜 Historique des versions"):
-    # On récupère toutes les notes
-    notes_history = get_all_changelogs()
-    # On les affiche une par une séparées par une ligne
-    for i, note in enumerate(notes_history):
-        st.markdown(note)
-        # Ajoute un séparateur sauf après la dernière note
-        if i < len(notes_history) - 1:
-             st.divider()
-# ----------------------------------------------------
+with st.sidebar:
+    st.header("🗄️ Informations")
+    st.markdown("---")
+    with st.expander("📜 Historique des versions"):
+        notes_history = get_all_changelogs()
+        for i, note in enumerate(notes_history):
+            st.markdown(note)
+            if i < len(notes_history) - 1: st.divider()
 
 # --- GESTION DE LA RECHERCHE ---
-# ... la suite du code ...
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
 
-# ----- REMPLACER TOUT LE BLOC DE RECHERCHE PAR CECI -----
-
-# ----- REMPLACER LA LIGNE st.text_input -----
 search_query = st.text_input("🔍 Rechercher une gare (tapez puis sélectionnez) :", placeholder="Ex: Noisiel, Châtelet, Funiculaire...")
-# --------------------------------------------
 
 if search_query:
-    with st.spinner("Recherche des arrêts..."):
-        data = demander_api(f"places?q={search_query}")
-
-    if data and 'places' in data:
-        opts = {}
-        for p in data['places']:
-            if 'stop_area' in p:
-                ville = p.get('administrative_regions', [{}])[0].get('name', '')
-                label = f"{p['name']} ({ville})" if ville else p['name']
-                opts[label] = p['stop_area']['id']
-
-        # Le menu déroulant. Si l'utilisateur change la sélection, le script se relance.
-        choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
-
-        # V3.3 : Validation immédiate (plus de bouton)
-        # Si un choix est fait ET qu'il est différent de celui déjà affiché, on met à jour immédiatement.
-        if choice and st.session_state.selected_name != choice:
-            st.session_state.selected_stop = opts[choice]
-            st.session_state.selected_name = choice
-            st.rerun() # Force le rechargement pour afficher le tableau tout de suite
-# -------------------------------------------------------
+    if not st.session_state.selected_name or search_query.lower() not in st.session_state.selected_name.lower():
+        with st.spinner("Recherche des arrêts..."):
+            data = demander_api(f"places?q={search_query}")
+        
+        if data and 'places' in data:
+            opts = {}
+            for p in data['places']:
+                if 'stop_area' in p:
+                    ville = p.get('administrative_regions', [{}])[0].get('name', '')
+                    label = f"{p['name']} ({ville})" if ville else p['name']
+                    opts[label] = p['stop_area']['id']
+            
+            choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
+            
+            if choice and st.session_state.selected_name != choice:
+                st.session_state.selected_stop = opts[choice]
+                st.session_state.selected_name = choice
+                st.rerun()
 
 # ========================================================
-#        FRAGMENT DYNAMIQUE
+#        FRAGMENT DYNAMIQUE (LOGIQUE COMPLÈTE REBÂTIE)
 # ========================================================
-# ----- REMPLACER TOUTE LA FONCTION DU FRAGMENT -----
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
     
@@ -300,11 +267,24 @@ def afficher_tableau_live(stop_id, stop_name):
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
+    # 1. Récupérer TOUTES les lignes théoriques
+    data_lines = demander_lignes_arret(stop_id)
+    all_lines_at_stop = {}
+    if data_lines and 'lines' in data_lines:
+        for line in data_lines['lines']:
+            mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
+            code = line.get('code', '?')
+            color = line.get('color', '666666')
+            # Clé unique: (mode, code)
+            all_lines_at_stop[(mode, code)] = {'color': color}
+
+    # 2. Récupérer les départs TEMPS RÉEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
-    # Ajout du bucket CABLE ici
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
-    
+    # Set pour suivre les lignes qui seront affichées dans le tableau principal
+    displayed_lines_keys = set()
+
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
             info = d['display_informations']
@@ -313,33 +293,30 @@ def afficher_tableau_live(stop_id, stop_name):
             color = info.get('color', '666666')
             
             raw_dest = info.get('direction', '')
-            if mode == "BUS":
-                dest = raw_dest
-            else:
-                dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            if mode == "BUS": dest = raw_dest
+            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             
             freshness = d.get('data_freshness', 'realtime')
+            # La nouvelle fonction format_html_time gère le "Service terminé" (tri=3000)
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
             
             if val_tri < -5: continue 
+
+            # Si l'API renvoie un départ (même lointain), on considère la ligne comme "active"
+            displayed_lines_keys.add((mode, code))
 
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    # Ajout de CABLE dans l'ordre
+    # 3. Affichage principal
     ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "CABLE", "BUS", "AUTRE"]
     has_data = False
-    # Nouvelle liste pour le footer
-    modes_sans_arret = []
 
     for mode_actuel in ordre_affichage:
         lignes_du_mode = buckets[mode_actuel]
-        if not lignes_du_mode:
-            # Si le mode est vide, on le note pour le footer
-            modes_sans_arret.append(ICONES_TITRE[mode_actuel])
-            continue
+        if not lignes_du_mode: continue
             
         has_data = True
         st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
@@ -352,12 +329,19 @@ def afficher_tableau_live(stop_id, stop_name):
             _, code, color = cle
             departs = lignes_du_mode[cle]
 
-            # --- BUS ---
-            if mode_actuel == "BUS":
+            # Séparation : proches vs lointains (service terminé)
+            proches = [d for d in departs if d['tri'] < 3000]
+            # S'il n'y a pas de proches, on crée un départ fictif "Service terminé"
+            if not proches:
+                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
+
+
+            # --- AFFICHAGE STANDARD (BUS/MÉTRO...) ---
+            if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
                 dest_map = {}
-                for d in departs:
+                for d in proches:
                     if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 2: dest_map[d['dest']].append(d['html'])
+                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
                 
                 sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
                 
@@ -375,8 +359,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 </div>
                 """, unsafe_allow_html=True)
 
-            # --- RER ---
-            elif mode_actuel == "RER" and code in GEOGRAPHIE_RER:
+            # --- AFFICHAGE RER/TRAIN ---
+            elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 st.markdown(f"""
                 <div class="rail-card">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -385,82 +369,70 @@ def afficher_tableau_live(stop_id, stop_name):
                 """, unsafe_allow_html=True)
                 
                 geo = GEOGRAPHIE_RER[code]
-                p1, p2, p3 = [], [], []
-                for d in departs:
-                    u = d['dest'].upper()
-                    if any(k in u for k in geo['mots_1']): p1.append(d)
-                    elif any(k in u for k in geo['mots_2']): p2.append(d)
-                    else: p3.append(d)
+                # On filtre uniquement sur les départs "proches"
+                real_proches = [d for d in departs if d['tri'] < 3000]
                 
-                def render_rer_group(titre, liste):
-                    if not liste: return
-                    liste.sort(key=lambda x: x['tri'])
+                p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
+                p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
+                p3 = [d for d in real_proches if d not in p1 and d not in p2]
+                
+                def render_rer_group(titre, liste_proches):
                     st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
-                    for item in liste[:4]:
-                        st.markdown(f"""
-                        <div class='rail-row'>
-                            <span class='rail-dest'>{item['dest']}</span>
-                            <span>{item['html']}</span>
-                        </div>
-                        <div class='rail-sep'></div>
-                        """, unsafe_allow_html=True)
+                    if not liste_proches:
+                        st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                    else:
+                        liste_proches.sort(key=lambda x: x['tri'])
+                        # Limite à 4 trains
+                        for item in liste_proches[:4]:
+                            st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
 
-                render_rer_group(geo['label_1'], p1)
-                render_rer_group(geo['label_2'], p2)
-                render_rer_group("AUTRES DIRECTIONS", p3)
+                # Logique RER optimisée : si les deux directions principales sont vides
+                if not p1 and not p2:
+                     st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                else:
+                    render_rer_group(geo['label_1'], p1)
+                    render_rer_group(geo['label_2'], p2)
+
+                if p3: render_rer_group("AUTRES DIRECTIONS", p3)
+
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # --- STANDARD (Inclut maintenant le Câble) ---
-            else:
-                st.markdown(f"""
-                <div class="rail-card">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+    # 4. Calcul et affichage du FOOTER INTELLIGENT (Logique robuste anti-doublons)
+    missing_lines_by_mode = {}
+    for (mode_theo, code_theo), info in all_lines_at_stop.items():
+        # Si la clé (mode, code) n'est PAS dans celles qui ont eu des données temps réel
+        if (mode_theo, code_theo) not in displayed_lines_keys:
+            if mode_theo not in missing_lines_by_mode: missing_lines_by_mode[mode_theo] = []
+            missing_lines_by_mode[mode_theo].append({'code': code_theo, 'color': info['color']})
+
+    if missing_lines_by_mode:
+        st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
+        st.caption("Autres lignes desservant cet arrêt :")
+        
+        for mode in ordre_affichage:
+            if mode in missing_lines_by_mode:
+                html_badges = ""
+                seen_codes = set() # Sécurité visuelle
+                sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
                 
-                dest_map = {}
-                for d in departs:
-                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
+                for line in sorted_lines:
+                    if line['code'] not in seen_codes:
+                        # Utilisation de la nouvelle classe CSS footer-badge
+                        html_badges += f'<span class="line-badge footer-badge" style="background-color:#{line["color"]};">{line["code"]}</span>'
+                        seen_codes.add(line['code'])
                 
-                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0])
-                
-                for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
+                if html_badges:
+                    # Utilisation de la nouvelle classe CSS footer-container et footer-icon et TRIPLES GUILLEMETS
                     st.markdown(f"""
-                    <div class='rail-row'>
-                        <span class='rail-dest'>{dest_name}</span>
-                        <div style='text-align:right;'>{times_str}</div>
+                    <div class="footer-container">
+                        <span class="footer-icon">{ICONES_TITRE[mode]}</span>
+                        <div>{html_badges}</div>
                     </div>
-                    <div class='rail-sep'></div>
                     """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- NOUVEAU FOOTER DES MODES ABSENTS ---
-    if modes_sans_arret:
-        st.markdown("<div style='margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;'></div>", unsafe_allow_html=True)
-        st.caption("Autres modes disponibles ici (sans départs proches) :")
-        tags_html = ""
-        for m in modes_sans_arret:
-            tags_html += f"<span class='small-mode-tag'>{m}</span>"
-        st.markdown(f"<div>{tags_html}</div>", unsafe_allow_html=True)
-
-    if not has_data and not modes_sans_arret:
-        st.info("Aucun passage trouvé ou erreur API.")
-    elif not has_data and modes_sans_arret:
-         st.info("Aucun départ proche détecté pour les modes de cette gare.")
-# --------------------------------------------------
+    if not has_data and not missing_lines_by_mode:
+        st.info("Aucune information trouvée pour cet arrêt.")
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
-
-
-
-
-
-
-
-
 
