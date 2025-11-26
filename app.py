@@ -2,31 +2,45 @@ import streamlit as st
 import requests
 from datetime import datetime
 import re
+import time
+import pytz # Nouvelle librairie indispensable
 
 # ==========================================
 #              CONFIGURATION
 # ==========================================
-API_KEY = "rNhB9Ig3dR3W6AbHQLr5MiTiqR9vidrA"  # <--- REMETS TA CLÉ ICI !
-BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
+# On cherche la clé dans les secrets sécurisés de Streamlit
+try:
+    API_KEY = st.secrets["IDFM_API_KEY"]
+except FileNotFoundError:
+    st.error("❌ Erreur : Le fichier .streamlit/secrets.toml est introuvable ou la clé est manquante.")
+    st.stop()
 
-st.set_page_config(page_title="Grand Paname Express", page_icon="🚆", layout="centered")
+BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
 
 # ==========================================
 #              STYLE CSS
 # ==========================================
 st.markdown("""
 <style>
-    /* Animation clignotement */
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
     
-    /* Couleurs Texte */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+    .live-dot {
+        display: inline-block; width: 10px; height: 10px;
+        background-color: #e74c3c; border-radius: 50%;
+        margin-right: 8px; animation: pulse 2s infinite;
+    }
+
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
     .text-blue { color: #3498db; font-weight: bold; }
     
-    /* Badges Lignes */
     .line-badge {
         display: inline-block; padding: 4px 10px; border-radius: 6px;
         font-weight: 900; color: white; text-align: center; min-width: 35px;
@@ -34,17 +48,14 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    /* Séparateur temps */
     .time-sep { color: #555; margin: 0 8px; font-weight: lighter; }
     
-    /* Section Headers */
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
         border-bottom: 2px solid #444; font-size: 20px; font-weight: bold; color: #eee;
         letter-spacing: 1px;
     }
     
-    /* Titre Gare */
     .station-title {
         font-size: 24px; font-weight: 800; color: #fff;
         text-align: center; margin: 10px 0 20px 0; text-transform: uppercase;
@@ -53,7 +64,6 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
-    /* RER Directions */
     .rer-direction {
         margin-top: 15px; margin-bottom: 8px; 
         font-size: 13px; font-weight: bold; color: #3498db; 
@@ -61,7 +71,6 @@ st.markdown("""
         border-bottom: 1px solid #333; padding-bottom: 2px;
     }
     
-    /* Bus Container */
     .bus-card {
         background-color: #1a1a1a; padding: 12px; margin-bottom: 10px;
         border-radius: 8px; border-left: 5px solid #666;
@@ -72,7 +81,6 @@ st.markdown("""
     }
     .bus-dest { color: #ccc; font-size: 15px; }
     
-    /* RER/Metro Container */
     .rail-card { margin-bottom: 20px; background-color: #0E1117; }
     .rail-dest { font-weight: 500; font-size: 15px; color: #e0e0e0; }
     .rail-row { display: flex; justify-content: space-between; padding: 4px 0; }
@@ -142,8 +150,19 @@ def normaliser_mode(mode_brut):
     return "AUTRE"
 
 def format_html_time(heure_str, data_freshness):
-    obj = datetime.strptime(heure_str, '%Y%m%dT%H%M%S')
-    delta = int((obj - datetime.now()).total_seconds() / 60)
+    # --- CORRECTION FUSEAU HORAIRE ---
+    paris_tz = pytz.timezone('Europe/Paris')
+    
+    # L'API renvoie l'heure sans info de zone, mais c'est l'heure locale de Paris
+    # On force donc l'interprétation en "Paris Time"
+    obj_naive = datetime.strptime(heure_str, '%Y%m%dT%H%M%S')
+    obj = paris_tz.localize(obj_naive)
+    
+    # On récupère l'heure actuelle à Paris aussi
+    now = datetime.now(paris_tz)
+    
+    delta = int((obj - now).total_seconds() / 60)
+    # ---------------------------------
     
     if data_freshness == 'base_schedule':
         return (2000, f"<span class='text-blue'>~{obj.strftime('%H:%M')}</span>")
@@ -161,16 +180,13 @@ def format_html_time(heure_str, data_freshness):
 #              INTERFACE GLOBALE
 # ==========================================
 
-# Titre principal (Statique)
 st.title("🚆 Grand Paname")
-st.caption("v3.1 - Smooth Operator")
+st.caption("v3.2 - Timezone Fixed")
 
-# --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
 
-# Barre de recherche (Statique)
 search_query = st.text_input("🔍 Rechercher une gare :", placeholder="Tapez le nom ici...")
 
 if search_query:
@@ -193,28 +209,23 @@ if search_query:
             st.rerun()
 
 # ========================================================
-#        FRAGMENT DYNAMIQUE (C'est ça la magie !)
+#        FRAGMENT DYNAMIQUE
 # ========================================================
-# Cette fonction se relance toute seule toutes les 15s
-# SANS recharger le reste de la page (titre, recherche...)
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
     
-    # Nom de la gare (Nettoyé)
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    # Indicateur de mise à jour discret
-    heure_actuelle = datetime.now().strftime('%H:%M:%S')
+    # Heure Parisienne pour l'affichage "Dernière mise à jour"
+    paris_tz = pytz.timezone('Europe/Paris')
+    heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
-    # Appel API
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
-    bus_missing_codes = [] 
-
-    # Traitement
+    
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
             info = d['display_informations']
@@ -236,7 +247,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    # Affichage
     ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
@@ -343,6 +353,5 @@ def afficher_tableau_live(stop_id, stop_name):
     if not has_data:
         st.info("Aucun passage trouvé ou erreur API.")
 
-# --- APPEL DU FRAGMENT ---
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
