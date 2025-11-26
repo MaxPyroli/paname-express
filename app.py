@@ -124,29 +124,29 @@ GEOGRAPHIE_RER = {
     "A": {
         "label_1": "⇦ OUEST (Cergy / Poissy / St-Germain)",
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "VESINET", "VÉSINET", "NANTERRE", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
-        "label_2": "⇨ EST (Marne-la-Vallée / Boissy / Torcy)",
+        "label_2": "⇨ EST (Boissy / Marne-la-Vallée / Torcy)",
         "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"]
     },
     "B": {
-        "label_1": "⇧ NORD (Roissy / Mitry / Gare du Nord)",
+        "label_1": "⇧ NORD (Roissy / Mitry)",
         "mots_1": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE"],
-        "label_2": "⇩ SUD (St-Rémy / Robinson / Laplace)",
+        "label_2": "⇩ SUD (St-Rémy / Robinson)",
         "mots_2": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"]
     },
     "C": {
         "label_1": "⇦ OUEST (Versailles / Pontoise)",
         "mots_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "INVALIDES", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
-        "label_2": "⇨ SUD/EST (Massy / Dourdan / Juvisy)",
+        "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"]
     },
     "D": {
-        "label_1": "⇧ NORD (Creil / Stade de France)",
+        "label_1": "⇧ NORD (Creil)",
         "mots_1": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
-        "label_2": "⇩ SUD (Melun / Corbeil / Gare de Lyon)",
+        "label_2": "⇩ SUD (Melun / Corbeil)",
         "mots_2": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"]
     },
     "E": {
-        "label_1": "⇦ OUEST (Haussmann / La Défense)",
+        "label_1": "⇦ OUEST (Nanterre)",
         "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
         "label_2": "⇨ EST (Chelles / Tournan)",
         "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"]
@@ -454,6 +454,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
