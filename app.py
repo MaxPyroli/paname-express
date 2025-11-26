@@ -202,6 +202,20 @@ def format_html_time(heure_str, data_freshness):
     if data_freshness == 'base_schedule':
         return (2000, f"<span class='text-blue'>~{obj.strftime('%H:%M')}</span>")
     
+    # MODIFICATION ICI : Texte plus court et couleur grise
+    if delta > 120:
+         return (3000, "<span style='color:#999; font-size:0.9em'>Service terminé</span>")
+
+    if delta <= 0:
+        return (0, "<span class='text-red'>À quai</span>")
+    if delta == 1:
+        return (1, "<span class='blink text-orange'>À l'approche</span>")
+    if delta < 5:
+        return (delta, f"<span class='text-orange'>{delta} min</span>")
+    
+    return (delta, f"<span class='text-green'>{delta} min</span>")
+# --------------------------------------------------
+    
     # MODIFICATION ICI : Seuil passé à 120 minutes (2 heures) au lieu de 240
     if delta > 120:
          return (3000, "<span class='text-blue' style='font-size:0.9em'>Service terminé / Lointain</span>")
@@ -309,7 +323,7 @@ def afficher_tableau_live(stop_id, stop_name):
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
-    # 1. Récupérer TOUTES les lignes théoriques de l'arrêt
+    # 1. Récupérer TOUTES les lignes théoriques
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {}
     if data_lines and 'lines' in data_lines:
@@ -317,14 +331,14 @@ def afficher_tableau_live(stop_id, stop_name):
             mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
             code = line.get('code', '?')
             color = line.get('color', '666666')
-            # On stocke les infos avec une clé unique (mode, code)
             all_lines_at_stop[(mode, code)] = {'color': color}
 
     # 2. Récupérer les départs TEMPS RÉEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
-    active_lines_keys = set() # Pour noter les lignes qui ONT des départs
+    # On garde une trace des lignes qui ont AU MOINS un départ affiché (proche ou "service terminé")
+    displayed_lines_keys = set()
 
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
@@ -332,9 +346,6 @@ def afficher_tableau_live(stop_id, stop_name):
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
             code = info.get('code', '?')
             color = info.get('color', '666666')
-            
-            # On note que cette ligne est active
-            active_lines_keys.add((mode, code))
             
             raw_dest = info.get('direction', '')
             if mode == "BUS": dest = raw_dest
@@ -350,7 +361,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    # 3. Affichage principal
+    # 3. Affichage principal avec logique de filtrage "Service terminé"
     ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "CABLE", "BUS", "AUTRE"]
     has_data = False
 
@@ -369,12 +380,34 @@ def afficher_tableau_live(stop_id, stop_name):
             _, code, color = cle
             departs = lignes_du_mode[cle]
 
-            # --- BUS ---
-            if mode_actuel == "BUS":
+            # --- LOGIQUE DE FILTRAGE "SERVICE TERMINÉ" ---
+            # On sépare les départs proches (< 3000) des lointains (= 3000)
+            proches = [d for d in departs if d['tri'] < 3000]
+            lointains = [d for d in departs if d['tri'] == 3000]
+
+            final_departs = []
+            if proches:
+                # S'il y a des proches, on n'affiche QUE les proches (cas RER B)
+                final_departs = proches
+                displayed_lines_keys.add((mode_actuel, code)) # Cette ligne sera affichée
+            elif lointains:
+                # S'il n'y a QUE des lointains, on affiche UN SEUL "Service terminé"
+                # On prend le premier pour l'exemple, le texte est le même de toute façon
+                final_departs = [lointains[0]] 
+                displayed_lines_keys.add((mode_actuel, code)) # Cette ligne sera affichée
+
+            if not final_departs: continue
+
+            # --- AFFICHAGE BUS/MÉTRO/TRAM/CÂBLE/AUTRE ---
+            if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
                 dest_map = {}
-                for d in departs:
+                for d in final_departs:
                     if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 2: dest_map[d['dest']].append(d['html'])
+                    # Pour les "Service terminé", on n'en garde qu'un seul par destination
+                    if d['tri'] == 3000:
+                         if not dest_map[d['dest']]: dest_map[d['dest']].append(d['html'])
+                    elif len(dest_map[d['dest']]) < 3: 
+                        dest_map[d['dest']].append(d['html'])
                 
                 sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
                 
@@ -392,8 +425,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 </div>
                 """, unsafe_allow_html=True)
 
-            # --- RER ---
-            elif mode_actuel == "RER" and code in GEOGRAPHIE_RER:
+            # --- AFFICHAGE RER/TRAIN ---
+            elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 st.markdown(f"""
                 <div class="rail-card">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -403,7 +436,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 geo = GEOGRAPHIE_RER[code]
                 p1, p2, p3 = [], [], []
-                for d in departs:
+                for d in final_departs:
                     u = d['dest'].upper()
                     if any(k in u for k in geo['mots_1']): p1.append(d)
                     elif any(k in u for k in geo['mots_2']): p2.append(d)
@@ -411,54 +444,40 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 def render_rer_group(titre, liste):
                     if not liste: return
-                    liste.sort(key=lambda x: x['tri'])
-                    st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
-                    for item in liste[:4]:
+                    # Si TOUS les éléments du groupe sont "Service terminé"
+                    if all(item['tri'] == 3000 for item in liste):
+                        # On affiche une seule ligne grise générique pour la direction
+                        st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
                         st.markdown(f"""
-                        <div class='rail-row'>
-                            <span class='rail-dest'>{item['dest']}</span>
-                            <span>{item['html']}</span>
+                        <div class='rail-row' style='color:#999; font-style:italic;'>
+                            <span>Service terminé pour cette direction</span>
                         </div>
                         <div class='rail-sep'></div>
                         """, unsafe_allow_html=True)
+                    else:
+                        # Sinon, comportement normal
+                        liste.sort(key=lambda x: x['tri'])
+                        st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
+                        for item in liste[:4]:
+                            st.markdown(f"""
+                            <div class='rail-row'>
+                                <span class='rail-dest'>{item['dest']}</span>
+                                <span>{item['html']}</span>
+                            </div>
+                            <div class='rail-sep'></div>
+                            """, unsafe_allow_html=True)
 
                 render_rer_group(geo['label_1'], p1)
                 render_rer_group(geo['label_2'], p2)
                 render_rer_group("AUTRES DIRECTIONS", p3)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # --- STANDARD ---
-            else:
-                st.markdown(f"""
-                <div class="rail-card">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                dest_map = {}
-                for d in departs:
-                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
-                
-                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0])
-                
-                for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
-                    st.markdown(f"""
-                    <div class='rail-row'>
-                        <span class='rail-dest'>{dest_name}</span>
-                        <div style='text-align:right;'>{times_str}</div>
-                    </div>
-                    <div class='rail-sep'></div>
-                    """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-
-    # 4. Calcul et affichage du FOOTER INTELLIGENT
-    # On cherche les lignes présentes dans la théorie mais PAS dans les départs actifs
+    # 4. Calcul et affichage du FOOTER INTELLIGENT CORRIGÉ
+    # On cherche les lignes théoriques qui NE SONT PAS dans les lignes affichées
     missing_lines_by_mode = {}
     for (mode, code), info in all_lines_at_stop.items():
-        if (mode, code) not in active_lines_keys:
+        # La correction est ici : on vérifie par rapport à displayed_lines_keys
+        if (mode, code) not in displayed_lines_keys:
             if mode not in missing_lines_by_mode: missing_lines_by_mode[mode] = []
             missing_lines_by_mode[mode].append({'code': code, 'color': info['color']})
 
@@ -466,11 +485,9 @@ def afficher_tableau_live(stop_id, stop_name):
         st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt (sans départs proches) :")
         
-        # On affiche par mode pour que ce soit propre
         for mode in ordre_affichage:
             if mode in missing_lines_by_mode:
                 html_badges = ""
-                # Tri des lignes (ex: Bus 20 avant Bus 100)
                 sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
                 for line in sorted_lines:
                     html_badges += f'<span class="line-badge" style="background-color:#{line["color"]}; font-size:12px; padding: 2px 8px; min-width: 30px;">{line["code"]}</span>'
@@ -487,6 +504,7 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
