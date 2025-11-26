@@ -353,9 +353,20 @@ def afficher_tableau_live(stop_id, stop_name):
         has_data = True
         st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
 
-        def sort_key(k): 
-            try: return (0, int(k[1])) 
-            except: return (1, k[1])
+        # Fonction de tri intelligente pour les numéros de ligne (ex: N32, 1, 10, T3a)
+        def smart_sort_key(cle_ligne):
+            mode, code, _ = cle_ligne
+            # On utilise une regex pour séparer les lettres du début et les chiffres
+            match = re.match(r"([a-zA-Z]*)(\d*)(.*)", code)
+            if match:
+                prefix, number, suffix = match.groups()
+                # On trie d'abord par préfixe (ex: 'N' après ''), puis par numéro (entier), puis par suffixe
+                num_val = int(number) if number else 0
+                return (prefix, num_val, suffix)
+            return (code, 0, "") # Fallback au cas où
+
+        # On applique le tri intelligent aux clés (mode, code, color)
+        sorted_keys = sorted(lignes_du_mode.keys(), key=smart_sort_key)
         
         for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
@@ -492,6 +503,7 @@ def afficher_tableau_live(stop_id, stop_name):
 # --------------------------------------------------
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
