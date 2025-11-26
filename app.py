@@ -313,6 +313,7 @@ if search_query:
 #        FRAGMENT DYNAMIQUE
 # ========================================================
 
+# ----- REMPLACER TOUTE LA FONCTION DU FRAGMENT -----
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
     
@@ -491,6 +492,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
     if not has_displayed_something and not missing_lines_by_mode:
         st.info("Aucune information trouvée pour cet arrêt (ni théorique, ni temps réel).")
+# --------------------------------------------------
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
