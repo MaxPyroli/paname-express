@@ -216,7 +216,7 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10 - Clean") # Version mise à jour pour le lancement
+st.caption("v0.10 - Clean")
 
 with st.sidebar:
     st.header("🗄️ Informations")
@@ -275,7 +275,7 @@ def afficher_tableau_live(stop_id, stop_name):
             mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
             code = line.get('code', '?')
             color = line.get('color', '666666')
-            # Clé unique: (mode, code)
+            # Clé unique (mode, code) pour éviter les doublons API
             all_lines_at_stop[(mode, code)] = {'color': color}
 
     # 2. Récupérer les départs TEMPS RÉEL
@@ -300,17 +300,15 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
-            # NOTE: On n'ajoute plus directement à displayed_lines_keys ici
-            # On le fera après filtrage "Service terminé"
-
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
     # 2.5 FILTRAGE INTELLIGENT "SERVICE TERMINÉ"
-    # Pour les bus/tram/métro : si tous les départs sont "Service terminé", on les retire du tableau (ils iront dans le footer)
-    # Pour RER/Train : on garde l'affichage "Service terminé" car c'est un panneau d'information important
+    # Consigne : Uniquement pour les BUS, si tout est terminé, on cache (ça ira dans le footer).
+    # Pour les AUTRES (Métro, Tram, RER...), on laisse affiché "Service terminé".
+    
     for mode in list(buckets.keys()):
         keys_to_remove = []
         for cle in buckets[mode]:
@@ -319,19 +317,19 @@ def afficher_tableau_live(stop_id, stop_name):
             has_active = any(d['tri'] < 3000 for d in departs)
             
             if has_active:
-                # La ligne a de l'activité, on l'affiche normalement
+                # La ligne a de l'activité, on l'affiche et on la note comme affichée
                 displayed_lines_keys.add((cle[0], cle[1]))
             else:
                 # Uniquement du "Service terminé"
-                if mode in ["RER", "TRAIN"]:
-                    # Pour le lourd, on garde le panneau d'info "Service terminé"
-                    displayed_lines_keys.add((cle[0], cle[1]))
-                else:
-                    # Pour BUS, TRAM, METRO, CABLE... on cache du tableau principal
-                    # Comme on ne l'ajoute pas à displayed_lines_keys, elle apparaîtra dans le footer !
+                if mode == "BUS":
+                    # Pour les BUS uniquement : on retire du tableau principal
+                    # (Elle n'est pas ajoutée à displayed_lines_keys, donc elle apparaîtra dans le footer)
                     keys_to_remove.append(cle)
+                else:
+                    # Pour METRO, TRAM, RER, CABLE... on garde le panneau "Service terminé"
+                    displayed_lines_keys.add((cle[0], cle[1]))
         
-        # Suppression effective des lignes inactives des buckets d'affichage
+        # Suppression effective des lignes de BUS inactives des buckets d'affichage
         for k in keys_to_remove:
             del buckets[mode][k]
 
@@ -355,14 +353,11 @@ def afficher_tableau_live(stop_id, stop_name):
             _, code, color = cle
             departs = lignes_du_mode[cle]
 
-            # Séparation : proches vs lointains (service terminé)
             proches = [d for d in departs if d['tri'] < 3000]
-            # S'il n'y a pas de proches, on crée un départ fictif "Service terminé"
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
-
-            # --- AFFICHAGE STANDARD (BUS/MÉTRO...) ---
+            # --- AFFICHAGE STANDARD (BUS/MÉTRO/TRAM/CABLE) ---
             if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
                 dest_map = {}
                 for d in proches:
@@ -395,7 +390,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 """, unsafe_allow_html=True)
                 
                 geo = GEOGRAPHIE_RER[code]
-                # On filtre uniquement sur les départs "proches"
                 real_proches = [d for d in departs if d['tri'] < 3000]
                 
                 p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
@@ -408,11 +402,9 @@ def afficher_tableau_live(stop_id, stop_name):
                         st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
-                        # Limite à 4 trains
                         for item in liste_proches[:4]:
                             st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
 
-                # Logique RER optimisée : si les deux directions principales sont vides
                 if not p1 and not p2:
                      st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 else:
@@ -423,10 +415,10 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    # 4. Calcul et affichage du FOOTER INTELLIGENT (Logique robuste anti-doublons)
+    # 4. Calcul et affichage du FOOTER INTELLIGENT
     missing_lines_by_mode = {}
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
-        # Si la clé (mode, code) n'est PAS dans celles qui ont eu des données temps réel ACTIVES
+        # ANTIDOUBLONS : Si la ligne est déjà affichée (active ou "Service terminé" forcé), on ne la met pas au footer
         if (mode_theo, code_theo) not in displayed_lines_keys:
             if mode_theo not in missing_lines_by_mode: missing_lines_by_mode[mode_theo] = []
             missing_lines_by_mode[mode_theo].append({'code': code_theo, 'color': info['color']})
@@ -438,17 +430,17 @@ def afficher_tableau_live(stop_id, stop_name):
         for mode in ordre_affichage:
             if mode in missing_lines_by_mode:
                 html_badges = ""
-                seen_codes = set() # Sécurité visuelle
+                seen_codes = set()
+                # Tri des numéros de ligne
                 sorted_lines = sorted(missing_lines_by_mode[mode], key=lambda x: (0, int(x['code'])) if x['code'].isdigit() else (1, x['code']))
                 
                 for line in sorted_lines:
+                    # ANTIDOUBLONS : Sécurité supplémentaire interne au footer
                     if line['code'] not in seen_codes:
-                        # Utilisation de la nouvelle classe CSS footer-badge
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{line["color"]};">{line["code"]}</span>'
                         seen_codes.add(line['code'])
                 
                 if html_badges:
-                    # Utilisation de la nouvelle classe CSS footer-container et footer-icon et TRIPLES GUILLEMETS
                     st.markdown(f"""
                     <div class="footer-container">
                         <span class="footer-icon">{ICONES_TITRE[mode]}</span>
