@@ -145,6 +145,7 @@ ICONES_TITRE = {
     "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
 }
 
+# Mise à jour de la hiérarchie pour inclure CABLE au bon endroit
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
 
 def demander_api(suffixe):
@@ -166,7 +167,7 @@ def normaliser_mode(mode_brut):
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
     if "RER" in m: return "RER"
-    # Modification ici : ajout de "TER" pour les regrouper avec les trains
+    # Ajout des TER dans la catégorie TRAIN
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
@@ -205,9 +206,8 @@ def get_all_changelogs():
     
     files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
     
-    # --- LOGIQUE DE TRI INTELLIGENT (v0.10 > v0.9) ---
+    # Tri intelligent des versions (ex: 0.10 après 0.9)
     def version_key(filename):
-        # Transforme "v0.9.1.md" en [0, 9, 1] pour comparer les nombres et pas le texte
         try:
             clean = filename.lower().replace('v', '').replace('.md', '')
             return [int(part) for part in clean.split('.') if part.isdigit()]
@@ -215,7 +215,6 @@ def get_all_changelogs():
             return [0]
             
     files.sort(key=version_key, reverse=True)
-    # -------------------------------------------------
 
     for filename in files:
         filepath = os.path.join(log_dir, filename)
@@ -229,7 +228,7 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.9.1 - Milk")
+st.caption("v0.9.2 - Ultimate Edition")
 
 with st.sidebar:
     st.header("🗄️ Informations")
@@ -293,7 +292,7 @@ def afficher_tableau_live(stop_id, stop_name):
     # 2. Récupération temps réel
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
     
-    buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
+    buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
@@ -340,6 +339,7 @@ def afficher_tableau_live(stop_id, stop_name):
             del buckets[mode][k]
 
     # 3. Affichage Tableau
+    # Mise à jour de l'ordre d'affichage (CABLE après METRO)
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
@@ -362,31 +362,8 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
-            # --- AFFICHAGE STANDARD ---
-            if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
-                dest_map = {}
-                for d in proches:
-                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
-                
-                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
-                
-                rows_html = ""
-                for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
-                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
-                
-                st.markdown(f"""
-                <div class="bus-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                    {rows_html}
-                </div>
-                """, unsafe_allow_html=True)
-
-            # --- AFFICHAGE RER/TRAIN ---
-            elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
+            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE DÉFINIE (A, B, C, D, E)
+            if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 st.markdown(f"""
                 <div class="rail-card">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -420,6 +397,49 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
+            elif mode_actuel in ["RER", "TRAIN"]:
+                st.markdown(f"""
+                <div class="rail-card">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                real_proches = [d for d in departs if d['tri'] < 3000]
+                
+                if not real_proches:
+                     st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                else:
+                    real_proches.sort(key=lambda x: x['tri'])
+                    for item in real_proches:
+                        st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            else:
+                dest_map = {}
+                for d in proches:
+                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
+                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
+                
+                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
+                
+                rows_html = ""
+                for dest_name, times in sorted_dests:
+                    times_str = "<span class='time-sep'>|</span>".join(times)
+                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                
+                st.markdown(f"""
+                <div class="bus-card" style="border-left-color: #{color};">
+                    <div style="display:flex; align-items:center;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                    {rows_html}
+                </div>
+                """, unsafe_allow_html=True)
+
     # 4. Footer Intelligent (Final Clean)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -436,7 +456,7 @@ def afficher_tableau_live(stop_id, stop_name):
         st.caption("Autres lignes desservant cet arrêt :")
         
         for mode in ordre_affichage:
-            if mode == "AUTRE": continue # SUPPRESSION DES AUTRES DU FOOTER
+            if mode == "AUTRE": continue
 
             if mode in footer_data and footer_data[mode]:
                 html_badges = ""
@@ -460,4 +480,3 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
