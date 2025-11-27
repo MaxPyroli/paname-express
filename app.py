@@ -172,7 +172,7 @@ def normaliser_mode(mode_brut):
     if "BUS" in m: return "BUS"
     return "AUTRE"
 
-# Fonction cruciale pour éviter les doublons "113" vs "113 "
+# Fonction cruciale pour éviter les doublons
 def clean_code_line(code):
     return str(code).strip().upper()
 
@@ -217,7 +217,7 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10 - Final Fix")
+st.caption("v0.10 - Perfect Footer")
 
 with st.sidebar:
     st.header("🗄️ Informations")
@@ -274,7 +274,7 @@ def afficher_tableau_live(stop_id, stop_name):
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
             mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
-            code = clean_code_line(line.get('code', '?')) # NETTOYAGE STRICT
+            code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
@@ -283,16 +283,13 @@ def afficher_tableau_live(stop_id, stop_name):
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "TRAM": {}, "CABLE": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set() # (mode, code) qui SONT affichés dans le tableau principal
-
-    # On prépare le footer dès maintenant pour y mettre les lignes qu'on rejette
-    # Structure : footer_data[mode][code] = color
     footer_data = {m: {} for m in buckets.keys()}
 
     if data_live and 'departures' in data_live:
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
-            code = clean_code_line(info.get('code', '?')) # NETTOYAGE STRICT
+            code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
             
             raw_dest = info.get('direction', '')
@@ -309,7 +306,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
-    # 2.5 FILTRAGE & NETTOYAGE ROBUSTE
+    # 2.5 FILTRAGE & NETTOYAGE
     for mode in list(buckets.keys()):
         keys_to_remove = []
         for cle in buckets[mode]:
@@ -321,10 +318,8 @@ def afficher_tableau_live(stop_id, stop_name):
             has_active = any(d['tri'] < 3000 for d in departs)
             
             if has_active:
-                # La ligne a des départs actifs -> On garde
                 displayed_lines_keys.add((mode, code_clean))
             else:
-                # Uniquement du "Service terminé"
                 if mode == "BUS":
                     # BUS inactif -> On retire du tableau ET on force l'ajout au footer
                     keys_to_remove.append(cle)
@@ -355,7 +350,6 @@ def afficher_tableau_live(stop_id, stop_name):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
-            # Filtre visuel : on ne montre que les prochains départs
             proches = [d for d in departs if d['tri'] < 3000]
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
@@ -418,26 +412,31 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    # 4. Footer Intelligent (Construction finale)
+    # 4. Footer Intelligent (Final Clean)
     
-    # On ajoute les lignes théoriques qui MANQUENT au tableau
+    # Remplissage standard avec les lignes théoriques manquantes
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
-            # On écrase la couleur si elle existait déjà (pas grave), ça évite les doublons
             if mode_theo not in footer_data: footer_data[mode_theo] = {}
             footer_data[mode_theo][code_theo] = info['color']
 
-    # On vérifie s'il y a quelque chose à afficher
-    total_footer_items = sum(len(items) for items in footer_data.values())
+    # On compte les items mais SANS compter la catégorie AUTRE (pour ne pas afficher le titre si y'a que du "autre")
+    count_visible = 0
+    for m in footer_data:
+        if m != "AUTRE": # <--- On ignore AUTRE dans le compte
+            count_visible += len(footer_data[m])
 
-    if total_footer_items > 0:
+    if count_visible > 0:
         st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         
         for mode in ordre_affichage:
+            # ICI EST LA MODIFICATION CLÉ : ON SKIPPE L'AFFICHAGE SI C'EST "AUTRE"
+            if mode == "AUTRE": 
+                continue
+
             if mode in footer_data and footer_data[mode]:
                 html_badges = ""
-                # Tri alphanumérique
                 items = footer_data[mode]
                 sorted_codes = sorted(items.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
                 
@@ -453,7 +452,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     </div>
                     """, unsafe_allow_html=True)
 
-    if not has_data and total_footer_items == 0:
+    if not has_data and count_visible == 0:
         st.info("Aucune information trouvée pour cet arrêt.")
 
 if st.session_state.selected_stop:
