@@ -316,6 +316,27 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
+    # 2.1 RECUPERATION DES LIGNES MANQUANTES ("GHOST LINES")
+    # Pour les modes nobles, si aucune data live n'est remontée, on force l'affichage
+    MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
+    
+    for (mode_t, code_t), info_t in all_lines_at_stop.items():
+        if mode_t in MODES_NOBLES:
+            # On vérifie si cette ligne existe déjà dans les buckets
+            exists_in_buckets = False
+            if mode_t in buckets:
+                for (b_mode, b_code, b_color) in buckets[mode_t]:
+                    if b_code == code_t:
+                        exists_in_buckets = True
+                        break
+            
+            # Si elle n'existe pas, on l'ajoute artificiellement
+            if not exists_in_buckets:
+                cle_ghost = (mode_t, code_t, info_t['color'])
+                if mode_t not in buckets: buckets[mode_t] = {}
+                # On ajoute un départ fictif "Service terminé" pour qu'elle passe les filtres
+                buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
+    
     # 2.5 FILTRAGE
     for mode in list(buckets.keys()):
         keys_to_remove = []
@@ -479,4 +500,5 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
