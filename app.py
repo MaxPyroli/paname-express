@@ -289,8 +289,8 @@ def afficher_tableau_live(stop_id, stop_name):
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. Récupération temps réel
-    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=100")
+# 2. Récupération temps réel (On augmente à 600 pour voir la ligne K à Gare du Nord !)
+    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set()
@@ -480,3 +480,4 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
