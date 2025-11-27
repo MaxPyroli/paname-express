@@ -452,7 +452,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 """, unsafe_allow_html=True)
 
             # --- AFFICHAGE RER/TRAIN ---
-            elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
+        elif mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 st.markdown(f"""
                 <div class="rail-card">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -526,5 +526,6 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
