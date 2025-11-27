@@ -145,7 +145,6 @@ ICONES_TITRE = {
     "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
 }
 
-# Mise à jour de la hiérarchie pour inclure CABLE au bon endroit
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
 
 def demander_api(suffixe):
@@ -167,7 +166,7 @@ def normaliser_mode(mode_brut):
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
     if "RER" in m: return "RER"
-    # Ajout des TER dans la catégorie TRAIN
+    # AJOUT DES TER ICI
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
@@ -206,7 +205,6 @@ def get_all_changelogs():
     
     files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
     
-    # Tri intelligent des versions (ex: 0.10 après 0.9)
     def version_key(filename):
         try:
             clean = filename.lower().replace('v', '').replace('.md', '')
@@ -228,7 +226,7 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.9.2 - Ultimate Edition")
+st.caption("v0.9.3 - Final Cut")
 
 with st.sidebar:
     st.header("🗄️ Informations")
@@ -289,7 +287,7 @@ def afficher_tableau_live(stop_id, stop_name):
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-# 2. Récupération temps réel (On augmente à 600 pour voir la ligne K à Gare du Nord !)
+    # 2. Récupération temps réel (Count 600 pour attraper la ligne K à Gare du Nord !)
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
@@ -339,7 +337,6 @@ def afficher_tableau_live(stop_id, stop_name):
             del buckets[mode][k]
 
     # 3. Affichage Tableau
-    # Mise à jour de l'ordre d'affichage (CABLE après METRO)
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
@@ -412,7 +409,8 @@ def afficher_tableau_live(stop_id, stop_name):
                      st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
-                    for item in real_proches:
+                    # LIMITATION À 4 TRAINS ICI
+                    for item in real_proches[:4]:
                         st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -480,4 +478,3 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
