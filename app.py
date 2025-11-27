@@ -354,7 +354,7 @@ def afficher_tableau_live(stop_id, stop_name):
             try: return (0, int(k[1])) 
             except: return (1, k[1])
         
-       for cle in sorted(lignes_du_mode.keys(), key=sort_key):
+    for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
