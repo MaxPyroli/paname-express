@@ -7,6 +7,7 @@ import pytz
 import os
 from PIL import Image
 
+
 # ==========================================
 #              CONFIGURATION
 # ==========================================
@@ -124,7 +125,7 @@ GEOGRAPHIE_RER = {
         "label_1": "⇦ OUEST (Versailles / Pontoise)",
         "mots_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "INVALIDES", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"]
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"]
     },
     "D": {
         "label_1": "⇧ NORD (Creil)",
@@ -478,3 +479,4 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
