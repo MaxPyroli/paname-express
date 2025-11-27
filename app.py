@@ -283,7 +283,18 @@ def afficher_tableau_live(stop_id, stop_name):
     all_lines_at_stop = {} 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
-            mode = normaliser_mode(line.get('physical_mode', 'AUTRE'))
+            # --- CORRECTION ROBUSTE DU MODE ---
+            # L'API théorique renvoie une liste 'physical_modes' au lieu d'une string directe
+            raw_mode = "AUTRE"
+            if 'physical_modes' in line and line['physical_modes']:
+                # On récupère l'ID du premier mode (ex: "physical_mode:Metro")
+                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+            elif 'physical_mode' in line:
+                raw_mode = line['physical_mode']
+            
+            mode = normaliser_mode(raw_mode)
+            # ----------------------------------
+
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
@@ -500,5 +511,6 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
