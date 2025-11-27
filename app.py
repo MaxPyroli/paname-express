@@ -145,7 +145,7 @@ ICONES_TITRE = {
     "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
 }
 
-HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "TRAM": 4, "BUS": 5, "AUTRE": 99}
+HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
 
 def demander_api(suffixe):
     headers = {'apiKey': API_KEY.strip()}
@@ -166,7 +166,8 @@ def normaliser_mode(mode_brut):
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
     if "RER" in m: return "RER"
-    if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m: return "TRAIN"
+    # Modification ici : ajout de "TER" pour les regrouper avec les trains
+    if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
     if "BUS" in m: return "BUS"
@@ -339,7 +340,7 @@ def afficher_tableau_live(stop_id, stop_name):
             del buckets[mode][k]
 
     # 3. Affichage Tableau
-    ordre_affichage = ["RER", "TRAIN", "METRO", "TRAM", "CABLE", "BUS", "AUTRE"]
+    ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
     for mode_actuel in ordre_affichage:
@@ -459,3 +460,4 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
