@@ -354,16 +354,82 @@ def afficher_tableau_live(stop_id, stop_name):
             try: return (0, int(k[1])) 
             except: return (1, k[1])
         
-        for cle in sorted(lignes_du_mode.keys(), key=sort_key):
+       for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
+            # Filtre : on garde les prochains départs
             proches = [d for d in departs if d['tri'] < 3000]
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
-            # --- AFFICHAGE STANDARD ---
-            if mode_actuel in ["BUS", "METRO", "TRAM", "CABLE", "AUTRE"]:
+            # -----------------------------------------------------------
+            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE DÉFINIE (A, B, C, D, E)
+            # -> Affichage groupé par branches (Nord, Sud, etc.)
+            # -----------------------------------------------------------
+            if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
+                st.markdown(f"""
+                <div class="rail-card">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                geo = GEOGRAPHIE_RER[code]
+                real_proches = [d for d in departs if d['tri'] < 3000]
+                
+                p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
+                p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
+                p3 = [d for d in real_proches if d not in p1 and d not in p2]
+                
+                def render_rer_group(titre, liste_proches):
+                    st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
+                    if not liste_proches:
+                        st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                    else:
+                        liste_proches.sort(key=lambda x: x['tri'])
+                        for item in liste_proches[:4]:
+                            st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+
+                if not p1 and not p2:
+                     st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                else:
+                    render_rer_group(geo['label_1'], p1)
+                    render_rer_group(geo['label_2'], p2)
+
+                if p3: render_rer_group("AUTRES DIRECTIONS", p3)
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # -----------------------------------------------------------
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
+            # -> Affichage liste simple style RER (ta demande)
+            # -----------------------------------------------------------
+            elif mode_actuel in ["RER", "TRAIN"]:
+                st.markdown(f"""
+                <div class="rail-card">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                real_proches = [d for d in departs if d['tri'] < 3000]
+                
+                if not real_proches:
+                     st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                else:
+                    # On affiche simplement la liste des prochains trains, triés par heure
+                    real_proches.sort(key=lambda x: x['tri'])
+                    for item in real_proches:
+                        st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # -----------------------------------------------------------
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            # -> Affichage compact groupé par destination
+            # -----------------------------------------------------------
+            else:
                 dest_map = {}
                 for d in proches:
                     if d['dest'] not in dest_map: dest_map[d['dest']] = []
@@ -460,4 +526,5 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
