@@ -347,16 +347,24 @@ if submitted and search_query:
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
+        opts = {}
+        # On tente de construire la liste des résultats
         if data and 'places' in data:
-            opts = {}
             for p in data['places']:
                 if 'stop_area' in p:
                     ville = p.get('administrative_regions', [{}])[0].get('name', '')
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
+        
+        # LA CORRECTION EST ICI : On vérifie si on a trouvé quelque chose
+        if len(opts) > 0:
             st.session_state.search_results = opts
+            # Succès : On ferme le clavier et on recharge
+            st.session_state.search_key += 1
+            st.rerun()
         else:
-            st.warning("Aucun résultat trouvé.")
+            # Échec : On affiche le message et on NE RECHARGE PAS
+            st.warning("⚠️ Aucun résultat trouvé. Essayez un autre nom.")
             st.session_state.search_results = {}
     
     # ASTUCE CLAVIER MOBILE : Changement de clé + Rerun
