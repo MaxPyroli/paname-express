@@ -598,7 +598,9 @@ def afficher_tableau_live(stop_id, stop_name):
                 </div>
                 """, unsafe_allow_html=True)
 
-    # 4. Footer Intelligent (Final Clean)
+    # 4. Footer Intelligent (Calcul & Affichage Re-ordonné)
+    
+    # D'abord, on calcule les lignes qui vont dans le footer
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
             if mode_theo not in footer_data: footer_data[mode_theo] = {}
@@ -609,8 +611,28 @@ def afficher_tableau_live(stop_id, stop_name):
         if m != "AUTRE":
             count_visible += len(footer_data[m])
 
+    # ETAPE 1 : ON AFFICHE LE MESSAGE D'ABORD (Si pas de données temps réel)
+    if not has_data:
+        if count_visible > 0:
+            # Cas : Lignes au footer mais rien en haut
+            st.markdown("""
+            <div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px; margin-bottom: 20px;'>
+                <h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3>
+                <p style='margin-top:5px; color: #888;'>Les lignes ci-dessous desservent cet arrêt mais n'ont pas de départ prévu dans les prochaines minutes.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Cas : Vide total
+            st.markdown("""
+            <div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'>
+                <h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3>
+                <p style='margin-top:5px; color: #888;'>Aucune donnée temps réel ou théorique trouvée pour cet arrêt.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ETAPE 2 : ON AFFICHE LE FOOTER ENSUITE
     if count_visible > 0:
-        st.markdown("<div style='margin-top: 30px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         
         for mode in ordre_affichage:
@@ -632,25 +654,6 @@ def afficher_tableau_live(stop_id, stop_name):
                         <div>{html_badges}</div>
                     </div>
                     """, unsafe_allow_html=True)
-
-    # GESTION DES MESSAGES D'ABSENCE DE DONNÉES (Style "Gros Bloc")
-    if not has_data:
-        if count_visible > 0:
-            # Cas : Lignes au footer mais rien en haut
-            st.markdown("""
-            <div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px;'>
-                <h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3>
-                <p style='margin-top:5px; color: #888;'>Les lignes desservant cet arrêt n'ont pas de départ prévu dans les prochaines minutes.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Cas : Vide total
-            st.markdown("""
-            <div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'>
-                <h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3>
-                <p style='margin-top:5px; color: #888;'>Aucune donnée temps réel ou théorique trouvée pour cet arrêt.</p>
-            </div>
-            """, unsafe_allow_html=True)
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
