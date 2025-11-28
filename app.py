@@ -6,11 +6,31 @@ import time
 import pytz
 import os
 from PIL import Image
-import base64
+import base64  # <--- Ne pas oublier cet import pour la police !
 
-# ... tes imports existants ...
+# ==========================================
+#              CONFIGURATION
+# ==========================================
+try:
+    API_KEY = st.secrets["IDFM_API_KEY"]
+except FileNotFoundError:
+    API_KEY = "TA_CLE_ICI_SI_BESOIN_EN_LOCAL"
 
-# FONCTION POUR CHARGER LA POLICE LOCALE
+BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
+
+try:
+    icon_image = Image.open("app_icon.png")
+except FileNotFoundError:
+    icon_image = "🚆"
+
+# 1. LA CONFIGURATION DOIT RESTER ICI (C'est la première commande Streamlit obligatoire)
+st.set_page_config(
+    page_title="Grand Paname Express",
+    page_icon=icon_image,
+    layout="centered"
+)
+
+# 2. FONCTION POUR CHARGER LA POLICE (Juste après la config)
 def charger_police_locale(file_path, font_name):
     try:
         with open(file_path, "rb") as f:
@@ -21,10 +41,7 @@ def charger_police_locale(file_path, font_name):
             @font-face {{
                 font-family: '{font_name}';
                 src: url('data:font/otf;base64,{b64}') format('opentype');
-                /* Si c'est du .ttf, remplacer 'opentype' par 'truetype' et 'otf' par 'ttf' */
             }}
-            
-            /* Appliquer la police à toute l'app */
             html, body, [class*="css"] {{
                 font-family: '{font_name}', sans-serif !important;
             }}
@@ -32,15 +49,11 @@ def charger_police_locale(file_path, font_name):
         """
         st.markdown(css, unsafe_allow_html=True)
     except FileNotFoundError:
-        # Si le fichier n'est pas là, on ne fait rien (police par défaut)
         pass
 
-# ... suite du code ...
-
-# APPEL DE LA FONCTION (A mettre juste après st.set_page_config)
-st.set_page_config(...) # Ta config actuelle
-
-charger_police_locale("GrandParis-Regular.otf", "Grand Paris") # Nom de ton fichier ici
+# 3. APPEL DE LA FONCTION
+# Assure-toi d'avoir uploadé le fichier 'GrandParis-Regular.otf' à la racine !
+charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
 #              CONFIGURATION
