@@ -147,7 +147,7 @@ GEOGRAPHIE_RER = {
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
         
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY"]
     },
     "D": {
@@ -584,6 +584,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
