@@ -6,6 +6,7 @@ import time
 import pytz
 import os
 from PIL import Image
+import base64
 
 # ==========================================
 #              CONFIGURATION
@@ -22,11 +23,63 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
+# 1. CONFIGURATION (Doit être la première commande Streamlit)
 st.set_page_config(
     page_title="Grand Paname Express",
     page_icon=icon_image,
     layout="centered"
 )
+
+# 2. FONCTION POLICE (Avec ciblage renforcé)
+# 2. FONCTION POLICE (Ciblage chirurgical pour sauver les icônes)
+def charger_police_locale(file_path, font_name):
+    if not os.path.exists(file_path):
+        st.error(f"⚠️ Fichier introuvable : {file_path}")
+        return
+    
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        
+        ext = file_path.split('.')[-1].lower()
+        format_str = "opentype" if ext == "otf" else "truetype"
+        
+        css = f"""
+            <style>
+            @font-face {{
+                font-family: '{font_name}';
+                src: url('data:font/{ext};base64,{b64}') format('{format_str}');
+            }}
+            
+            /* 1. On applique la police au corps général */
+            html, body {{
+                font-family: '{font_name}', sans-serif;
+            }}
+            
+            /* 2. On force sur les éléments de texte SPÉCIFIQUES (titres, paragraphes, boutons) */
+            /* En évitant 'span' et 'div' génériques, on sauve les icônes ! */
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 3. Ciblage spécifique pour les widgets Streamlit */
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 4. Cas particulier : Les titres dans les expanders (comme Historique) */
+            .streamlit-expanderHeader {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Erreur police : {e}")
+
+# 3. CHARGEMENT
+charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
 #              STYLE CSS
