@@ -446,8 +446,9 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE (A, B, C, D, E)
             # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
+                # AJOUT DU STYLE DE BORDURE ICI
                 st.markdown(f"""
-                <div class="rail-card">
+                <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
@@ -469,7 +470,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 def render_rer_group(titre, liste_proches):
                     st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
                     if not liste_proches:
-                        # NOUVEAU STYLE ICI
                         st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
@@ -477,7 +477,6 @@ def afficher_tableau_live(stop_id, stop_name):
                             st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
 
                 if not p1 and not p2:
-                     # NOUVEAU STYLE ICI AUSSI
                      st.markdown("""<div class="service-box">😴 Service terminé pour les directions principales</div>""", unsafe_allow_html=True)
                 else:
                     if not is_term_1: render_rer_group(geo['label_1'], p1)
@@ -491,8 +490,9 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (H, K, TER...)
             # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
+                # AJOUT DU STYLE DE BORDURE ICI AUSSI
                 st.markdown(f"""
-                <div class="rail-card">
+                <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
@@ -501,7 +501,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 real_proches = [d for d in departs if d['tri'] < 3000]
                 
                 if not real_proches:
-                     # NOUVEAU STYLE ICI
                      st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
@@ -514,23 +513,17 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
             # ===========================================================
             else:
-                # Structure : destination -> {'html': [liste des horaires], 'best_time': temps_en_minutes}
                 dest_data = {}
-                
                 for d in proches:
                     dn = d['dest']
                     if dn not in dest_data: 
                         dest_data[dn] = {'html': [], 'best_time': 9999}
                     
-                    # On garde max 3 horaires pour l'affichage
                     if len(dest_data[dn]['html']) < 3:
                         dest_data[dn]['html'].append(d['html'])
-                        
-                        # On capture le temps réel (tri) du premier départ pour classer la destination
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                # LE TRI MAGIQUE : On trie les destinations selon le 'best_time' croissant (le plus proche en premier)
                 sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
                 rows_html = ""
@@ -591,6 +584,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
