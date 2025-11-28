@@ -6,6 +6,41 @@ import time
 import pytz
 import os
 from PIL import Image
+import base64
+
+# ... tes imports existants ...
+
+# FONCTION POUR CHARGER LA POLICE LOCALE
+def charger_police_locale(file_path, font_name):
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        css = f"""
+            <style>
+            @font-face {{
+                font-family: '{font_name}';
+                src: url('data:font/otf;base64,{b64}') format('opentype');
+                /* Si c'est du .ttf, remplacer 'opentype' par 'truetype' et 'otf' par 'ttf' */
+            }}
+            
+            /* Appliquer la police à toute l'app */
+            html, body, [class*="css"] {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except FileNotFoundError:
+        # Si le fichier n'est pas là, on ne fait rien (police par défaut)
+        pass
+
+# ... suite du code ...
+
+# APPEL DE LA FONCTION (A mettre juste après st.set_page_config)
+st.set_page_config(...) # Ta config actuelle
+
+charger_police_locale("GrandParis-Regular.otf", "Grand Paris") # Nom de ton fichier ici
 
 # ==========================================
 #              CONFIGURATION
