@@ -112,32 +112,47 @@ GEOGRAPHIE_RER = {
     "A": {
         "label_1": "⇦ OUEST (Cergy / Poissy / St-Germain)",
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "VESINET", "VÉSINET", "NANTERRE", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
+        "term_1": ["CERGY", "POISSY", "GERMAIN"],
+        
         "label_2": "⇨ EST (Boissy / Marne-la-Vallée / Torcy)",
-        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"]
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"],
+        "term_2": ["CHESSY", "BOISSY"]
     },
     "B": {
         "label_1": "⇧ NORD (Roissy / Mitry)",
         "mots_1": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE"],
+        "term_1": ["GAULLE", "MITRY"],
+        
         "label_2": "⇩ SUD (St-Rémy / Robinson)",
-        "mots_2": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"]
+        "mots_2": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"],
+        "term_2": ["REMY", "RÉMY", "ROBINSON"]
     },
     "C": {
         "label_1": "⇦ OUEST (Versailles / Pontoise)",
         "mots_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "INVALIDES", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
+        "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
+        
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"]
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
+        "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY"]
     },
     "D": {
         "label_1": "⇧ NORD (Creil)",
         "mots_1": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
+        "term_1": ["CREIL", "ORRY"],
+        
         "label_2": "⇩ SUD (Melun / Corbeil)",
-        "mots_2": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"]
+        "mots_2": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
+        "term_2": ["MELUN", "CORBEIL", "MALESHERBES"]
     },
     "E": {
         "label_1": "⇦ OUEST (Nanterre)",
         "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
+        "term_1": ["NANTERRE", "HAUSSMANN"],
+        
         "label_2": "⇨ EST (Chelles / Tournan)",
-        "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"]
+        "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"],
+        "term_2": ["CHELLES", "TOURNAN"]
     }
 }
 
@@ -402,6 +417,12 @@ def afficher_tableau_live(stop_id, stop_name):
                 """, unsafe_allow_html=True)
                 
                 geo = GEOGRAPHIE_RER[code]
+                
+                # --- LOGIQUE TERMINUS ---
+                stop_upper = clean_name.upper()
+                is_term_1 = any(t in stop_upper for t in geo.get('term_1', []))
+                is_term_2 = any(t in stop_upper for t in geo.get('term_2', []))
+                
                 real_proches = [d for d in departs if d['tri'] < 3000]
                 
                 p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
@@ -417,15 +438,61 @@ def afficher_tableau_live(stop_id, stop_name):
                         for item in liste_proches[:4]:
                             st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
 
+                # Si aucune direction n'est pertinente (ex: terminus des deux côtés, ou fin de service global)
                 if not p1 and not p2:
                      st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 else:
-                    render_rer_group(geo['label_1'], p1)
-                    render_rer_group(geo['label_2'], p2)
+                    # On affiche le groupe SEULEMENT si on n'est PAS à son terminus
+                    if not is_term_1: render_rer_group(geo['label_1'], p1)
+                    if not is_term_2: render_rer_group(geo['label_2'], p2)
 
                 if p3: render_rer_group("AUTRES DIRECTIONS", p3)
 
                 st.markdown("</div>", unsafe_allow_html=True)
+
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
+            elif mode_actuel in ["RER", "TRAIN"]:
+                st.markdown(f"""
+                <div class="rail-card">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                real_proches = [d for d in departs if d['tri'] < 3000]
+                
+                if not real_proches:
+                     st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                else:
+                    real_proches.sort(key=lambda x: x['tri'])
+                    # Limite à 4 trains pour ne pas inonder l'écran (TER/Ligne K...)
+                    for item in real_proches[:4]:
+                        st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            else:
+                dest_map = {}
+                for d in proches:
+                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
+                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
+                
+                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
+                
+                rows_html = ""
+                for dest_name, times in sorted_dests:
+                    times_str = "<span class='time-sep'>|</span>".join(times)
+                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                
+                st.markdown(f"""
+                <div class="bus-card" style="border-left-color: #{color};">
+                    <div style="display:flex; align-items:center;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                    {rows_html}
+                </div>
+                """, unsafe_allow_html=True)
 
             # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
             elif mode_actuel in ["RER", "TRAIN"]:
@@ -511,6 +578,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
