@@ -446,13 +446,13 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE (A, B, C, D, E)
             # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                # AJOUT DU STYLE DE BORDURE ICI
-                st.markdown(f"""
+                # 1. On ouvre la string HTML de la carte
+                card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
-                """, unsafe_allow_html=True)
+                """
                 
                 geo = GEOGRAPHIE_RER[code]
                 
@@ -467,47 +467,54 @@ def afficher_tableau_live(stop_id, stop_name):
                 p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
                 p3 = [d for d in real_proches if d not in p1 and d not in p2]
                 
-                def render_rer_group(titre, liste_proches):
-                    st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
+                # Fonction interne qui retourne du TEXTE HTML (au lieu d'afficher direct)
+                def build_rer_group(titre, liste_proches):
+                    html_output = f"<div class='rer-direction'>{titre}</div>"
                     if not liste_proches:
-                        st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
+                        html_output += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
+                    return html_output
 
+                # Construction du contenu
                 if not p1 and not p2:
-                     st.markdown("""<div class="service-box">😴 Service terminé pour les directions principales</div>""", unsafe_allow_html=True)
+                     card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
-                    if not is_term_1: render_rer_group(geo['label_1'], p1)
-                    if not is_term_2: render_rer_group(geo['label_2'], p2)
+                    if not is_term_1: card_html += build_rer_group(geo['label_1'], p1)
+                    if not is_term_2: card_html += build_rer_group(geo['label_2'], p2)
 
-                if p3: render_rer_group("AUTRES DIRECTIONS", p3)
+                if p3: card_html += build_rer_group("AUTRES DIRECTIONS", p3)
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                # Fermeture de la carte et affichage UNIQUE
+                card_html += "</div>"
+                st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
             # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (H, K, TER...)
             # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
-                # AJOUT DU STYLE DE BORDURE ICI AUSSI
-                st.markdown(f"""
+                # 1. Ouverture de la carte
+                card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
-                """, unsafe_allow_html=True)
+                """
                 
                 real_proches = [d for d in departs if d['tri'] < 3000]
                 
                 if not real_proches:
-                     st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
+                     card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
-                        st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
                 
-                st.markdown("</div>", unsafe_allow_html=True)
+                # Fermeture et affichage
+                card_html += "</div>"
+                st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
             # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
@@ -536,6 +543,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         times_str = "<span class='time-sep'>|</span>".join(times)
                         rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
+                # Ici on construisait déjà tout en un bloc, donc c'était bon, mais je le remets pour être complet
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center;">
@@ -584,6 +592,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
