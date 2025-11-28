@@ -6,7 +6,7 @@ import time
 import pytz
 import os
 from PIL import Image
-import base64  # Indispensable pour la police
+import base64
 
 # ==========================================
 #              CONFIGURATION
@@ -23,66 +23,47 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. CONFIGURATION STREAMLIT
+# 1. CONFIGURATION (Doit être la première commande Streamlit)
 st.set_page_config(
     page_title="Grand Paname Express",
     page_icon=icon_image,
     layout="centered"
 )
 
-# 2. FONCTION POUR CHARGER LA POLICE
+# 2. FONCTION POLICE (Avec ciblage renforcé)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
-        st.error(f"⚠️ Fichier police introuvable : {file_path}")
+        st.error(f"⚠️ Fichier introuvable : {file_path}")
         return
-
+    
     try:
         with open(file_path, "rb") as f:
             data = f.read()
         b64 = base64.b64encode(data).decode()
         
-        # Détection simple de l'extension
+        # Détection automatique format
         ext = file_path.split('.')[-1].lower()
-        font_format = "opentype" if ext == "otf" else "truetype"
+        format_str = "opentype" if ext == "otf" else "truetype"
         
         css = f"""
             <style>
             @font-face {{
                 font-family: '{font_name}';
-                src: url('data:font/{ext};base64,{b64}') format('{font_format}');
+                src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
-            html, body, [class*="css"] {{
+            
+            /* CIBLAGE AGRESSIF POUR FORCER LA POLICE PARTOUT */
+            html, body, [class*="css"], font, div, span, p, h1, h2, h3 {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             </style>
         """
         st.markdown(css, unsafe_allow_html=True)
     except Exception as e:
-        st.error(f"Erreur chargement police : {e}")
+        st.error(f"Erreur police : {e}")
 
-# 3. APPEL AVEC LE BON NOM DE FICHIER
+# 3. CHARGEMENT
 charger_police_locale("GrandParis.otf", "Grand Paris")
-
-# ==========================================
-#              CONFIGURATION
-# ==========================================
-try:
-    API_KEY = st.secrets["IDFM_API_KEY"]
-except FileNotFoundError:
-    API_KEY = "TA_CLE_ICI_SI_BESOIN_EN_LOCAL"
-
-BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
-
-try:
-    icon_image = Image.open("app_icon.png")
-except FileNotFoundError:
-    icon_image = "🚆"
-
-st.set_page_config(
-    page_title="Grand Paname Express",
-    page_icon=icon_image,
-    layout="centered"
-)
 
 # ==========================================
 #              STYLE CSS
