@@ -57,8 +57,8 @@ st.markdown("""
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        /* CORRECTION ICI : Bordure grise visible tout le temps */
-        border-bottom: 2px solid #666; 
+        /* Utilisation d'un gris moyen semi-transparent pour être visible en mode clair ET sombre */
+        border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
         font-size: 20px; font-weight: bold; 
         color: var(--text-color);
         letter-spacing: 1px;
@@ -72,11 +72,14 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
+    /* Titre interne (ex: OUEST NANTERRE) */
     .rer-direction {
-        margin-top: 15px; margin-bottom: 8px; 
+        margin-top: 12px; 
         font-size: 13px; font-weight: bold; color: #3498db; 
         text-transform: uppercase; letter-spacing: 0.5px;
-        border-bottom: 1px solid #333; padding-bottom: 2px;
+        border-bottom: 1px solid #444; 
+        padding-bottom: 4px;
+        margin-bottom: 0px; /* Collé au prochain élément */
     }
     
     .bus-card, .rail-card {
@@ -88,27 +91,25 @@ st.markdown("""
         color: #ddd; 
     }
 
-    /* CORRECTION ICI : border-top gère la séparation, plus besoin de div supplémentaire */
     .bus-row, .rail-row {
-        display: flex; justify-content: space-between; margin-top: 6px;
-        padding-top: 4px; border-top: 1px solid #333;
+        display: flex; justify-content: space-between; 
+        padding-top: 8px; padding-bottom: 2px;
+        border-top: 1px solid #333; /* Ligne de séparation par défaut */
+    }
+    
+    /* ASTUCE CSS : Si une ligne de train suit direct un titre, pas de ligne en haut ! */
+    .rer-direction + .rail-row {
+        border-top: none;
+        padding-top: 8px;
     }
     
     .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
     
     .service-box { 
-        text-align: left; 
-        padding: 10px 12px; 
-        color: #888; 
-        font-style: italic; 
-        font-size: 0.95em;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        margin-top: 5px;
-        margin-bottom: 5px;
-        border-left: 3px solid #444;
+        text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
+        background: rgba(255, 255, 255, 0.05); border-radius: 6px;
+        margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444;
     }
-    
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
 
@@ -445,7 +446,7 @@ def afficher_tableau_live(stop_id, stop_name):
             try: return (0, int(k[1])) 
             except: return (1, k[1])
         
-                for cle in sorted(lignes_du_mode.keys(), key=sort_key):
+                        for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
@@ -459,7 +460,7 @@ def afficher_tableau_live(stop_id, stop_name):
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; margin-bottom:5px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
@@ -482,7 +483,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            # CORRECTION ICI : Suppression de rail-sep
+                            # Note: Plus de 'rail-sep' ici, le CSS gère tout !
                             html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
 
@@ -515,7 +516,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
-                        # CORRECTION ICI : Suppression de rail-sep
                         card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 
                 card_html += "</div>"
