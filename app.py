@@ -344,9 +344,8 @@ if submitted and search_query:
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
-        opts = {} # On initialise vide par sécurité
-        
-        # On remplit seulement si on a des données valides
+        opts = {}
+        # 1. On récupère les résultats s'il y en a
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
@@ -354,16 +353,15 @@ if submitted and search_query:
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
         
-        # LA CORRECTION EST ICI 👇
+        # 2. VERIFICATION : A-t-on trouvé quelque chose ?
         if len(opts) > 0:
-            # CAS 1 : SUCCÈS
+            # OUI -> On sauvegarde et ON RECHARGE (pour fermer le clavier)
             st.session_state.search_results = opts
-            # On change la clé et on recharge pour fermer le clavier
             st.session_state.search_key += 1
             st.rerun()
         else:
-            # CAS 2 : ÉCHEC (Pas de résultats)
-            # On affiche le message et surtout ON NE RECHARGE PAS !
+            # NON -> On affiche l'erreur et ON NE RECHARGE PAS !
+            # Le script s'arrête là, donc le message reste visible.
             st.warning("⚠️ Aucun résultat trouvé. Essayez un autre nom.")
             st.session_state.search_results = {}
     
