@@ -507,16 +507,29 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
             # ===========================================================
             else:
-                dest_map = {}
-                for d in proches:
-                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
+                # Structure : destination -> {'html': [liste des horaires], 'best_time': temps_en_minutes}
+                dest_data = {}
                 
-                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
+                for d in proches:
+                    dn = d['dest']
+                    if dn not in dest_data: 
+                        dest_data[dn] = {'html': [], 'best_time': 9999}
+                    
+                    # On garde max 3 horaires pour l'affichage
+                    if len(dest_data[dn]['html']) < 3:
+                        dest_data[dn]['html'].append(d['html'])
+                        
+                        # On capture le temps réel (tri) du premier départ pour classer la destination
+                        if d['tri'] < dest_data[dn]['best_time']:
+                            dest_data[dn]['best_time'] = d['tri']
+                
+                # LE TRI MAGIQUE : On trie les destinations selon le 'best_time' croissant (le plus proche en premier)
+                sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
                 rows_html = ""
-                for dest_name, times in sorted_dests:
-                    # DÉTECTION GÉNÉRALE : Si c'est "Service terminé", on applique le style
+                for dest_name, info in sorted_dests:
+                    times = info['html']
+                    
                     if "Service terminé" in dest_name:
                         rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
@@ -571,6 +584,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
