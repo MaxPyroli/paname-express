@@ -267,17 +267,22 @@ with st.sidebar:
             st.markdown(note)
             if i < len(notes_history) - 1: st.divider()
 
-# --- RECHERCHE ---
+# --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
+if 'search_results' not in st.session_state:
+    st.session_state.search_results = {}
 
-search_query = st.text_input("🔍 Rechercher une gare (tapez puis sélectionnez) :", placeholder="Ex: Noisiel, Châtelet, Funiculaire...")
+# NOUVEAU SYSTÈME : FORMULAIRE POUR GÉRER LE CLAVIER MOBILE
+with st.form("search_form"):
+    search_query = st.text_input("🔍 Rechercher une gare :", placeholder="Ex: Noisiel, Châtelet...")
+    # Le bouton submit permet de valider avec "Entrée" sur mobile et fermer le clavier
+    submitted = st.form_submit_button("Rechercher")
 
-if search_query:
-    if not st.session_state.selected_name or search_query.lower() not in st.session_state.selected_name.lower():
-        with st.spinner("Recherche des arrêts..."):
-            data = demander_api(f"places?q={search_query}")
+if submitted and search_query:
+    with st.spinner("Recherche des arrêts..."):
+        data = demander_api(f"places?q={search_query}")
         
         if data and 'places' in data:
             opts = {}
@@ -286,14 +291,23 @@ if search_query:
                     ville = p.get('administrative_regions', [{}])[0].get('name', '')
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
-            
-            choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
-            
-            if choice and st.session_state.selected_name != choice:
-                st.session_state.selected_stop = opts[choice]
-                st.session_state.selected_name = choice
-                st.rerun()
+            st.session_state.search_results = opts
+        else:
+            st.warning("Aucun résultat trouvé.")
+            st.session_state.search_results = {}
 
+# Affichage du menu déroulant s'il y a des résultats en mémoire
+if st.session_state.search_results:
+    opts = st.session_state.search_results
+    choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
+    
+    if choice:
+        stop_id = opts[choice]
+        # Mise à jour si changement
+        if st.session_state.selected_stop != stop_id:
+            st.session_state.selected_stop = stop_id
+            st.session_state.selected_name = choice
+            st.rerun()
 # ========================================================
 #                  AFFICHAGE LIVE
 # ========================================================
@@ -557,6 +571,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
