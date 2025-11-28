@@ -276,7 +276,7 @@ if 'search_results' not in st.session_state:
 
 # NOUVEAU SYSTÈME : FORMULAIRE POUR GÉRER LE CLAVIER MOBILE
 with st.form("search_form"):
-    search_query = st.text_input("🔍 Rechercher une gare :", placeholder="Ex: Noisiel, Châtelet...")
+    search_query = st.text_input("🔍 Rechercher une station :", placeholder="Ex: Noisiel, Saint-Lazare, Rouget de Lisle...")
     # Le bouton submit permet de valider avec "Entrée" sur mobile et fermer le clavier
     submitted = st.form_submit_button("Rechercher")
 
@@ -571,6 +571,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
