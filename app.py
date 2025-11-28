@@ -397,27 +397,30 @@ def afficher_tableau_live(stop_id, stop_name):
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
-    # 1. Récupération des lignes théoriques
-    data_lines = demander_lignes_arret(stop_id)
-    all_lines_at_stop = {} 
-    if data_lines and 'lines' in data_lines:
-        for line in data_lines['lines']:
-            # Correction robuste du mode
-            raw_mode = "AUTRE"
-            if 'physical_modes' in line and line['physical_modes']:
-                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
-            elif 'physical_mode' in line:
-                raw_mode = line['physical_mode']
-            
-            mode = normaliser_mode(raw_mode)
-            code = clean_code_line(line.get('code', '?')) 
-            color = line.get('color', '666666')
-            all_lines_at_stop[(mode, code)] = {'color': color}
+    # AJOUT SPINNER : On englobe le chargement des données pour patienter
+    with st.spinner("Chargement des prochains passages..."):
+        
+        # 1. Récupération des lignes théoriques
+        data_lines = demander_lignes_arret(stop_id)
+        all_lines_at_stop = {} 
+        if data_lines and 'lines' in data_lines:
+            for line in data_lines['lines']:
+                raw_mode = "AUTRE"
+                if 'physical_modes' in line and line['physical_modes']:
+                    raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+                elif 'physical_mode' in line:
+                    raw_mode = line['physical_mode']
+                
+                mode = normaliser_mode(raw_mode)
+                code = clean_code_line(line.get('code', '?')) 
+                color = line.get('color', '666666')
+                all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. Récupération temps réel (Count 600)
-    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
+        # 2. Récupération temps réel
+        data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
+    # ... La suite du code reste inchangée ...
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
