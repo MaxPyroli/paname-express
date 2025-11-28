@@ -54,19 +54,24 @@ st.markdown("""
         display: flex; align-items: center; margin-bottom: 8px;
     }
     .footer-icon {
-        margin-right: 10px; font-size: 14px; color: #ccc;
+        /* On utilise var(--text-color) pour que l'icône soit visible en mode clair comme sombre */
+        margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7;
     }
     .footer-badge {
         font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important;
     }
     /* -------------------------- */
 
-    .time-sep { color: #555; margin: 0 8px; font-weight: lighter; }
+    .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        border-bottom: 2px solid #444; font-size: 20px; font-weight: bold; color: #eee;
+        /* Utilisation des variables Streamlit pour s'adapter au thème */
+        border-bottom: 2px solid var(--text-color); 
+        font-size: 20px; font-weight: bold; 
+        color: var(--text-color);
         letter-spacing: 1px;
+        opacity: 0.9;
     }
     
     .station-title {
@@ -84,31 +89,25 @@ st.markdown("""
         border-bottom: 1px solid #333; padding-bottom: 2px;
     }
     
-    .bus-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 10px;
-        border-radius: 8px; border-left: 5px solid #666;
+    /* On garde les cartes sombres (style panneau) même en mode clair, pour le contraste */
+    .bus-card, .rail-card {
+        background-color: #1a1a1a; 
+        padding: 12px; 
+        margin-bottom: 15px;
+        border-radius: 8px; 
+        border-left: 5px solid #666;
+        color: #ddd; /* Force le texte en blanc DANS la carte */
     }
-    .bus-row {
+
+    .bus-row, .rail-row {
         display: flex; justify-content: space-between; margin-top: 6px;
         padding-top: 4px; border-top: 1px solid #333;
     }
-    .bus-dest { color: #ccc; font-size: 15px; }
     
-    /* STYLE MODIFIÉ : Harmonisation avec les cartes Bus */
-    .rail-card { 
-        background-color: #1a1a1a; /* Fond unifié */
-        padding: 12px; 
-        margin-bottom: 15px; 
-        border-radius: 8px; 
-        border-left: 5px solid #666; /* Sera écrasé par la couleur de ligne */
-    }
-    .rail-dest { font-weight: 500; font-size: 15px; color: #e0e0e0; }
-    .rail-row { display: flex; justify-content: space-between; padding: 4px 0; }
-    .rail-sep { border-top: 1px solid #333; margin: 4px 0; } /* Séparateur plus subtil */
+    .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
+    
+    .rail-sep { border-top: 1px solid #333; margin: 4px 0; }
 
-    /* Style pour "Service terminé" */
-    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
-    
     /* STYLE UNIFIÉ : Boîte "Service terminé" alignée à gauche */
     .service-box { 
         text-align: left; 
@@ -120,8 +119,10 @@ st.markdown("""
         border-radius: 6px;
         margin-top: 5px;
         margin-bottom: 5px;
-        border-left: 3px solid #444; /* Petit détail chic optionnel */
+        border-left: 3px solid #444;
     }
+    
+    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
 """, unsafe_allow_html=True)
 
