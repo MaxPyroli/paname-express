@@ -101,6 +101,20 @@ st.markdown("""
 
     /* Style pour "Service terminé" */
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
+    
+    /* STYLE UNIFIÉ : Boîte "Service terminé" alignée à gauche */
+    .service-box { 
+        text-align: left; 
+        padding: 10px 12px; 
+        color: #888; 
+        font-style: italic; 
+        font-size: 0.95em;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        border-left: 3px solid #444; /* Petit détail chic optionnel */
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -407,7 +421,9 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
-            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE DÉFINIE (A, B, C, D, E)
+            # ===========================================================
+            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE (A, B, C, D, E)
+            # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 st.markdown(f"""
                 <div class="rail-card">
@@ -418,7 +434,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 geo = GEOGRAPHIE_RER[code]
                 
-                # --- LOGIQUE TERMINUS ---
+                # Logique Terminus
                 stop_upper = clean_name.upper()
                 is_term_1 = any(t in stop_upper for t in geo.get('term_1', []))
                 is_term_2 = any(t in stop_upper for t in geo.get('term_2', []))
@@ -432,17 +448,17 @@ def afficher_tableau_live(stop_id, stop_name):
                 def render_rer_group(titre, liste_proches):
                     st.markdown(f"<div class='rer-direction'>{titre}</div>", unsafe_allow_html=True)
                     if not liste_proches:
-                        st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                        # NOUVEAU STYLE ICI
+                        st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
                             st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
 
-                # Si aucune direction n'est pertinente (ex: terminus des deux côtés, ou fin de service global)
                 if not p1 and not p2:
-                     st.markdown("""<div class='rail-row' style='text-align:center; margin: 15px 0;'><span class='service-end'>Service terminé pour les directions principales</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                     # NOUVEAU STYLE ICI AUSSI
+                     st.markdown("""<div class="service-box">😴 Service terminé pour les directions principales</div>""", unsafe_allow_html=True)
                 else:
-                    # On affiche le groupe SEULEMENT si on n'est PAS à son terminus
                     if not is_term_1: render_rer_group(geo['label_1'], p1)
                     if not is_term_2: render_rer_group(geo['label_2'], p2)
 
@@ -450,7 +466,9 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
+            # ===========================================================
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (H, K, TER...)
+            # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
                 st.markdown(f"""
                 <div class="rail-card">
@@ -462,16 +480,18 @@ def afficher_tableau_live(stop_id, stop_name):
                 real_proches = [d for d in departs if d['tri'] < 3000]
                 
                 if not real_proches:
-                     st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
+                     # NOUVEAU STYLE ICI
+                     st.markdown(f"""<div class="service-box">😴 Service terminé</div>""", unsafe_allow_html=True)
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
-                    # Limite à 4 trains pour ne pas inonder l'écran (TER/Ligne K...)
                     for item in real_proches[:4]:
                         st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
+            # ===========================================================
             else:
                 dest_map = {}
                 for d in proches:
@@ -482,8 +502,12 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 rows_html = ""
                 for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
-                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                    # DÉTECTION GÉNÉRALE : Si c'est "Service terminé", on applique le style
+                    if "Service terminé" in dest_name:
+                        rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                    else:
+                        times_str = "<span class='time-sep'>|</span>".join(times)
+                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
@@ -493,7 +517,6 @@ def afficher_tableau_live(stop_id, stop_name):
                     {rows_html}
                 </div>
                 """, unsafe_allow_html=True)
-
     # 4. Footer Intelligent (Final Clean)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -534,6 +557,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
