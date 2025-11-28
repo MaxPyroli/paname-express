@@ -49,29 +49,19 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    /* --- CSS POUR LE FOOTER --- */
-    .footer-container {
-        display: flex; align-items: center; margin-bottom: 8px;
-    }
-    .footer-icon {
-        /* On utilise var(--text-color) pour que l'icône soit visible en mode clair comme sombre */
-        margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7;
-    }
-    .footer-badge {
-        font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important;
-    }
-    /* -------------------------- */
+    .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
+    .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
+    .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
 
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        /* Utilisation des variables Streamlit pour s'adapter au thème */
-        border-bottom: 2px solid var(--text-color); 
+        /* CORRECTION ICI : Bordure grise visible tout le temps */
+        border-bottom: 2px solid #666; 
         font-size: 20px; font-weight: bold; 
         color: var(--text-color);
         letter-spacing: 1px;
-        opacity: 0.9;
     }
     
     .station-title {
@@ -89,16 +79,16 @@ st.markdown("""
         border-bottom: 1px solid #333; padding-bottom: 2px;
     }
     
-    /* On garde les cartes sombres (style panneau) même en mode clair, pour le contraste */
     .bus-card, .rail-card {
         background-color: #1a1a1a; 
         padding: 12px; 
         margin-bottom: 15px;
         border-radius: 8px; 
         border-left: 5px solid #666;
-        color: #ddd; /* Force le texte en blanc DANS la carte */
+        color: #ddd; 
     }
 
+    /* CORRECTION ICI : border-top gère la séparation, plus besoin de div supplémentaire */
     .bus-row, .rail-row {
         display: flex; justify-content: space-between; margin-top: 6px;
         padding-top: 4px; border-top: 1px solid #333;
@@ -106,9 +96,6 @@ st.markdown("""
     
     .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
     
-    .rail-sep { border-top: 1px solid #333; margin: 4px 0; }
-
-    /* STYLE UNIFIÉ : Boîte "Service terminé" alignée à gauche */
     .service-box { 
         text-align: left; 
         padding: 10px 12px; 
@@ -124,6 +111,7 @@ st.markdown("""
     
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
+
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -457,7 +445,7 @@ def afficher_tableau_live(stop_id, stop_name):
             try: return (0, int(k[1])) 
             except: return (1, k[1])
         
-        for cle in sorted(lignes_du_mode.keys(), key=sort_key):
+                for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
@@ -466,10 +454,9 @@ def afficher_tableau_live(stop_id, stop_name):
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
             # ===========================================================
-            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE (A, B, C, D, E)
+            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE
             # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                # 1. On ouvre la string HTML de la carte
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -478,8 +465,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 """
                 
                 geo = GEOGRAPHIE_RER[code]
-                
-                # Logique Terminus
                 stop_upper = clean_name.upper()
                 is_term_1 = any(t in stop_upper for t in geo.get('term_1', []))
                 is_term_2 = any(t in stop_upper for t in geo.get('term_2', []))
@@ -490,7 +475,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
                 p3 = [d for d in real_proches if d not in p1 and d not in p2]
                 
-                # Fonction interne qui retourne du TEXTE HTML (au lieu d'afficher direct)
                 def build_rer_group(titre, liste_proches):
                     html_output = f"<div class='rer-direction'>{titre}</div>"
                     if not liste_proches:
@@ -498,10 +482,10 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
+                            # CORRECTION ICI : Suppression de rail-sep
+                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
 
-                # Construction du contenu
                 if not p1 and not p2:
                      card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
@@ -510,15 +494,13 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 if p3: card_html += build_rer_group("AUTRES DIRECTIONS", p3)
 
-                # Fermeture de la carte et affichage UNIQUE
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (H, K, TER...)
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE
             # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
-                # 1. Ouverture de la carte
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -533,14 +515,14 @@ def afficher_tableau_live(stop_id, stop_name):
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
-                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
+                        # CORRECTION ICI : Suppression de rail-sep
+                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 
-                # Fermeture et affichage
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
+            # CAS 3 : TOUS LES AUTRES MODES
             # ===========================================================
             else:
                 dest_data = {}
@@ -559,14 +541,12 @@ def afficher_tableau_live(stop_id, stop_name):
                 rows_html = ""
                 for dest_name, info in sorted_dests:
                     times = info['html']
-                    
                     if "Service terminé" in dest_name:
                         rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
                         times_str = "<span class='time-sep'>|</span>".join(times)
                         rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
-                # Ici on construisait déjà tout en un bloc, donc c'était bon, mais je le remets pour être complet
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center;">
@@ -575,6 +555,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     {rows_html}
                 </div>
                 """, unsafe_allow_html=True)
+
     # 4. Footer Intelligent (Final Clean)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
