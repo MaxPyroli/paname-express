@@ -94,10 +94,17 @@ st.markdown("""
     }
     .bus-dest { color: #ccc; font-size: 15px; }
     
-    .rail-card { margin-bottom: 20px; background-color: #0E1117; }
+    /* STYLE MODIFIÉ : Harmonisation avec les cartes Bus */
+    .rail-card { 
+        background-color: #1a1a1a; /* Fond unifié */
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        border-left: 5px solid #666; /* Sera écrasé par la couleur de ligne */
+    }
     .rail-dest { font-weight: 500; font-size: 15px; color: #e0e0e0; }
     .rail-row { display: flex; justify-content: space-between; padding: 4px 0; }
-    .rail-sep { border-top: 1px solid #222; margin: 4px 0; }
+    .rail-sep { border-top: 1px solid #333; margin: 4px 0; } /* Séparateur plus subtil */
 
     /* Style pour "Service terminé" */
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
@@ -584,6 +591,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
