@@ -633,8 +633,24 @@ def afficher_tableau_live(stop_id, stop_name):
                     </div>
                     """, unsafe_allow_html=True)
 
-    if not has_data and count_visible == 0:
-        st.info("Aucune information trouvée pour cet arrêt.")
+    # GESTION DES MESSAGES D'ABSENCE DE DONNÉES (Style "Gros Bloc")
+    if not has_data:
+        if count_visible > 0:
+            # Cas : Lignes au footer mais rien en haut
+            st.markdown("""
+            <div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px;'>
+                <h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3>
+                <p style='margin-top:5px; color: #888;'>Les lignes desservant cet arrêt n'ont pas de départ prévu dans les prochaines minutes.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Cas : Vide total
+            st.markdown("""
+            <div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'>
+                <h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3>
+                <p style='margin-top:5px; color: #888;'>Aucune donnée temps réel ou théorique trouvée pour cet arrêt.</p>
+            </div>
+            """, unsafe_allow_html=True)
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
