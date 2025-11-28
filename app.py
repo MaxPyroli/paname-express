@@ -304,10 +304,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10.2 - Milk")
+st.caption("v0.10.3 - Milk")
 
 with st.sidebar:
-    st.header("v0.10.2 - Milk") 
+    st.header("v0.10.3 - Milk") 
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -598,9 +598,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 </div>
                 """, unsafe_allow_html=True)
 
-    # 4. Footer Intelligent (Calcul & Affichage Re-ordonné)
-    
-    # D'abord, on calcule les lignes qui vont dans le footer
+    # 4. Footer Intelligent (Calcul et Affichage)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
             if mode_theo not in footer_data: footer_data[mode_theo] = {}
@@ -608,13 +606,11 @@ def afficher_tableau_live(stop_id, stop_name):
 
     count_visible = 0
     for m in footer_data:
-        if m != "AUTRE":
-            count_visible += len(footer_data[m])
+        if m != "AUTRE": count_visible += len(footer_data[m])
 
-    # ETAPE 1 : ON AFFICHE LE MESSAGE D'ABORD (Si pas de données temps réel)
+    # ETAPE 1 : MESSAGE D'ERREUR/INFO (D'ABORD)
     if not has_data:
         if count_visible > 0:
-            # Cas : Lignes au footer mais rien en haut
             st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px; margin-bottom: 20px;'>
                 <h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3>
@@ -622,7 +618,6 @@ def afficher_tableau_live(stop_id, stop_name):
             </div>
             """, unsafe_allow_html=True)
         else:
-            # Cas : Vide total
             st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'>
                 <h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3>
@@ -630,19 +625,17 @@ def afficher_tableau_live(stop_id, stop_name):
             </div>
             """, unsafe_allow_html=True)
 
-    # ETAPE 2 : ON AFFICHE LE FOOTER ENSUITE
+    # ETAPE 2 : FOOTER (ENSUITE)
     if count_visible > 0:
         st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         
         for mode in ordre_affichage:
             if mode == "AUTRE": continue
-
             if mode in footer_data and footer_data[mode]:
                 html_badges = ""
                 items = footer_data[mode]
                 sorted_codes = sorted(items.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
-                
                 for code in sorted_codes:
                     color = items[code]
                     html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
