@@ -450,29 +450,6 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
-            else:
-                dest_map = {}
-                for d in proches:
-                    if d['dest'] not in dest_map: dest_map[d['dest']] = []
-                    if len(dest_map[d['dest']]) < 3: dest_map[d['dest']].append(d['html'])
-                
-                sorted_dests = sorted(dest_map.items(), key=lambda i: i[1][0]) 
-                
-                rows_html = ""
-                for dest_name, times in sorted_dests:
-                    times_str = "<span class='time-sep'>|</span>".join(times)
-                    rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
-                
-                st.markdown(f"""
-                <div class="bus-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                    {rows_html}
-                </div>
-                """, unsafe_allow_html=True)
-
             # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
             elif mode_actuel in ["RER", "TRAIN"]:
                 st.markdown(f"""
@@ -488,7 +465,7 @@ def afficher_tableau_live(stop_id, stop_name):
                      st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
-                    # LIMITATION À 4 TRAINS ICI
+                    # Limite à 4 trains pour ne pas inonder l'écran (TER/Ligne K...)
                     for item in real_proches[:4]:
                         st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
                 
@@ -557,6 +534,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
