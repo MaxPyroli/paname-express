@@ -304,10 +304,12 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10.2 - Milk")
+st.caption("v0.10.3 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.header("v0.10.2 - Milk") 
+    # Version en petit et gris avec le warning
+    st.caption("v0.10.3 - Milk • ⚠️ Pre-release") 
+    
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -322,17 +324,15 @@ if 'selected_stop' not in st.session_state:
     st.session_state.selected_name = None
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
-
-# Variables pour l'astuce du clavier mobile (Key Hack)
 if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
 if 'last_query' not in st.session_state:
     st.session_state.last_query = ""
+# NOUVEAU : On garde l'erreur en mémoire pour qu'elle survive au rechargement
+if 'search_error' not in st.session_state:
+    st.session_state.search_error = None
 
 with st.form("search_form"):
-    # On utilise une clé dynamique (search_key) pour le widget.
-    # Quand on change cette clé après la recherche, Streamlit recrée le champ
-    # texte à neuf, ce qui lui fait perdre le "focus" et ferme le clavier !
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
         placeholder="Ex: Noisiel, Saint-Lazare...",
@@ -341,25 +341,35 @@ with st.form("search_form"):
     )
     submitted = st.form_submit_button("Rechercher")
 
+# ZONE D'AFFICHAGE DE L'ERREUR (Juste sous la barre)
+if st.session_state.search_error:
+    st.warning(st.session_state.search_error)
+
 if submitted and search_query:
     st.session_state.last_query = search_query 
+    # On efface l'ancienne erreur avant de chercher
+    st.session_state.search_error = None
     
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
+        opts = {}
         if data and 'places' in data:
-            opts = {}
             for p in data['places']:
                 if 'stop_area' in p:
                     ville = p.get('administrative_regions', [{}])[0].get('name', '')
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
+        
+        if len(opts) > 0:
             st.session_state.search_results = opts
         else:
-            st.warning("Aucun résultat trouvé.")
+            # C'est ici que ça change : on stocke l'erreur au lieu de l'afficher tout de suite
             st.session_state.search_results = {}
+            st.session_state.search_error = "⚠️ Aucun résultat trouvé. Essayez un autre nom."
     
-    # ASTUCE CLAVIER MOBILE : Changement de clé + Rerun
+    # On force le rechargement DANS TOUS LES CAS (Succès ou Échec)
+    # Cela permet de fermer le clavier à chaque fois.
     st.session_state.search_key += 1
     st.rerun()
 
@@ -389,27 +399,30 @@ def afficher_tableau_live(stop_id, stop_name):
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
-    # 1. Récupération des lignes théoriques
-    data_lines = demander_lignes_arret(stop_id)
-    all_lines_at_stop = {} 
-    if data_lines and 'lines' in data_lines:
-        for line in data_lines['lines']:
-            # Correction robuste du mode
-            raw_mode = "AUTRE"
-            if 'physical_modes' in line and line['physical_modes']:
-                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
-            elif 'physical_mode' in line:
-                raw_mode = line['physical_mode']
-            
-            mode = normaliser_mode(raw_mode)
-            code = clean_code_line(line.get('code', '?')) 
-            color = line.get('color', '666666')
-            all_lines_at_stop[(mode, code)] = {'color': color}
+    # AJOUT SPINNER : On englobe le chargement des données pour patienter
+    with st.spinner("Chargement des prochains passages..."):
+        
+        # 1. Récupération des lignes théoriques
+        data_lines = demander_lignes_arret(stop_id)
+        all_lines_at_stop = {} 
+        if data_lines and 'lines' in data_lines:
+            for line in data_lines['lines']:
+                raw_mode = "AUTRE"
+                if 'physical_modes' in line and line['physical_modes']:
+                    raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+                elif 'physical_mode' in line:
+                    raw_mode = line['physical_mode']
+                
+                mode = normaliser_mode(raw_mode)
+                code = clean_code_line(line.get('code', '?')) 
+                color = line.get('color', '666666')
+                all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. Récupération temps réel (Count 600)
-    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
+        # 2. Récupération temps réel
+        data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
+    # ... La suite du code reste inchangée ...
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
@@ -564,21 +577,26 @@ def afficher_tableau_live(stop_id, stop_name):
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
             # ===========================================================
             else:
                 dest_data = {}
                 for d in proches:
                     dn = d['dest']
-                    if dn not in dest_data: 
-                        dest_data[dn] = {'html': [], 'best_time': 9999}
+                    if dn not in dest_data: dest_data[dn] = {'html': [], 'best_time': 9999}
                     
                     if len(dest_data[dn]['html']) < 3:
                         dest_data[dn]['html'].append(d['html'])
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                # NOUVEAU TRI HYBRIDE :
+                # - METRO, TRAM, CABLE : Tri Alphabétique (item[0] = nom destination)
+                # - BUS, AUTRE : Tri par Temps (item[1]['best_time'])
+                if mode_actuel in ["METRO", "TRAM", "CABLE"]:
+                    sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                else:
+                    sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
                 rows_html = ""
                 for dest_name, info in sorted_dests:
@@ -598,9 +616,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 </div>
                 """, unsafe_allow_html=True)
 
-    # 4. Footer Intelligent (Calcul & Affichage Re-ordonné)
-    
-    # D'abord, on calcule les lignes qui vont dans le footer
+    # 4. Footer Intelligent (Calcul et Affichage)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
             if mode_theo not in footer_data: footer_data[mode_theo] = {}
@@ -608,13 +624,11 @@ def afficher_tableau_live(stop_id, stop_name):
 
     count_visible = 0
     for m in footer_data:
-        if m != "AUTRE":
-            count_visible += len(footer_data[m])
+        if m != "AUTRE": count_visible += len(footer_data[m])
 
-    # ETAPE 1 : ON AFFICHE LE MESSAGE D'ABORD (Si pas de données temps réel)
+    # ETAPE 1 : MESSAGE D'ERREUR/INFO (D'ABORD)
     if not has_data:
         if count_visible > 0:
-            # Cas : Lignes au footer mais rien en haut
             st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px; margin-bottom: 20px;'>
                 <h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3>
@@ -622,7 +636,6 @@ def afficher_tableau_live(stop_id, stop_name):
             </div>
             """, unsafe_allow_html=True)
         else:
-            # Cas : Vide total
             st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'>
                 <h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3>
@@ -630,19 +643,17 @@ def afficher_tableau_live(stop_id, stop_name):
             </div>
             """, unsafe_allow_html=True)
 
-    # ETAPE 2 : ON AFFICHE LE FOOTER ENSUITE
+    # ETAPE 2 : FOOTER (ENSUITE)
     if count_visible > 0:
         st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
         
         for mode in ordre_affichage:
             if mode == "AUTRE": continue
-
             if mode in footer_data and footer_data[mode]:
                 html_badges = ""
                 items = footer_data[mode]
                 sorted_codes = sorted(items.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
-                
                 for code in sorted_codes:
                     color = items[code]
                     html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
