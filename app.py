@@ -6,7 +6,7 @@ import time
 import pytz
 import os
 from PIL import Image
-import base64  # <--- Ne pas oublier cet import pour la police !
+import base64  # Indispensable pour la police
 
 # ==========================================
 #              CONFIGURATION
@@ -23,24 +23,33 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. LA CONFIGURATION DOIT RESTER ICI (C'est la première commande Streamlit obligatoire)
+# 1. CONFIGURATION STREAMLIT
 st.set_page_config(
     page_title="Grand Paname Express",
     page_icon=icon_image,
     layout="centered"
 )
 
-# 2. FONCTION POUR CHARGER LA POLICE (Juste après la config)
+# 2. FONCTION POUR CHARGER LA POLICE
 def charger_police_locale(file_path, font_name):
+    if not os.path.exists(file_path):
+        st.error(f"⚠️ Fichier police introuvable : {file_path}")
+        return
+
     try:
         with open(file_path, "rb") as f:
             data = f.read()
         b64 = base64.b64encode(data).decode()
+        
+        # Détection simple de l'extension
+        ext = file_path.split('.')[-1].lower()
+        font_format = "opentype" if ext == "otf" else "truetype"
+        
         css = f"""
             <style>
             @font-face {{
                 font-family: '{font_name}';
-                src: url('data:font/otf;base64,{b64}') format('opentype');
+                src: url('data:font/{ext};base64,{b64}') format('{font_format}');
             }}
             html, body, [class*="css"] {{
                 font-family: '{font_name}', sans-serif !important;
@@ -48,11 +57,10 @@ def charger_police_locale(file_path, font_name):
             </style>
         """
         st.markdown(css, unsafe_allow_html=True)
-    except FileNotFoundError:
-        pass
+    except Exception as e:
+        st.error(f"Erreur chargement police : {e}")
 
-# 3. APPEL DE LA FONCTION
-# Assure-toi d'avoir uploadé le fichier 'GrandParis-Regular.otf' à la racine !
+# 3. APPEL AVEC LE BON NOM DE FICHIER
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
