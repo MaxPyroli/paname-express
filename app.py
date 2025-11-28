@@ -263,9 +263,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.9.3 - Final Cut")
+st.caption("v0.10 - Milk")
 
 with st.sidebar:
+    st.header("v0.10 - Milk") # Ajout du numéro de version en haut
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -592,6 +593,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
 
 
 
