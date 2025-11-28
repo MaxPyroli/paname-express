@@ -450,27 +450,6 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (Ligne H, J, K, TER...)
-            elif mode_actuel in ["RER", "TRAIN"]:
-                st.markdown(f"""
-                <div class="rail-card">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                real_proches = [d for d in departs if d['tri'] < 3000]
-                
-                if not real_proches:
-                     st.markdown(f"""<div class='rail-row'><span class='service-end'>Service terminé</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
-                else:
-                    real_proches.sort(key=lambda x: x['tri'])
-                    # Limite à 4 trains pour ne pas inonder l'écran (TER/Ligne K...)
-                    for item in real_proches[:4]:
-                        st.markdown(f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>""", unsafe_allow_html=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-
             # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
             else:
                 dest_map = {}
