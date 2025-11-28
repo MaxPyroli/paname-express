@@ -330,9 +330,6 @@ if 'last_query' not in st.session_state:
     st.session_state.last_query = ""
 
 with st.form("search_form"):
-    # On utilise une clé dynamique (search_key) pour le widget.
-    # Quand on change cette clé après la recherche, Streamlit recrée le champ
-    # texte à neuf, ce qui lui fait perdre le "focus" et ferme le clavier !
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
         placeholder="Ex: Noisiel, Saint-Lazare...",
@@ -347,8 +344,9 @@ if submitted and search_query:
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
-        opts = {}
-        # On tente de construire la liste des résultats
+        opts = {} # On initialise vide par sécurité
+        
+        # On remplit seulement si on a des données valides
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
@@ -356,14 +354,16 @@ if submitted and search_query:
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
         
-        # LOGIQUE CORRIGÉE : On ne recharge QUE si on a trouvé quelque chose
+        # LA CORRECTION EST ICI 👇
         if len(opts) > 0:
+            # CAS 1 : SUCCÈS
             st.session_state.search_results = opts
-            # Succès : On ferme le clavier et on recharge
+            # On change la clé et on recharge pour fermer le clavier
             st.session_state.search_key += 1
             st.rerun()
         else:
-            # Échec : On affiche le message et ON NE RECHARGE PAS
+            # CAS 2 : ÉCHEC (Pas de résultats)
+            # On affiche le message et surtout ON NE RECHARGE PAS !
             st.warning("⚠️ Aucun résultat trouvé. Essayez un autre nom.")
             st.session_state.search_results = {}
     
