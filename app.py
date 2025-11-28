@@ -282,13 +282,27 @@ if 'selected_stop' not in st.session_state:
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
 
-# NOUVEAU SYSTÈME : FORMULAIRE POUR GÉRER LE CLAVIER MOBILE
+# Variables pour l'astuce du clavier mobile (Key Hack)
+if 'search_key' not in st.session_state:
+    st.session_state.search_key = 0
+if 'last_query' not in st.session_state:
+    st.session_state.last_query = ""
+
 with st.form("search_form"):
-    search_query = st.text_input("🔍 Rechercher une station :", placeholder="Ex: Noisiel, Saint-Lazare, Rouget de Lisle...")
-    # Le bouton submit permet de valider avec "Entrée" sur mobile et fermer le clavier
+    # On utilise une clé dynamique (search_key) pour le widget.
+    # Quand on change cette clé après la recherche, Streamlit recrée le champ
+    # texte à neuf, ce qui lui fait perdre le "focus" et ferme le clavier !
+    search_query = st.text_input(
+        "🔍 Rechercher une station :", 
+        placeholder="Ex: Noisiel, Saint-Lazare...",
+        value=st.session_state.last_query, 
+        key=f"search_input_{st.session_state.search_key}"
+    )
     submitted = st.form_submit_button("Rechercher")
 
 if submitted and search_query:
+    st.session_state.last_query = search_query # On sauvegarde le texte pour qu'il reste affiché
+    
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
@@ -303,6 +317,13 @@ if submitted and search_query:
         else:
             st.warning("Aucun résultat trouvé.")
             st.session_state.search_results = {}
+    
+    # L'ASTUCE EST ICI :
+    # 1. On change l'identité du champ texte pour le prochain affichage
+    st.session_state.search_key += 1
+    # 2. On recharge la page immédiatement pour appliquer le changement
+    st.rerun()
+
 
 # Affichage du menu déroulant s'il y a des résultats en mémoire
 if st.session_state.search_results:
