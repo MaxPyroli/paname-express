@@ -572,21 +572,26 @@ def afficher_tableau_live(stop_id, stop_name):
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
             # ===========================================================
             else:
                 dest_data = {}
                 for d in proches:
                     dn = d['dest']
-                    if dn not in dest_data: 
-                        dest_data[dn] = {'html': [], 'best_time': 9999}
+                    if dn not in dest_data: dest_data[dn] = {'html': [], 'best_time': 9999}
                     
                     if len(dest_data[dn]['html']) < 3:
                         dest_data[dn]['html'].append(d['html'])
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                # NOUVEAU TRI HYBRIDE :
+                # - METRO, TRAM, CABLE : Tri Alphabétique (item[0] = nom destination)
+                # - BUS, AUTRE : Tri par Temps (item[1]['best_time'])
+                if mode_actuel in ["METRO", "TRAM", "CABLE"]:
+                    sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                else:
+                    sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
                 rows_html = ""
                 for dest_name, info in sorted_dests:
