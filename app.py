@@ -31,6 +31,7 @@ st.set_page_config(
 )
 
 # 2. FONCTION POLICE (Avec ciblage renforcé)
+# 2. FONCTION POLICE (Ciblage chirurgical pour sauver les icônes)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         st.error(f"⚠️ Fichier introuvable : {file_path}")
@@ -41,7 +42,6 @@ def charger_police_locale(file_path, font_name):
             data = f.read()
         b64 = base64.b64encode(data).decode()
         
-        # Détection automatique format
         ext = file_path.split('.')[-1].lower()
         format_str = "opentype" if ext == "otf" else "truetype"
         
@@ -52,8 +52,24 @@ def charger_police_locale(file_path, font_name):
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
-            /* CIBLAGE AGRESSIF POUR FORCER LA POLICE PARTOUT */
-            html, body, [class*="css"], font, div, span, p, h1, h2, h3 {{
+            /* 1. On applique la police au corps général */
+            html, body {{
+                font-family: '{font_name}', sans-serif;
+            }}
+            
+            /* 2. On force sur les éléments de texte SPÉCIFIQUES (titres, paragraphes, boutons) */
+            /* En évitant 'span' et 'div' génériques, on sauve les icônes ! */
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 3. Ciblage spécifique pour les widgets Streamlit */
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 4. Cas particulier : Les titres dans les expanders (comme Historique) */
+            .streamlit-expanderHeader {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             </style>
