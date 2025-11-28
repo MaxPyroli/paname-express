@@ -322,12 +322,13 @@ if 'selected_stop' not in st.session_state:
     st.session_state.selected_name = None
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
-
-# Variables pour l'astuce du clavier mobile (Key Hack)
 if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
 if 'last_query' not in st.session_state:
     st.session_state.last_query = ""
+# NOUVEAU : On garde l'erreur en mémoire pour qu'elle survive au rechargement
+if 'search_error' not in st.session_state:
+    st.session_state.search_error = None
 
 with st.form("search_form"):
     search_query = st.text_input(
@@ -338,14 +339,19 @@ with st.form("search_form"):
     )
     submitted = st.form_submit_button("Rechercher")
 
+# ZONE D'AFFICHAGE DE L'ERREUR (Juste sous la barre)
+if st.session_state.search_error:
+    st.warning(st.session_state.search_error)
+
 if submitted and search_query:
     st.session_state.last_query = search_query 
+    # On efface l'ancienne erreur avant de chercher
+    st.session_state.search_error = None
     
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
         opts = {}
-        # 1. On récupère les résultats s'il y en a
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
@@ -353,19 +359,15 @@ if submitted and search_query:
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
         
-        # 2. VERIFICATION : A-t-on trouvé quelque chose ?
         if len(opts) > 0:
-            # OUI -> On sauvegarde et ON RECHARGE (pour fermer le clavier)
             st.session_state.search_results = opts
-            st.session_state.search_key += 1
-            st.rerun()
         else:
-            # NON -> On affiche l'erreur et ON NE RECHARGE PAS !
-            # Le script s'arrête là, donc le message reste visible.
-            st.warning("⚠️ Aucun résultat trouvé. Essayez un autre nom.")
+            # C'est ici que ça change : on stocke l'erreur au lieu de l'afficher tout de suite
             st.session_state.search_results = {}
+            st.session_state.search_error = "⚠️ Aucun résultat trouvé. Essayez un autre nom."
     
-    # ASTUCE CLAVIER MOBILE : Changement de clé + Rerun
+    # On force le rechargement DANS TOUS LES CAS (Succès ou Échec)
+    # Cela permet de fermer le clavier à chaque fois.
     st.session_state.search_key += 1
     st.rerun()
 
