@@ -7,7 +7,6 @@ import pytz
 import os
 from PIL import Image
 
-
 # ==========================================
 #              CONFIGURATION
 # ==========================================
@@ -57,7 +56,7 @@ st.markdown("""
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        /* Utilisation d'un gris moyen semi-transparent pour être visible en mode clair ET sombre */
+        /* CORRECTION MODE CLAIR : Utilisation de var(--text-color) et bordure semi-transparente */
         border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
         font-size: 20px; font-weight: bold; 
         color: var(--text-color);
@@ -97,7 +96,7 @@ st.markdown("""
         border-top: 1px solid #333; /* Ligne de séparation par défaut */
     }
     
-    /* ASTUCE CSS : Si une ligne de train suit direct un titre, pas de ligne en haut ! */
+    /* CORRECTION DOUBLES LIGNES : Si une ligne de train suit direct un titre, pas de ligne en haut ! */
     .rer-direction + .rail-row {
         border-top: none;
         padding-top: 8px;
@@ -112,7 +111,6 @@ st.markdown("""
     }
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
-
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -145,7 +143,7 @@ GEOGRAPHIE_RER = {
         
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
-        "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY"]
+        "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
         "label_1": "⇧ NORD (Creil)",
@@ -256,7 +254,7 @@ st.title("🚆 Grand Paname")
 st.caption("v0.10 - Milk")
 
 with st.sidebar:
-    st.header("v0.10 - Milk") # Ajout du numéro de version en haut
+    st.header("v0.10 - Milk") 
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -291,7 +289,7 @@ with st.form("search_form"):
     submitted = st.form_submit_button("Rechercher")
 
 if submitted and search_query:
-    st.session_state.last_query = search_query # On sauvegarde le texte pour qu'il reste affiché
+    st.session_state.last_query = search_query 
     
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
@@ -308,12 +306,9 @@ if submitted and search_query:
             st.warning("Aucun résultat trouvé.")
             st.session_state.search_results = {}
     
-    # L'ASTUCE EST ICI :
-    # 1. On change l'identité du champ texte pour le prochain affichage
+    # ASTUCE CLAVIER MOBILE : Changement de clé + Rerun
     st.session_state.search_key += 1
-    # 2. On recharge la page immédiatement pour appliquer le changement
     st.rerun()
-
 
 # Affichage du menu déroulant s'il y a des résultats en mémoire
 if st.session_state.search_results:
@@ -327,6 +322,7 @@ if st.session_state.search_results:
             st.session_state.selected_stop = stop_id
             st.session_state.selected_name = choice
             st.rerun()
+
 # ========================================================
 #                  AFFICHAGE LIVE
 # ========================================================
@@ -345,23 +341,19 @@ def afficher_tableau_live(stop_id, stop_name):
     all_lines_at_stop = {} 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
-            # --- CORRECTION ROBUSTE DU MODE ---
-            # L'API théorique renvoie une liste 'physical_modes' au lieu d'une string directe
+            # Correction robuste du mode
             raw_mode = "AUTRE"
             if 'physical_modes' in line and line['physical_modes']:
-                # On récupère l'ID du premier mode (ex: "physical_mode:Metro")
                 raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
             elif 'physical_mode' in line:
                 raw_mode = line['physical_mode']
             
             mode = normaliser_mode(raw_mode)
-            # ----------------------------------
-
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. Récupération temps réel (Count 600 pour attraper la ligne K à Gare du Nord !)
+    # 2. Récupération temps réel (Count 600)
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
@@ -390,12 +382,10 @@ def afficher_tableau_live(stop_id, stop_name):
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
     # 2.1 RECUPERATION DES LIGNES MANQUANTES ("GHOST LINES")
-    # Pour les modes nobles, si aucune data live n'est remontée, on force l'affichage
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
-            # On vérifie si cette ligne existe déjà dans les buckets
             exists_in_buckets = False
             if mode_t in buckets:
                 for (b_mode, b_code, b_color) in buckets[mode_t]:
@@ -403,11 +393,9 @@ def afficher_tableau_live(stop_id, stop_name):
                         exists_in_buckets = True
                         break
             
-            # Si elle n'existe pas, on l'ajoute artificiellement
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
-                # On ajoute un départ fictif "Service terminé" pour qu'elle passe les filtres
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
     
     # 2.5 FILTRAGE
@@ -446,7 +434,7 @@ def afficher_tableau_live(stop_id, stop_name):
             try: return (0, int(k[1])) 
             except: return (1, k[1])
         
-            for cle in sorted(lignes_du_mode.keys(), key=sort_key):
+        for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
             
@@ -458,6 +446,7 @@ def afficher_tableau_live(stop_id, stop_name):
             # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE
             # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
+                # CONSTRUCTION HTML UNIQUE POUR ÉVITER LES BUGS D'AFFICHAGE
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:5px;">
@@ -483,7 +472,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            # Note: Plus de 'rail-sep' ici, le CSS gère tout !
+                            # Pas de séparateur ici, le CSS s'en charge (border-top)
                             html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
 
@@ -596,17 +585,3 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
