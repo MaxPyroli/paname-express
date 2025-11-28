@@ -7,7 +7,6 @@ import pytz
 import os
 from PIL import Image
 
-
 # ==========================================
 #              CONFIGURATION
 # ==========================================
@@ -49,23 +48,18 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    /* --- CSS POUR LE FOOTER --- */
-    .footer-container {
-        display: flex; align-items: center; margin-bottom: 8px;
-    }
-    .footer-icon {
-        margin-right: 10px; font-size: 14px; color: #ccc;
-    }
-    .footer-badge {
-        font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important;
-    }
-    /* -------------------------- */
+    .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
+    .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
+    .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
 
-    .time-sep { color: #555; margin: 0 8px; font-weight: lighter; }
+    .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        border-bottom: 2px solid #444; font-size: 20px; font-weight: bold; color: #eee;
+        /* CORRECTION MODE CLAIR : Utilisation de var(--text-color) et bordure semi-transparente */
+        border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
+        font-size: 20px; font-weight: bold; 
+        color: var(--text-color);
         letter-spacing: 1px;
     }
     
@@ -77,51 +71,45 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
+    /* Titre interne (ex: OUEST NANTERRE) */
     .rer-direction {
-        margin-top: 15px; margin-bottom: 8px; 
+        margin-top: 12px; 
         font-size: 13px; font-weight: bold; color: #3498db; 
         text-transform: uppercase; letter-spacing: 0.5px;
-        border-bottom: 1px solid #333; padding-bottom: 2px;
+        border-bottom: 1px solid #444; 
+        padding-bottom: 4px;
+        margin-bottom: 0px; /* Collé au prochain élément */
     }
     
-    .bus-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 10px;
-        border-radius: 8px; border-left: 5px solid #666;
-    }
-    .bus-row {
-        display: flex; justify-content: space-between; margin-top: 6px;
-        padding-top: 4px; border-top: 1px solid #333;
-    }
-    .bus-dest { color: #ccc; font-size: 15px; }
-    
-    /* STYLE MODIFIÉ : Harmonisation avec les cartes Bus */
-    .rail-card { 
-        background-color: #1a1a1a; /* Fond unifié */
+    .bus-card, .rail-card {
+        background-color: #1a1a1a; 
         padding: 12px; 
-        margin-bottom: 15px; 
+        margin-bottom: 15px;
         border-radius: 8px; 
-        border-left: 5px solid #666; /* Sera écrasé par la couleur de ligne */
+        border-left: 5px solid #666;
+        color: #ddd; 
     }
-    .rail-dest { font-weight: 500; font-size: 15px; color: #e0e0e0; }
-    .rail-row { display: flex; justify-content: space-between; padding: 4px 0; }
-    .rail-sep { border-top: 1px solid #333; margin: 4px 0; } /* Séparateur plus subtil */
 
-    /* Style pour "Service terminé" */
-    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
-    
-    /* STYLE UNIFIÉ : Boîte "Service terminé" alignée à gauche */
-    .service-box { 
-        text-align: left; 
-        padding: 10px 12px; 
-        color: #888; 
-        font-style: italic; 
-        font-size: 0.95em;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        margin-top: 5px;
-        margin-bottom: 5px;
-        border-left: 3px solid #444; /* Petit détail chic optionnel */
+    .bus-row, .rail-row {
+        display: flex; justify-content: space-between; 
+        padding-top: 8px; padding-bottom: 2px;
+        border-top: 1px solid #333; /* Ligne de séparation par défaut */
     }
+    
+    /* CORRECTION DOUBLES LIGNES : Si une ligne de train suit direct un titre, pas de ligne en haut ! */
+    .rer-direction + .rail-row {
+        border-top: none;
+        padding-top: 8px;
+    }
+    
+    .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
+    
+    .service-box { 
+        text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
+        background: rgba(255, 255, 255, 0.05); border-radius: 6px;
+        margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444;
+    }
+    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -155,7 +143,7 @@ GEOGRAPHIE_RER = {
         
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
-        "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY"]
+        "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
         "label_1": "⇧ NORD (Creil)",
@@ -263,10 +251,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10 - Milk")
+st.caption("v0.10.1 - Milk")
 
 with st.sidebar:
-    st.header("v0.10 - Milk") # Ajout du numéro de version en haut
+    st.header("v0.10.1 - Milk") 
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -282,13 +270,27 @@ if 'selected_stop' not in st.session_state:
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
 
-# NOUVEAU SYSTÈME : FORMULAIRE POUR GÉRER LE CLAVIER MOBILE
+# Variables pour l'astuce du clavier mobile (Key Hack)
+if 'search_key' not in st.session_state:
+    st.session_state.search_key = 0
+if 'last_query' not in st.session_state:
+    st.session_state.last_query = ""
+
 with st.form("search_form"):
-    search_query = st.text_input("🔍 Rechercher une station :", placeholder="Ex: Noisiel, Saint-Lazare, Rouget de Lisle...")
-    # Le bouton submit permet de valider avec "Entrée" sur mobile et fermer le clavier
+    # On utilise une clé dynamique (search_key) pour le widget.
+    # Quand on change cette clé après la recherche, Streamlit recrée le champ
+    # texte à neuf, ce qui lui fait perdre le "focus" et ferme le clavier !
+    search_query = st.text_input(
+        "🔍 Rechercher une station :", 
+        placeholder="Ex: Noisiel, Saint-Lazare...",
+        value=st.session_state.last_query, 
+        key=f"search_input_{st.session_state.search_key}"
+    )
     submitted = st.form_submit_button("Rechercher")
 
 if submitted and search_query:
+    st.session_state.last_query = search_query 
+    
     with st.spinner("Recherche des arrêts..."):
         data = demander_api(f"places?q={search_query}")
         
@@ -303,6 +305,10 @@ if submitted and search_query:
         else:
             st.warning("Aucun résultat trouvé.")
             st.session_state.search_results = {}
+    
+    # ASTUCE CLAVIER MOBILE : Changement de clé + Rerun
+    st.session_state.search_key += 1
+    st.rerun()
 
 # Affichage du menu déroulant s'il y a des résultats en mémoire
 if st.session_state.search_results:
@@ -316,6 +322,7 @@ if st.session_state.search_results:
             st.session_state.selected_stop = stop_id
             st.session_state.selected_name = choice
             st.rerun()
+
 # ========================================================
 #                  AFFICHAGE LIVE
 # ========================================================
@@ -334,23 +341,19 @@ def afficher_tableau_live(stop_id, stop_name):
     all_lines_at_stop = {} 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
-            # --- CORRECTION ROBUSTE DU MODE ---
-            # L'API théorique renvoie une liste 'physical_modes' au lieu d'une string directe
+            # Correction robuste du mode
             raw_mode = "AUTRE"
             if 'physical_modes' in line and line['physical_modes']:
-                # On récupère l'ID du premier mode (ex: "physical_mode:Metro")
                 raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
             elif 'physical_mode' in line:
                 raw_mode = line['physical_mode']
             
             mode = normaliser_mode(raw_mode)
-            # ----------------------------------
-
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. Récupération temps réel (Count 600 pour attraper la ligne K à Gare du Nord !)
+    # 2. Récupération temps réel (Count 600)
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
@@ -379,12 +382,10 @@ def afficher_tableau_live(stop_id, stop_name):
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
 
     # 2.1 RECUPERATION DES LIGNES MANQUANTES ("GHOST LINES")
-    # Pour les modes nobles, si aucune data live n'est remontée, on force l'affichage
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
-            # On vérifie si cette ligne existe déjà dans les buckets
             exists_in_buckets = False
             if mode_t in buckets:
                 for (b_mode, b_code, b_color) in buckets[mode_t]:
@@ -392,11 +393,9 @@ def afficher_tableau_live(stop_id, stop_name):
                         exists_in_buckets = True
                         break
             
-            # Si elle n'existe pas, on l'ajoute artificiellement
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
-                # On ajoute un départ fictif "Service terminé" pour qu'elle passe les filtres
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
     
     # 2.5 FILTRAGE
@@ -444,20 +443,18 @@ def afficher_tableau_live(stop_id, stop_name):
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
 
             # ===========================================================
-            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE (A, B, C, D, E)
+            # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE
             # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                # 1. On ouvre la string HTML de la carte
+                # CONSTRUCTION HTML UNIQUE POUR ÉVITER LES BUGS D'AFFICHAGE
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; margin-bottom:5px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
                 
                 geo = GEOGRAPHIE_RER[code]
-                
-                # Logique Terminus
                 stop_upper = clean_name.upper()
                 is_term_1 = any(t in stop_upper for t in geo.get('term_1', []))
                 is_term_2 = any(t in stop_upper for t in geo.get('term_2', []))
@@ -468,7 +465,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
                 p3 = [d for d in real_proches if d not in p1 and d not in p2]
                 
-                # Fonction interne qui retourne du TEXTE HTML (au lieu d'afficher direct)
                 def build_rer_group(titre, liste_proches):
                     html_output = f"<div class='rer-direction'>{titre}</div>"
                     if not liste_proches:
@@ -476,10 +472,10 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
+                            # Pas de séparateur ici, le CSS s'en charge (border-top)
+                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
 
-                # Construction du contenu
                 if not p1 and not p2:
                      card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
@@ -488,15 +484,13 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 if p3: card_html += build_rer_group("AUTRES DIRECTIONS", p3)
 
-                # Fermeture de la carte et affichage UNIQUE
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (H, K, TER...)
+            # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE
             # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
-                # 1. Ouverture de la carte
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
@@ -511,14 +505,13 @@ def afficher_tableau_live(stop_id, stop_name):
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
-                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div><div class='rail-sep'></div>"""
+                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 
-                # Fermeture et affichage
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
             # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro...)
+            # CAS 3 : TOUS LES AUTRES MODES
             # ===========================================================
             else:
                 dest_data = {}
@@ -537,14 +530,12 @@ def afficher_tableau_live(stop_id, stop_name):
                 rows_html = ""
                 for dest_name, info in sorted_dests:
                     times = info['html']
-                    
                     if "Service terminé" in dest_name:
                         rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
                         times_str = "<span class='time-sep'>|</span>".join(times)
                         rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
-                # Ici on construisait déjà tout en un bloc, donc c'était bon, mais je le remets pour être complet
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center;">
@@ -553,6 +544,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     {rows_html}
                 </div>
                 """, unsafe_allow_html=True)
+
     # 4. Footer Intelligent (Final Clean)
     for (mode_theo, code_theo), info in all_lines_at_stop.items():
         if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -593,17 +585,3 @@ def afficher_tableau_live(stop_id, stop_name):
 
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
