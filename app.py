@@ -99,6 +99,24 @@ st.markdown("""
         100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
     }
 
+    /* SPINNER PERSONNALISÉ (Pour la zone de statut sans décalage) */
+    .custom-loader {
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #3498db; /* Bleu */
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
@@ -416,13 +434,17 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    # ZONE DE STATUT FIXE (Pour éviter que ça saute)
-    # On crée un placeholder vide qui servira à afficher l'état
+    # ZONE DE STATUT FIXE
     status_area = st.empty()
-    status_area.caption("⏳ Actualisation des données en cours...") # Message immédiat
+    
+    # 1. AFFICHER LE SPINNER (HTML/CSS personnalisé pour ne rien décaler)
+    status_area.markdown("""
+        <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'>
+            <span class="custom-loader"></span> Actualisation...
+        </div>
+    """, unsafe_allow_html=True)
 
     # 1. Récupération des lignes théoriques
-    # (On a retiré le 'with st.spinner' pour ne pas créer de décalage)
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
     if data_lines and 'lines' in data_lines:
