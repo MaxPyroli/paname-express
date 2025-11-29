@@ -470,11 +470,10 @@ def afficher_tableau_live(stop_id, stop_name):
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
-    # --- CALCUL DES DERNIERS DÉPARTS ---
+    # --- CALCUL DES DERNIERS DÉPARTS (LOGIQUE "TROU D'AIR") ---
     last_departures_map = {} 
     
     if data_live and 'departures' in data_live:
-        # Passe 1 : Identifier le MAX
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -509,11 +508,23 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
+            # Vérification "Dernier Train" PLUS INTELLIGENTE
             is_last = False
             if val_tri < 3000:
                 key = (mode, code, dest)
-                if val_tri == last_departures_map.get(key):
-                    is_last = True
+                max_val = last_departures_map.get(key)
+                
+                # CONDITION : C'est le dernier de la liste
+                if max_val and val_tri == max_val:
+                    # ET ce dernier départ est assez lointain (> 1h d'attente)
+                    # Cela signifie que l'API a eu le temps de chercher loin et n'a rien trouvé d'autre.
+                    # Si le dernier bus est dans 5 min, c'est juste que la liste est pleine.
+                    # Si le dernier bus est dans 120 min, c'est que c'est vraiment la fin.
+                    if val_tri > 60:
+                        is_last = True
+                    # Exception : Si c'est un train/RER tard le soir (> 21h), on est plus souple
+                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21:
+                        is_last = True
 
             cle = (mode, code, color)
             if mode in buckets:
