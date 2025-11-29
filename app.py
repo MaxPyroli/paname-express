@@ -159,7 +159,7 @@ GEO_ZONES = {
         }
     },
     "D": {
-        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil / Goussainville)"),
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
         "keywords": {
             -10: ["MELUN", "CORBEIL", "ESSONNES", "MALESHERBES", "FERTE", "FERTÉ", "BOUTIGNY", "MAISSE", "BUNO", "GIRONVILLE", "MOULIN", "MENNECY", "VILLABÉ", "COUDRAY", "PLESSIS", "LIEUSAINT", "MOISSY", "COMBS", "BOUSSY", "QUINCY", "VIGNEUX", "JUVISY", "RIS", "BRAS", "EVRY", "ÉVRY", "GRIGNY"],
             -5:  ["VILLENEUVE", "VERT DE MAISONS", "MAISONS-ALFORT", "CRETEIL", "CRÉTEIL"],
@@ -169,7 +169,7 @@ GEO_ZONES = {
         }
     },
     "E": {
-        "labels": ("⇦ OUEST (Nanterre / La Défense)", "⇨ EST (Chelles / Tournan)"),
+        "labels": ("⇦ OUEST (Nanterre)", "⇨ EST (Chelles / Tournan)"),
         "keywords": {
             -10: ["NANTERRE", "DEFENSE", "DÉFENSE", "CNIT", "PORTE MAILLOT"],
             0:   ["HAUSSMANN", "LAZARE", "MAGENTA", "GARE DU NORD", "ROSA PARKS"],
