@@ -687,20 +687,41 @@ def afficher_tableau_live(stop_id, stop_name):
                         contains_last = False
                         last_val_tri = 9999
                         
-                        for d_item in info['items']:
+                        # On parcourt les horaires avec leur index (0, 1, 2...)
+                        for idx, d_item in enumerate(info['items']):
+                            val_tri = d_item['tri']
+                            
+                            # FILTRE 1 : On cache les 2ème/3ème bus s'ils sont dans trop longtemps (> 50 min)
+                            if idx > 0 and val_tri > 50:
+                                continue
+                                
                             txt = d_item['html']
+                            
+                            # FILTRE 2 : Gestion intelligente du drapeau "Dernier"
                             if d_item.get('is_last'):
                                 contains_last = True
-                                last_val_tri = d_item['tri']
-                                if last_val_tri < 30:
-                                    txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                else:
-                                    txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                last_val_tri = val_tri
+                                
+                                # On n'affiche le drapeau que si le départ est raisonnablement proche (< 60 min)
+                                if val_tri < 60:
+                                    if val_tri < 30:
+                                        # < 30 min : Encadré jaune
+                                        txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    else:
+                                        # 30-60 min : Drapeau simple
+                                        txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                # Si > 60 min, on ne met RIEN (affichage standard)
+                                    
                             html_list.append(txt)
                         
+                        # Si tous les horaires ont été filtrés (cas rare), on garde au moins le premier
+                        if not html_list and info['items']:
+                             html_list.append(info['items'][0]['html'])
+
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
-                        if contains_last and len(info['items']) == 1 and last_val_tri < 10:
+                        # Règle pour la "Grosse Boîte" (inchangée : très proche et seul)
+                        if contains_last and len(html_list) == 1 and last_val_tri < 10:
                              rows_html += f"""
                             <div class='last-dep-box'>
                                 <span class='last-dep-label'>🏁 Dernier Bus (Départ imminent)</span>
