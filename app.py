@@ -349,12 +349,16 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
+st.caption("v0.10.5 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.10.4 - Milk • ⚠️ Pre-release") 
+    st.caption("v0.10.5 - Milk • ⚠️ Pre-release") 
     
     st.header("🗄️ Informations")
+    
+    # LE PETIT MESSAGE SYMPA 👇
+    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
@@ -362,7 +366,6 @@ with st.sidebar:
             st.markdown(note)
             if i < len(notes_history) - 1: st.divider()
     
-    # AJOUT DE LA MENTION TRANSPARENCE
     st.markdown("---")
     st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
