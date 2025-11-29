@@ -416,37 +416,36 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    paris_tz = pytz.timezone('Europe/Paris')
-    heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
+    # ZONE DE STATUT FIXE (Pour éviter que ça saute)
+    # On crée un placeholder vide qui servira à afficher l'état
+    status_area = st.empty()
+    status_area.caption("⏳ Actualisation des données en cours...") # Message immédiat
 
-    with st.spinner("Chargement des prochains passages..."):
-        
-        # 1. Récupération des lignes théoriques
-        data_lines = demander_lignes_arret(stop_id)
-        all_lines_at_stop = {} 
-        if data_lines and 'lines' in data_lines:
-            for line in data_lines['lines']:
-                raw_mode = "AUTRE"
-                if 'physical_modes' in line and line['physical_modes']:
-                    raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
-                elif 'physical_mode' in line:
-                    raw_mode = line['physical_mode']
-                
-                mode = normaliser_mode(raw_mode)
-                code = clean_code_line(line.get('code', '?')) 
-                color = line.get('color', '666666')
-                all_lines_at_stop[(mode, code)] = {'color': color}
+    # 1. Récupération des lignes théoriques
+    # (On a retiré le 'with st.spinner' pour ne pas créer de décalage)
+    data_lines = demander_lignes_arret(stop_id)
+    all_lines_at_stop = {} 
+    if data_lines and 'lines' in data_lines:
+        for line in data_lines['lines']:
+            raw_mode = "AUTRE"
+            if 'physical_modes' in line and line['physical_modes']:
+                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+            elif 'physical_mode' in line:
+                raw_mode = line['physical_mode']
+            
+            mode = normaliser_mode(raw_mode)
+            code = clean_code_line(line.get('code', '?')) 
+            color = line.get('color', '666666')
+            all_lines_at_stop[(mode, code)] = {'color': color}
 
-        # 2. Récupération temps réel
-        data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
+    # 2. Récupération temps réel
+    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
     # --- CALCUL DES DERNIERS DÉPARTS ---
-    # On stocke le temps max pour chaque triplet (Mode, Ligne, Destination)
     last_departures_map = {} 
     
     if data_live and 'departures' in data_live:
@@ -458,19 +457,18 @@ def afficher_tableau_live(stop_id, stop_name):
             
             raw_dest = info.get('direction', '')
             if mode == "BUS": dest = raw_dest
-            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest) # Nettoyage pour RER/Train
+            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             
             freshness = d.get('data_freshness', 'realtime')
             val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
             
-            # On ne considère pas les "Service terminé" (3000) comme des horaires valides
             if val_tri < 3000:
                 key = (mode, code, dest)
                 current_max = last_departures_map.get(key, -999999)
                 if val_tri > current_max:
                     last_departures_map[key] = val_tri
 
-        # Passe 2 : Remplir les buckets avec l'info is_last
+        # Passe 2 : Remplir les buckets
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -486,7 +484,6 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
-            # Vérification si c'est le dernier
             is_last = False
             if val_tri < 3000:
                 key = (mode, code, dest)
@@ -533,6 +530,12 @@ def afficher_tableau_live(stop_id, stop_name):
         
         for k in keys_to_remove:
             del buckets[mode][k]
+
+    # --- MISE À JOUR DU STATUT (FIN DU CHARGEMENT) ---
+    paris_tz = pytz.timezone('Europe/Paris')
+    heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
+    # On remplace le "Chargement..." par l'heure, sans bouger le reste de la page
+    status_area.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
 
     # 3. Affichage Tableau
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
@@ -581,7 +584,6 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            # AFFICHAGE CONDITIONNEL : Ligne normale OU Boîte clignotante
                             if item.get('is_last'):
                                 html_output += f"""
                                 <div class='last-dep-box'>
@@ -637,9 +639,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
-            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES
             else:
                 dest_data = {}
                 for d in proches:
@@ -651,7 +651,6 @@ def afficher_tableau_live(stop_id, stop_name):
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                # Tri : Alphabétique pour Métro/Tram, Chronologique pour Bus
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
                 else:
@@ -664,28 +663,21 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         html_list = []
                         contains_last = False
-                        last_val_tri = 9999 # Temps du dernier départ
+                        last_val_tri = 9999
                         
                         for d_item in info['items']:
                             txt = d_item['html']
-                            
-                            # Si c'est le dernier départ, on analyse le temps pour savoir comment l'afficher
                             if d_item.get('is_last'):
                                 contains_last = True
                                 last_val_tri = d_item['tri']
-                                
-                                # RÈGLE 2 : Si < 30 min, on met l'encadré simple autour de l'heure
                                 if last_val_tri < 30:
                                     txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
                                 else:
-                                    # RÈGLE 3 : Si > 30 min, juste le drapeau discret
                                     txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
-                                    
                             html_list.append(txt)
                         
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
-                        # RÈGLE 1 : LA GROSSE BOÎTE (Uniquement si dernier départ, seul affiché, et < 10 min)
                         if contains_last and len(info['items']) == 1 and last_val_tri < 10:
                              rows_html += f"""
                             <div class='last-dep-box'>
@@ -697,7 +689,6 @@ def afficher_tableau_live(stop_id, stop_name):
                             </div>
                             """
                         else:
-                            # Affichage normal (avec ou sans l'encadré simple autour de l'heure selon la Règle 2)
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
                 st.markdown(f"""
