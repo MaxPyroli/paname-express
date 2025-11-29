@@ -622,7 +622,9 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # CAS 3 : TOUS LES AUTRES MODES
+            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            # ===========================================================
             else:
                 dest_data = {}
                 for d in proches:
@@ -634,6 +636,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
+                # Tri : Alphabétique pour Métro/Tram, Chronologique pour Bus
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
                 else:
@@ -644,29 +647,34 @@ def afficher_tableau_live(stop_id, stop_name):
                     if "Service terminé" in dest_name:
                         rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
-                        # Pour les bus, on doit gérer l'affichage différemment
-                        # Si l'UN des horaires est le dernier, on veut peut-être le marquer
-                        # Mais le design "boîte qui s'ouvre" est dur sur une ligne horizontale.
-                        # On va garder le badge simple pour les Bus, mais ajouter la boîte SI c'est le seul affiché.
-                        
                         html_list = []
                         contains_last = False
+                        last_val_tri = 9999 # Temps du dernier départ
                         
                         for d_item in info['items']:
                             txt = d_item['html']
+                            
+                            # Si c'est le dernier départ, on analyse le temps pour savoir comment l'afficher
                             if d_item.get('is_last'):
                                 contains_last = True
-                                # On entoure le temps spécifique du dernier bus
-                                txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                last_val_tri = d_item['tri']
+                                
+                                # RÈGLE 2 : Si < 30 min, on met l'encadré simple autour de l'heure
+                                if last_val_tri < 30:
+                                    txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                else:
+                                    # RÈGLE 3 : Si > 30 min, juste le drapeau discret
+                                    txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                    
                             html_list.append(txt)
                         
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
-                        # Si c'est le dernier et qu'il est tout seul, on peut mettre la boîte
-                        if contains_last and len(info['items']) == 1:
+                        # RÈGLE 1 : LA GROSSE BOÎTE (Uniquement si dernier départ, seul affiché, et < 10 min)
+                        if contains_last and len(info['items']) == 1 and last_val_tri < 10:
                              rows_html += f"""
                             <div class='last-dep-box'>
-                                <span class='last-dep-label'>🏁 Dernier Bus</span>
+                                <span class='last-dep-label'>🏁 Dernier Bus (Départ imminent)</span>
                                 <div class='bus-row'>
                                     <span class='bus-dest'>➜ {dest_name}</span>
                                     <span>{times_str}</span>
@@ -674,6 +682,7 @@ def afficher_tableau_live(stop_id, stop_name):
                             </div>
                             """
                         else:
+                            # Affichage normal (avec ou sans l'encadré simple autour de l'heure selon la Règle 2)
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
                 st.markdown(f"""
