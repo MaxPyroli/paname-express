@@ -351,10 +351,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
+st.caption("v0.10.5alpha - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.10.4 - Milk • ⚠️ Pre-release") 
+    st.caption("v0.10.5alpha - Milk • ⚠️ Pre-release") 
     
     st.header("🗄️ Informations")
     
@@ -439,10 +439,10 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    # ZONE DE STATUT FIXE
+    # ZONE DE STATUT FIXE (Placeholder)
     status_area = st.empty()
     
-    # 1. AFFICHER LE SPINNER (HTML/CSS personnalisé pour ne rien décaler)
+    # 1. AFFICHER LE SPINNER (Sans décaler la page)
     status_area.markdown("""
         <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'>
             <span class="custom-loader"></span> Actualisation...
