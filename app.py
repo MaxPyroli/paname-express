@@ -23,9 +23,9 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. CONFIGURATION
+# 1. CONFIGURATION (Doit être la première commande Streamlit)
 st.set_page_config(
-    page_title="Grand Paname Express",
+    page_title="Grand Paname Express (Bêta)",
     page_icon=icon_image,
     layout="centered"
 )
@@ -348,7 +348,7 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.title("🚆 Grand Paname")
+st.title("🚆 Grand Paname (Bêta)")
 st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
