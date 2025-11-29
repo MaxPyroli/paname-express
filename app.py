@@ -463,8 +463,8 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-            # === CAS 1 : RER AVEC LOGIQUE DE DIRECTION ===
-            if mode_actuel in ["RER"] and code in GEOGRAPHIE_RER:
+            # === CAS 1 : RER INTELLIGENT (LOGIQUE ROBUSTE + PATCH C) ===
+            if mode_actuel in ["RER"] and code in GEO_ZONES:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:5px;">
@@ -472,20 +472,21 @@ def afficher_tableau_live(stop_id, stop_name):
                     </div>
                 """
                 
-                geo = GEOGRAPHIE_RER[code]
+                geo = GEO_ZONES[code]
                 stop_upper = clean_name.upper()
                 
-                # --- PATCH DYNAMIQUE POUR LE RER C (Correctif Invalides/Porte Maillot) ---
+                # --- PATCH DYNAMIQUE POUR LE RER C ---
                 local_mots_1 = geo['mots_1'].copy() # Ouest
                 local_mots_2 = geo['mots_2'].copy() # Sud/Est
                 
                 if code == "C":
-                    # Si on est dans la boucle Nord-Ouest (Maillot, Pereire...), Invalides est vers le Sud/Est
-                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY"]
+                    # Ajout de JAVEL et GARIGLIANO à la liste des gares où Invalides = Sud/Est
+                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
+                    
                     if any(k in stop_upper for k in zone_nord_ouest):
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-                # ---------------------------------------------------------------------
+                # -------------------------------------
 
                 # Tri des départs avec les listes ajustées
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
