@@ -13,7 +13,7 @@ import base64
 # ==========================================
 try:
     API_KEY = st.secrets["IDFM_API_KEY"]
-except FileNotFoundError:
+except (FileNotFoundError, KeyError):
     API_KEY = "TA_CLE_ICI_SI_BESOIN_EN_LOCAL"
 
 BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
@@ -25,16 +25,15 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION (Doit être la première commande Streamlit)
 st.set_page_config(
-    page_title="Grand Paname Express",
+    page_title="Grand Paname (Bêta)",
     page_icon=icon_image,
     layout="centered"
 )
 
-# 2. FONCTION POLICE (Avec ciblage renforcé)
-# 2. FONCTION POLICE (Ciblage chirurgical pour sauver les icônes)
+# 2. FONCTION POLICE (Ciblage Étendu & Sécurisé)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
-        st.error(f"⚠️ Fichier introuvable : {file_path}")
+        # st.error(f"⚠️ Fichier introuvable : {file_path}")
         return
     
     try:
@@ -52,23 +51,27 @@ def charger_police_locale(file_path, font_name):
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
-            /* 1. On applique la police au corps général */
+            /* 1. Base globale (héritage) */
             html, body {{
                 font-family: '{font_name}', sans-serif;
             }}
             
-            /* 2. On force sur les éléments de texte SPÉCIFIQUES (titres, paragraphes, boutons) */
-            /* En évitant 'span' et 'div' génériques, on sauve les icônes ! */
+            /* 2. Forçage sur les balises de texte "sûres" (sans casser les icônes) */
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* 3. Ciblage spécifique pour les widgets Streamlit */
-            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
+            /* 3. Forçage sur TES classes personnalisées (Bus, Train, Footer...) */
+            .bus-card, .rail-card, .station-title, .section-header, .footer-container, .service-box {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* 4. Cas particulier : Les titres dans les expanders (comme Historique) */
+            /* 4. Forçage sur les conteneurs de texte Streamlit */
+            .stMarkdown, .stCaption, .stText, .stSelectbox, .stTextInput {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 5. Cas particulier : Titres des expanders */
             .streamlit-expanderHeader {{
                 font-family: '{font_name}', sans-serif !important;
             }}
@@ -89,6 +92,31 @@ st.markdown("""
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
     
+    /* ANIMATION PULSATION JAUNE POUR LE DERNIER TRAIN */
+    @keyframes yellow-pulse {
+        0% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
+        50% { border-color: #fff; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); }
+        100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
+    }
+
+    /* SPINNER PERSONNALISÉ (Pour la zone de statut sans décalage) */
+    .custom-loader {
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #3498db; /* Bleu */
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
@@ -109,7 +137,6 @@ st.markdown("""
     
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
-        /* CORRECTION MODE CLAIR : Utilisation de var(--text-color) et bordure semi-transparente */
         border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
         font-size: 20px; font-weight: bold; 
         color: var(--text-color);
@@ -124,14 +151,14 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
-    /* Titre interne (ex: OUEST NANTERRE) */
+    /* Titre interne */
     .rer-direction {
         margin-top: 12px; 
         font-size: 13px; font-weight: bold; color: #3498db; 
         text-transform: uppercase; letter-spacing: 0.5px;
         border-bottom: 1px solid #444; 
         padding-bottom: 4px;
-        margin-bottom: 0px; /* Collé au prochain élément */
+        margin-bottom: 0px; 
     }
     
     .bus-card, .rail-card {
@@ -146,10 +173,10 @@ st.markdown("""
     .bus-row, .rail-row {
         display: flex; justify-content: space-between; 
         padding-top: 8px; padding-bottom: 2px;
-        border-top: 1px solid #333; /* Ligne de séparation par défaut */
+        border-top: 1px solid #333; 
     }
     
-    /* CORRECTION DOUBLES LIGNES : Si une ligne de train suit direct un titre, pas de ligne en haut ! */
+    /* Si une ligne de train suit direct un titre, pas de ligne en haut ! */
     .rer-direction + .rail-row {
         border-top: none;
         padding-top: 8px;
@@ -163,6 +190,34 @@ st.markdown("""
         margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444;
     }
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
+
+    /* --- NOUVEAU STYLE : CADRE DERNIER DÉPART --- */
+    .last-dep-box {
+        border: 2px solid #f1c40f; /* Jaune IDFM */
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        background-color: rgba(241, 196, 15, 0.1);
+        animation: yellow-pulse 2s infinite; /* Clignotement */
+    }
+    
+    .last-dep-label {
+        display: block;
+        font-size: 0.75em;
+        text-transform: uppercase;
+        font-weight: bold;
+        color: #f1c40f;
+        margin-bottom: 4px;
+        letter-spacing: 1px;
+    }
+    
+    /* Ajustement pour que le contenu dans la boîte jaune s'affiche bien */
+    .last-dep-box .rail-row, .last-dep-box .bus-row {
+        border-top: none !important;
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -175,7 +230,6 @@ GEOGRAPHIE_RER = {
         "label_1": "⇦ OUEST (Cergy / Poissy / St-Germain)",
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "VESINET", "VÉSINET", "NANTERRE", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
         "term_1": ["CERGY", "POISSY", "GERMAIN"],
-        
         "label_2": "⇨ EST (Boissy / Marne-la-Vallée / Torcy)",
         "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"],
         "term_2": ["CHESSY", "BOISSY"]
@@ -184,7 +238,6 @@ GEOGRAPHIE_RER = {
         "label_1": "⇧ NORD (Roissy / Mitry)",
         "mots_1": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE"],
         "term_1": ["GAULLE", "MITRY"],
-        
         "label_2": "⇩ SUD (St-Rémy / Robinson)",
         "mots_2": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"],
         "term_2": ["REMY", "RÉMY", "ROBINSON"]
@@ -193,7 +246,6 @@ GEOGRAPHIE_RER = {
         "label_1": "⇦ OUEST (Versailles / Pontoise)",
         "mots_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "INVALIDES", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
-        
         "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
@@ -202,7 +254,6 @@ GEOGRAPHIE_RER = {
         "label_1": "⇧ NORD (Creil)",
         "mots_1": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
         "term_1": ["CREIL", "ORRY"],
-        
         "label_2": "⇩ SUD (Melun / Corbeil)",
         "mots_2": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_2": ["MELUN", "CORBEIL", "MALESHERBES"]
@@ -211,7 +262,6 @@ GEOGRAPHIE_RER = {
         "label_1": "⇦ OUEST (Nanterre)",
         "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
         "term_1": ["NANTERRE", "HAUSSMANN"],
-        
         "label_2": "⇨ EST (Chelles / Tournan)",
         "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"],
         "term_2": ["CHELLES", "TOURNAN"]
@@ -243,8 +293,10 @@ def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
-    if "RER" in m: return "RER"
-    # AJOUT DES TER ICI
+    
+    # CORRECTION ICI : RapidTransit = RER pour l'API
+    if "RER" in m or "RAPIDTRANSIT" in m: return "RER"
+    
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
@@ -280,18 +332,13 @@ def get_all_changelogs():
     log_dir = "changelogs"
     all_notes = []
     if not os.path.exists(log_dir): return ["*Aucune note de version trouvée.*"]
-    
     files = [f for f in os.listdir(log_dir) if f.endswith(".md")]
-    
     def version_key(filename):
         try:
             clean = filename.lower().replace('v', '').replace('.md', '')
             return [int(part) for part in clean.split('.') if part.isdigit()]
-        except:
-            return [0]
-            
+        except: return [0]
     files.sort(key=version_key, reverse=True)
-
     for filename in files:
         filepath = os.path.join(log_dir, filename)
         try:
@@ -303,20 +350,26 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.title("🚆 Grand Paname")
-st.caption("v0.10.3 - Milk • ⚠️ Pre-release")
+st.title("🚆 Grand Paname (Bêta)")
+st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    # Version en petit et gris avec le warning
-    st.caption("v0.10.3 - Milk • ⚠️ Pre-release") 
+    st.caption("v0.10.4 - Milk • ⚠️ Pre-release") 
     
     st.header("🗄️ Informations")
+    
+    # LE PETIT MESSAGE SYMPA 👇
+    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
         for i, note in enumerate(notes_history):
             st.markdown(note)
             if i < len(notes_history) - 1: st.divider()
+    
+    st.markdown("---")
+    st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
@@ -328,7 +381,6 @@ if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
 if 'last_query' not in st.session_state:
     st.session_state.last_query = ""
-# NOUVEAU : On garde l'erreur en mémoire pour qu'elle survive au rechargement
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
@@ -341,13 +393,11 @@ with st.form("search_form"):
     )
     submitted = st.form_submit_button("Rechercher")
 
-# ZONE D'AFFICHAGE DE L'ERREUR (Juste sous la barre)
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
 
 if submitted and search_query:
     st.session_state.last_query = search_query 
-    # On efface l'ancienne erreur avant de chercher
     st.session_state.search_error = None
     
     with st.spinner("Recherche des arrêts..."):
@@ -364,23 +414,17 @@ if submitted and search_query:
         if len(opts) > 0:
             st.session_state.search_results = opts
         else:
-            # C'est ici que ça change : on stocke l'erreur au lieu de l'afficher tout de suite
             st.session_state.search_results = {}
             st.session_state.search_error = "⚠️ Aucun résultat trouvé. Essayez un autre nom."
     
-    # On force le rechargement DANS TOUS LES CAS (Succès ou Échec)
-    # Cela permet de fermer le clavier à chaque fois.
     st.session_state.search_key += 1
     st.rerun()
 
-# Affichage du menu déroulant s'il y a des résultats en mémoire
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
-    
     if choice:
         stop_id = opts[choice]
-        # Mise à jour si changement
         if st.session_state.selected_stop != stop_id:
             st.session_state.selected_stop = stop_id
             st.session_state.selected_name = choice
@@ -395,38 +439,62 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    paris_tz = pytz.timezone('Europe/Paris')
-    heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    st.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
+    # ZONE DE STATUT FIXE
+    status_area = st.empty()
+    
+    # 1. AFFICHER LE SPINNER (HTML/CSS personnalisé pour ne rien décaler)
+    status_area.markdown("""
+        <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'>
+            <span class="custom-loader"></span> Actualisation...
+        </div>
+    """, unsafe_allow_html=True)
 
-    # AJOUT SPINNER : On englobe le chargement des données pour patienter
-    with st.spinner("Chargement des prochains passages..."):
-        
-        # 1. Récupération des lignes théoriques
-        data_lines = demander_lignes_arret(stop_id)
-        all_lines_at_stop = {} 
-        if data_lines and 'lines' in data_lines:
-            for line in data_lines['lines']:
-                raw_mode = "AUTRE"
-                if 'physical_modes' in line and line['physical_modes']:
-                    raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
-                elif 'physical_mode' in line:
-                    raw_mode = line['physical_mode']
-                
-                mode = normaliser_mode(raw_mode)
-                code = clean_code_line(line.get('code', '?')) 
-                color = line.get('color', '666666')
-                all_lines_at_stop[(mode, code)] = {'color': color}
+    # 1. Récupération des lignes théoriques
+    data_lines = demander_lignes_arret(stop_id)
+    all_lines_at_stop = {} 
+    if data_lines and 'lines' in data_lines:
+        for line in data_lines['lines']:
+            raw_mode = "AUTRE"
+            if 'physical_modes' in line and line['physical_modes']:
+                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+            elif 'physical_mode' in line:
+                raw_mode = line['physical_mode']
+            
+            mode = normaliser_mode(raw_mode)
+            code = clean_code_line(line.get('code', '?')) 
+            color = line.get('color', '666666')
+            all_lines_at_stop[(mode, code)] = {'color': color}
 
-        # 2. Récupération temps réel
-        data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
+    # 2. Récupération temps réel
+    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
-    # ... La suite du code reste inchangée ...
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
 
+    # --- CALCUL DES DERNIERS DÉPARTS (LOGIQUE "TROU D'AIR") ---
+    last_departures_map = {} 
+    
     if data_live and 'departures' in data_live:
+        for d in data_live['departures']:
+            info = d['display_informations']
+            mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
+            code = clean_code_line(info.get('code', '?')) 
+            
+            raw_dest = info.get('direction', '')
+            if mode == "BUS": dest = raw_dest
+            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            
+            freshness = d.get('data_freshness', 'realtime')
+            val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
+            
+            if val_tri < 3000:
+                key = (mode, code, dest)
+                current_max = last_departures_map.get(key, -999999)
+                if val_tri > current_max:
+                    last_departures_map[key] = val_tri
+
+        # Passe 2 : Remplir les buckets
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -442,16 +510,40 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
+            # Vérification "Dernier Train" PLUS INTELLIGENTE
+            is_last = False
+            if val_tri < 3000:
+                key = (mode, code, dest)
+                max_val = last_departures_map.get(key)
+                
+                # CONDITION : C'est le dernier de la liste
+                if max_val and val_tri == max_val:
+                    # ET ce dernier départ est assez lointain (> 1h d'attente)
+                    # Cela signifie que l'API a eu le temps de chercher loin et n'a rien trouvé d'autre.
+                    # Si le dernier bus est dans 5 min, c'est juste que la liste est pleine.
+                    # Si le dernier bus est dans 120 min, c'est que c'est vraiment la fin.
+                    if val_tri > 60:
+                        is_last = True
+                    # Exception : Si c'est un train/RER tard le soir (> 21h), on est plus souple
+                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21:
+                        is_last = True
+
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri})
+                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
     # 2.1 RECUPERATION DES LIGNES MANQUANTES ("GHOST LINES")
+    # Pour les modes nobles, si aucune data live n'est remontée, on force l'affichage
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
+            # FILTRE ANTI-BRUIT : On ne force pas l'affichage "Service terminé" 
+            # pour les TER ou la ligne R qui polluent souvent les gares RER D
+            if code_t in ["TER", "R"]: 
+                continue
+
             exists_in_buckets = False
             if mode_t in buckets:
                 for (b_mode, b_code, b_color) in buckets[mode_t]:
@@ -462,7 +554,7 @@ def afficher_tableau_live(stop_id, stop_name):
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
-                buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
+                buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
     
     # 2.5 FILTRAGE
     for mode in list(buckets.keys()):
@@ -485,6 +577,12 @@ def afficher_tableau_live(stop_id, stop_name):
         for k in keys_to_remove:
             del buckets[mode][k]
 
+    # --- MISE À JOUR DU STATUT (FIN DU CHARGEMENT) ---
+    paris_tz = pytz.timezone('Europe/Paris')
+    heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
+    # On remplace le "Chargement..." par l'heure, sans bouger le reste de la page
+    status_area.caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
+
     # 3. Affichage Tableau
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
@@ -503,30 +601,24 @@ def afficher_tableau_live(stop_id, stop_name):
         for cle in sorted(lignes_du_mode.keys(), key=sort_key):
             _, code, color = cle
             departs = lignes_du_mode[cle]
-            
             proches = [d for d in departs if d['tri'] < 3000]
             if not proches:
-                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000}]
+                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-            # ===========================================================
             # CAS 1 : RER/TRAIN AVEC GÉOGRAPHIE
-            # ===========================================================
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                # CONSTRUCTION HTML UNIQUE POUR ÉVITER LES BUGS D'AFFICHAGE
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:5px;">
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
-                
                 geo = GEOGRAPHIE_RER[code]
                 stop_upper = clean_name.upper()
                 is_term_1 = any(t in stop_upper for t in geo.get('term_1', []))
                 is_term_2 = any(t in stop_upper for t in geo.get('term_2', []))
                 
                 real_proches = [d for d in departs if d['tri'] < 3000]
-                
                 p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
                 p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
                 p3 = [d for d in real_proches if d not in p1 and d not in p2]
@@ -538,12 +630,15 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
-                            # Pas de séparateur ici, le CSS s'en charge (border-top)
-                            html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
+                            if item.get('is_last'):
+                                # CORRECTION : Tout sur une ligne pour éviter le bug Markdown
+                                html_output += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
+                            else:
+                                html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
 
                 if not p1 and not p2:
-                     card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
+                     card_html += """<div class="service-box">😴 Service terminé </div>"""
                 else:
                     if not is_term_1: card_html += build_rer_group(geo['label_1'], p1)
                     if not is_term_2: card_html += build_rer_group(geo['label_2'], p2)
@@ -553,9 +648,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # ===========================================================
             # CAS 2 : TRAINS/RER SANS GÉOGRAPHIE
-            # ===========================================================
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
@@ -563,36 +656,33 @@ def afficher_tableau_live(stop_id, stop_name):
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
-                
                 real_proches = [d for d in departs if d['tri'] < 3000]
-                
                 if not real_proches:
                      card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                 else:
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
-                        card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
+                        if item.get('is_last'):
+                            # CORRECTION : Tout sur une ligne ici aussi
+                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
+                        else:
+                            card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
-            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES
             else:
                 dest_data = {}
                 for d in proches:
                     dn = d['dest']
-                    if dn not in dest_data: dest_data[dn] = {'html': [], 'best_time': 9999}
+                    if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
                     
-                    if len(dest_data[dn]['html']) < 3:
-                        dest_data[dn]['html'].append(d['html'])
+                    if len(dest_data[dn]['items']) < 3:
+                        dest_data[dn]['items'].append(d)
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                # NOUVEAU TRI HYBRIDE :
-                # - METRO, TRAM, CABLE : Tri Alphabétique (item[0] = nom destination)
-                # - BUS, AUTRE : Tri par Temps (item[1]['best_time'])
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
                 else:
@@ -600,12 +690,59 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 rows_html = ""
                 for dest_name, info in sorted_dests:
-                    times = info['html']
                     if "Service terminé" in dest_name:
                         rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
-                        times_str = "<span class='time-sep'>|</span>".join(times)
-                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                        html_list = []
+                        contains_last = False
+                        last_val_tri = 9999
+                        
+                        # On parcourt les horaires avec leur index (0, 1, 2...)
+                        for idx, d_item in enumerate(info['items']):
+                            val_tri = d_item['tri']
+                            
+                            # FILTRE 1 : On cache les 2ème/3ème bus s'ils sont dans trop longtemps (> 50 min)
+                            if idx > 0 and val_tri > 50:
+                                continue
+                                
+                            txt = d_item['html']
+                            
+                            # FILTRE 2 : Gestion intelligente du drapeau "Dernier"
+                            if d_item.get('is_last'):
+                                contains_last = True
+                                last_val_tri = val_tri
+                                
+                                # On n'affiche le drapeau que si le départ est raisonnablement proche (< 60 min)
+                                if val_tri < 60:
+                                    if val_tri < 30:
+                                        # < 30 min : Encadré jaune
+                                        txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    else:
+                                        # 30-60 min : Drapeau simple
+                                        txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                # Si > 60 min, on ne met RIEN (affichage standard)
+                                    
+                            html_list.append(txt)
+                        
+                        # Si tous les horaires ont été filtrés (cas rare), on garde au moins le premier
+                        if not html_list and info['items']:
+                             html_list.append(info['items'][0]['html'])
+
+                        times_str = "<span class='time-sep'>|</span>".join(html_list)
+                        
+                        # Règle pour la "Grosse Boîte" (inchangée : très proche et seul)
+                        if contains_last and len(html_list) == 1 and last_val_tri < 10:
+                             rows_html += f"""
+                            <div class='last-dep-box'>
+                                <span class='last-dep-label'>🏁 Dernier Bus (Départ imminent)</span>
+                                <div class='bus-row'>
+                                    <span class='bus-dest'>➜ {dest_name}</span>
+                                    <span>{times_str}</span>
+                                </div>
+                            </div>
+                            """
+                        else:
+                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
@@ -626,7 +763,7 @@ def afficher_tableau_live(stop_id, stop_name):
     for m in footer_data:
         if m != "AUTRE": count_visible += len(footer_data[m])
 
-    # ETAPE 1 : MESSAGE D'ERREUR/INFO (D'ABORD)
+    # MESSAGE D'ERREUR/INFO
     if not has_data:
         if count_visible > 0:
             st.markdown("""
@@ -643,11 +780,10 @@ def afficher_tableau_live(stop_id, stop_name):
             </div>
             """, unsafe_allow_html=True)
 
-    # ETAPE 2 : FOOTER (ENSUITE)
+    # FOOTER
     if count_visible > 0:
         st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
         st.caption("Autres lignes desservant cet arrêt :")
-        
         for mode in ordre_affichage:
             if mode == "AUTRE": continue
             if mode in footer_data and footer_data[mode]:
@@ -657,7 +793,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 for code in sorted_codes:
                     color = items[code]
                     html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
-                
                 if html_badges:
                     st.markdown(f"""
                     <div class="footer-container">
