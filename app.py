@@ -349,10 +349,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.10.5 - Milk • ⚠️ Pre-release")
+st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.10.5 - Milk • ⚠️ Pre-release") 
+    st.caption("v0.10.4 - Milk • ⚠️ Pre-release") 
     
     st.header("🗄️ Informations")
     
