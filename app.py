@@ -86,12 +86,12 @@ def charger_police_locale(file_path, font_name):
                 display: inline-block;
                 vertical-align: middle;
                 margin-right: 8px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
             </style>
         """
         st.markdown(css, unsafe_allow_html=True)
