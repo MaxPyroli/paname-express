@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION (Doit être la première commande Streamlit)
 st.set_page_config(
-    page_title="Grand Paname Express (Bêta)",
+    page_title="Grand Paname (Bêta)",
     page_icon=icon_image,
     layout="centered"
 )
