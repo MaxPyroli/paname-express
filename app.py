@@ -30,9 +30,10 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE
+# 2. FONCTION POLICE (Ciblage Étendu & Sécurisé)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
+        # st.error(f"⚠️ Fichier introuvable : {file_path}")
         return
     
     try:
@@ -50,18 +51,27 @@ def charger_police_locale(file_path, font_name):
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
+            /* 1. Base globale (héritage) */
             html, body {{
                 font-family: '{font_name}', sans-serif;
             }}
             
+            /* 2. Forçage sur les balises de texte "sûres" (sans casser les icônes) */
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
+            /* 3. Forçage sur TES classes personnalisées (Bus, Train, Footer...) */
+            .bus-card, .rail-card, .station-title, .section-header, .footer-container, .service-box {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
+            /* 4. Forçage sur les conteneurs de texte Streamlit */
+            .stMarkdown, .stCaption, .stText, .stSelectbox, .stTextInput {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* 5. Cas particulier : Titres des expanders */
             .streamlit-expanderHeader {{
                 font-family: '{font_name}', sans-serif !important;
             }}
