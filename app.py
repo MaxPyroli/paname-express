@@ -638,7 +638,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     return html_output
 
                 if not p1 and not p2:
-                     card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
+                     card_html += """<div class="service-box">😴 Service terminé </div>"""
                 else:
                     if not is_term_1: card_html += build_rer_group(geo['label_1'], p1)
                     if not is_term_2: card_html += build_rer_group(geo['label_2'], p2)
