@@ -149,15 +149,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-#              LOGIQUE MÉTIER "SMART GEO V2"
+#              LOGIQUE MÉTIER
 # ==========================================
 
-# On définit explicitement les mots-clés pour chaque direction pour éviter les erreurs de calcul
-GEO_ZONES = {
+GEOGRAPHIE_RER = {
     "A": {
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
-        "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE"],
-        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"]
+        "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "VESINET", "VÉSINET", "NANTERRE", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"]
     },
     "B": {
         "labels": ("⇩ SUD (St-Rémy / Robinson)", "⇧ NORD (Roissy / Mitry)"),
@@ -168,7 +167,7 @@ GEO_ZONES = {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
         # INVALIDES est mis ici par défaut (Vers l'Ouest pour la majorité des gares)
         "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS"]
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"]
     },
     "D": {
         "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil / Goussainville)"),
@@ -256,10 +255,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname")
-st.caption("v0.11 - Smart Geo • ⚠️ Pre-release")
+st.caption("v0.11.1 - Hotfix Geo • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.11 - Smart Geo • ⚠️ Pre-release") 
+    st.caption("v0.11.1 - Hotfix Geo • ⚠️ Pre-release") 
     st.header("🗄️ Informations")
     st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
     st.markdown("---")
@@ -464,8 +463,8 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-            # === CAS 1 : RER INTELLIGENT (LOGIQUE ROBUSTE + PATCH C) ===
-            if mode_actuel in ["RER"] and code in GEO_ZONES:
+            # === CAS 1 : RER AVEC LOGIQUE DE DIRECTION ===
+            if mode_actuel in ["RER"] and code in GEOGRAPHIE_RER:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:5px;">
@@ -473,55 +472,54 @@ def afficher_tableau_live(stop_id, stop_name):
                     </div>
                 """
                 
-                geo = GEO_ZONES[code]
+                geo = GEOGRAPHIE_RER[code]
                 stop_upper = clean_name.upper()
                 
-                # --- PATCH DYNAMIQUE POUR LE RER C ---
-                # On travaille sur des copies pour ne pas casser la config globale
-                local_mots_1 = geo['mots_1'].copy()
-                local_mots_2 = geo['mots_2'].copy()
+                # --- PATCH DYNAMIQUE POUR LE RER C (Correctif Invalides/Porte Maillot) ---
+                local_mots_1 = geo['mots_1'].copy() # Ouest
+                local_mots_2 = geo['mots_2'].copy() # Sud/Est
                 
                 if code == "C":
-                    # Liste des gares où Invalides doit être considéré comme "Sud/Est" (Sens anti-horaire vers Paris)
-                    # C'est ce qui corrige ton problème à Porte Maillot !
+                    # Si on est dans la boucle Nord-Ouest (Maillot, Pereire...), Invalides est vers le Sud/Est
                     zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY"]
                     if any(k in stop_upper for k in zone_nord_ouest):
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-                # -------------------------------------
+                # ---------------------------------------------------------------------
 
                 # Tri des départs avec les listes ajustées
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
                 
-                # Détection Terminus (pour cacher la direction si on y est)
+                # Détection Terminus
                 is_term_1 = any(k in stop_upper for k in local_mots_1)
                 is_term_2 = any(k in stop_upper for k in local_mots_2)
                 
                 def render_group(titre, items):
                     h = f"<div class='rer-direction'>{titre}</div>"
-                    if not items:
-                         h += f"""<div class="service-box">😴 Service terminé</div>"""
-                    else:
-                        items.sort(key=lambda x: x['tri'])
-                        for it in items[:4]:
-                            if it.get('is_last'):
-                                h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                            else:
-                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                    items.sort(key=lambda x: x['tri'])
+                    for it in items[:4]:
+                        if it.get('is_last'):
+                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                        else:
+                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
                 if not p1 and not p2:
                      card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
-                    if not is_term_1: card_html += render_group(geo['labels'][0], p1)
-                    if not is_term_2: card_html += render_group(geo['labels'][1], p2)
+                    if not is_term_1 and p1: card_html += render_group(geo['labels'][0], p1)
+                    elif not is_term_1: card_html += f"<div class='rer-direction'>{geo['labels'][0]}</div><div class='service-box'>😴 Service terminé</div>"
+                    
+                    if not is_term_2 and p2: card_html += render_group(geo['labels'][1], p2)
+                    elif not is_term_2: card_html += f"<div class='rer-direction'>{geo['labels'][1]}</div><div class='service-box'>😴 Service terminé</div>"
 
                 if p3: card_html += render_group("AUTRES DIRECTIONS", p3)
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
+
             # === CAS 2 : TRAINS & RER NON MAILLÉS ===
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
