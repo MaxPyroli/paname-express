@@ -335,6 +335,7 @@ st.caption("v0.10.4 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
     st.caption("v0.10.4 - Milk • ⚠️ Pre-release") 
+    
     st.header("🗄️ Informations")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
@@ -342,6 +343,10 @@ with st.sidebar:
         for i, note in enumerate(notes_history):
             st.markdown(note)
             if i < len(notes_history) - 1: st.divider()
+    
+    # AJOUT DE LA MENTION TRANSPARENCE
+    st.markdown("---")
+    st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
