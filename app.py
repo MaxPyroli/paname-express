@@ -75,6 +75,23 @@ def charger_police_locale(file_path, font_name):
             .streamlit-expanderHeader {{
                 font-family: '{font_name}', sans-serif !important;
             }}
+            /* SPINNER PERSONNALISÉ (Pour la zone de statut sans décalage) */
+    .custom-loader {
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #3498db; /* Bleu */
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
             </style>
         """
         st.markdown(css, unsafe_allow_html=True)
