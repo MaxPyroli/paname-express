@@ -293,8 +293,10 @@ def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
-    if "RER" in m: return "RER"
-    # AJOUT DES TER ICI
+    
+    # CORRECTION ICI : RapidTransit = RER pour l'API
+    if "RER" in m or "RAPIDTRANSIT" in m: return "RER"
+    
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
@@ -531,16 +533,24 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
-    # 2.1 RECUPERATION DES LIGNES MANQUANTES
+    # 2.1 RECUPERATION DES LIGNES MANQUANTES ("GHOST LINES")
+    # Pour les modes nobles, si aucune data live n'est remontée, on force l'affichage
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
+    
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
+            # FILTRE ANTI-BRUIT : On ne force pas l'affichage "Service terminé" 
+            # pour les TER ou la ligne R qui polluent souvent les gares RER D
+            if code_t in ["TER", "R"]: 
+                continue
+
             exists_in_buckets = False
             if mode_t in buckets:
                 for (b_mode, b_code, b_color) in buckets[mode_t]:
                     if b_code == code_t:
                         exists_in_buckets = True
                         break
+            
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
