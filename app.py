@@ -149,83 +149,38 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-#              LOGIQUE MÉTIER "SMART GEO"
+#              LOGIQUE MÉTIER "SMART GEO V2"
 # ==========================================
 
-# SYSTÈME DE SCORE GÉOGRAPHIQUE
-# Négatif = Ouest / Sud
-# 0 = Centre Paris
-# Positif = Est / Nord
+# On définit explicitement les mots-clés pour chaque direction pour éviter les erreurs de calcul
 GEO_ZONES = {
     "A": {
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
-        "keywords": {
-            -10: ["CERGY", "POISSY", "GERMAIN", "MAISONS", "LAFFITTE", "ACHERES", "CONFLANS", "NEUVILLE", "HOUILLES"],
-            -5:  ["NANTERRE", "RUEIL", "VESINET", "CHATOU", "DEFENSE", "DÉFENSE", "GRANDE ARCHE"],
-            0:   ["AUBER", "CHATELET", "CHÂTELET", "GARE DE LYON", "NATION"],
-            5:   ["VINCENNES", "FONTENAY", "NOGENT", "JOINVILLE", "ST-MAUR", "SAINT-MAUR", "CHAMPIGNY"],
-            10:  ["BOISSY", "MARNE", "VALLEE", "VALLÉE", "CHESSY", "DISNEY", "TORCY", "LOGNES", "NOISY", "NOISIEL", "BUSSY"]
-        }
+        "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE"],
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"]
     },
     "B": {
         "labels": ("⇩ SUD (St-Rémy / Robinson)", "⇧ NORD (Roissy / Mitry)"),
-        "keywords": {
-            -10: ["REMY", "RÉMY", "CHEVREUSE", "COURCELLE", "GIF", "ORSAY", "PALAISEAU", "MASSY", "FONTAINE", "ROBINSON", "SCEAUX", "BERNY"],
-            -5:  ["BOURG", "BAGNEUX", "ARCUEIL", "LAPLACE", "GENTILLY", "UNIVERSITAIRE"],
-            0:   ["DENFERT", "PORT ROYAL", "LUXEMBOURG", "MICHEL", "CHATELET", "CHÂTELET", "HALLES"],
-            5:   ["GARE DU NORD", "STADE DE FRANCE", "LA PLAINE", "AUBERVILLIERS"],
-            10:  ["BOURGET", "DRANCY", "BLANC MESNIL", "AULNAY", "SEVRAN", "VILLEPINTE", "GAULLE", "AÉROPORT", "MITRY", "CLAYE", "TREMBLAY"]
-        }
+        "mots_1": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"],
+        "mots_2": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE", "AÉROPORT"]
     },
     "C": {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
-        "keywords": {
-            -10: ["PONTOISE", "ST-OUEN", "SAINT-OUEN", "ERMONT", "GENNEVILLIERS", "PORTE DE CLICHY", "PEREIRE", "MAILLOT", "FOCH", "HENRI MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO", "VERSAILLES", "QUENTIN", "SAINT-QUENTIN", "VIROFLAY", "CHAVILLE", "MEUDON", "ISSY"],
-            0:   ["CHAMP DE MARS", "EIFFEL", "INVALIDES", "ORSAY", "ST-MICHEL", "SAINT-MICHEL", "AUSTERLITZ"],
-            5:   ["BIBLIOTHEQUE", "BIBLIOTHÈQUE", "IVRY", "VITRY", "CHOISY", "ORLY", "RUNGIS"],
-            10:  ["JUVISY", "ATHIS", "SAVIGNY", "EPINAY", "ÉPINAY", "OISE", "GRAVIGNY", "BALIZY", "LONGJUMEAU", "CHILLY"],
-            15:  ["MASSY", "PALAISEAU", "IGNY", "BIEVRES", "BIÈVRES", "VAUBOYEN", "JOUY", "PETIT VAUX"],
-            20:  ["BRETIGNY", "BRÉTIGNY", "MAROLLES", "BOURAY", "LAMARDY", "CHAMARANDE", "ETRECHY", "ÉTRÉCHY", "ETAMPES", "ÉTAMPES", "ST-MARTIN", "DOURDAN", "SERMAISE", "ST-CHERON", "BREUILLET", "ARPAJON", "EGLY", "ÉGLY", "BRUYERES", "BRUYÈRES"]
-        }
+        # INVALIDES est mis ici par défaut (Vers l'Ouest pour la majorité des gares)
+        "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS"]
     },
     "D": {
         "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil / Goussainville)"),
-        "keywords": {
-            -10: ["MELUN", "CORBEIL", "ESSONNES", "MALESHERBES", "FERTE", "FERTÉ", "BOUTIGNY", "MAISSE", "BUNO", "GIRONVILLE", "MOULIN", "MENNECY", "VILLABÉ", "COUDRAY", "PLESSIS", "LIEUSAINT", "MOISSY", "COMBS", "BOUSSY", "QUINCY", "VIGNEUX", "JUVISY", "RIS", "BRAS", "EVRY", "ÉVRY", "GRIGNY"],
-            -5:  ["VILLENEUVE", "VERT DE MAISONS", "MAISONS-ALFORT", "CRETEIL", "CRÉTEIL"],
-            0:   ["GARE DE LYON", "CHATELET", "CHÂTELET", "HALLES"],
-            5:   ["GARE DU NORD", "STADE DE FRANCE", "ST-DENIS", "SAINT-DENIS"],
-            10:  ["PIERREFITTE", "GARGES", "SARCELLES", "VILLIERS-LE-BEL", "GONESSE", "ARNOUVILLE", "GOUSSAINVILLE", "LOUVRES", "SURVILLIERS", "ORRY", "COYE", "CHANTILLY", "CREIL"]
-        }
+        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
+        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"]
     },
     "E": {
         "labels": ("⇦ OUEST (Nanterre / La Défense)", "⇨ EST (Chelles / Tournan)"),
-        "keywords": {
-            -10: ["NANTERRE", "DEFENSE", "DÉFENSE", "CNIT", "PORTE MAILLOT"],
-            0:   ["HAUSSMANN", "LAZARE", "MAGENTA", "GARE DU NORD", "ROSA PARKS"],
-            5:   ["PANTIN", "NOISY-LE-SEC", "BONDY", "RAINCY", "VILLEMOMBLE", "GAGNY"],
-            10:  ["CHENAY", "CHELLES", "GOURNAY", "ROSNY", "VAL DE FONTENAY", "NOGENT", "PERREUX", "VILLIERS-SUR-MARNE", "YVRIS", "EMERAINVILLE", "ROISSY-EN-BRIE", "OZOIR", "GRETZ", "TOURNAN"]
-        }
+        "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
+        "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"]
     }
 }
-
-def get_geo_score(line_code, station_name):
-    if line_code not in GEO_ZONES: return None
-    name_upper = station_name.upper()
-    data = GEO_ZONES[line_code]["keywords"]
-    for score, keywords in data.items():
-        for k in keywords:
-            if k in name_upper: return score
-    return 0
-
-def get_smart_direction(line_code, current_stop_name, destination_name):
-    current_score = get_geo_score(line_code, current_stop_name)
-    dest_score = get_geo_score(line_code, destination_name)
-    labels = GEO_ZONES[line_code]["labels"]
-    
-    if dest_score > current_score: return labels[1]
-    elif dest_score < current_score: return labels[0]
-    else: return "AUTRES DIRECTIONS"
 
 ICONES_TITRE = {
     "RER": "🚆 RER", "TRAIN": "🚆 TRAIN", "METRO": "🚇 MÉTRO", 
@@ -509,7 +464,7 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-            # === CAS 1 : RER INTELLIGENT (LOGIQUE SMART GEO) ===
+            # === CAS 1 : RER INTELLIGENT (LOGIQUE ROBUSTE + PATCH C) ===
             if mode_actuel in ["RER"] and code in GEO_ZONES:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
@@ -518,48 +473,55 @@ def afficher_tableau_live(stop_id, stop_name):
                     </div>
                 """
                 
-                # Tri des destinations par direction "Intelligente"
-                directions_bucket = {}
-                labels = GEO_ZONES[code]["labels"] # (Label Negatif, Label Positif)
+                geo = GEO_ZONES[code]
+                stop_upper = clean_name.upper()
                 
-                # On regroupe les trains par leur label de direction calculé
-                for item in proches:
-                    smart_dir = get_smart_direction(code, clean_name, item['dest'])
-                    if smart_dir not in directions_bucket: directions_bucket[smart_dir] = []
-                    directions_bucket[smart_dir].append(item)
+                # --- PATCH DYNAMIQUE POUR LE RER C ---
+                # On travaille sur des copies pour ne pas casser la config globale
+                local_mots_1 = geo['mots_1'].copy()
+                local_mots_2 = geo['mots_2'].copy()
                 
-                # Fonction de rendu interne
+                if code == "C":
+                    # Liste des gares où Invalides doit être considéré comme "Sud/Est" (Sens anti-horaire vers Paris)
+                    # C'est ce qui corrige ton problème à Porte Maillot !
+                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY"]
+                    if any(k in stop_upper for k in zone_nord_ouest):
+                        if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
+                        if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
+                # -------------------------------------
+
+                # Tri des départs avec les listes ajustées
+                p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
+                p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
+                p3 = [d for d in proches if d not in p1 and d not in p2]
+                
+                # Détection Terminus (pour cacher la direction si on y est)
+                is_term_1 = any(k in stop_upper for k in local_mots_1)
+                is_term_2 = any(k in stop_upper for k in local_mots_2)
+                
                 def render_group(titre, items):
                     h = f"<div class='rer-direction'>{titre}</div>"
-                    items.sort(key=lambda x: x['tri'])
-                    for it in items[:4]:
-                        if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                        else:
-                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                    if not items:
+                         h += f"""<div class="service-box">😴 Service terminé</div>"""
+                    else:
+                        items.sort(key=lambda x: x['tri'])
+                        for it in items[:4]:
+                            if it.get('is_last'):
+                                h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                            else:
+                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
-                # Affichage dans l'ordre (Négatif / Positif / Autres)
-                # 1. Label Négatif (Ouest ou Sud)
-                if labels[0] in directions_bucket:
-                    card_html += render_group(labels[0], directions_bucket[labels[0]])
-                
-                # 2. Label Positif (Est ou Nord)
-                if labels[1] in directions_bucket:
-                    card_html += render_group(labels[1], directions_bucket[labels[1]])
-                
-                # 3. Les restes ("AUTRES DIRECTIONS")
-                if "AUTRES DIRECTIONS" in directions_bucket:
-                    card_html += render_group("AUTRES DIRECTIONS", directions_bucket["AUTRES DIRECTIONS"])
-                
-                # Si vide total (Service terminé affiché plus haut dans 'proches' mais pas classé)
-                if not directions_bucket and proches:
-                     # Cas spécial : Service terminé générique
-                     card_html += f"""<div class="service-box">😴 Service terminé</div>"""
+                if not p1 and not p2:
+                     card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
+                else:
+                    if not is_term_1: card_html += render_group(geo['labels'][0], p1)
+                    if not is_term_2: card_html += render_group(geo['labels'][1], p2)
+
+                if p3: card_html += render_group("AUTRES DIRECTIONS", p3)
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
-
             # === CAS 2 : TRAINS & RER NON MAILLÉS ===
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
