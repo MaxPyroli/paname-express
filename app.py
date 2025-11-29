@@ -610,15 +610,8 @@ def afficher_tableau_live(stop_id, stop_name):
                         liste_proches.sort(key=lambda x: x['tri'])
                         for item in liste_proches[:4]:
                             if item.get('is_last'):
-                                html_output += f"""
-                                <div class='last-dep-box'>
-                                    <span class='last-dep-label'>🏁 Dernier départ</span>
-                                    <div class='rail-row'>
-                                        <span class='rail-dest'>{item['dest']}</span>
-                                        <span>{item['html']}</span>
-                                    </div>
-                                </div>
-                                """
+                                # CORRECTION : Tout sur une ligne pour éviter le bug Markdown
+                                html_output += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
                             else:
                                 html_output += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     return html_output
@@ -649,15 +642,8 @@ def afficher_tableau_live(stop_id, stop_name):
                     real_proches.sort(key=lambda x: x['tri'])
                     for item in real_proches[:4]:
                         if item.get('is_last'):
-                            card_html += f"""
-                            <div class='last-dep-box'>
-                                <span class='last-dep-label'>🏁 Dernier départ</span>
-                                <div class='rail-row'>
-                                    <span class='rail-dest'>{item['dest']}</span>
-                                    <span>{item['html']}</span>
-                                </div>
-                            </div>
-                            """
+                            # CORRECTION : Tout sur une ligne ici aussi
+                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
                         else:
                             card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 
