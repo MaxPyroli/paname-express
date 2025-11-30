@@ -148,17 +148,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-#              LOGIQUE MÉTIER
-# ==========================================
-
 GEOGRAPHIE_RER = {
     "A": {
-        # MODIFICATION ICI : On utilise "labels" (tuple) au lieu de label_1/label_2
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
         "term_1": ["CERGY", "POISSY", "GERMAIN"],
-        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"],
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"],
         "term_2": ["CHESSY", "BOISSY"]
     },
     "B": {
@@ -170,9 +165,10 @@ GEOGRAPHIE_RER = {
     },
     "C": {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
+        # INVALIDES est par défaut à l'Ouest
         "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS"],
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
@@ -498,9 +494,23 @@ def afficher_tableau_live(stop_id, stop_name):
                 geo = GEOGRAPHIE_RER[code]
                 stop_upper = clean_name.upper()
                 
+                # --- PATCH DYNAMIQUE POUR LE RER C ---
+                local_mots_1 = geo['mots_1'].copy() # Ouest
+                local_mots_2 = geo['mots_2'].copy() # Sud/Est
+                
+                if code == "C":
+                    # On ajoute JAVEL et GARIGLIANO ici !
+                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
+                    
+                    if any(k in stop_upper for k in zone_nord_ouest):
+                        # Si on est dans cette zone, Invalides passe à l'Est/Sud
+                        if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
+                        if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
+                # -------------------------------------
+
                 real_proches = [d for d in departs if d['tri'] < 3000]
-                p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_1'])]
-                p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in geo['mots_2'])]
+                p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in local_mots_1)]
+                p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in real_proches if d not in p1 and d not in p2]
                 
                 is_term_1 = any(k in stop_upper for k in geo['term_1'])
@@ -510,9 +520,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     h = f"<div class='rer-direction'>{titre}</div>"
                     items.sort(key=lambda x: x['tri'])
                     for it in items[:4]:
-                        # AFFICHAGE DU CODE DEBUG ICI
                         debug_badge = f"<span style='font-size:0.7em; color:#777; margin-left:5px;'>{it['debug']}</span>"
-                        
                         if it.get('is_last'):
                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}{debug_badge}</span><span>{it['html']}</span></div></div>"""
                         else:
