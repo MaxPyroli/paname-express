@@ -439,7 +439,7 @@ def afficher_tableau_live(stop_id, stop_name):
     last_departures_map = {} 
 
     if data_live and 'departures' in data_live:
-        # Passe 1 : Max
+        # Passe 1 : Identifier l'horaire MAX pour chaque direction
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -447,14 +447,17 @@ def afficher_tableau_live(stop_id, stop_name):
             raw_dest = info.get('direction', '')
             if mode == "BUS": dest = raw_dest
             else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            
             freshness = d.get('data_freshness', 'realtime')
             val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
+            
+            # On ne prend pas en compte les "Service terminé" (3000)
             if val_tri < 3000:
                 key = (mode, code, dest)
                 current_max = last_departures_map.get(key, -999999)
                 if val_tri > current_max: last_departures_map[key] = val_tri
 
-        # Passe 2 : Buckets
+        # Passe 2 : Remplir les buckets
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -463,23 +466,42 @@ def afficher_tableau_live(stop_id, stop_name):
             raw_dest = info.get('direction', '')
             if mode == "BUS": dest = raw_dest
             else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            
+            # --- DEBUG INFO ---
+            try:
+                route_id_brut = d.get('route', {}).get('id', 'N/A')
+                route_id_short = route_id_brut.split(':')[-1] if ':' in route_id_brut else route_id_brut
+            except: route_id_short = "?"
+            debug_info = f"[R:{route_id_short}]"
+            # ------------------
+
             freshness = d.get('data_freshness', 'realtime')
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
             
             if val_tri < -5: continue 
 
+            # LOGIQUE "DERNIER DÉPART" (Revue et Corrigée)
             is_last = False
             if val_tri < 3000:
                 key = (mode, code, dest)
                 max_val = last_departures_map.get(key)
+                
                 if max_val and val_tri == max_val:
-                    if val_tri > 60: is_last = True
-                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: is_last = True
+                    # Pour RER et TRAIN : On fait confiance à l'API (count=600 voit loin)
+                    # Si c'est le dernier de la liste, on l'affiche comme Dernier, peu importe l'heure.
+                    if mode in ["RER", "TRAIN"]:
+                        is_last = True
+                    else:
+                        # Pour BUS/METRO/TRAM : On garde une sécurité pour éviter les faux positifs en journée
+                        # (Car la fréquence est élevée et la liste peut être coupée)
+                        # On affiche "Dernier" seulement si > 1h d'attente OU si c'est le soir (> 21h)
+                        if val_tri > 60 or datetime.now(pytz.timezone('Europe/Paris')).hour >= 21:
+                            is_last = True
 
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
+                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'debug': debug_info})
 
     # 2.1 GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
