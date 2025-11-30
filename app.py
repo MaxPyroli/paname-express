@@ -538,7 +538,6 @@ def afficher_tableau_live(stop_id, stop_name):
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
             # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
-            # CORRECTION ICI : On ajoute "TRAIN" dans la liste autorisée 👇
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
@@ -572,24 +571,39 @@ def afficher_tableau_live(stop_id, stop_name):
                     h = f"<div class='rer-direction'>{titre}</div>"
                     items.sort(key=lambda x: x['tri'])
                     for it in items[:4]:
-                        # Debug badge retiré pour la prod
                         if it.get('is_last'):
                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
                         else:
                             h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
-                if not p1 and not p2:
-                     card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
+                # LOGIQUE D'AFFICHAGE CORRIGÉE
+                directions_vides = (not p1 and not p2)
+                
+                if directions_vides:
+                     # Message simplifié comme demandé
+                     card_html += """<div class="service-box">😴 Service terminé</div>"""
                 else:
                     if not is_term_1: card_html += render_group(geo['labels'][0], p1)
                     if not is_term_2: card_html += render_group(geo['labels'][1], p2)
 
-                if p3: card_html += render_group("AUTRES DIRECTIONS", p3)
+                # GESTION "AUTRES DIRECTIONS" (Anti-Doublon)
+                # On affiche p3 SEULEMENT SI :
+                # 1. Il y a des trains dedans
+                # 2. ET (Ce ne sont pas juste des messages "Service terminé" ALORS qu'on a déjà affiché le message global)
+                
+                has_real_trains_in_p3 = any(d['tri'] < 3000 for d in p3)
+                
+                if p3:
+                    # Si on a déjà dit "Service terminé" globalement (directions_vides) 
+                    # et que p3 ne contient rien de réel, on ne l'affiche pas.
+                    if directions_vides and not has_real_trains_in_p3:
+                        pass 
+                    else:
+                        card_html += render_group("AUTRES DIRECTIONS", p3)
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
-
             # === CAS 2 : TRAINS & RER NON MAILLÉS ===
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
