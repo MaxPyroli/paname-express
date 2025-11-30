@@ -170,20 +170,21 @@ GEOGRAPHIE_RER = {
     },
     "C": {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
-        "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
-        "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
+        # AUSTERLITZ est bien à l'Ouest quand on est au Sud. INVALIDES est Ouest par défaut.
+        "mots_1": ["INVALIDES", "AUSTERLITZ", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
+        "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "AUSTERLITZ"],
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
-        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil / Goussainville)"),
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
         "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
         "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
         "term_2": ["CREIL", "ORRY"]
     },
     "E": {
-        "labels": ("⇦ OUEST (Nanterre / La Défense)", "⇨ EST (Chelles / Tournan)"),
+        "labels": ("⇦ OUEST (Nanterre)", "⇨ EST (Chelles / Tournan)"),
         "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
         "term_1": ["NANTERRE", "HAUSSMANN"],
         "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"],
@@ -280,7 +281,10 @@ def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
     if "FUNI" in m or "CABLE" in m or "TÉLÉPHÉRIQUE" in m: return "CABLE"
+    
+    # CORRECTION ICI : RapidTransit = RER pour l'API
     if "RER" in m or "RAPIDTRANSIT" in m: return "RER"
+    
     if "TRAIN" in m or "RAIL" in m or "SNCF" in m or "EXPRESS" in m or "TER" in m: return "TRAIN"
     if "METRO" in m or "MÉTRO" in m: return "METRO"
     if "TRAM" in m: return "TRAM"
@@ -329,10 +333,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.11.1 - Smart Geo • ⚠️ Pre-release")
+st.caption("v0.10.5 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.11.1 - Smart Geo • ⚠️ Pre-release") 
+    st.caption("v0.10.5 - Milk • ⚠️ Pre-release") 
     st.header("🗄️ Informations")
     st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
     st.markdown("---")
@@ -569,34 +573,29 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 def render_group(titre, items):
                     h = f"<div class='rer-direction'>{titre}</div>"
-                    items.sort(key=lambda x: x['tri'])
-                    for it in items[:4]:
-                        if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                        else:
-                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                    if not items:
+                         h += f"""<div class="service-box">😴 Service terminé</div>"""
+                    else:
+                        items.sort(key=lambda x: x['tri'])
+                        for it in items[:4]:
+                            if it.get('is_last'):
+                                h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                            else:
+                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
                 # LOGIQUE D'AFFICHAGE CORRIGÉE
                 directions_vides = (not p1 and not p2)
                 
                 if directions_vides:
-                     # Message simplifié comme demandé
                      card_html += """<div class="service-box">😴 Service terminé</div>"""
                 else:
                     if not is_term_1: card_html += render_group(geo['labels'][0], p1)
                     if not is_term_2: card_html += render_group(geo['labels'][1], p2)
 
-                # GESTION "AUTRES DIRECTIONS" (Anti-Doublon)
-                # On affiche p3 SEULEMENT SI :
-                # 1. Il y a des trains dedans
-                # 2. ET (Ce ne sont pas juste des messages "Service terminé" ALORS qu'on a déjà affiché le message global)
-                
                 has_real_trains_in_p3 = any(d['tri'] < 3000 for d in p3)
                 
                 if p3:
-                    # Si on a déjà dit "Service terminé" globalement (directions_vides) 
-                    # et que p3 ne contient rien de réel, on ne l'affiche pas.
                     if directions_vides and not has_real_trains_in_p3:
                         pass 
                     else:
@@ -604,7 +603,8 @@ def afficher_tableau_live(stop_id, stop_name):
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
-            # === CAS 2 : TRAINS & RER NON MAILLÉS ===
+
+            # === CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (BACKUP) ===
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
@@ -624,12 +624,13 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # === CAS 3 : BUS / METRO / ETC ===
+            # === CAS 3 : TOUS LES AUTRES MODES ===
             else:
                 dest_data = {}
                 for d in proches:
                     dn = d['dest']
                     if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
+                    
                     if len(dest_data[dn]['items']) < 3:
                         dest_data[dn]['items'].append(d)
                         if d['tri'] < dest_data[dn]['best_time']:
