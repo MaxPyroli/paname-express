@@ -537,8 +537,9 @@ def afficher_tableau_live(stop_id, stop_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-            # === CAS 1 : RER AVEC LOGIQUE DE DIRECTION ===
-            if mode_actuel in ["RER"] and code in GEOGRAPHIE_RER:
+            # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
+            # CORRECTION ICI : On ajoute "TRAIN" dans la liste autorisée 👇
+            if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center; margin-bottom:5px;">
@@ -550,8 +551,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 stop_upper = clean_name.upper()
                 
                 # --- PATCH DYNAMIQUE POUR LE RER C ---
-                local_mots_1 = geo['mots_1'].copy() # Ouest
-                local_mots_2 = geo['mots_2'].copy() # Sud/Est
+                local_mots_1 = geo['mots_1'].copy()
+                local_mots_2 = geo['mots_2'].copy()
                 
                 if code == "C":
                     zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
@@ -571,6 +572,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     h = f"<div class='rer-direction'>{titre}</div>"
                     items.sort(key=lambda x: x['tri'])
                     for it in items[:4]:
+                        # Debug badge retiré pour la prod
                         if it.get('is_last'):
                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
                         else:
@@ -580,11 +582,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 if not p1 and not p2:
                      card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
-                    if not is_term_1 and p1: card_html += render_group(geo['labels'][0], p1)
-                    elif not is_term_1: card_html += f"<div class='rer-direction'>{geo['labels'][0]}</div><div class='service-box'>😴 Service terminé</div>"
-                    
-                    if not is_term_2 and p2: card_html += render_group(geo['labels'][1], p2)
-                    elif not is_term_2: card_html += f"<div class='rer-direction'>{geo['labels'][1]}</div><div class='service-box'>😴 Service terminé</div>"
+                    if not is_term_1: card_html += render_group(geo['labels'][0], p1)
+                    if not is_term_2: card_html += render_group(geo['labels'][1], p2)
 
                 if p3: card_html += render_group("AUTRES DIRECTIONS", p3)
 
