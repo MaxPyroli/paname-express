@@ -148,12 +148,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ==========================================
+#              LOGIQUE MÉTIER
+# ==========================================
+
 GEOGRAPHIE_RER = {
     "A": {
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
         "term_1": ["CERGY", "POISSY", "GERMAIN"],
-        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"],
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"],
         "term_2": ["CHESSY", "BOISSY"]
     },
     "B": {
@@ -165,7 +169,7 @@ GEOGRAPHIE_RER = {
     },
     "C": {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
-        # INVALIDES est par défaut à l'Ouest
+        # INVALIDES est mis ici par défaut (Vers l'Ouest pour la majorité des gares)
         "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
@@ -253,7 +257,7 @@ def get_all_changelogs():
         filepath = os.path.join(log_dir, filename)
         try:
             with open(filepath, "r", encoding="utf-8") as f: all_notes.append(f.read())
-        except: pass
+        except Exception as e: all_notes.append(f"Erreur de lecture de {filename}: {e}")
     return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
 
 # ==========================================
@@ -261,12 +265,12 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.12 - Spy Mode • ⚠️ Pre-release")
+st.caption("v0.11.1 - Smart Geo • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.12 - Spy Mode • ⚠️ Pre-release") 
+    st.caption("v0.11.1 - Smart Geo • ⚠️ Pre-release") 
     st.header("🗄️ Informations")
-    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version. Nous calibrons les directions RER.")
+    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
@@ -391,18 +395,6 @@ def afficher_tableau_live(stop_id, stop_name):
             raw_dest = info.get('direction', '')
             if mode == "BUS": dest = raw_dest
             else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
-            
-            # --- ESPIONNAGE API ---
-            # On récupère les IDs techniques pour calibrer
-            try:
-                route_id_brut = d.get('route', {}).get('id', 'N/A')
-                # On ne garde que la fin de l'ID pour que ce soit lisible (ex: "route:IDFM:C:1" -> "C:1")
-                route_id_short = route_id_brut.split(':')[-1] if ':' in route_id_brut else route_id_brut
-            except: route_id_short = "?"
-            
-            debug_info = f"[R:{route_id_short}]"
-            # ----------------------
-
             freshness = d.get('data_freshness', 'realtime')
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
             
@@ -419,8 +411,7 @@ def afficher_tableau_live(stop_id, stop_name):
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                # On ajoute debug_info au paquet
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'debug': debug_info})
+                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
     # 2.1 GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
@@ -436,7 +427,7 @@ def afficher_tableau_live(stop_id, stop_name):
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
-                buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False, 'debug': ''}]
+                buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
     
     # 2.5 FILTRAGE
     for mode in list(buckets.keys()):
@@ -480,7 +471,7 @@ def afficher_tableau_live(stop_id, stop_name):
             departs = lignes_du_mode[cle]
             proches = [d for d in departs if d['tri'] < 3000]
             if not proches:
-                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False, 'debug': ''}]
+                 proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
             # === CAS 1 : RER AVEC LOGIQUE DE DIRECTION ===
             if mode_actuel in ["RER"] and code in GEOGRAPHIE_RER:
@@ -499,19 +490,15 @@ def afficher_tableau_live(stop_id, stop_name):
                 local_mots_2 = geo['mots_2'].copy() # Sud/Est
                 
                 if code == "C":
-                    # On ajoute JAVEL et GARIGLIANO ici !
                     zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
-                    
                     if any(k in stop_upper for k in zone_nord_ouest):
-                        # Si on est dans cette zone, Invalides passe à l'Est/Sud
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
                 # -------------------------------------
 
-                real_proches = [d for d in departs if d['tri'] < 3000]
-                p1 = [d for d in real_proches if any(k in d['dest'].upper() for k in local_mots_1)]
-                p2 = [d for d in real_proches if any(k in d['dest'].upper() for k in local_mots_2)]
-                p3 = [d for d in real_proches if d not in p1 and d not in p2]
+                p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
+                p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
+                p3 = [d for d in proches if d not in p1 and d not in p2]
                 
                 is_term_1 = any(k in stop_upper for k in geo['term_1'])
                 is_term_2 = any(k in stop_upper for k in geo['term_2'])
@@ -520,25 +507,27 @@ def afficher_tableau_live(stop_id, stop_name):
                     h = f"<div class='rer-direction'>{titre}</div>"
                     items.sort(key=lambda x: x['tri'])
                     for it in items[:4]:
-                        debug_badge = f"<span style='font-size:0.7em; color:#777; margin-left:5px;'>{it['debug']}</span>"
                         if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}{debug_badge}</span><span>{it['html']}</span></div></div>"""
+                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
                         else:
-                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}{debug_badge}</span><span>{it['html']}</span></div>"""
+                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
                 if not p1 and not p2:
                      card_html += """<div class="service-box">😴 Service terminé pour les directions principales</div>"""
                 else:
-                    if not is_term_1: card_html += render_group(geo['labels'][0], p1)
-                    if not is_term_2: card_html += render_group(geo['labels'][1], p2)
+                    if not is_term_1 and p1: card_html += render_group(geo['labels'][0], p1)
+                    elif not is_term_1: card_html += f"<div class='rer-direction'>{geo['labels'][0]}</div><div class='service-box'>😴 Service terminé</div>"
+                    
+                    if not is_term_2 and p2: card_html += render_group(geo['labels'][1], p2)
+                    elif not is_term_2: card_html += f"<div class='rer-direction'>{geo['labels'][1]}</div><div class='service-box'>😴 Service terminé</div>"
 
                 if p3: card_html += render_group("AUTRES DIRECTIONS", p3)
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # === CAS 2 : TRAINS/RER SANS GÉOGRAPHIE ===
+            # === CAS 2 : TRAINS & RER NON MAILLÉS ===
             elif mode_actuel in ["RER", "TRAIN"]:
                 card_html = f"""
                 <div class="rail-card" style="border-left-color: #{color};">
@@ -546,21 +535,19 @@ def afficher_tableau_live(stop_id, stop_name):
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
-                real_proches = [d for d in departs if d['tri'] < 3000]
-                if not real_proches:
+                if not proches or (len(proches)==1 and proches[0]['tri']==3000):
                      card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                 else:
-                    real_proches.sort(key=lambda x: x['tri'])
-                    for item in real_proches[:4]:
-                        debug_badge = f"<span style='font-size:0.7em; color:#777; margin-left:5px;'>{item['debug']}</span>"
+                    proches.sort(key=lambda x: x['tri'])
+                    for item in proches[:4]:
                         if item.get('is_last'):
-                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}{debug_badge}</span><span>{item['html']}</span></div></div>"""
+                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
                         else:
-                            card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}{debug_badge}</span><span>{item['html']}</span></div>"""
+                            card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # === CAS 3 : TOUS LES AUTRES MODES ===
+            # === CAS 3 : BUS / METRO / ETC ===
             else:
                 dest_data = {}
                 for d in proches:
@@ -568,7 +555,8 @@ def afficher_tableau_live(stop_id, stop_name):
                     if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
                     if len(dest_data[dn]['items']) < 3:
                         dest_data[dn]['items'].append(d)
-                        if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
+                        if d['tri'] < dest_data[dn]['best_time']:
+                            dest_data[dn]['best_time'] = d['tri']
                 
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
