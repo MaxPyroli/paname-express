@@ -154,42 +154,38 @@ st.markdown("""
 
 GEOGRAPHIE_RER = {
     "A": {
-        "label_1": "⇦ OUEST (Cergy / Poissy / St-Germain)",
-        "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "VESINET", "VÉSINET", "NANTERRE", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
+        # MODIFICATION ICI : On utilise "labels" (tuple) au lieu de label_1/label_2
+        "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
+        "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
         "term_1": ["CERGY", "POISSY", "GERMAIN"],
-        "label_2": "⇨ EST (Boissy / Marne-la-Vallée / Torcy)",
-        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "VARENNE", "NOGENT", "DISNEY"],
+        "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"],
         "term_2": ["CHESSY", "BOISSY"]
     },
     "B": {
-        "label_1": "⇧ NORD (Roissy / Mitry)",
-        "mots_1": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE"],
-        "term_1": ["GAULLE", "MITRY"],
-        "label_2": "⇩ SUD (St-Rémy / Robinson)",
-        "mots_2": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"],
-        "term_2": ["REMY", "RÉMY", "ROBINSON"]
+        "labels": ("⇩ SUD (St-Rémy / Robinson)", "⇧ NORD (Roissy / Mitry)"),
+        "mots_1": ["REMY", "RÉMY", "ROBINSON", "LAPLACE", "DENFERT", "CITE", "MASSY", "ORSAY", "BOURG", "CROIX", "GENTILLY", "ARCUEIL", "BAGNEUX"],
+        "term_1": ["REMY", "RÉMY", "ROBINSON"],
+        "mots_2": ["GAULLE", "MITRY", "NORD", "AULNAY", "BOURGET", "LA PLAINE", "CLAYE", "AÉROPORT"],
+        "term_2": ["GAULLE", "MITRY"]
     },
     "C": {
-        "label_1": "⇦ OUEST (Versailles / Pontoise)",
-        "mots_1": ["VERSAILLES", "QUENTIN", "PONTOISE", "INVALIDES", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
+        "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
+        "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
-        "label_2": "⇨ SUD/EST (Massy / Dourdan / Étampes)",
-        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
+        "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "CHOISY", "IVRY", "ATHIS"],
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
-        "label_1": "⇧ NORD (Creil)",
-        "mots_1": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
-        "term_1": ["CREIL", "ORRY"],
-        "label_2": "⇩ SUD (Melun / Corbeil)",
-        "mots_2": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
-        "term_2": ["MELUN", "CORBEIL", "MALESHERBES"]
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil / Goussainville)"),
+        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
+        "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
+        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
+        "term_2": ["CREIL", "ORRY"]
     },
     "E": {
-        "label_1": "⇦ OUEST (Nanterre)",
+        "labels": ("⇦ OUEST (Nanterre / La Défense)", "⇨ EST (Chelles / Tournan)"),
         "mots_1": ["HAUSSMANN", "LAZARE", "MAGENTA", "NANTERRE", "DEFENSE", "DÉFENSE", "ROSA"],
         "term_1": ["NANTERRE", "HAUSSMANN"],
-        "label_2": "⇨ EST (Chelles / Tournan)",
         "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"],
         "term_2": ["CHELLES", "TOURNAN"]
     }
