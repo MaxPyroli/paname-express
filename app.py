@@ -153,6 +153,7 @@ st.markdown("""
 # ==========================================
 
 GEOGRAPHIE_RER = {
+    # --- RER ---
     "A": {
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE"],
@@ -169,7 +170,6 @@ GEOGRAPHIE_RER = {
     },
     "C": {
         "labels": ("⇦ OUEST (Versailles / Pontoise)", "⇨ SUD/EST (Massy / Dourdan / Étampes)"),
-        # INVALIDES est mis ici par défaut (Vers l'Ouest pour la majorité des gares)
         "mots_1": ["INVALIDES", "VERSAILLES", "QUENTIN", "PONTOISE", "CHAMP", "EIFFEL", "CHAVILLE", "ERMONT", "JAVEL", "ALMA", "VELIZY", "BEAUCHAMP", "MONTIGNY", "ARGENTEUIL"],
         "term_1": ["VERSAILLES", "QUENTIN", "PONTOISE"],
         "mots_2": ["MASSY", "DOURDAN", "ETAMPES", "ÉTAMPES", "MARTIN", "JUVISY", "AUSTERLITZ", "BIBLIOTHEQUE", "ORLY", "RUNGIS", "BRETIGNY", "BRÉTIGNY", "CHOISY", "IVRY", "ATHIS", "SAVIGNY"],
@@ -188,6 +188,70 @@ GEOGRAPHIE_RER = {
         "term_1": ["NANTERRE", "HAUSSMANN"],
         "mots_2": ["CHELLES", "TOURNAN", "VILLIERS", "GAGNY", "EMERAINVILLE", "ROISSY", "NOISY", "BONDY"],
         "term_2": ["CHELLES", "TOURNAN"]
+    },
+    # --- TRANSILIENS ---
+    "H": {
+        "labels": ("⇧ NORD (Pontoise / Persan / Creil)", "⇩ PARIS NORD"),
+        "mots_1": ["PONTOISE", "PERSAN", "BEAUMONT", "LUZARCHES", "CREIL", "MONTSOULT", "VALMONDOIS", "SARROUS", "SAINT-LEU"],
+        "term_1": ["PONTOISE", "PERSAN", "LUZARCHES", "CREIL"],
+        "mots_2": ["PARIS", "NORD"],
+        "term_2": ["PARIS", "NORD"]
+    },
+    "J": {
+        "labels": ("⇦ OUEST (Mantes / Gisors / Ermont)", "⇨ PARIS ST-LAZARE"),
+        "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN"],
+        "term_1": ["MANTES", "GISORS", "ERMONT", "VERNON"],
+        "mots_2": ["PARIS", "LAZARE"],
+        "term_2": ["PARIS", "LAZARE"]
+    },
+    "K": {
+        "labels": ("⇧ NORD (Crépy-en-Valois)", "⇩ PARIS NORD"),
+        "mots_1": ["CREPY", "CRÉPY", "DAMMARTIN"],
+        "term_1": ["CREPY", "CRÉPY"],
+        "mots_2": ["PARIS", "NORD"],
+        "term_2": ["PARIS", "NORD"]
+    },
+    "L": {
+        "labels": ("⇦ OUEST (Versailles / St-Nom / Cergy)", "⇨ PARIS ST-LAZARE"),
+        "mots_1": ["VERSAILLES", "NOM", "BRETÈCHE", "CERGY", "NANTERRE", "MAISONS", "CLOUD"],
+        "term_1": ["VERSAILLES", "NOM", "CERGY"],
+        "mots_2": ["PARIS", "LAZARE"],
+        "term_2": ["PARIS", "LAZARE"]
+    },
+    "N": {
+        "labels": ("⇦ OUEST (Rambouillet / Dreux / Mantes)", "⇨ PARIS MONTPARNASSE"),
+        "mots_1": ["RAMBOUILLET", "DREUX", "MANTES", "JOLIE", "PLAISIR", "SEVRES", "SÈVRES"],
+        "term_1": ["RAMBOUILLET", "DREUX", "MANTES"],
+        "mots_2": ["PARIS", "MONTPARNASSE"],
+        "term_2": ["PARIS", "MONTPARNASSE"]
+    },
+    "P": {
+        "labels": ("⇨ EST (Meaux / Provins / Coulommiers)", "⇦ PARIS EST"),
+        "mots_1": ["MEAUX", "CHATEAU", "CHÂTEAU", "THIERRY", "FERTE", "FERTÉ", "MILON", "PROVINS", "COULOMMIERS"],
+        "term_1": ["MEAUX", "CHÂTEAU", "PROVINS", "COULOMMIERS", "FERTÉ"],
+        "mots_2": ["PARIS", "EST"],
+        "term_2": ["PARIS", "EST"]
+    },
+    "R": {
+        "labels": ("⇩ SUD (Montereau / Montargis)", "⇧ PARIS GARE DE LYON"),
+        "mots_1": ["MONTEREAU", "MONTARGIS", "MELUN"],
+        "term_1": ["MONTEREAU", "MONTARGIS"],
+        "mots_2": ["PARIS", "LYON", "BERCY"],
+        "term_2": ["PARIS", "LYON"]
+    },
+    "U": {
+        "labels": ("⇩ SUD (La Verrière)", "⇧ NORD (La Défense)"),
+        "mots_1": ["VERRIERE", "VERRIÈRE", "TRAPPES"],
+        "term_1": ["VERRIERE", "VERRIÈRE"],
+        "mots_2": ["DEFENSE", "DÉFENSE"],
+        "term_2": ["DEFENSE", "DÉFENSE"]
+    },
+    "V": {
+        "labels": ("⇦ OUEST (Versailles-Chantiers)", "⇨ EST (Massy-Palaiseau)"),
+        "mots_1": ["VERSAILLES", "CHANTIERS"],
+        "term_1": ["VERSAILLES"],
+        "mots_2": ["MASSY", "PALAISEAU"],
+        "term_2": ["MASSY"]
     }
 }
 
