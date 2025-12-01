@@ -629,12 +629,14 @@ def afficher_tableau_live(stop_id, stop_name):
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
-                # Tri : Alphabétique pour Métro/Tram, Chronologique pour Bus
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
                 else:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
+                # Détection Noctilien (Ligne commençant par N)
+                is_noctilien = str(code).strip().upper().startswith('N')
+
                 rows_html = ""
                 for dest_name, info in sorted_dests:
                     if "Service terminé" in dest_name:
@@ -647,10 +649,11 @@ def afficher_tableau_live(stop_id, stop_name):
                         for idx, d_item in enumerate(info['items']):
                             val_tri = d_item['tri']
                             
-                            # FILTRE 1 : "Loin des yeux"
-                            # On cache le 2ème/3ème bus s'ils sont dans trop longtemps (> 62 min)
-                            # Cela permet d'afficher le suivant pour les fréquences horaires (60 min)
-                            if idx > 0 and val_tri > 62: continue
+                            # FILTRE "LOIN DES YEUX" HYBRIDE
+                            # On cache le 2ème/3ème bus si > 62 min...
+                            # ...SAUF si c'est un Noctilien (on veut voir le suivant même si c'est dans 90 min)
+                            if idx > 0 and val_tri > 62 and not is_noctilien: 
+                                continue
                                 
                             txt = d_item['html']
                             if d_item.get('is_last'):
@@ -664,6 +667,7 @@ def afficher_tableau_live(stop_id, stop_name):
                                         txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                             html_list.append(txt)
                         
+                        # Si le filtre a tout tué, on garde au moins le premier
                         if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
