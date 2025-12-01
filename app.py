@@ -633,8 +633,15 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
+            # ... (juste après val_tri, html_time = ...)
+
             is_last = False
-            if val_tri < 3000:
+            
+            # LOGIQUE : On calcule le dernier départ pour tout le monde...
+            # SAUF pour les Noctiliens (Bus dont le code commence par 'N')
+            is_noctilien = (mode == "BUS" and str(code).upper().startswith('N'))
+            
+            if not is_noctilien and val_tri < 3000:
                 key_check = (mode, code, dest)
                 max_val = last_departures_map.get(key_check)
                 
@@ -645,17 +652,20 @@ def afficher_tableau_live(stop_id, stop_name):
                     except: dep_hour = 0
                     current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
                     
+                    # Logique Nuit/Soirée (Valide pour Bus de jour, RER, etc.)
                     is_evening_mode = (current_hour >= 21)
                     is_night_train = (dep_hour >= 22) or (dep_hour < 4)
                     
                     if is_evening_mode or is_night_train:
                         is_last = True
             
+            # Exclusion de sécurité pour les Transiliens non officiels
             TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
             if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
                 is_last = False
 
             cle = (mode, code, color)
+            # ... (suite du code)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
