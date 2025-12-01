@@ -23,17 +23,45 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. CONFIGURATION
 st.set_page_config(
-    page_title="Grand Paname (v1.0 Bêta)",
+    page_title="Grand Paname (v1.0)",
     page_icon=icon_image,
     layout="centered"
 )
 
+# ==========================================
+#           CONFIGURATION DES PÔLES
+# ==========================================
+# C'est ici qu'on définit nos "Super-Stations".
+# Pour trouver les IDs, utilise le "Mode Développeur" dans la sidebar !
+SUPER_POLES = {
+    "Châtelet / Les Halles": [
+        "stop_area:IDFM:71387", # Châtelet-les-Halles (RER)
+        "stop_area:IDFM:71393", # Châtelet (Métro)
+    ],
+    "Saint-Lazare / Auber": [
+        "stop_area:IDFM:71363", # Gare Saint-Lazare
+        "stop_area:IDFM:73624", # Haussmann St-Lazare
+        "stop_area:IDFM:71347", # Auber
+        "stop_area:IDFM:71355", # Saint-Augustin
+    ],
+    "Gare du Nord / Magenta": [
+        "stop_area:IDFM:71410", # Gare du Nord
+        "stop_area:IDFM:71248", # Magenta
+        "stop_area:IDFM:71418", # La Chapelle
+    ],
+    "La Défense / Grande Arche": [
+        "stop_area:IDFM:71521", # La Défense (Grande Arche)
+    ],
+    "Montparnasse": [
+        "stop_area:IDFM:71065", # Gare Montparnasse
+        "stop_area:IDFM:71099", # Montparnasse-Bienvenüe
+    ]
+}
+
 # 2. FONCTION POLICE
 def charger_police_locale(file_path, font_name):
-    if not os.path.exists(file_path):
-        return
+    if not os.path.exists(file_path): return
     try:
         with open(file_path, "rb") as f:
             data = f.read()
@@ -42,25 +70,15 @@ def charger_police_locale(file_path, font_name):
         format_str = "opentype" if ext == "otf" else "truetype"
         css = f"""
             <style>
-            @font-face {{
-                font-family: '{font_name}';
-                src: url('data:font/{ext};base64,{b64}') format('{format_str}');
-            }}
+            @font-face {{ font-family: '{font_name}'; src: url('data:font/{ext};base64,{b64}') format('{format_str}'); }}
             html, body {{ font-family: '{font_name}', sans-serif; }}
-            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
-                font-family: '{font_name}', sans-serif !important;
-            }}
-            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
-                font-family: '{font_name}', sans-serif !important;
-            }}
-            .streamlit-expanderHeader {{
-                font-family: '{font_name}', sans-serif !important;
-            }}
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{ font-family: '{font_name}', sans-serif !important; }}
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{ font-family: '{font_name}', sans-serif !important; }}
+            .streamlit-expanderHeader {{ font-family: '{font_name}', sans-serif !important; }}
             </style>
         """
         st.markdown(css, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Erreur police : {e}")
+    except: pass
 
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
@@ -145,18 +163,10 @@ st.markdown("""
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
-
-    /* STYLE DU BADGE VERSION 1.0 */
+    
     .version-badge {
-        background: linear-gradient(45deg, #FF4B4B, #F76B1C);
-        color: white;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.8em;
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        vertical-align: middle;
-        margin-left: 10px;
+        background: linear-gradient(45deg, #FF4B4B, #F76B1C); color: white; padding: 4px 10px; border-radius: 15px;
+        font-size: 0.6em; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); vertical-align: middle; margin-left: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -281,6 +291,17 @@ def demander_api(suffixe):
         return r.json()
     except: return None
 
+# Fonction pour les super-pôles : récupère plusieurs IDs et fusionne
+def demander_lignes_multi_arrets(stop_ids):
+    all_lines = {}
+    for sid in stop_ids:
+        data = demander_api(f"stop_areas/{sid}/lines")
+        if data and 'lines' in data:
+            for line in data['lines']:
+                # On stocke avec une clé unique pour dédoublonner
+                all_lines[line['id']] = line
+    return {'lines': list(all_lines.values())}
+
 def demander_lignes_arret(stop_id):
     headers = {'apiKey': API_KEY.strip()}
     try:
@@ -340,16 +361,28 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-# TITRE AVEC LE BADGE VISUEL 1.0 BETA
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Bêta</span></h1>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.markdown("<h3 style='color:#888;'>v1.0 Bêta</h3>", unsafe_allow_html=True)
+    st.caption("v1.0.0 - Alpha • 🚧 Dev")
+    
+    # --- MODE DÉVELOPPEUR POUR TROUVER LES IDs DES PÔLES ---
+    st.markdown("---")
+    st.subheader("🛠️ Mode Développeur")
+    with st.expander("🔎 Trouver un ID de gare"):
+        dev_search = st.text_input("Nom de la gare à analyser :", key="dev_search")
+        if dev_search:
+            dev_data = demander_api(f"places?q={dev_search}")
+            if dev_data and 'places' in dev_data:
+                for p in dev_data['places']:
+                    if 'stop_area' in p:
+                        st.text(f"{p['name']} :")
+                        st.code(p['stop_area']['id'])
+    st.markdown("---")
+    # -------------------------------------------------------
+
     st.header("🗄️ Informations")
-    
-    # MESSAGE DE BIENVENUE
-    st.info("**🚀 Bienvenue dans la Bêta 1.0 !**\n\nCeci est une version majeure. Nous testons de nouvelles fonctionnalités. Vos retours sont précieux !")
-    
+    st.info("**🚀 Bienvenue dans la Bêta 1.0 !**\n\nCeci est une version majeure. Nous testons les Super-Pôles (agrégation de gares).")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
@@ -363,6 +396,9 @@ with st.sidebar:
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
     st.session_state.selected_name = None
+    st.session_state.selected_pole_name = None # Pour les super pôles
+    st.session_state.selected_pole_ids = None
+
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
 if 'search_key' not in st.session_state:
@@ -375,7 +411,7 @@ if 'search_error' not in st.session_state:
 with st.form("search_form"):
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
-        placeholder="Ex: Noisiel, Saint-Lazare...",
+        placeholder="Ex: Noisiel, Châtelet...",
         value=st.session_state.last_query, 
         key=f"search_input_{st.session_state.search_key}"
     )
@@ -387,76 +423,113 @@ if st.session_state.search_error:
 if submitted and search_query:
     st.session_state.last_query = search_query 
     st.session_state.search_error = None
+    
     with st.spinner("Recherche des arrêts..."):
-        data = demander_api(f"places?q={search_query}")
+        
         opts = {}
+        
+        # 1. RECHERCHE DANS LES SUPER-PÔLES (Priorité)
+        query_normalized = search_query.lower()
+        for pole_name in SUPER_POLES:
+            if query_normalized in pole_name.lower() or pole_name.lower() in query_normalized:
+                label = f"✨ SUPER-PÔLE : {pole_name}"
+                opts[label] = "POLE:" + pole_name # Marqueur spécial
+        
+        # 2. RECHERCHE CLASSIQUE API
+        data = demander_api(f"places?q={search_query}")
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
                     ville = p.get('administrative_regions', [{}])[0].get('name', '')
                     label = f"{p['name']} ({ville})" if ville else p['name']
                     opts[label] = p['stop_area']['id']
+        
         if len(opts) > 0:
             st.session_state.search_results = opts
         else:
             st.session_state.search_results = {}
             st.session_state.search_error = "⚠️ Aucun résultat trouvé. Essayez un autre nom."
+    
     st.session_state.search_key += 1
     st.rerun()
 
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
+    
     if choice:
-        stop_id = opts[choice]
-        if st.session_state.selected_stop != stop_id:
-            st.session_state.selected_stop = stop_id
-            st.session_state.selected_name = choice
-            st.rerun()
+        value = opts[choice]
+        
+        # LOGIQUE DE SÉLECTION : PÔLE OU GARE SIMPLE ?
+        if value.startswith("POLE:"):
+            pole_name = value.split("POLE:")[1]
+            if st.session_state.selected_pole_name != pole_name:
+                st.session_state.selected_pole_name = pole_name
+                st.session_state.selected_pole_ids = SUPER_POLES[pole_name]
+                st.session_state.selected_stop = None # Reset gare simple
+                st.session_state.selected_name = None
+                st.rerun()
+        else:
+            stop_id = value
+            if st.session_state.selected_stop != stop_id:
+                st.session_state.selected_stop = stop_id
+                st.session_state.selected_name = choice
+                st.session_state.selected_pole_name = None # Reset pôle
+                st.session_state.selected_pole_ids = None
+                st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE
+#                  AFFICHAGE LIVE (Gare Simple ou Pôle)
 # ========================================================
 @st.fragment(run_every=15)
-def afficher_tableau_live(stop_id, stop_name):
+def afficher_tableau_live(stop_ids, display_name):
+    # stop_ids est maintenant toujours une LISTE
     
-    clean_name = stop_name.split('(')[0].strip()
+    clean_name = display_name.split('(')[0].strip().replace("✨ SUPER-PÔLE : ", "")
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
     status_area = st.empty()
     status_area.markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Actualisation...</div>""", unsafe_allow_html=True)
 
-    # 1. LIGNES THEORIQUES
-    data_lines = demander_lignes_arret(stop_id)
+    # 1. LIGNES THEORIQUES (Fusionnées)
     all_lines_at_stop = {} 
     has_c1_cable = False
 
-    if data_lines and 'lines' in data_lines:
-        for line in data_lines['lines']:
-            raw_mode = "AUTRE"
-            if 'physical_modes' in line and line['physical_modes']:
-                raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
-            elif 'physical_mode' in line:
-                raw_mode = line['physical_mode']
-            mode = normaliser_mode(raw_mode)
-            code = clean_code_line(line.get('code', '?')) 
-            color = line.get('color', '666666')
-            all_lines_at_stop[(mode, code)] = {'color': color}
-            
-            if mode == "CABLE" and code == "C1":
-                has_c1_cable = True
+    # On boucle sur chaque ID du pôle
+    for s_id in stop_ids:
+        data_lines = demander_lignes_arret(s_id)
+        if data_lines and 'lines' in data_lines:
+            for line in data_lines['lines']:
+                raw_mode = "AUTRE"
+                if 'physical_modes' in line and line['physical_modes']:
+                    raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
+                elif 'physical_mode' in line:
+                    raw_mode = line['physical_mode']
+                
+                mode = normaliser_mode(raw_mode)
+                code = clean_code_line(line.get('code', '?')) 
+                color = line.get('color', '666666')
+                all_lines_at_stop[(mode, code)] = {'color': color}
+                
+                if mode == "CABLE" and code == "C1": has_c1_cable = True
 
-    # 2. TEMPS REEL
-    data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
-    
+    # 2. TEMPS REEL (Fusionnés)
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
     last_departures_map = {} 
 
-    if data_live and 'departures' in data_live:
+    # On lance les requêtes pour chaque ID et on fusionne les résultats
+    all_departures = []
+    
+    for s_id in stop_ids:
+        data_live = demander_api(f"stop_areas/{s_id}/departures?count=600")
+        if data_live and 'departures' in data_live:
+            all_departures.extend(data_live['departures'])
+    
+    if all_departures:
         # Passe 1 : Max
-        for d in data_live['departures']:
+        for d in all_departures:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
             code = clean_code_line(info.get('code', '?')) 
@@ -471,7 +544,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if val_tri > current_max: last_departures_map[key] = val_tri
 
         # Passe 2 : Buckets
-        for d in data_live['departures']:
+        for d in all_departures:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
             code = clean_code_line(info.get('code', '?')) 
@@ -489,12 +562,23 @@ def afficher_tableau_live(stop_id, stop_name):
                 key = (mode, code, dest)
                 max_val = last_departures_map.get(key)
                 if max_val and val_tri == max_val:
-                    is_last = True
+                    if val_tri > 60: is_last = True
+                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: is_last = True
 
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
+                
+                # Dédoublonnage basique : si on a déjà exactement le même départ (même heure, même dest), on évite
+                # (Utile si 2 gares du pôle captent les mêmes bus)
+                is_duplicate = False
+                for existing in buckets[mode][cle]:
+                    if existing['dest'] == dest and existing['tri'] == val_tri:
+                        is_duplicate = True
+                        break
+                
+                if not is_duplicate:
+                    buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
     # 2.1 GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
@@ -536,7 +620,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
     # 3. AFFICHAGE
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
-    has_data = False
+    has_data = len(all_departures) > 0
 
     for mode_actuel in ordre_affichage:
         lignes_du_mode = buckets[mode_actuel]
@@ -564,6 +648,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
+                
                 geo = GEOGRAPHIE_RER[code]
                 stop_upper = clean_name.upper()
                 
@@ -575,7 +660,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     if any(k in stop_upper for k in zone_nord_ouest):
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-                
+
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
@@ -634,6 +719,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 for d in proches:
                     dn = d['dest']
                     if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
+                    
                     if len(dest_data[dn]['items']) < 3:
                         dest_data[dn]['items'].append(d)
                         if d['tri'] < dest_data[dn]['best_time']:
@@ -654,17 +740,22 @@ def afficher_tableau_live(stop_id, stop_name):
                         html_list = []
                         contains_last = False
                         last_val_tri = 9999
+                        
                         for idx, d_item in enumerate(info['items']):
                             val_tri = d_item['tri']
                             if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                
                             txt = d_item['html']
                             if d_item.get('is_last'):
                                 contains_last = True
                                 last_val_tri = val_tri
                                 if val_tri < 60:
-                                    if val_tri < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                    else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                    if val_tri < 30:
+                                        txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    else:
+                                        txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                             html_list.append(txt)
+                        
                         if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
@@ -673,7 +764,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         else:
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
-                # BANDEAU CABLE C1
+                # Bandeau C1 (Affiché au dessus de la carte)
                 if code == "C1":
                     target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
                     now = datetime.now(pytz.timezone('Europe/Paris'))
@@ -719,5 +810,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 if html_badges:
                     st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 
-if st.session_state.selected_stop:
-    afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+# Au démarrage, si un pôle est sélectionné, on l'affiche
+if st.session_state.selected_pole_ids:
+    afficher_tableau_live(st.session_state.selected_pole_ids, f"✨ SUPER-PÔLE : {st.session_state.selected_pole_name}")
+elif st.session_state.selected_stop:
+    afficher_tableau_live([st.session_state.selected_stop], st.session_state.selected_name)
