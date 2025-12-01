@@ -389,9 +389,47 @@ def get_all_changelogs():
 
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
+# --- INITIALISATION DES FAVORIS ---
+if 'favorites' not in st.session_state:
+    st.session_state.favorites = []
+
+def toggle_favorite(stop_id, stop_name):
+    """Ajoute ou retire un arrêt des favoris."""
+    # On nettoie le nom pour l'affichage (enlève la ville entre parenthèses)
+    clean_name = stop_name.split('(')[0].strip()
+    
+    # Vérifie si l'ID est déjà dans la liste
+    exists = False
+    for i, fav in enumerate(st.session_state.favorites):
+        if fav['id'] == stop_id:
+            st.session_state.favorites.pop(i) # On retire
+            exists = True
+            st.toast(f"❌ {clean_name} retiré des favoris", icon="🗑️")
+            break
+    
+    if not exists:
+        st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
+        st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
 
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
+    
+    # --- SECTION FAVORIS ---
+    st.header("⭐ Mes Favoris")
+    if not st.session_state.favorites:
+        st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
+    else:
+        # On affiche les favoris sous forme de boutons
+        for fav in st.session_state.favorites:
+            if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
+                st.session_state.selected_stop = fav['id']
+                st.session_state.selected_name = fav['full_name']
+                st.session_state.search_key += 1 # Petite astuce pour forcer le refresh UI
+                st.rerun()
+    
+    st.markdown("---")
+    
+    # --- SECTION INFOS ---
     st.header("🗄️ Informations")
     st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
     st.markdown("---")
@@ -465,7 +503,23 @@ if st.session_state.search_results:
 def afficher_tableau_live(stop_id, stop_name):
     
     clean_name = stop_name.split('(')[0].strip()
-    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    
+    # --- GESTION DU BOUTON FAVORI ---
+    # On vérifie si la gare actuelle est déjà favorite
+    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
+    
+    # Mise en page : Colonne Titre (Large) + Colonne Bouton (Petite)
+    col_title, col_fav = st.columns([0.85, 0.15])
+    
+    with col_title:
+        st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+        
+    with col_fav:
+        # On centre le bouton verticalement avec un peu de marge vide
+        st.write("") 
+        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
+            toggle_favorite(stop_id, stop_name)
+            st.rerun()
     
     # On prépare des conteneurs vides
     containers = {
