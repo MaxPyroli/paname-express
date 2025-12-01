@@ -478,20 +478,28 @@ if st.session_state.search_results:
     
     if choice:
         value = opts[choice]
+        
+        # CAS 1 : C'EST UN SUPER-PÔLE (ex: "POLE:CHATELET")
         if value.startswith("POLE:"):
             pole_key = value.split("POLE:")[1]
+            
+            # On vérifie si on doit recharger (pour éviter la boucle infinie)
             if st.session_state.selected_pole_name != pole_key:
                 st.session_state.selected_pole_name = pole_key
                 st.session_state.selected_pole_ids = POLES_DATA[pole_key]['ids']
-                st.session_state.selected_stop = None
+                st.session_state.selected_stop = None # On vide la gare simple
                 st.session_state.selected_name = None
                 st.rerun()
+
+        # CAS 2 : C'EST UNE GARE SIMPLE (ex: "stop_area:IDFM:12345")
         else:
             stop_id = value
+            
+            # On vérifie si on doit recharger
             if st.session_state.selected_stop != stop_id:
                 st.session_state.selected_stop = stop_id
                 st.session_state.selected_name = choice
-                st.session_state.selected_pole_name = None
+                st.session_state.selected_pole_name = None # On vide le pôle
                 st.session_state.selected_pole_ids = None
                 st.rerun()
 
@@ -860,5 +868,10 @@ def afficher_tableau_live(stop_ids, display_name):
                 if html_badges:
                     st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 
-if st.session_state.selected_stop:
+if st.session_state.selected_pole_ids:
+    # Cas Pôle : On envoie la liste des IDs et le nom du pôle
+    afficher_tableau_live(st.session_state.selected_pole_ids, POLES_DATA[st.session_state.selected_pole_name]['name'])
+
+elif st.session_state.selected_stop:
+    # Cas Gare Simple : On envoie une liste avec un seul ID [stop_id] et le nom de la gare
     afficher_tableau_live([st.session_state.selected_stop], st.session_state.selected_name)
