@@ -422,6 +422,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
             elif 'physical_mode' in line:
                 raw_mode = line['physical_mode']
+            
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
@@ -431,15 +432,26 @@ def afficher_tableau_live(stop_id, stop_name):
             if mode == "CABLE" and code == "C1":
                 has_c1_cable = True
 
-    # --- BANDEAU SPÉCIAL CÂBLE C1 ---
+    # --- BANDEAU SPÉCIAL CÂBLE C1 (Jusqu'au 13 Décembre) ---
     if has_c1_cable:
-        # Date cible : 30 Juin 2025 (Date fictive pour l'exemple, à ajuster)
-        target_date = datetime(2025, 6, 30, 8, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+        target_date = datetime(2025, 12, 13, 8, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
         now = datetime.now(pytz.timezone('Europe/Paris'))
         
         if target_date > now:
             delta = target_date - now
             jours = delta.days
+            
+            # Petite animation CSS inline pour faire flotter la cabine
+            st.markdown("""
+            <style>
+                @keyframes float {
+                    0% { transform: translateY(0px); }
+                    50% { transform: translateY(-6px); }
+                    100% { transform: translateY(0px); }
+                }
+                .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
+            </style>
+            """, unsafe_allow_html=True)
             
             st.markdown(f"""
             <div style="
@@ -453,13 +465,13 @@ def afficher_tableau_live(stop_id, stop_name):
                 border: 1px solid rgba(255,255,255,0.2);
             ">
                 <div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
-                    🚠 Câble C1 • En approche
+                    <span class='cable-icon'>🚠</span> Câble C1 • En approche
                 </div>
                 <div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">
                     J-{jours}
                 </div>
                 <div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">
-                    Mise en service prévue pour l'été 2025
+                    Inauguration le 13 décembre 2025
                 </div>
             </div>
             """, unsafe_allow_html=True)
