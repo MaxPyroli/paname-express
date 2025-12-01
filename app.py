@@ -179,8 +179,8 @@ POLES_CONFIGURATION = {
     "stop_area:IDFM:73688":  "ST_LAZARE", # Haussmann St-Lazare
     "stop_area:IDFM:478926": "ST_LAZARE", # Auber
     "stop_area:IDFM:73690":  "ST_LAZARE", # Saint-Augustin
-    "stop_area:IDFM:73645":  "ST_LAZARE", # Havre-Caumartin (Lignes 3, 9)
-    "stop_area:IDFM:73650":  "ST_LAZARE", # Opéra (Lignes 3, 7, 8)
+    "stop_area:IDFM:482368":  "ST_LAZARE", # Havre-Caumartin (Lignes 3, 9)
+    "stop_area:IDFM:71337":  "ST_LAZARE", # Opéra (Lignes 3, 7, 8)
 
     # --- GARE DU NORD / MAGENTA ---
     "stop_area:IDFM:71410":  "GARE_NORD", 
