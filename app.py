@@ -457,7 +457,7 @@ if st.session_state.search_results:
             st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE (STABILISÉ)
+#                  AFFICHAGE LIVE (OPTIMISÉ + FIX TER)
 # ========================================================
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
@@ -477,22 +477,13 @@ def afficher_tableau_live(stop_id, stop_name):
         "AUTRE": st.container()
     }
     
-    # --- FIX STABILITÉ ---
-    # On définit une structure HTML fixe pour éviter que la page ne saute.
-    # On utilise min-height: 30px pour réserver l'espace vertical.
+    # --- FIX STABILITÉ HTML ---
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
         html_content = f"""
         <div style='
-            display: flex; 
-            align-items: center; 
-            color: #888; 
-            font-size: 0.8rem; 
-            font-style: italic; 
-            margin-bottom: 10px;
-            height: 30px;       /* Hauteur fixe forcée */
-            line-height: 30px;  /* Alignement vertical */
-            overflow: hidden;   /* Sécurité */
+            display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;
+            height: 30px; line-height: 30px; overflow: hidden;
         '>
             {loader_html} <span style='margin-left: 8px;'>{text}</span>
         </div>
@@ -502,7 +493,7 @@ def afficher_tableau_live(stop_id, stop_name):
     # 1. ÉTAT CHARGEMENT
     update_header("Actualisation rapide...", is_loading=True)
 
-    # 2. LIGNES THEORIQUES (INSTANTANÉ GRÂCE AU CACHE)
+    # 2. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
 
@@ -552,13 +543,47 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
+            # ... (code précédent: val_tri, html_time, etc.)
+
             is_last = False
             if val_tri < 3000:
-                max_val = last_departures_map.get((mode, code, dest))
+                # Clé pour identifier la ligne et la direction
+                key_check = (mode, code, dest)
+                max_val = last_departures_map.get(key_check)
+                
+                # Si ce train correspond au temps le plus lointain trouvé
                 if max_val and val_tri == max_val:
-                    if val_tri > 60 or datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: is_last = True
+                    
+                    # --- NOUVELLE LOGIQUE INTELLIGENTE ---
+                    # 1. On récupère l'heure réelle de départ du train (HH)
+                    try:
+                        dep_str = d['stop_date_time']['departure_date_time']
+                        # Format Navitia : YYYYMMDDTHHMMSS -> On prend le HH après le T
+                        dep_hour = int(dep_str.split('T')[1][:2])
+                    except:
+                        dep_hour = 0
+
+                    # 2. On récupère l'heure actuelle
+                    current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
+                    
+                    # 3. CRITÈRES STRICTS :
+                    # - Soit on est déjà en "Mode Soirée" (après 21h)
+                    # - Soit le train part dans la "Zone Nuit" (22h - 04h du matin)
+                    is_evening_mode = (current_hour >= 21)
+                    is_night_train = (dep_hour >= 22) or (dep_hour < 4)
+                    
+                    if is_evening_mode or is_night_train:
+                        is_last = True
+            
+            # --- FIX TER (Toujours utile) ---
+            # Si c'est un TRAIN mais pas un Transilien officiel, on force is_last à False par sécurité
+            TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
+            if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
+                is_last = False
+            # -----------------------------------------------------------
 
             cle = (mode, code, color)
+            # ... (suite du code)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
@@ -590,7 +615,6 @@ def afficher_tableau_live(stop_id, stop_name):
         for k in keys_to_remove: del buckets[mode][k]
 
     # 6. AFFICHAGE FINAL
-    # On met à jour le header ici (Etat Stable)
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     update_header(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE", is_loading=False)
