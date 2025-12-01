@@ -245,14 +245,16 @@ GEOGRAPHIE_RER = {
     # --- TRANSILIENS ---
     "H": {
         "labels": ("⇧ NORD (Pontoise / Persan / Creil)", "⇩ PARIS NORD"),
-        "mots_1": ["PONTOISE", "PERSAN", "BEAUMONT", "LUZARCHES", "CREIL", "MONTSOULT", "VALMONDOIS", "SARROUS", "SAINT-LEU"],
+        # J'ai ajouté "SARCELLES" et "BRICE" ici
+        "mots_1": ["PONTOISE", "PERSAN", "BEAUMONT", "LUZARCHES", "CREIL", "MONTSOULT", "VALMONDOIS", "SARROUS", "SAINT-LEU", "SARCELLES", "BRICE"],
         "term_1": ["PONTOISE", "PERSAN", "LUZARCHES", "CREIL"],
         "mots_2": ["PARIS", "NORD"],
         "term_2": ["PARIS", "NORD"]
     },
     "J": {
         "labels": ("⇦ OUEST (Mantes / Gisors / Ermont)", "⇨ PARIS ST-LAZARE"),
-        "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN"],
+        # J'ai ajouté "MUREAUX" et "CORMEILLES" (souvent un terminus aussi)
+        "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN", "MUREAUX", "CORMEILLES"],
         "term_1": ["MANTES", "GISORS", "ERMONT", "VERNON"],
         "mots_2": ["PARIS", "LAZARE"],
         "term_2": ["PARIS", "LAZARE"]
