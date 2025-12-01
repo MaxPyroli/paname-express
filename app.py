@@ -842,7 +842,17 @@ def afficher_tableau_live(stop_ids, display_name):
                 if html_badges:
                     st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 
-if st.session_state.selected_pole_ids:
-    afficher_tableau_live(st.session_state.selected_pole_ids, POLES_DATA[st.session_state.selected_pole_name]['name'])
+# ==========================================
+#        LANCEMENT DE L'AFFICHAGE
+# ==========================================
+# On regarde si un pôle est sélectionné
+if st.session_state.selected_pole_name:
+    # CORRECTION : On va chercher les IDs directement dans la config POLES_DATA
+    # pour être sûr d'avoir la version à jour (avec Opéra/Havre), même si on a modifié le code.
+    pole_info = POLES_DATA.get(st.session_state.selected_pole_name)
+    if pole_info:
+        afficher_tableau_live(pole_info['ids'], pole_info['name'])
+
+# Sinon, on regarde si une gare simple est sélectionnée
 elif st.session_state.selected_stop:
     afficher_tableau_live([st.session_state.selected_stop], st.session_state.selected_name)
