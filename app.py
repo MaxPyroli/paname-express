@@ -666,7 +666,9 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # === CAS 3 : TOUS LES AUTRES MODES ===
+            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            # ===========================================================
             else:
                 dest_data = {}
                 for d in proches:
@@ -714,18 +716,42 @@ def afficher_tableau_live(stop_id, stop_name):
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
                         if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                             rows_html += f"""
-                            <div class='last-dep-box'>
-                                <span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>
-                                <div class='bus-row'>
-                                    <span class='bus-dest'>➜ {dest_name}</span>
-                                    <span>{times_str}</span>
-                                </div>
-                            </div>
-                            """
+                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
                         else:
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
+                # --- BANDEAU SPÉCIAL CÂBLE C1 (INTÉGRÉ AU BLOC) ---
+                if code == "C1":
+                    target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                    now = datetime.now(pytz.timezone('Europe/Paris'))
+                    
+                    if target_date > now:
+                        delta = target_date - now
+                        st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
+                        
+                        st.markdown(f"""
+                        <div style="
+                            background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
+                            color: white;
+                            padding: 15px;
+                            border-radius: 12px;
+                            text-align: center;
+                            margin-bottom: 15px;
+                            box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3);
+                            border: 1px solid rgba(255,255,255,0.2);
+                        ">
+                            <div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                                <span class='cable-icon'>🚠</span> Câble C1 • A l'approche...
+                            </div>
+                            <div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">
+                                J-{delta.days}
+                            </div>
+                            <div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">
+                                Inauguration le 13 décembre 2025 à 11h
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
                     <div style="display:flex; align-items:center;">
