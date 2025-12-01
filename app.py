@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION
 st.set_page_config(
-    page_title="Grand Paname (Bêta)",
+    page_title="Grand Paname (v1.0 Bêta)",
     page_icon=icon_image,
     layout="centered"
 )
@@ -105,11 +105,23 @@ st.markdown("""
         font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px;
     }
     
+    /* STYLE STANDARD (Gare Simple) */
     .station-title {
         font-size: 24px; font-weight: 800; color: #fff;
         text-align: center; margin: 10px 0 20px 0; text-transform: uppercase;
         background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
         padding: 12px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    /* NOUVEAU STYLE : SUPER PÔLE (Premium) */
+    .station-title-pole {
+        font-size: 24px; font-weight: 800; color: #fff;
+        text-align: center; margin: 10px 0 20px 0; text-transform: uppercase;
+        /* Dégradé Violet/Or + Bordure Dorée */
+        background: linear-gradient(135deg, #662D8C 0%, #ED1E79 100%);
+        padding: 12px; border-radius: 10px; 
+        box-shadow: 0 4px 20px rgba(237, 30, 121, 0.4);
+        border: 2px solid #FDB931;
     }
     
     .rer-direction {
@@ -371,7 +383,7 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Bêta</span></h1>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.caption("v1.0.0 - Bêta 2 • 🚧 Dev")
+    st.caption("v1.0.0 - Bêta 3 • 🚧 Dev")
     
     # --- MODE DÉVELOPPEUR ---
     st.markdown("---")
@@ -478,6 +490,8 @@ if st.session_state.search_results:
     
     if choice:
         value = opts[choice]
+        
+        # CAS 1 : C'EST UN SUPER-PÔLE
         if value.startswith("POLE:"):
             pole_key = value.split("POLE:")[1]
             if st.session_state.selected_pole_name != pole_key:
@@ -486,6 +500,8 @@ if st.session_state.search_results:
                 st.session_state.selected_stop = None
                 st.session_state.selected_name = None
                 st.rerun()
+
+        # CAS 2 : C'EST UNE GARE SIMPLE
         else:
             stop_id = value
             if st.session_state.selected_stop != stop_id:
@@ -502,7 +518,10 @@ if st.session_state.search_results:
 def afficher_tableau_live(stop_ids, display_name):
     
     clean_name = display_name.split('(')[0].strip().replace("✨ SUPER-PÔLE : ", "")
-    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    
+    # STYLE DU TITRE (Standard ou Premium selon si c'est un pôle)
+    title_class = "station-title-pole" if len(stop_ids) > 1 else "station-title"
+    st.markdown(f"<div class='{title_class}'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
     status_area = st.empty()
     status_area.markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Actualisation...</div>""", unsafe_allow_html=True)
@@ -510,7 +529,7 @@ def afficher_tableau_live(stop_ids, display_name):
     # 1. LIGNES THEORIQUES
     all_lines_at_stop = {} 
     has_c1_cable = False
-    is_pole_mode = len(stop_ids) > 1 # Détection mode Pôle
+    is_pole_mode = len(stop_ids) > 1 
 
     for s_id in stop_ids:
         data_lines = demander_lignes_arret(s_id)
@@ -521,12 +540,10 @@ def afficher_tableau_live(stop_ids, display_name):
                     raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
                 elif 'physical_mode' in line:
                     raw_mode = line['physical_mode']
-                
                 mode = normaliser_mode(raw_mode)
                 code = clean_code_line(line.get('code', '?')) 
                 color = line.get('color', '666666')
                 all_lines_at_stop[(mode, code)] = {'color': color}
-                
                 if mode == "CABLE" and code == "C1": has_c1_cable = True
 
     # 2. TEMPS REEL
@@ -591,6 +608,7 @@ def afficher_tableau_live(stop_ids, display_name):
 
             origin_key = d['origin_name'] if is_pole_mode else "MAIN"
             
+            # Pour RER/Train, on ne sépare PAS les blocs par gare, même en mode pôle
             if mode in ["RER", "TRAIN"]:
                 origin_key = "MAIN"
 
@@ -604,7 +622,7 @@ def afficher_tableau_live(stop_ids, display_name):
                         is_duplicate = True
                         break
                 if not is_duplicate:
-                    buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
+                    buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'origin': origin_key})
 
     # 2.1 GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
@@ -670,8 +688,11 @@ def afficher_tableau_live(stop_ids, display_name):
             if not proches:
                  proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
+            # Badge Gare (si Super-Pôle et Métro/Bus)
+            # On ne l'affiche que si on est en mode pôle ET que ce n'est pas "MAIN"
+            # ET que ce n'est pas un RER/TRAIN (car on a forcé MAIN plus haut)
             station_badge = ""
-            if is_pole_mode and origin != "MAIN" and mode in ["METRO", "TRAM", "BUS"]:
+            if is_pole_mode and origin != "MAIN" and mode not in ["RER", "TRAIN"]:
                 station_badge = f"<span class='origin-badge'>{origin}</span>"
 
             # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
@@ -689,7 +710,7 @@ def afficher_tableau_live(stop_ids, display_name):
                     if any(k in stop_upper for k in zone_nord_ouest):
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-
+                
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
@@ -701,10 +722,13 @@ def afficher_tableau_live(stop_ids, display_name):
                     h = f"<div class='rer-direction'>{titre}</div>"
                     items.sort(key=lambda x: x['tri'])
                     for it in items[:4]:
+                        # Ajout de l'origine du train si on est dans un pôle (utile pour savoir si ça part de Gare du Nord ou Magenta)
+                        origin_txt = f"<span style='font-size:0.7em; color:#888; margin-left:5px; font-style:italic;'>({it['origin_name']})</span>" if is_pole_mode and it.get('origin_name') else ""
+                        
                         if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}{origin_txt}</span><span>{it['html']}</span></div></div>"""
                         else:
-                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}{origin_txt}</span><span>{it['html']}</span></div>"""
                     return h
 
                 directions_vides = (not p1 and not p2)
@@ -730,10 +754,12 @@ def afficher_tableau_live(stop_ids, display_name):
                 else:
                     proches.sort(key=lambda x: x['tri'])
                     for item in proches[:4]:
+                        origin_txt = f"<span style='font-size:0.7em; color:#888; margin-left:5px; font-style:italic;'>({item['origin_name']})</span>" if is_pole_mode and item.get('origin_name') else ""
+                        
                         if item.get('is_last'):
-                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
+                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}{origin_txt}</span><span>{item['html']}</span></div></div>"""
                         else:
-                            card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
+                            card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}{origin_txt}</span><span>{item['html']}</span></div>"""
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
