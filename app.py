@@ -14,6 +14,31 @@ st.set_page_config(
 )
 
 # ==========================================
+#              FONCTION POLICE
+# ==========================================
+def charger_police_locale(file_path, font_name):
+    if not os.path.exists(file_path): return
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        ext = file_path.split('.')[-1].lower()
+        format_str = "opentype" if ext == "otf" else "truetype"
+        css = f"""
+            <style>
+            @font-face {{ font-family: '{font_name}'; src: url('data:font/{ext};base64,{b64}') format('{format_str}'); }}
+            html, body {{ font-family: '{font_name}', sans-serif; }}
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{ font-family: '{font_name}', sans-serif !important; }}
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{ font-family: '{font_name}', sans-serif !important; }}
+            .streamlit-expanderHeader {{ font-family: '{font_name}', sans-serif !important; }}
+            </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except: pass
+
+charger_police_locale("GrandParis.otf", "Grand Paris")
+
+# ==========================================
 #              STYLE CSS (v0.12.2)
 # ==========================================
 st.markdown("""
@@ -27,6 +52,13 @@ st.markdown("""
         100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
     }
     
+    @keyframes float { 
+        0% { transform: translateY(0px); } 
+        50% { transform: translateY(-6px); } 
+        100% { transform: translateY(0px); } 
+    } 
+    .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
+
     .text-red { color: #e74c3c; font-weight: bold; }
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
@@ -40,7 +72,7 @@ st.markdown("""
     }
     
     .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
-    .footer-icon { margin-right: 10px; font-size: 14px; color: #ccc; opacity: 0.7; }
+    .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
     .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
 
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
@@ -48,7 +80,7 @@ st.markdown("""
     .section-header {
         margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
         border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
-        font-size: 20px; font-weight: bold; color: #ccc; letter-spacing: 1px;
+        font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px;
     }
     
     .station-title {
@@ -143,8 +175,10 @@ def get_demo_data():
 
     # 2. RER A (Smart Geo + "À l'approche")
     data['lines'].append({'physical_mode': 'RER', 'code': 'A', 'color': 'E3051C'})
+    # Ouest
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'St-Germain-en-Laye', 'min': 1, 'color': 'E3051C'})
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Cergy-le-Haut', 'min': 8, 'color': 'E3051C'})
+    # Est (Dernier départ)
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Marne-la-Vallée Chessy', 'min': 15, 'color': 'E3051C', 'is_last': True})
 
     # 3. TRAIN H (Branches)
@@ -175,6 +209,7 @@ def afficher_demo():
     st.title("💎 Grand Paname - SHOWCASE")
     st.caption("Vitrine de toutes les fonctionnalités")
     
+    # Zone Statut Fixe
     st.markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Démonstration temps réel...</div>""", unsafe_allow_html=True)
 
     mock_data = get_demo_data()
@@ -210,7 +245,7 @@ def afficher_demo():
             if cle not in buckets[mode]: buckets[mode][cle] = []
             buckets[mode][cle].append({'dest': dest, 'html': html, 'tri': minutes, 'is_last': is_last})
 
-    # Footer
+    # Footer filling
     for l in mock_data['lines']:
         mode = l['physical_mode']
         code = l['code']
@@ -280,13 +315,18 @@ def afficher_demo():
             else:
                 rows_html = ""
                 
-                # Tri : Alphabétique pour Métro/Câble, Chrono pour Bus
+                # Bandeau C1
+                if code == "C1":
+                    st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px;"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-12</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
+
+                # Tri
                 if mode_actuel in ["METRO", "CABLE"]:
                     departs.sort(key=lambda x: x['dest'])
                 else:
                     departs.sort(key=lambda x: x['tri'])
                 
-                # Regroupement par destination pour simuler le vrai affichage
+                # Regroupement par destination
                 grouped = {}
                 for d in departs:
                     if d['dest'] not in grouped: grouped[d['dest']] = []
@@ -328,5 +368,29 @@ def afficher_demo():
             if mode in footer_data and footer_data[mode]:
                 badges = "".join([f'<span class="line-badge footer-badge" style="background-color:#{c};">{cd}</span>' for cd, c in footer_data[mode].items()])
                 st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{badges}</div></div>""", unsafe_allow_html=True)
+
+# ==========================================
+#              FAUX PANNEAU LATÉRAL
+# ==========================================
+with st.sidebar:
+    st.caption("v0.12.2 - Milk • ⚠️ Pre-release") 
+    st.header("🗄️ Informations")
+    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    st.markdown("---")
+    with st.expander("📜 Historique des versions"):
+        st.markdown("""
+        ✨ **v0.12.2 — Milk**
+        *Date : 30 Novembre 2025*
+        
+        **Nouveautés**
+        * 🏁 Mise en évidence graphique des ultimes passages.
+        * 🆔 Intégration de la police Grand Paris.
+        * 🚠 Bandeau spécial pour le Câble C1.
+        """)
+        st.divider()
+        st.markdown("*... (Anciennes versions)*")
+    
+    st.markdown("---")
+    st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
 afficher_demo()
