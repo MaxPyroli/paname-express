@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION
 st.set_page_config(
-    page_title="Grand Paname (Bêta)",
+    page_title="Grand Paname (v1.0 Abondance 🧀)", # C'est ici que ça change l'onglet
     page_icon=icon_image,
     layout="centered"
 )
@@ -354,8 +354,9 @@ st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span>
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.caption("v1.0.0 - Alpha • 🚧 Dev") 
+    st.caption("v1.0.0 Alpha - Abondance 🧀") # La classe !
     st.header("🗄️ Informations")
+    # ... la suite ne change pas ...
     
     # On garde ton message d'avertissement, il est bienveillant !
     st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version Alpha 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
