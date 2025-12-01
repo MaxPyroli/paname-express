@@ -328,10 +328,10 @@ def get_all_changelogs():
 # ==========================================
 
 st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.11.1 - Hotfix • ⚠️ Pre-release")
+st.caption("v0.11.1 - Milk • ⚠️ Pre-release")
 
 with st.sidebar:
-    st.caption("v0.11.1 - Hotfix • ⚠️ Pre-release") 
+    st.caption("v0.11.1 - Milk • ⚠️ Pre-release") 
     st.header("🗄️ Informations")
     st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
     st.markdown("---")
