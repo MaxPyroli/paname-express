@@ -180,7 +180,7 @@ POLES_CONFIGURATION = {
     "stop_area:IDFM:478926": "ST_LAZARE", # Auber
     "stop_area:IDFM:73690":  "ST_LAZARE", # Saint-Augustin
     "stop_area:IDFM:71538":  "ST_LAZARE", # Havre-Caumartin (Codes corrigés)
-    "stop_area:IDFM:71547":  "ST_LAZARE", # Opéra (Codes corrigés)
+    "stop_area:IDFM:71337":  "ST_LAZARE", # Opéra (Codes corrigés)
 
     # --- GARE DU NORD / MAGENTA ---
     "stop_area:IDFM:71410":  "GARE_NORD", 
