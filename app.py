@@ -567,18 +567,16 @@ def afficher_tableau_live(stop_id, stop_name):
                 
                 def render_group(titre, items):
                     h = f"<div class='rer-direction'>{titre}</div>"
-                    if not items:
-                         h += f"""<div class="service-box">😴 Service terminé</div>"""
-                    else:
-                        items.sort(key=lambda x: x['tri'])
-                        for it in items[:4]:
-                            if it.get('is_last'):
-                                h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                            else:
-                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                    items.sort(key=lambda x: x['tri'])
+                    for it in items[:4]:
+                        if it.get('is_last'):
+                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                        else:
+                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                     return h
 
                 directions_vides = (not p1 and not p2)
+                
                 if directions_vides:
                      card_html += """<div class="service-box">😴 Service terminé</div>"""
                 else:
@@ -586,6 +584,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     if not is_term_2: card_html += render_group(geo['labels'][1], p2)
 
                 has_real_trains_in_p3 = any(d['tri'] < 3000 for d in p3)
+                
                 if p3:
                     if directions_vides and not has_real_trains_in_p3:
                         pass 
@@ -615,9 +614,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
-            # ===========================================================
+            # === CAS 3 : TOUS LES AUTRES MODES ===
             else:
                 dest_data = {}
                 for d in proches:
@@ -634,7 +631,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 else:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                 
-                # Détection Noctilien (Ligne commençant par N)
                 is_noctilien = str(code).strip().upper().startswith('N')
 
                 rows_html = ""
@@ -648,10 +644,6 @@ def afficher_tableau_live(stop_id, stop_name):
                         
                         for idx, d_item in enumerate(info['items']):
                             val_tri = d_item['tri']
-                            
-                            # FILTRE "LOIN DES YEUX" HYBRIDE
-                            # On cache le 2ème/3ème bus si > 62 min...
-                            # ...SAUF si c'est un Noctilien (on veut voir le suivant même si c'est dans 90 min)
                             if idx > 0 and val_tri > 62 and not is_noctilien: 
                                 continue
                                 
@@ -659,7 +651,6 @@ def afficher_tableau_live(stop_id, stop_name):
                             if d_item.get('is_last'):
                                 contains_last = True
                                 last_val_tri = val_tri
-                                # Gestion du badge selon le temps
                                 if val_tri < 60:
                                     if val_tri < 30:
                                         txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
@@ -667,21 +658,11 @@ def afficher_tableau_live(stop_id, stop_name):
                                         txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                             html_list.append(txt)
                         
-                        # Si le filtre a tout tué, on garde au moins le premier
                         if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
-                        # Règle pour la "Grosse Boîte" (Départ imminent)
                         if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                             rows_html += f"""
-                            <div class='last-dep-box'>
-                                <span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>
-                                <div class='bus-row'>
-                                    <span class='bus-dest'>➜ {dest_name}</span>
-                                    <span>{times_str}</span>
-                                </div>
-                            </div>
-                            """
+                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
                         else:
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
