@@ -65,10 +65,19 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS
+#              STYLE CSS (Ninja Update)
 # ==========================================
 st.markdown("""
 <style>
+    /* --- CSS NINJA : EMPÊCHER LE GRISEMENT --- */
+    /* Force l'opacité à rester à 100% même pendant le rechargement du fragment */
+    div[data-testid="stFragment"] {
+        opacity: 1 !important;
+        transition: none !important;
+        filter: none !important;
+    }
+    /* ----------------------------------------- */
+
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
     
@@ -174,7 +183,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ==========================================
 #              LOGIQUE MÉTIER
 # ==========================================
