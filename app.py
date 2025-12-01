@@ -343,9 +343,13 @@ HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6,
 def demander_api(suffixe):
     headers = {'apiKey': API_KEY.strip()}
     try:
-        r = requests.get(f"{BASE_URL}/{suffixe}", headers=headers)
-        return r.json()
-    except: return None
+        # Timeout de 4 secondes max par requête pour éviter le gel
+        r = requests.get(f"{BASE_URL}/{suffixe}", headers=headers, timeout=4)
+        if r.status_code == 200:
+            return r.json()
+        return None
+    except Exception as e:
+        return None
 
 def demander_lignes_arret(stop_id):
     headers = {'apiKey': API_KEY.strip()}
