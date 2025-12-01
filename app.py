@@ -176,11 +176,10 @@ GEOGRAPHIE_RER = {
     },
     "D": {
         "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
-        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
+        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
-        # Par défaut : Gare de Lyon est au Nord (vers Paris)
-        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS", "GARE DE LYON", "PARIS", "CHATELET", "NORD"],
-        "term_2": ["CREIL", "ORRY", "GOUSSAINVILLE"] # Ajouté Goussainville qui est souvent terminus
+        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
+        "term_2": ["CREIL", "ORRY"]
     },
     "E": {
         "labels": ("⇦ OUEST (Nanterre)", "⇨ EST (Chelles / Tournan)"),
@@ -546,29 +545,27 @@ def afficher_tableau_live(stop_id, stop_name):
 
             # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                    geo = GEOGRAPHIE_RER[code]
-                    stop_upper = clean_name.upper()
-                    local_mots_1 = geo['mots_1'].copy()
-                    local_mots_2 = geo['mots_2'].copy()
-                    
-                    # --- PATCH RER C (Invalides) ---
-                    if code == "C":
-                        zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
-                        if any(k in stop_upper for k in zone_nord_ouest):
-                            if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
-                            if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
+                card_html = f"""
+                <div class="rail-card" style="border-left-color: #{color};">
+                    <div style="display:flex; align-items:center; margin-bottom:5px;">
+                        <span class="line-badge" style="background-color:#{color};">{code}</span>
+                    </div>
+                """
+                
+                geo = GEOGRAPHIE_RER[code]
+                stop_upper = clean_name.upper()
+                
+                # --- PATCH DYNAMIQUE POUR LE RER C ---
+                local_mots_1 = geo['mots_1'].copy()
+                local_mots_2 = geo['mots_2'].copy()
+                
+                if code == "C":
+                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
+                    if any(k in stop_upper for k in zone_nord_ouest):
+                        if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
+                        if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
+                # -------------------------------------
 
-                    # --- PATCH RER D (Gare de Lyon) ---
-                    if code == "D":
-                        # Liste des gares de la branche NORD
-                        # Si on est ici, Gare de Lyon est une destination SUD (mots_1)
-                        zone_nord_d = ["CREIL", "ORRY", "COYE", "SURVILLIERS", "FOSSES", "LOUVRES", "GOUSSAINVILLE", "VILLIERS-LE-BEL", "GARGES", "SARCELLES", "PIERREFITTE", "STAINS", "SAINT-DENIS", "STADE DE FRANCE", "NORD"]
-                        
-                        if any(k in stop_upper for k in zone_nord_d):
-                            # On inverse : Lyon passe au Sud
-                            if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
-                            if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
-                                
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
