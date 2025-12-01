@@ -175,11 +175,13 @@ GEOGRAPHIE_RER = {
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
-        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
-        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "GARE DE LYON", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Paris / Creil)"),
+        # Gare de Lyon retirée d'ici (SUD)
+        "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
-        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS"],
-        "term_2": ["CREIL", "ORRY"]
+        # Gare de Lyon ajoutée ici (NORD/PARIS)
+        "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS", "GARE DE LYON", "PARIS", "CHATELET", "NORD"],
+        "term_2": ["CREIL", "ORRY", "GOUSSAINVILLE"]
     },
     "E": {
         "labels": ("⇦ OUEST (Nanterre)", "⇨ EST (Chelles / Tournan)"),
@@ -545,62 +547,61 @@ def afficher_tableau_live(stop_id, stop_name):
 
             # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                card_html = f"""
-                <div class="rail-card" style="border-left-color: #{color};">
-                    <div style="display:flex; align-items:center; margin-bottom:5px;">
-                        <span class="line-badge" style="background-color:#{color};">{code}</span>
-                    </div>
-                """
-                
-                geo = GEOGRAPHIE_RER[code]
-                stop_upper = clean_name.upper()
-                
-                # --- PATCH DYNAMIQUE POUR LE RER C ---
-                local_mots_1 = geo['mots_1'].copy()
-                local_mots_2 = geo['mots_2'].copy()
-                
-                if code == "C":
-                    zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
-                    if any(k in stop_upper for k in zone_nord_ouest):
-                        if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
-                        if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-                # -------------------------------------
+                    geo = GEOGRAPHIE_RER[code]
+                    stop_upper = clean_name.upper()
+                    local_mots_1 = geo['mots_1'].copy()
+                    local_mots_2 = geo['mots_2'].copy()
+                    
+                    # --- PATCH RER C ---
+                    if code == "C":
+                        if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
+                            if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
+                            if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
 
-                p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
-                p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
-                p3 = [d for d in proches if d not in p1 and d not in p2]
-                
-                is_term_1 = any(k in stop_upper for k in geo['term_1'])
-                is_term_2 = any(k in stop_upper for k in geo['term_2'])
-                
-                def render_group(titre, items):
-                    h = f"<div class='rer-direction'>{titre}</div>"
-                    items.sort(key=lambda x: x['tri'])
-                    for it in items[:4]:
-                        if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                        else:
-                            h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
-                    return h
+                    # --- PATCH RER D (Gestion intelligente Gare de Lyon) ---
+                    if code == "D":
+                        # Liste des gares au Nord de Paris
+                        zone_nord_d = ["CREIL", "ORRY", "COYE", "SURVILLIERS", "FOSSES", "LOUVRES", "GOUSSAINVILLE", "VILLIERS-LE-BEL", "GARGES", "SARCELLES", "PIERREFITTE", "STAINS", "SAINT-DENIS", "STADE DE FRANCE", "NORD"]
+                        if any(k in stop_upper for k in zone_nord_d):
+                            # Si on est au Nord, Gare de Lyon devient une destination SUD
+                            if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
+                            if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
-                directions_vides = (not p1 and not p2)
-                
-                if directions_vides:
-                     card_html += """<div class="service-box">😴 Service terminé</div>"""
-                else:
-                    if not is_term_1: card_html += render_group(geo['labels'][0], p1)
-                    if not is_term_2: card_html += render_group(geo['labels'][1], p2)
+                    p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
+                    p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
+                    p3 = [d for d in proches if d not in p1 and d not in p2]
+                    
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                    
+                    def render_group(titre, items):
+                        h = f"<div class='rer-direction'>{titre}</div>"
+                        
+                        # --- LE FIX : Afficher "Service terminé" si la liste est vide ---
+                        if not items:
+                            h += """<div class="service-box">😴 Service terminé</div>"""
+                            return h
+                        # -----------------------------------------------------------------
 
-                has_real_trains_in_p3 = any(d['tri'] < 3000 for d in p3)
-                
-                if p3:
-                    if directions_vides and not has_real_trains_in_p3:
-                        pass 
-                    else:
+                        items.sort(key=lambda x: x['tri'])
+                        for it in items[:4]:
+                            if it.get('is_last'): h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                            else: h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                        return h
+
+                    # On affiche la direction 1 si on n'est pas au terminus de celle-ci
+                    if not any(k in stop_upper for k in geo['term_1']): 
+                        card_html += render_group(geo['labels'][0], p1)
+                    
+                    # On affiche la direction 2 si on n'est pas au terminus de celle-ci
+                    if not any(k in stop_upper for k in geo['term_2']): 
+                        card_html += render_group(geo['labels'][1], p2)
+                    
+                    # Autres directions (Seulement s'il y a des trains, sinon on cache)
+                    if p3 and any(d['tri'] < 3000 for d in p3): 
                         card_html += render_group("AUTRES DIRECTIONS", p3)
-
-                card_html += "</div>"
-                st.markdown(card_html, unsafe_allow_html=True)
+                    
+                    card_html += "</div>"
+                    st.markdown(card_html, unsafe_allow_html=True)
 
             # === CAS 2 : TRAINS/RER SANS GÉOGRAPHIE (BACKUP) ===
             elif mode_actuel in ["RER", "TRAIN"]:
