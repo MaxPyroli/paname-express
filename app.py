@@ -392,13 +392,12 @@ with st.sidebar:
     st.markdown("---")
     st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
-# --- GESTION DE LA RECHERCHE ---
+# --- GESTION DE LA RECHERCHE ET SESSION ---
+# Initialisation sécurisée de toutes les variables de session
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
+if 'selected_name' not in st.session_state:
     st.session_state.selected_name = None
-    st.session_state.selected_pole_name = None # Pour les super pôles
-    st.session_state.selected_pole_ids = None
-
 if 'search_results' not in st.session_state:
     st.session_state.search_results = {}
 if 'search_key' not in st.session_state:
@@ -408,7 +407,14 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
+# NOUVELLES VARIABLES POUR LES PÔLES (C'est ce qui manquait !)
+if 'selected_pole_name' not in st.session_state:
+    st.session_state.selected_pole_name = None
+if 'selected_pole_ids' not in st.session_state:
+    st.session_state.selected_pole_ids = None
+
 with st.form("search_form"):
+    # ... (Le reste du formulaire reste identique) ...
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
         placeholder="Ex: Noisiel, Châtelet...",
@@ -416,6 +422,8 @@ with st.form("search_form"):
         key=f"search_input_{st.session_state.search_key}"
     )
     submitted = st.form_submit_button("Rechercher")
+
+# ... (Le reste de la logique de recherche reste identique jusqu'à la fin du fichier) ...
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
