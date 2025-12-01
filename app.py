@@ -145,6 +145,26 @@ st.markdown("""
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+    /* ... tes autres styles (last-dep-box, etc.) ... */
+
+    .version-badge {
+        background: linear-gradient(45deg, #FF4B4B, #F76B1C);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.5em; /* Ajusté pour bien s'aligner avec le H1 */
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        vertical-align: middle;
+        margin-left: 10px;
+        letter-spacing: 1px;
+    }
+    
+    .verified-badge {
+        color: #3498db;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -327,14 +347,21 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.11.1 - Milk • ⚠️ Pre-release")
+# Titre avec le badge HTML
+st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
+
+# Un petit sous-titre stylé pour confirmer l'authenticité
+st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.caption("v0.11.1 - Milk • ⚠️ Pre-release") 
+    st.caption("v1.0.0 - Alpha • 🚧 Dev") 
     st.header("🗄️ Informations")
-    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    
+    # On garde ton message d'avertissement, il est bienveillant !
+    st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version Alpha 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
+    
     st.markdown("---")
+    # ... le reste ne change pas ...
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
         for i, note in enumerate(notes_history):
