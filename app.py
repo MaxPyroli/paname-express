@@ -575,33 +575,33 @@ def afficher_tableau_live(stop_id, stop_name):
     last_departures_map = {} 
 
     if data_live and 'departures' in data_live:
-        # Passe 1 : Max
-        for d in data_live['departures']:
-            val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
-            if val_tri < 3000:
-                info = d['display_informations']
-                mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
-                code = clean_code_line(info.get('code', '?')) 
-                
-                # --- NETTOYAGE INTELLIGENT DES NOMS ---
+        # --- NETTOYAGE INTELLIGENT DES NOMS (V2) ---
                 raw_dest = info.get('direction', '')
                 if mode != "BUS":
-                    # Pour RER/Train/Métro : on vire toujours la parenthèse
                     dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
                 else:
-                    # Pour BUS : on garde la ville SAUF si elle est déjà dans le nom
                     match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
                     if match:
                         name_part = match.group(1).strip()
                         city_part = match.group(2).strip()
-                        # Si "Boissy" est dans "Gare de Boissy", on garde juste le nom
+                        
+                        # 1. Vérification exacte (Ex: Noisiel inclus dans Gare de Noisiel)
                         if city_part.lower() in name_part.lower():
                             dest = name_part
+                        # 2. Vérification partielle pour villes composées (Ex: Sucy-en-Brie -> Sucy)
+                        elif '-' in city_part:
+                            # On prend juste le premier mot avant le tiret (ex: "Sucy")
+                            first_chunk = city_part.split('-')[0].strip()
+                            # Sécurité : on ne filtre que si le morceau fait plus de 2 lettres (évite les faux positifs)
+                            if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower():
+                                dest = name_part
+                            else:
+                                dest = raw_dest
                         else:
                             dest = raw_dest
                     else:
                         dest = raw_dest
-                # --------------------------------------
+                # -------------------------------------------
                 
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
@@ -613,7 +613,7 @@ def afficher_tableau_live(stop_id, stop_name):
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
             
-            # --- NETTOYAGE INTELLIGENT DES NOMS (Copie du bloc précédent) ---
+            # --- NETTOYAGE INTELLIGENT DES NOMS (V2 - Copie conforme) ---
             raw_dest = info.get('direction', '')
             if mode != "BUS":
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
@@ -622,12 +622,20 @@ def afficher_tableau_live(stop_id, stop_name):
                 if match:
                     name_part = match.group(1).strip()
                     city_part = match.group(2).strip()
+                    
                     if city_part.lower() in name_part.lower():
                         dest = name_part
+                    elif '-' in city_part:
+                        first_chunk = city_part.split('-')[0].strip()
+                        if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower():
+                            dest = name_part
+                        else:
+                            dest = raw_dest
                     else:
                         dest = raw_dest
                 else:
                     dest = raw_dest
+            # -------------------------------------------------------------
             # -------------------------------------------------------------
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
