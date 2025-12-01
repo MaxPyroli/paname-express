@@ -413,6 +413,8 @@ def afficher_tableau_live(stop_id, stop_name):
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
+    has_c1_cable = False # Flag pour détecter le Câble C1
+
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
             raw_mode = "AUTRE"
@@ -424,6 +426,43 @@ def afficher_tableau_live(stop_id, stop_name):
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
+            
+            # DÉTECTION CÂBLE C1
+            if mode == "CABLE" and code == "C1":
+                has_c1_cable = True
+
+    # --- BANDEAU SPÉCIAL CÂBLE C1 ---
+    if has_c1_cable:
+        # Date cible : 30 Juin 2025 (Date fictive pour l'exemple, à ajuster)
+        target_date = datetime(2025, 6, 30, 8, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+        now = datetime.now(pytz.timezone('Europe/Paris'))
+        
+        if target_date > now:
+            delta = target_date - now
+            jours = delta.days
+            
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
+                color: white;
+                padding: 15px;
+                border-radius: 12px;
+                text-align: center;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3);
+                border: 1px solid rgba(255,255,255,0.2);
+            ">
+                <div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                    🚠 Câble C1 • En approche
+                </div>
+                <div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">
+                    J-{jours}
+                </div>
+                <div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">
+                    Mise en service prévue pour l'été 2025
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
     # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
@@ -468,7 +507,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 key = (mode, code, dest)
                 max_val = last_departures_map.get(key)
                 if max_val and val_tri == max_val:
-                    is_last = True
+                    if val_tri > 60: is_last = True
+                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: is_last = True
 
             cle = (mode, code, color)
             if mode in buckets:
@@ -662,7 +702,15 @@ def afficher_tableau_live(stop_id, stop_name):
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
                         if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
+                             rows_html += f"""
+                            <div class='last-dep-box'>
+                                <span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>
+                                <div class='bus-row'>
+                                    <span class='bus-dest'>➜ {dest_name}</span>
+                                    <span>{times_str}</span>
+                                </div>
+                            </div>
+                            """
                         else:
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
