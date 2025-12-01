@@ -175,7 +175,7 @@ GEOGRAPHIE_RER = {
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
-        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Paris / Creil)"),
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
         # Gare de Lyon retirée d'ici (SUD)
         "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
