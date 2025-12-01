@@ -626,7 +626,9 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # === CAS 3 : TOUS LES AUTRES MODES ===
+            # ===========================================================
+            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
+            # ===========================================================
             else:
                 dest_data = {}
                 for d in proches:
@@ -638,6 +640,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         if d['tri'] < dest_data[dn]['best_time']:
                             dest_data[dn]['best_time'] = d['tri']
                 
+                # Tri : Alphabétique pour Métro/Tram, Chronologique pour Bus
                 if mode_actuel in ["METRO", "TRAM", "CABLE"]:
                     sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
                 else:
@@ -651,22 +654,38 @@ def afficher_tableau_live(stop_id, stop_name):
                         html_list = []
                         contains_last = False
                         last_val_tri = 9999
+                        
                         for idx, d_item in enumerate(info['items']):
                             val_tri = d_item['tri']
+                            # Filtre "Loin des yeux" : on cache le 2ème bus si > 50 min
                             if idx > 0 and val_tri > 50: continue
+                                
                             txt = d_item['html']
                             if d_item.get('is_last'):
                                 contains_last = True
                                 last_val_tri = val_tri
+                                # Gestion du badge selon le temps
                                 if val_tri < 60:
-                                    if val_tri < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                    else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                    if val_tri < 30:
+                                        txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    else:
+                                        txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                             html_list.append(txt)
+                        
                         if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                         times_str = "<span class='time-sep'>|</span>".join(html_list)
                         
+                        # Règle pour la "Grosse Boîte" (Départ imminent)
                         if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier Bus (Départ imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
+                             rows_html += f"""
+                            <div class='last-dep-box'>
+                                <span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>
+                                <div class='bus-row'>
+                                    <span class='bus-dest'>➜ {dest_name}</span>
+                                    <span>{times_str}</span>
+                                </div>
+                            </div>
+                            """
                         else:
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
