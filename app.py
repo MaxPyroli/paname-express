@@ -485,22 +485,47 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
+            # ... (code précédent: val_tri, html_time, etc.)
+
             is_last = False
             if val_tri < 3000:
-                max_val = last_departures_map.get((mode, code, dest))
+                # Clé pour identifier la ligne et la direction
+                key_check = (mode, code, dest)
+                max_val = last_departures_map.get(key_check)
+                
+                # Si ce train correspond au temps le plus lointain trouvé
                 if max_val and val_tri == max_val:
-                    # Condition de base : +60 min ou après 21h
-                    if val_tri > 60 or datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: 
+                    
+                    # --- NOUVELLE LOGIQUE INTELLIGENTE ---
+                    # 1. On récupère l'heure réelle de départ du train (HH)
+                    try:
+                        dep_str = d['stop_date_time']['departure_date_time']
+                        # Format Navitia : YYYYMMDDTHHMMSS -> On prend le HH après le T
+                        dep_hour = int(dep_str.split('T')[1][:2])
+                    except:
+                        dep_hour = 0
+
+                    # 2. On récupère l'heure actuelle
+                    current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
+                    
+                    # 3. CRITÈRES STRICTS :
+                    # - Soit on est déjà en "Mode Soirée" (après 21h)
+                    # - Soit le train part dans la "Zone Nuit" (22h - 04h du matin)
+                    is_evening_mode = (current_hour >= 21)
+                    is_night_train = (dep_hour >= 22) or (dep_hour < 4)
+                    
+                    if is_evening_mode or is_night_train:
                         is_last = True
             
-            # --- FIX TER : SUPPRESSION "DERNIER DÉPART" POUR LES TER ---
-            # Si c'est un TRAIN mais pas un Transilien officiel, on force is_last à False
+            # --- FIX TER (Toujours utile) ---
+            # Si c'est un TRAIN mais pas un Transilien officiel, on force is_last à False par sécurité
             TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
             if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
                 is_last = False
             # -----------------------------------------------------------
 
             cle = (mode, code, color)
+            # ... (suite du code)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
