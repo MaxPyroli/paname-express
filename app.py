@@ -582,7 +582,26 @@ def afficher_tableau_live(stop_id, stop_name):
                 info = d['display_informations']
                 mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
                 code = clean_code_line(info.get('code', '?')) 
-                dest = info.get('direction', '') if mode == "BUS" else re.sub(r'\s*\([^)]+\)$', '', info.get('direction', ''))
+                
+                # --- NETTOYAGE INTELLIGENT DES NOMS ---
+                raw_dest = info.get('direction', '')
+                if mode != "BUS":
+                    # Pour RER/Train/Métro : on vire toujours la parenthèse
+                    dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+                else:
+                    # Pour BUS : on garde la ville SAUF si elle est déjà dans le nom
+                    match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
+                    if match:
+                        name_part = match.group(1).strip()
+                        city_part = match.group(2).strip()
+                        # Si "Boissy" est dans "Gare de Boissy", on garde juste le nom
+                        if city_part.lower() in name_part.lower():
+                            dest = name_part
+                        else:
+                            dest = raw_dest
+                    else:
+                        dest = raw_dest
+                # --------------------------------------
                 
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
@@ -593,11 +612,28 @@ def afficher_tableau_live(stop_id, stop_name):
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
-            dest = info.get('direction', '') if mode == "BUS" else re.sub(r'\s*\([^)]+\)$', '', info.get('direction', ''))
+            
+            # --- NETTOYAGE INTELLIGENT DES NOMS (Copie du bloc précédent) ---
+            raw_dest = info.get('direction', '')
+            if mode != "BUS":
+                dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            else:
+                match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
+                if match:
+                    name_part = match.group(1).strip()
+                    city_part = match.group(2).strip()
+                    if city_part.lower() in name_part.lower():
+                        dest = name_part
+                    else:
+                        dest = raw_dest
+                else:
+                    dest = raw_dest
+            # -------------------------------------------------------------
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             
             if val_tri < -5: continue 
+            # ... (la suite reste inchangée) ... 
 
             # ... (code précédent: val_tri, html_time, etc.)
 
