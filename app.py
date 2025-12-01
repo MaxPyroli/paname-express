@@ -497,7 +497,7 @@ if st.session_state.search_results:
             st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE (OPTIMISÉ + FIX TER)
+#                  AFFICHAGE LIVE (CORRIGÉ & INDENTÉ)
 # ========================================================
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
@@ -505,17 +505,11 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
     # --- GESTION DU BOUTON FAVORI ---
-    # On vérifie si la gare actuelle est déjà favorite
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
-    
-    # Mise en page : Colonne Titre (Large) + Colonne Bouton (Petite)
     col_title, col_fav = st.columns([0.85, 0.15])
-    
     with col_title:
         st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
-        
     with col_fav:
-        # On centre le bouton verticalement avec un peu de marge vide
         st.write("") 
         if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
             toggle_favorite(stop_id, stop_name)
@@ -575,7 +569,17 @@ def afficher_tableau_live(stop_id, stop_name):
     last_departures_map = {} 
 
     if data_live and 'departures' in data_live:
-        # --- NETTOYAGE INTELLIGENT DES NOMS (V2) ---
+        
+        # --- PASSE 1 : CALCUL DU MAX (POUR DERNIER DÉPART) ---
+        for d in data_live['departures']:
+            val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
+            
+            if val_tri < 3000:
+                info = d['display_informations']
+                mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
+                code = clean_code_line(info.get('code', '?')) 
+                
+                # --- NETTOYAGE INTELLIGENT DES NOMS (V2) ---
                 raw_dest = info.get('direction', '')
                 if mode != "BUS":
                     dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
@@ -584,15 +588,10 @@ def afficher_tableau_live(stop_id, stop_name):
                     if match:
                         name_part = match.group(1).strip()
                         city_part = match.group(2).strip()
-                        
-                        # 1. Vérification exacte (Ex: Noisiel inclus dans Gare de Noisiel)
                         if city_part.lower() in name_part.lower():
                             dest = name_part
-                        # 2. Vérification partielle pour villes composées (Ex: Sucy-en-Brie -> Sucy)
                         elif '-' in city_part:
-                            # On prend juste le premier mot avant le tiret (ex: "Sucy")
                             first_chunk = city_part.split('-')[0].strip()
-                            # Sécurité : on ne filtre que si le morceau fait plus de 2 lettres (évite les faux positifs)
                             if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower():
                                 dest = name_part
                             else:
@@ -606,7 +605,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
 
-        # Passe 2 : Buckets
+        # --- PASSE 2 : REMPLISSAGE DES BUCKETS ---
         for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
@@ -622,7 +621,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 if match:
                     name_part = match.group(1).strip()
                     city_part = match.group(2).strip()
-                    
                     if city_part.lower() in name_part.lower():
                         dest = name_part
                     elif '-' in city_part:
@@ -636,54 +634,34 @@ def afficher_tableau_live(stop_id, stop_name):
                 else:
                     dest = raw_dest
             # -------------------------------------------------------------
-            # -------------------------------------------------------------
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             
             if val_tri < -5: continue 
-            # ... (la suite reste inchangée) ... 
-
-            # ... (code précédent: val_tri, html_time, etc.)
 
             is_last = False
             if val_tri < 3000:
-                # Clé pour identifier la ligne et la direction
                 key_check = (mode, code, dest)
                 max_val = last_departures_map.get(key_check)
                 
-                # Si ce train correspond au temps le plus lointain trouvé
                 if max_val and val_tri == max_val:
-                    
-                    # --- NOUVELLE LOGIQUE INTELLIGENTE ---
-                    # 1. On récupère l'heure réelle de départ du train (HH)
                     try:
                         dep_str = d['stop_date_time']['departure_date_time']
-                        # Format Navitia : YYYYMMDDTHHMMSS -> On prend le HH après le T
                         dep_hour = int(dep_str.split('T')[1][:2])
-                    except:
-                        dep_hour = 0
-
-                    # 2. On récupère l'heure actuelle
+                    except: dep_hour = 0
                     current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
                     
-                    # 3. CRITÈRES STRICTS :
-                    # - Soit on est déjà en "Mode Soirée" (après 21h)
-                    # - Soit le train part dans la "Zone Nuit" (22h - 04h du matin)
                     is_evening_mode = (current_hour >= 21)
                     is_night_train = (dep_hour >= 22) or (dep_hour < 4)
                     
                     if is_evening_mode or is_night_train:
                         is_last = True
             
-            # --- FIX TER (Toujours utile) ---
-            # Si c'est un TRAIN mais pas un Transilien officiel, on force is_last à False par sécurité
             TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
             if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
                 is_last = False
-            # -----------------------------------------------------------
 
             cle = (mode, code, color)
-            # ... (suite du code)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
