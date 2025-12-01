@@ -568,7 +568,7 @@ def afficher_tableau_live(stop_id, stop_name):
                             # On inverse : Lyon passe au Sud
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
-
+                                
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
