@@ -23,9 +23,9 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. CONFIGURATION
+# 1. CONFIGURATION DE LA PAGE
 st.set_page_config(
-    page_title="Grand Paname (v1.0 Abondance 🧀)", # C'est ici que ça change l'onglet
+    page_title="Grand Paname (v1.0 Abondance 🧀)",
     page_icon=icon_image,
     layout="centered"
 )
@@ -60,7 +60,7 @@ def charger_police_locale(file_path, font_name):
         """
         st.markdown(css, unsafe_allow_html=True)
     except Exception as e:
-        st.error(f"Erreur police : {e}")
+        pass
 
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
@@ -77,6 +77,13 @@ st.markdown("""
         50% { border-color: #fff; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); }
         100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
     }
+    
+    @keyframes float { 
+        0% { transform: translateY(0px); } 
+        50% { transform: translateY(-6px); } 
+        100% { transform: translateY(0px); } 
+    } 
+    .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
 
     .custom-loader {
         border: 2px solid rgba(255, 255, 255, 0.1);
@@ -145,14 +152,14 @@ st.markdown("""
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
-    /* ... tes autres styles (last-dep-box, etc.) ... */
 
+    /* LE STYLE DU BADGE ALPHA */
     .version-badge {
         background: linear-gradient(45deg, #FF4B4B, #F76B1C);
         color: white;
         padding: 4px 10px;
         border-radius: 15px;
-        font-size: 0.5em; /* Ajusté pour bien s'aligner avec le H1 */
+        font-size: 0.5em; 
         font-weight: bold;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         vertical-align: middle;
@@ -288,6 +295,17 @@ def demander_api(suffixe):
         return r.json()
     except: return None
 
+# =============================================================
+#  IMPORTANT : CETTE FONCTION ÉTAIT MANQUANTE ET CAUSAIT L'ERREUR
+# =============================================================
+@st.cache_data(ttl=3600)
+def demander_lignes_arret(stop_id):
+    headers = {'apiKey': API_KEY.strip()}
+    try:
+        r = requests.get(f"{BASE_URL}/stop_areas/{stop_id}/lines", headers=headers)
+        return r.json()
+    except: return None
+
 def normaliser_mode(mode_brut):
     if not mode_brut: return "AUTRE"
     m = mode_brut.upper()
@@ -340,22 +358,14 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-# Titre avec le badge HTML
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
-
-# Un petit sous-titre stylé pour confirmer l'authenticité
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.caption("v1.0.0 Alpha - Abondance 🧀") # La classe !
+    st.caption("v1.0.0 - Abondance 🧀")
     st.header("🗄️ Informations")
-    # ... la suite ne change pas ...
-    
-    # On garde ton message d'avertissement, il est bienveillant !
-    st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version Alpha 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
-    
+    st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
     st.markdown("---")
-    # ... le reste ne change pas ...
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
         for i, note in enumerate(notes_history):
@@ -429,9 +439,8 @@ def afficher_tableau_live(stop_id, stop_name):
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
     # On prépare des conteneurs vides pour stabiliser l'affichage
-    # L'écran ne sautera plus, les cases vont juste se remplir
     containers = {
-        "Header": st.empty(), # Pour le "Actualisation..."
+        "Header": st.empty(),
         "RER": st.container(),
         "TRAIN": st.container(),
         "METRO": st.container(),
@@ -441,7 +450,6 @@ def afficher_tableau_live(stop_id, stop_name):
         "AUTRE": st.container()
     }
     
-    # Petit message discret pendant que ça charge
     containers["Header"].markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Actualisation rapide...</div>""", unsafe_allow_html=True)
 
     # 1. LIGNES THEORIQUES (INSTANTANÉ GRÂCE AU CACHE)
@@ -461,7 +469,7 @@ def afficher_tableau_live(stop_id, stop_name):
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. TEMPS REEL (C'est le seul truc qui prend un peu de temps)
+    # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
@@ -470,7 +478,7 @@ def afficher_tableau_live(stop_id, stop_name):
     last_departures_map = {} 
 
     if data_live and 'departures' in data_live:
-        # Passe 1 : Max (Optimisée)
+        # Passe 1 : Max
         for d in data_live['departures']:
             val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             if val_tri < 3000:
@@ -531,8 +539,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 else: displayed_lines_keys.add((mode, code_clean))
         for k in keys_to_remove: del buckets[mode][k]
 
-    # 3. AFFICHAGE (On remplit les conteneurs créés au début)
-    # L'heure s'affiche à la fin pour confirmer que tout est chargé
+    # 3. AFFICHAGE
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     containers["Header"].caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
@@ -546,7 +553,6 @@ def afficher_tableau_live(stop_id, stop_name):
         
         has_data = True
         
-        # On écrit DANS le conteneur spécifique
         with containers[mode_actuel]:
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
 
@@ -560,14 +566,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches: proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # ... (Le code HTML des cartes reste identique à ta version actuelle) ...
-                # Je remets ici la logique d'affichage abrégée pour la clarté, 
-                # mais tu gardes exactement ton bloc HTML RER/BUS actuel ici.
-                
-                # [Copie-colle ici tout le bloc "if mode_actuel in ["RER", "TRAIN"]..." jusqu'à la fin de la génération HTML de la carte]
-                # Je te remets le bloc complet ci-dessous pour être sûr :
-
-                # === BLOC D'AFFICHAGE DES CARTES ===
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
@@ -655,15 +653,16 @@ def afficher_tableau_live(stop_id, stop_name):
                                 else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                     
                     if code == "C1":
-                         # (Ton bloc C1 existant avec le décompte J-X)
-                         pass # Tu as déjà ce code dans ta version
+                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                         now = datetime.now(pytz.timezone('Europe/Paris'))
+                         if target_date > now:
+                             delta = target_date - now
+                             st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
+                             st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
-                # === FIN DU BLOC D'AFFICHAGE ===
 
-
-    # 4. FOOTER (Dans le conteneur AUTRE ou après)
-    # On le met dans un conteneur dédié ou à la fin
+    # 4. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
             if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -689,5 +688,6 @@ def afficher_tableau_live(stop_id, stop_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     if html_badges:
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
+
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
