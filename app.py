@@ -65,17 +65,36 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (Ninja Update)
+#              STYLE CSS (Ninja Update v2)
 # ==========================================
 st.markdown("""
 <style>
-    /* --- CSS NINJA : EMPÊCHER LE GRISEMENT --- */
-    /* Force l'opacité à rester à 100% même pendant le rechargement du fragment */
+    /* --- CSS NINJA : FORCER L'OPACITÉ --- */
+    
+    /* Cible le fragment et force l'opacité à 100% tout le temps */
     div[data-testid="stFragment"] {
         opacity: 1 !important;
+        transform: none !important;
         transition: none !important;
         filter: none !important;
     }
+    
+    /* Cible les conteneurs internes pour empêcher le clignotement */
+    div.element-container {
+        opacity: 1 !important;
+        filter: none !important;
+    }
+    
+    /* Cache l'icône de chargement (le spinner) par défaut de Streamlit */
+    div[data-testid="stSpinner"] {
+        display: none !important;
+    }
+    
+    /* Cache la barre de progression "Running" en haut */
+    .stApp > header {
+        visibility: hidden !important;
+    }
+    
     /* ----------------------------------------- */
 
     @keyframes blinker { 50% { opacity: 0; } }
