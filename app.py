@@ -174,13 +174,13 @@ POLES_CONFIGURATION = {
     "stop_area:IDFM:71264":  "CHATELET",
     "stop_area:IDFM:73794":  "CHATELET",
     
-    # --- SAINT-LAZARE / AUBER / HAUSSMANN / OPÉRA ---
-    "stop_area:IDFM:71370":  "ST_LAZARE", # Gare Saint-Lazare
-    "stop_area:IDFM:73688":  "ST_LAZARE", # Haussmann St-Lazare
-    "stop_area:IDFM:478926": "ST_LAZARE", # Auber
-    "stop_area:IDFM:73690":  "ST_LAZARE", # Saint-Augustin
-    "stop_area:IDFM:71538":  "ST_LAZARE", # Havre-Caumartin (Codes corrigés)
-    "stop_area:IDFM:71337":  "ST_LAZARE", # Opéra (Codes corrigés)
+    # --- SAINT-LAZARE / OPÉRA / AUBER / HAUSSMANN ---
+    "stop_area:IDFM:71370":  "ST_LAZARE", # Gare Saint-Lazare (M3, M12, M13, M14, Train J/L)
+    "stop_area:IDFM:73688":  "ST_LAZARE", # Haussmann St-Lazare (RER E)
+    "stop_area:IDFM:478926": "ST_LAZARE", # Auber (RER A)
+    "stop_area:IDFM:73690":  "ST_LAZARE", # Saint-Augustin (M9, relié à St Lazare M14)
+    "stop_area:IDFM:73645":  "ST_LAZARE", # Havre-Caumartin (M3, M9, relié à Auber/Haussmann)
+    "stop_area:IDFM:73650":  "ST_LAZARE", # Opéra (M7, M8, M3, relié à Auber)
 
     # --- GARE DU NORD / MAGENTA ---
     "stop_area:IDFM:71410":  "GARE_NORD", 
@@ -195,9 +195,14 @@ POLES_DATA = {
     },
     "ST_LAZARE": {
         "name": "✨ SUPER-PÔLE : SAINT-LAZARE / OPÉRA",
+        # L'ordre des IDs peut influencer l'ordre de traitement, mais le tri final se fait par mode/heure
         "ids": [
-            "stop_area:IDFM:71370", "stop_area:IDFM:73688", "stop_area:IDFM:478926", 
-            "stop_area:IDFM:73690", "stop_area:IDFM:71538", "stop_area:IDFM:71547"
+            "stop_area:IDFM:71370", # St-Lazare
+            "stop_area:IDFM:73688", # Haussmann
+            "stop_area:IDFM:478926", # Auber
+            "stop_area:IDFM:73690", # Saint-Augustin
+            "stop_area:IDFM:73645", # Havre-Caumartin (Ajout Vital pour M3/M9)
+            "stop_area:IDFM:73650"  # Opéra (Ajout Vital pour M7/M8)
         ]
     },
     "GARE_NORD": {
