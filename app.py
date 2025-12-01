@@ -457,7 +457,7 @@ if st.session_state.search_results:
             st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE (OPTIMISÉ)
+#                  AFFICHAGE LIVE (STABILISÉ)
 # ========================================================
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
@@ -465,7 +465,7 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    # On prépare des conteneurs vides pour stabiliser l'affichage
+    # On prépare des conteneurs vides
     containers = {
         "Header": st.empty(),
         "RER": st.container(),
@@ -477,9 +477,32 @@ def afficher_tableau_live(stop_id, stop_name):
         "AUTRE": st.container()
     }
     
-    containers["Header"].markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Actualisation rapide...</div>""", unsafe_allow_html=True)
+    # --- FIX STABILITÉ ---
+    # On définit une structure HTML fixe pour éviter que la page ne saute.
+    # On utilise min-height: 30px pour réserver l'espace vertical.
+    def update_header(text, is_loading=False):
+        loader_html = '<span class="custom-loader"></span>' if is_loading else ''
+        html_content = f"""
+        <div style='
+            display: flex; 
+            align-items: center; 
+            color: #888; 
+            font-size: 0.8rem; 
+            font-style: italic; 
+            margin-bottom: 10px;
+            height: 30px;       /* Hauteur fixe forcée */
+            line-height: 30px;  /* Alignement vertical */
+            overflow: hidden;   /* Sécurité */
+        '>
+            {loader_html} <span style='margin-left: 8px;'>{text}</span>
+        </div>
+        """
+        containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
-    # 1. LIGNES THEORIQUES (INSTANTANÉ GRÂCE AU CACHE)
+    # 1. ÉTAT CHARGEMENT
+    update_header("Actualisation rapide...", is_loading=True)
+
+    # 2. LIGNES THEORIQUES (INSTANTANÉ GRÂCE AU CACHE)
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
 
@@ -496,7 +519,7 @@ def afficher_tableau_live(stop_id, stop_name):
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
 
-    # 2. TEMPS REEL
+    # 3. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
@@ -540,7 +563,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
-    # 2.1 GHOST LINES
+    # 4. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
@@ -554,7 +577,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if mode_t not in buckets: buckets[mode_t] = {}
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
     
-    # 2.5 FILTRAGE
+    # 5. FILTRAGE
     for mode in list(buckets.keys()):
         keys_to_remove = []
         for cle in buckets[mode]:
@@ -566,10 +589,11 @@ def afficher_tableau_live(stop_id, stop_name):
                 else: displayed_lines_keys.add((mode, code_clean))
         for k in keys_to_remove: del buckets[mode][k]
 
-    # 3. AFFICHAGE
+    # 6. AFFICHAGE FINAL
+    # On met à jour le header ici (Etat Stable)
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    containers["Header"].caption(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE")
+    update_header(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE", is_loading=False)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
@@ -689,7 +713,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
-    # 4. FOOTER
+    # 7. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
             if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -715,6 +739,5 @@ def afficher_tableau_live(stop_id, stop_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     if html_badges:
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
