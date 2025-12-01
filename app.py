@@ -65,36 +65,36 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (Ninja Update v2)
+#              STYLE CSS (Ninja Update v3)
 # ==========================================
 st.markdown("""
 <style>
-    /* --- CSS NINJA : FORCER L'OPACITÉ --- */
+    /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
     
-    /* Cible le fragment et force l'opacité à 100% tout le temps */
+    /* 1. Cache l'instruction "Press Enter to submit form" */
+    div[data-testid="InputInstructions"] {
+        display: none !important;
+    }
+    
+    /* 2. Force l'opacité à 100% (Anti-grisement) */
     div[data-testid="stFragment"] {
         opacity: 1 !important;
         transform: none !important;
         transition: none !important;
         filter: none !important;
     }
-    
-    /* Cible les conteneurs internes pour empêcher le clignotement */
     div.element-container {
         opacity: 1 !important;
         filter: none !important;
     }
     
-    /* Cache l'icône de chargement (le spinner) par défaut de Streamlit */
+    /* 3. Cache les éléments de chargement par défaut */
     div[data-testid="stSpinner"] {
         display: none !important;
     }
-    
-    /* Cache la barre de progression "Running" en haut */
     .stApp > header {
         visibility: hidden !important;
     }
-    
     /* ----------------------------------------- */
 
     @keyframes blinker { 50% { opacity: 0; } }
@@ -105,13 +105,6 @@ st.markdown("""
         50% { border-color: #fff; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); }
         100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
     }
-    
-    @keyframes float { 
-        0% { transform: translateY(0px); } 
-        50% { transform: translateY(-6px); } 
-        100% { transform: translateY(0px); } 
-    } 
-    .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
 
     .custom-loader {
         border: 2px solid rgba(255, 255, 255, 0.1);
@@ -181,7 +174,6 @@ st.markdown("""
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
 
-    /* LE STYLE DU BADGE ALPHA */
     .version-badge {
         background: linear-gradient(45deg, #FF4B4B, #F76B1C);
         color: white;
