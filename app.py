@@ -181,8 +181,9 @@ st.markdown("""
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
 
+    /* LE STYLE DU BADGE ALPHA (ROUGE) */
     .version-badge {
-        background: linear-gradient(45deg, #FF4B4B, #F76B1C);
+        background: #e74c3c; /* Rouge pur */
         color: white;
         padding: 4px 10px;
         border-radius: 15px;
@@ -382,7 +383,7 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 • Abondance 🧀</span></h1>", unsafe_allow_html=True)
+st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
 # --- INITIALISATION DES FAVORIS ---
