@@ -432,50 +432,6 @@ def afficher_tableau_live(stop_id, stop_name):
             if mode == "CABLE" and code == "C1":
                 has_c1_cable = True
 
-    # --- BANDEAU SPÉCIAL CÂBLE C1 (Jusqu'au 13 Décembre) ---
-    if has_c1_cable:
-        target_date = datetime(2025, 12, 13, 8, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-        now = datetime.now(pytz.timezone('Europe/Paris'))
-        
-        if target_date > now:
-            delta = target_date - now
-            jours = delta.days
-            
-            # Petite animation CSS inline pour faire flotter la cabine
-            st.markdown("""
-            <style>
-                @keyframes float {
-                    0% { transform: translateY(0px); }
-                    50% { transform: translateY(-6px); }
-                    100% { transform: translateY(0px); }
-                }
-                .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-                color: white;
-                padding: 15px;
-                border-radius: 12px;
-                text-align: center;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3);
-                border: 1px solid rgba(255,255,255,0.2);
-            ">
-                <div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
-                    <span class='cable-icon'>🚠</span> Câble C1 • En approche
-                </div>
-                <div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">
-                    J-{jours}
-                </div>
-                <div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">
-                    Inauguration le 13 décembre 2025
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
     # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
     
@@ -688,39 +644,58 @@ def afficher_tableau_live(stop_id, stop_name):
                 is_noctilien = str(code).strip().upper().startswith('N')
 
                 rows_html = ""
-                for dest_name, info in sorted_dests:
-                    if "Service terminé" in dest_name:
-                        rows_html += f'<div class="service-box">😴 Service terminé</div>'
-                    else:
-                        html_list = []
-                        contains_last = False
-                        last_val_tri = 9999
-                        
-                        for idx, d_item in enumerate(info['items']):
-                            val_tri = d_item['tri']
-                            if idx > 0 and val_tri > 62 and not is_noctilien: 
-                                continue
-                                
-                            txt = d_item['html']
-                            if d_item.get('is_last'):
-                                contains_last = True
-                                last_val_tri = val_tri
-                                if val_tri < 60:
-                                    if val_tri < 30:
-                                        txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                    else:
-                                        txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
-                            html_list.append(txt)
-                        
-                        if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                        times_str = "<span class='time-sep'>|</span>".join(html_list)
-                        
-                        if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
-                        else:
-                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
-                # --- BANDEAU SPÉCIAL CÂBLE C1 (INTÉGRÉ AU BLOC) ---
+                # LOGIQUE SPÉCIALE CÂBLE C1 : Compte à rebours précis
+                if code == "C1":
+                    target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                    now = datetime.now(pytz.timezone('Europe/Paris'))
+                    if target_date > now:
+                        delta = target_date - now
+                        total_seconds = int(delta.total_seconds())
+                        days = total_seconds // 86400
+                        hours = (total_seconds % 86400) // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        
+                        # On remplace la ligne "Service terminé" par le chrono
+                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {minutes}min</span></div>'
+                    else:
+                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
+
+                # LOGIQUE STANDARD (Autres lignes)
+                else:
+                    for dest_name, info in sorted_dests:
+                        if "Service terminé" in dest_name:
+                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        else:
+                            html_list = []
+                            contains_last = False
+                            last_val_tri = 9999
+                            
+                            for idx, d_item in enumerate(info['items']):
+                                val_tri = d_item['tri']
+                                if idx > 0 and val_tri > 62 and not is_noctilien: 
+                                    continue
+                                    
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    if val_tri < 60:
+                                        if val_tri < 30:
+                                            txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                        else:
+                                            txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                html_list.append(txt)
+                            
+                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                            times_str = "<span class='time-sep'>|</span>".join(html_list)
+                            
+                            if contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                 rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
+                            else:
+                                rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                
+                # --- BANDEAU SPÉCIAL CÂBLE C1 (Affiché juste au-dessus de la carte) ---
                 if code == "C1":
                     target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
                     now = datetime.now(pytz.timezone('Europe/Paris'))
