@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION DE LA PAGE
 st.set_page_config(
-    page_title="Grand Paname (v1.0 Abondance 🧀)",
+    page_title="Grand Paname (v1.0 ALPHA)",
     page_icon=icon_image,
     layout="centered"
 )
