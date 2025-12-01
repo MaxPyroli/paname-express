@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION
 st.set_page_config(
-    page_title="Grand Paname (Bêta)",
+    page_title="Grand Paname (v1.0 Bêta)",
     page_icon=icon_image,
     layout="centered"
 )
@@ -145,6 +145,19 @@ st.markdown("""
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+
+    /* STYLE DU BADGE VERSION 1.0 */
+    .version-badge {
+        background: linear-gradient(45deg, #FF4B4B, #F76B1C);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        vertical-align: middle;
+        margin-left: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -327,13 +340,16 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.title("🚆 Grand Paname (Bêta)")
-st.caption("v0.11.1 - Milk • ⚠️ Pre-release")
+# TITRE AVEC LE BADGE VISUEL 1.0 BETA
+st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Bêta</span></h1>", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.caption("v0.11.1 - Milk • ⚠️ Pre-release") 
+    st.markdown("<h3 style='color:#888;'>v1.0 Bêta</h3>", unsafe_allow_html=True)
     st.header("🗄️ Informations")
-    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    
+    # MESSAGE DE BIENVENUE
+    st.info("**🚀 Bienvenue dans la Bêta 1.0 !**\n\nCeci est une version majeure. Nous testons de nouvelles fonctionnalités. Vos retours sont précieux !")
+    
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
@@ -413,7 +429,7 @@ def afficher_tableau_live(stop_id, stop_name):
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
-    has_c1_cable = False # Flag pour détecter le Câble C1
+    has_c1_cable = False
 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
@@ -422,13 +438,11 @@ def afficher_tableau_live(stop_id, stop_name):
                 raw_mode = line['physical_modes'][0].get('id', 'AUTRE')
             elif 'physical_mode' in line:
                 raw_mode = line['physical_mode']
-            
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
             
-            # DÉTECTION CÂBLE C1
             if mode == "CABLE" and code == "C1":
                 has_c1_cable = True
 
@@ -475,8 +489,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 key = (mode, code, dest)
                 max_val = last_departures_map.get(key)
                 if max_val and val_tri == max_val:
-                    if val_tri > 60: is_last = True
-                    elif datetime.now(pytz.timezone('Europe/Paris')).hour >= 21: is_last = True
+                    is_last = True
 
             cle = (mode, code, color)
             if mode in buckets:
@@ -551,11 +564,9 @@ def afficher_tableau_live(stop_id, stop_name):
                         <span class="line-badge" style="background-color:#{color};">{code}</span>
                     </div>
                 """
-                
                 geo = GEOGRAPHIE_RER[code]
                 stop_upper = clean_name.upper()
                 
-                # --- PATCH DYNAMIQUE POUR LE RER C ---
                 local_mots_1 = geo['mots_1'].copy()
                 local_mots_2 = geo['mots_2'].copy()
                 
@@ -564,8 +575,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     if any(k in stop_upper for k in zone_nord_ouest):
                         if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                         if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-                # -------------------------------------
-
+                
                 p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                 p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                 p3 = [d for d in proches if d not in p1 and d not in p2]
@@ -584,7 +594,6 @@ def afficher_tableau_live(stop_id, stop_name):
                     return h
 
                 directions_vides = (not p1 and not p2)
-                
                 if directions_vides:
                      card_html += """<div class="service-box">😴 Service terminé</div>"""
                 else:
@@ -592,12 +601,9 @@ def afficher_tableau_live(stop_id, stop_name):
                     if not is_term_2: card_html += render_group(geo['labels'][1], p2)
 
                 has_real_trains_in_p3 = any(d['tri'] < 3000 for d in p3)
-                
                 if p3:
-                    if directions_vides and not has_real_trains_in_p3:
-                        pass 
-                    else:
-                        card_html += render_group("AUTRES DIRECTIONS", p3)
+                    if directions_vides and not has_real_trains_in_p3: pass 
+                    else: card_html += render_group("AUTRES DIRECTIONS", p3)
 
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
@@ -622,15 +628,12 @@ def afficher_tableau_live(stop_id, stop_name):
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # ===========================================================
-            # CAS 3 : TOUS LES AUTRES MODES (Bus, Métro, Tram, Câble...)
-            # ===========================================================
+            # === CAS 3 : TOUS LES AUTRES MODES ===
             else:
                 dest_data = {}
                 for d in proches:
                     dn = d['dest']
                     if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
-                    
                     if len(dest_data[dn]['items']) < 3:
                         dest_data[dn]['items'].append(d)
                         if d['tri'] < dest_data[dn]['best_time']:
@@ -644,88 +647,40 @@ def afficher_tableau_live(stop_id, stop_name):
                 is_noctilien = str(code).strip().upper().startswith('N')
 
                 rows_html = ""
-                
-                # LOGIQUE SPÉCIALE CÂBLE C1 : Compte à rebours précis
-                if code == "C1":
-                    target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                    now = datetime.now(pytz.timezone('Europe/Paris'))
-                    if target_date > now:
-                        delta = target_date - now
-                        total_seconds = int(delta.total_seconds())
-                        days = total_seconds // 86400
-                        hours = (total_seconds % 86400) // 3600
-                        minutes = (total_seconds % 3600) // 60
-                        
-                        # On remplace la ligne "Service terminé" par le chrono
-                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {minutes}min</span></div>'
+                for dest_name, info in sorted_dests:
+                    if "Service terminé" in dest_name:
+                        rows_html += f'<div class="service-box">😴 Service terminé</div>'
                     else:
-                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
-
-                # LOGIQUE STANDARD (Autres lignes)
-                else:
-                    for dest_name, info in sorted_dests:
-                        if "Service terminé" in dest_name:
-                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        html_list = []
+                        contains_last = False
+                        last_val_tri = 9999
+                        for idx, d_item in enumerate(info['items']):
+                            val_tri = d_item['tri']
+                            if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                            txt = d_item['html']
+                            if d_item.get('is_last'):
+                                contains_last = True
+                                last_val_tri = val_tri
+                                if val_tri < 60:
+                                    if val_tri < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                            html_list.append(txt)
+                        if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                        times_str = "<span class='time-sep'>|</span>".join(html_list)
+                        
+                        if contains_last and len(html_list) == 1 and last_val_tri < 10:
+                             rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
                         else:
-                            html_list = []
-                            contains_last = False
-                            last_val_tri = 9999
-                            
-                            for idx, d_item in enumerate(info['items']):
-                                val_tri = d_item['tri']
-                                if idx > 0 and val_tri > 62 and not is_noctilien: 
-                                    continue
-                                    
-                                txt = d_item['html']
-                                if d_item.get('is_last'):
-                                    contains_last = True
-                                    last_val_tri = val_tri
-                                    if val_tri < 60:
-                                        if val_tri < 30:
-                                            txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                        else:
-                                            txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
-                                html_list.append(txt)
-                            
-                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                            times_str = "<span class='time-sep'>|</span>".join(html_list)
-                            
-                            if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                 rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
-                            else:
-                                rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                 
-                # --- BANDEAU SPÉCIAL CÂBLE C1 (Affiché juste au-dessus de la carte) ---
+                # BANDEAU CABLE C1
                 if code == "C1":
                     target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
                     now = datetime.now(pytz.timezone('Europe/Paris'))
-                    
                     if target_date > now:
                         delta = target_date - now
                         st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
-                        
-                        st.markdown(f"""
-                        <div style="
-                            background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-                            color: white;
-                            padding: 15px;
-                            border-radius: 12px;
-                            text-align: center;
-                            margin-bottom: 15px;
-                            box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3);
-                            border: 1px solid rgba(255,255,255,0.2);
-                        ">
-                            <div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
-                                <span class='cable-icon'>🚠</span> Câble C1 • A l'approche...
-                            </div>
-                            <div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">
-                                J-{delta.days}
-                            </div>
-                            <div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">
-                                Inauguration le 13 décembre 2025 à 11h
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
                 st.markdown(f"""
                 <div class="bus-card" style="border-left-color: #{color};">
