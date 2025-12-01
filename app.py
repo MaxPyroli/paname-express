@@ -542,19 +542,20 @@ if st.session_state.search_results:
                 st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE (INCREMENTAL)
+#                  AFFICHAGE LIVE (INCREMENTAL & FUSIONNÉ)
 # ========================================================
 @st.fragment(run_every=30)
 def afficher_tableau_live(stop_ids, display_name):
     
     clean_name = display_name.split('(')[0].strip().replace("✨ SUPER-PÔLE : ", "")
+    is_pole_mode = len(stop_ids) > 1
     
     # STYLE DU TITRE
-    title_class = "station-title-pole" if len(stop_ids) > 1 else "station-title"
+    title_class = "station-title-pole" if is_pole_mode else "station-title"
     st.markdown(f"<div class='{title_class}'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
     # 1. PRÉPARATION DES CONTENEURS (Slots vides qui vont se remplir)
-    # L'ordre visuel est défini ici une bonne fois pour toutes
+    # L'ordre visuel est défini ici.
     containers = {
         "RER": st.container(),
         "TRAIN": st.container(),
@@ -565,45 +566,39 @@ def afficher_tableau_live(stop_ids, display_name):
         "AUTRE": st.container()
     }
     
-    # Zone de status pour voir la progression
     status_box = st.empty()
     
-    # 2. INITIALISATION DES DONNÉES GLOBALES (Buckets)
+    # 2. INITIALISATION DES DONNÉES GLOBALES
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
-    
-    # Pour le footer (lignes sans info)
     all_lines_detected = {} 
     
-    # === FONCTION DE RENDU INTERNE (C'est ton code d'affichage déplacé ici) ===
-    # Elle permet de mettre à jour SEULEMENT le conteneur modifié
+    # === FONCTION DE RENDU INTERNE ===
     def render_mode_container(mode_target, container_target):
         lignes_du_mode = buckets[mode_target]
         if not lignes_du_mode: return
         
         with container_target:
-            container_target.empty() # On nettoie avant de redessiner
+            container_target.empty() # On efface tout le contenu précédent du conteneur
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_target]}</div>", unsafe_allow_html=True)
             
-            # Tri intelligent
+            # Tri par numéro de ligne
             def sort_key(k): 
                 try: code_val = (0, int(k[1])) 
                 except: code_val = (1, k[1])
-                return (code_val, k[3]) # Tri par Ligne puis par Origine
+                return code_val
 
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
-                mode, code, color, origin = cle
+                mode, code, color, origin_key = cle
                 departs = lignes_du_mode[cle]
                 
-                # Filtrage
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # Badge Gare (Si Pôle)
-                station_badge = ""
-                if len(stop_ids) > 1 and origin != "MAIN" and mode not in ["RER", "TRAIN"]:
-                    station_badge = f"<span class='origin-badge'>{origin}</span>"
-
+                # Badge Gare : On ne l'affiche que si ce n'est PAS un pôle fusionné (pour éviter la surcharge)
+                # ou si on veut distinguer des gares éloignées (pas le cas ici)
+                station_badge = "" 
+                
                 # === CAS 1: RER/TRAIN AVEC GÉOGRAPHIE ===
                 if mode in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
@@ -612,7 +607,7 @@ def afficher_tableau_live(stop_ids, display_name):
                     local_mots_1 = geo['mots_1'].copy()
                     local_mots_2 = geo['mots_2'].copy()
                     
-                    # Patch RER C (Logique conservée)
+                    # Patch RER C
                     if code == "C":
                          zone_nord_ouest = ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]
                          if any(k in clean_name.upper() for k in zone_nord_ouest):
@@ -623,13 +618,25 @@ def afficher_tableau_live(stop_ids, display_name):
                     p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
                     p3 = [d for d in proches if d not in p1 and d not in p2]
                     
-                    # Helper HTML
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
+                        # Tri par temps
                         items.sort(key=lambda x: x['tri'])
-                        for it in items[:4]:
+                        # Dédoublonnage visuel strict pour l'affichage (éviter d'avoir 2 fois "Cergy 5 min")
+                        seen_times = set()
+                        unique_items = []
+                        for it in items:
+                            unique_key = (it['dest'], it['tri'])
+                            if unique_key not in seen_times:
+                                seen_times.add(unique_key)
+                                unique_items.append(it)
+                        
+                        for it in unique_items[:4]:
+                             # On affiche l'origine réelle en petit si disponible (utile pour savoir si ça part de Gare du Nord ou Magenta)
+                             origin_txt = f"<span style='font-size:0.7em; color:#888; margin-left:5px; font-style:italic;'>({it['origin_real']})</span>" if (is_pole_mode and it.get('origin_real') and mode=="TRAIN") else ""
+                             
                              row_cls = "last-dep-box" if it.get('is_last') else "rail-row"
-                             content = f"<span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span>"
+                             content = f"<span class='rail-dest'>{it['dest']}{origin_txt}</span><span>{it['html']}</span>"
                              if it.get('is_last'): h += f"<div class='{row_cls}'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'>{content}</div></div>"
                              else: h += f"<div class='{row_cls}'>{content}</div>"
                         return h
@@ -650,7 +657,12 @@ def afficher_tableau_live(stop_ids, display_name):
                          card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
-                        for item in proches[:4]:
+                        seen_times = set()
+                        for item in proches:
+                            if len(seen_times) >= 4: break
+                            if item['tri'] in seen_times: continue
+                            seen_times.add(item['tri'])
+                            
                             row_cls = "last-dep-box" if item.get('is_last') else "rail-row"
                             content = f"<span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span>"
                             if item.get('is_last'): card_html += f"<div class='{row_cls}'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'>{content}</div></div>"
@@ -664,9 +676,9 @@ def afficher_tableau_live(stop_ids, display_name):
                     for d in proches:
                         dn = d['dest']
                         if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
-                        if len(dest_data[dn]['items']) < 3:
-                            dest_data[dn]['items'].append(d)
-                            if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
+                        # Fusion plus stricte des horaires
+                        dest_data[dn]['items'].append(d)
+                        if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
                     
                     if mode in ["METRO", "TRAM", "CABLE"]: sorted_dests = sorted(dest_data.items(), key=lambda i: i[0])
                     else: sorted_dests = sorted(dest_data.items(), key=lambda i: i[1]['best_time'])
@@ -681,17 +693,33 @@ def afficher_tableau_live(stop_ids, display_name):
                             html_list = []
                             contains_last = False
                             last_val_tri = 9999
-                            for idx, d_item in enumerate(info['items']):
-                                val_tri = d_item['tri']
-                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                            
+                            # Tri et Dédoublonnage des horaires (Ex: évite d'avoir "2 min | 2 min" si capté par 2 gares)
+                            sorted_items = sorted(info['items'], key=lambda x: x['tri'])
+                            unique_items = []
+                            seen_tris = set()
+                            
+                            for it in sorted_items:
+                                if len(unique_items) >= 3: break
+                                # On considère que si l'écart est < 1 min, c'est le même train vu par une autre gare
+                                is_duplicate_time = False
+                                for st in seen_tris:
+                                    if abs(st - it['tri']) < 1: is_duplicate_time = True
+                                if not is_duplicate_time:
+                                    if it['tri'] > 62 and not is_noctilien: continue
+                                    seen_tris.add(it['tri'])
+                                    unique_items.append(it)
+
+                            for d_item in unique_items:
                                 txt = d_item['html']
                                 if d_item.get('is_last'):
                                     contains_last = True
-                                    last_val_tri = val_tri
-                                    if val_tri < 60:
-                                        if val_tri < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                    last_val_tri = d_item['tri']
+                                    if d_item['tri'] < 60:
+                                        if d_item['tri'] < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
                                         else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                                 html_list.append(txt)
+                                
                             if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                             times_str = "<span class='time-sep'>|</span>".join(html_list)
                             
@@ -700,7 +728,6 @@ def afficher_tableau_live(stop_ids, display_name):
                             else:
                                 rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
                     
-                    # LOGIQUE CABLE C1
                     if code == "C1":
                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
                         now = datetime.now(pytz.timezone('Europe/Paris'))
@@ -712,22 +739,20 @@ def afficher_tableau_live(stop_ids, display_name):
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span>{station_badge}</div>{rows_html}</div>""", unsafe_allow_html=True)
 
 
-    # 3. BOUCLE DE CHARGEMENT PROGRESSIF (LE CŒUR DU SYSTÈME)
+    # 3. BOUCLE DE CHARGEMENT PROGRESSIF
     total_ids = len(stop_ids)
     progress_bar = st.progress(0)
     
     for idx, s_id in enumerate(stop_ids):
-        # UI Update
         percent = int((idx / total_ids) * 100)
         progress_bar.progress(percent)
         status_box.markdown(f"""<div style='color:#3498db; font-size:0.9em; margin-bottom:10px;'>⏳ Chargement des données ({idx+1}/{total_ids})...</div>""", unsafe_allow_html=True)
 
         # A. Récupération API
         data_lines = demander_lignes_arret(s_id)
-        # Optimisation: On demande 100 départs par ID, c'est suffisant et plus rapide
         data_live = demander_api(f"stop_areas/{s_id}/departures?count=100") 
         
-        # B. Lignes Théoriques (pour le footer et les couleurs)
+        # B. Lignes Théoriques
         if data_lines and 'lines' in data_lines:
             for line in data_lines['lines']:
                 raw_mode = "AUTRE"
@@ -743,9 +768,8 @@ def afficher_tableau_live(stop_ids, display_name):
 
         # C. Temps Réel
         if data_live and 'departures' in data_live:
-            # Nom de la sous-station actuelle
-            try: origin_clean = data_live['departures'][0]['stop_point']['stop_area']['name'].split('(')[0].strip()
-            except: origin_clean = "Gare"
+            try: origin_real = data_live['departures'][0]['stop_point']['stop_area']['name'].split('(')[0].strip()
+            except: origin_real = "Gare"
 
             for d in data_live['departures']:
                 info = d['display_informations']
@@ -754,35 +778,27 @@ def afficher_tableau_live(stop_ids, display_name):
                 raw_dest = info.get('direction', '')
                 dest = raw_dest if mode == "BUS" else re.sub(r'\s*\([^)]+\)$', '', raw_dest)
                 
-                # Couleur fallback
                 color = info.get('color', buckets.get('colors', {}).get((mode, code), '666666'))
                 
-                # Temps
                 freshness = d.get('data_freshness', 'realtime')
                 val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
                 if val_tri < -5: continue
 
-                # Last departure logic
                 is_last = False
-                if mode in ["RER", "TRAIN"] and val_tri < 3000 and val_tri > 1200: is_last = True # Simplifié pour perf
+                if mode in ["RER", "TRAIN"] and val_tri < 3000 and val_tri > 1200: is_last = True
                 elif val_tri < 3000 and (val_tri > 60 or datetime.now(pytz.timezone('Europe/Paris')).hour >= 21): is_last = True
 
-                # Clé unique : Si RER/TRAIN, on regroupe tout sous "MAIN" pour éviter la fragmentation
-                origin_key = "MAIN" if mode in ["RER", "TRAIN"] else origin_clean
+                # === C'EST ICI QUE LA FUSION OPÈRE ===
+                # Si on est en mode Pôle, on met "MAIN" pour tout le monde (sauf BUS éventuellement, mais là je force tout)
+                # Cela oblige le script à considérer la Ligne 3 (Opéra) et Ligne 3 (Havre) comme la MEME ligne.
+                origin_key = "MAIN" if is_pole_mode else origin_real
                 
                 cle = (mode, code, color, origin_key)
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 
-                # Anti-doublon (important pour les chevauchements d'IDs)
-                is_duplicate = False
-                for existing in buckets[mode][cle]:
-                    if existing['dest'] == dest and abs(existing['tri'] - val_tri) < 2:
-                        is_duplicate = True; break
-                
-                if not is_duplicate:
-                    buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'origin': origin_clean})
+                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'origin_real': origin_real})
 
-            # D. RENDU IMMÉDIAT (Mise à jour visuelle instantanée)
+            # D. RENDU IMMÉDIAT
             modes_to_update = set()
             for d in data_live['departures']:
                 m = normaliser_mode(d['display_informations'].get('physical_mode', 'AUTRE'))
@@ -797,14 +813,12 @@ def afficher_tableau_live(stop_ids, display_name):
     heure = datetime.now(paris_tz).strftime('%H:%M:%S')
     status_box.markdown(f"""<div style='display: flex; align-items: center; color: #2ecc71; font-size: 0.8rem; margin-bottom: 10px;'>✅ Données à jour : {heure} • <span class='blink' style='margin-left:5px'>🔴 LIVE</span></div>""", unsafe_allow_html=True)
     
-    # Calcul des lignes affichées pour le footer
     displayed_lines_keys = set()
     for mode in buckets:
         if mode == "colors": continue
         for cle in buckets[mode]:
-            displayed_lines_keys.add((cle[0], cle[1])) # (mode, code)
+            displayed_lines_keys.add((cle[0], cle[1]))
 
-    # Affichage du footer (Lignes théoriques non trouvées en temps réel)
     footer_data = {}
     for (mode_t, code_t), info in all_lines_detected.items():
         if (mode_t, code_t) not in displayed_lines_keys:
@@ -813,7 +827,6 @@ def afficher_tableau_live(stop_ids, display_name):
 
     count_visible = sum(len(footer_data[m]) for m in footer_data if m != "AUTRE")
     
-    # Message "Rien trouvé" si vraiment vide
     has_any_data = any(len(buckets[m]) > 0 for m in buckets if m != "colors")
     if not has_any_data:
         if count_visible > 0:
@@ -836,7 +849,6 @@ def afficher_tableau_live(stop_ids, display_name):
                     html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                 if html_badges:
                     st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-
 # ==========================================
 #        LANCEMENT DE L'AFFICHAGE
 # ==========================================
