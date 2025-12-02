@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import time
 import pytz
@@ -8,7 +8,7 @@ import os
 from PIL import Image
 import base64
 import json
-from streamlit_local_storage import LocalStorage # <--- Nouvelle librairie
+from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
 
 # ==========================================
 #              CONFIGURATION
@@ -383,29 +383,29 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (LOCAL STORAGE) ---
-localS = LocalStorage()
+# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur) ---
 
-# 1. Chargement : On récupère ce qu'il y a dans le navigateur
-# La librairie peut mettre une fraction de seconde à répondre, d'où le try/except
-try:
-    ls_item = localS.getItem("gp_favorites")
-    # Si on trouve des données et que la session est vide, on charge !
-    if ls_item and not st.session_state.favorites:
-        st.session_state.favorites = ls_item
-except:
-    pass # Pas encore chargé ou erreur
+# 1. Lecture : On demande au navigateur de nous donner le contenu de 'gp_favs'
+# key="get_favs" assure que cette commande est stable
+favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs")
 
-# Sécurité si toujours vide
+# 2. Chargement dans la session
 if 'favorites' not in st.session_state:
     st.session_state.favorites = []
 
+# Si on reçoit des données du navigateur et que notre session est vide, on charge !
+if favs_from_browser and not st.session_state.favorites:
+    try:
+        st.session_state.favorites = json.loads(favs_from_browser)
+    except:
+        pass
+
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute/Retire et sauvegarde dans le LocalStorage du navigateur."""
+    """Ajoute/Retire et sauvegarde via JS."""
     clean_name = stop_name.split('(')[0].strip()
     exists = False
     
-    # Mise à jour de la liste
+    # 1. Mise à jour Mémoire
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -416,12 +416,14 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # SAUVEGARDE PERMANENTE
-    # On écrit la liste mise à jour dans la mémoire du navigateur
-    # key="save_favs" sert à déclencher l'action côté JS
-    localS.setItem("gp_favorites", st.session_state.favorites, key=f"save_{int(time.time())}")
+    # 2. Sauvegarde JS : On écrit directement dans le localStorage
+    # On utilise json.dumps pour transformer la liste en texte
+    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") # Échappement des apostrophes pour le JS
     
-    # Petite pause pour laisser le temps au navigateur d'enregistrer
+    # On exécute la commande JS pour sauvegarder
+    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
+    
+    # Petite pause pour laisser le temps au JS de s'exécuter avant le rerun du bouton
     time.sleep(0.3)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
