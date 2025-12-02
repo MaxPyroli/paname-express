@@ -740,8 +740,26 @@ def afficher_tableau_live(stop_id, stop_name):
                             return h
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
-                            if it.get('is_last'): h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                            else: h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                            val_tri = it['tri']
+                            
+                            if it.get('is_last'):
+                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (RER) ---
+                                if val_tri < 10:
+                                    # < 10 min : Grand cadre clignotant (URGENCE)
+                                    # On laisse le temps normal dedans pour ne pas surcharger
+                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                                
+                                elif val_tri <= 30:
+                                    # 10 à 30 min : Petit encadré discret (IMMINENT)
+                                    # Pas de grand cadre, juste le style sur l'heure
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
+                                
+                                else:
+                                    # > 30 min : Texte jaune simple (LOINTAIN)
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
+                                # -----------------------------------------
+                            else:
+                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                         return h
 
                     if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
