@@ -383,48 +383,52 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (V2 - Robuste) ---
+# --- INITIALISATION DES FAVORIS (V3 - Sécurisée) ---
 controller = CookieController()
 
-# On initialise la liste vide par sécurité
-if 'favorites' not in st.session_state:
-    st.session_state.favorites = []
-
-# On essaie de charger le cookie SEULEMENT si on ne l'a pas déjà fait cette session
-if 'cookies_loaded' not in st.session_state:
+# Chargement initial : On essaie de récupérer le cookie
+# S'il n'est pas encore là, on initialise une liste vide
+try:
     cookie_data = controller.get('gp_favorites')
-    
-    if cookie_data:
-        try:
-            st.session_state.favorites = json.loads(cookie_data)
-            st.session_state.cookies_loaded = True # C'est bon, on a les données !
-            st.rerun() # On recharge pour afficher les étoiles tout de suite
-        except:
-            pass # Données corrompues, on garde la liste vide
+    if cookie_data and 'favorites' not in st.session_state:
+        st.session_state.favorites = json.loads(cookie_data)
+    elif 'favorites' not in st.session_state:
+        st.session_state.favorites = []
+except:
+    st.session_state.favorites = []
             
     # Note : Si cookie_data est None, on ne fait rien, on attendra le prochain run 
     # (le composant cookie met quelques millisecondes à se connecter)
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute ou retire un arrêt et sauvegarde."""
+    """Ajoute ou retire un arrêt des favoris et sauvegarde en Cookie Sécurisé."""
     clean_name = stop_name.split('(')[0].strip()
-    exists = False
     
+    # 1. Mise à jour de la mémoire (Session)
+    exists = False
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
             exists = True
-            st.toast(f"❌ {clean_name} retiré", icon="🗑️")
+            st.toast(f"❌ {clean_name} retiré des favoris", icon="🗑️")
             break
-            
     if not exists:
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
-        st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
+        st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
     
-    # Sauvegarde et marque comme chargé pour ne pas écraser au prochain F5
-    controller.set('gp_favorites', json.dumps(st.session_state.favorites), max_age=2592000)
-    st.session_state.cookies_loaded = True
-    time.sleep(0.5) # Petite pause pour l'écriture
+    # 2. Sauvegarde dans le Cookie (JSON)
+    # CORRECTIF SÉCURITÉ : On force SameSite=None et Secure=True pour que le navigateur accepte le cookie
+    # expires=30 correspond à 30 jours de validité
+    controller.set(
+        'gp_favorites', 
+        json.dumps(st.session_state.favorites), 
+        sameSite='None', 
+        secure=True, 
+        expires=30
+    )
+    
+    # Pause pour laisser le temps d'écriture
+    time.sleep(0.5)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
