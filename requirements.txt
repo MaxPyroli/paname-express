@@ -3,5 +3,4 @@ requests
 pandas
 pyarrow
 pytz
-streamlit-local-storage
 
