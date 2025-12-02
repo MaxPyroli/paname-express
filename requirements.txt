@@ -3,7 +3,8 @@ requests
 pandas
 pyarrow
 pytz
-: pip install --upgrade pip
-pip install extra-streamlit-components
+extra-streamlit-components
+--upgrade pip
+
 
 
