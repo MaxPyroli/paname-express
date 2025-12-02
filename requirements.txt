@@ -3,8 +3,4 @@ requests
 pandas
 pyarrow
 pytz
-extra-streamlit-components
---upgrade pip
-
-
-
+streamlit-cookies-controller
