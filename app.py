@@ -774,8 +774,19 @@ def afficher_tableau_live(stop_id, stop_name):
                     else:
                         proches.sort(key=lambda x: x['tri'])
                         for item in proches[:4]:
-                            if item.get('is_last'): card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
-                            else: card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
+                            val_tri = item['tri']
+                            
+                            if item.get('is_last'):
+                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (BACKUP) ---
+                                if val_tri < 10:
+                                    card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
+                                elif val_tri <= 30:
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-small-frame'>{item['html']} 🏁</span></div>"""
+                                else:
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-text-only'>{item['html']} 🏁</span></div>"""
+                                # --------------------------------------------
+                            else:
+                                card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
