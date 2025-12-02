@@ -253,7 +253,8 @@ GEOGRAPHIE_RER = {
     },
     "J": {
         "labels": ("⇦ OUEST (Mantes / Gisors / Ermont)", "⇨ PARIS ST-LAZARE"),
-        "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN", "MUREAUX", "CORMEILLES"],
+        # J'ai ajouté "ARGENTEUIL" ici
+        "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN", "MUREAUX", "CORMEILLES", "ARGENTEUIL"],
         "term_1": ["MANTES", "GISORS", "ERMONT", "VERNON"],
         "mots_2": ["PARIS", "LAZARE"],
         "term_2": ["PARIS", "LAZARE"]
