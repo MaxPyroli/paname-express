@@ -383,20 +383,25 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur) ---
+# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V2 Auto-Load) ---
 
-# 1. Lecture : On demande au navigateur de nous donner le contenu de 'gp_favs'
-# key="get_favs" assure que cette commande est stable
+# 1. Lecture : On demande au navigateur de nous donner le contenu
+# Le key est important pour que Streamlit sache de quel widget on parle
 favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs")
 
 # 2. Chargement dans la session
 if 'favorites' not in st.session_state:
     st.session_state.favorites = []
 
-# Si on reçoit des données du navigateur et que notre session est vide, on charge !
-if favs_from_browser and not st.session_state.favorites:
+# 3. SYNCHRONISATION INSTANTANÉE
+# Si on reçoit des données du navigateur...
+if favs_from_browser:
     try:
-        st.session_state.favorites = json.loads(favs_from_browser)
+        loaded_favs = json.loads(favs_from_browser)
+        # ...et que notre session est vide ou différente, on met à jour !
+        if st.session_state.favorites != loaded_favs:
+            st.session_state.favorites = loaded_favs
+            st.rerun() # <--- L'ASTUCE : On force le rafraîchissement immédiat pour afficher la sidebar
     except:
         pass
 
@@ -416,14 +421,10 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. Sauvegarde JS : On écrit directement dans le localStorage
-    # On utilise json.dumps pour transformer la liste en texte
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") # Échappement des apostrophes pour le JS
-    
-    # On exécute la commande JS pour sauvegarder
+    # 2. Sauvegarde JS
+    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") 
     streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
     
-    # Petite pause pour laisser le temps au JS de s'exécuter avant le rerun du bouton
     time.sleep(0.3)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
