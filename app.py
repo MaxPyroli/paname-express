@@ -67,7 +67,7 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (Ninja Update v5)
+#              STYLE CSS (Ninja Update v6)
 # ==========================================
 st.markdown("""
 <style>
@@ -206,22 +206,20 @@ st.markdown("""
         font-size: 0.8em;
         margin-left: 5px;
     }
-    /* Alignement vertical parfait du bouton favori */
+    
+    /* Alignement vertical du bouton favori */
     div[data-testid="column"] {
         display: flex;
-        align-items: center; /* Centre verticalement le contenu des colonnes */
+        align-items: center; 
     }
-    
-    /* Style du bouton favori pour le rendre plus discret/joli */
     div[data-testid="column"] button {
         border: none;
         background: transparent;
         font-size: 1.5rem;
         padding: 0;
     }
-    
     div[data-testid="column"] button:hover {
-        color: #f1c40f; /* Jaune au survol */
+        color: #f1c40f; 
         border: none;
         background: transparent;
     }
