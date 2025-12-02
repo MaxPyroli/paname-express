@@ -387,6 +387,7 @@ st.markdown("##### *L'application de référence pour vos départs en Île-de-Fr
 controller = CookieController()
 
 # Chargement initial des favoris depuis le cookie
+# On ne lit le cookie que si la session n'a pas encore de favoris chargés
 if 'favorites' not in st.session_state:
     try:
         cookie_data = controller.get('gp_favorites')
@@ -410,9 +411,12 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
     
-    # 2. Sauvegarde dans le Cookie (JSON) - expire dans 30 jours
+    # 2. Sauvegarde dans le Cookie (JSON)
     controller.set('gp_favorites', json.dumps(st.session_state.favorites), max_age=30*24*3600)
-
+    
+    # CRUCIAL : On attend 0.5s pour laisser le temps au navigateur d'écrire le cookie
+    # avant que le st.rerun() (appelé par le bouton) ne recharge la page.
+    time.sleep(0.5)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
