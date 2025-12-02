@@ -746,7 +746,7 @@ def afficher_tableau_live(stop_id, stop_name):
                         for it in items[:4]:
                             val_tri = it['tri']
                             if it.get('is_last'):
-                                # Logique graduelle
+                                # Logique graduelle 3 niveaux
                                 if val_tri < 10:
                                     h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
                                 elif val_tri <= 30:
@@ -757,12 +757,19 @@ def afficher_tableau_live(stop_id, stop_name):
                                 h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                         return h
 
-                    # --- LOGIQUE D'AFFICHAGE GLOBALE OU SÉPARÉE ---
-                    # Si TOUT est vide (p1 et p2 et p3), on met un seul gros message
-                    if not p1 and not p2 and not p3:
+                    # --- LOGIQUE D'AFFICHAGE (Correction) ---
+                    # Si p1 ET p2 sont vides, c'est que le service principal est terminé.
+                    # On affiche un seul bandeau global.
+                    if not p1 and not p2:
                         card_html += """<div class="service-box">😴 Service terminé</div>"""
+                        
+                        # Cas rare : s'il reste des trains "Autres" (p3) qui ne sont PAS le placeholder "Service terminé"
+                        real_p3 = [x for x in p3 if "Service terminé" not in x['dest']]
+                        if real_p3:
+                             card_html += render_group("AUTRES DIRECTIONS", real_p3)
+                    
                     else:
-                        # Sinon, on affiche colonne par colonne (avec message individuel si besoin)
+                        # Sinon (au moins une direction active), on affiche les colonnes normalement
                         if not any(k in stop_upper for k in geo['term_1']): 
                             card_html += render_group(geo['labels'][0], p1)
                         
