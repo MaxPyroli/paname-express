@@ -541,34 +541,12 @@ if st.session_state.search_results:
             st.session_state.selected_name = choice
             st.rerun()
 
+
 # ========================================================
-#                  AFFICHAGE LIVE (FINAL & INDENTÉ)
-# ========================================================
-# ========================================================
-#                  AFFICHAGE LIVE (FINAL)
+#           LE MOTEUR LIVE (FRAGMENT ISOLÉ)
 # ========================================================
 @st.fragment(run_every=15)
-def afficher_tableau_live(stop_id, stop_name):
-    
-    clean_name = stop_name.split('(')[0].strip()
-    
-    # --- GESTION DU BOUTON FAVORI (STYLE AMÉLIORÉ) ---
-    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
-    
-    # On utilise des colonnes avec un ratio serré pour rapprocher l'étoile
-    # gap="small" permet de réduire l'espace entre le titre et l'étoile
-    col_title, col_fav = st.columns([0.9, 0.1], gap="small", vertical_alignment="center")
-    
-    with col_title:
-        # On garde le titre tel quel
-        st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
-        
-    with col_fav:
-        # Bouton simple, le CSS s'occupera de le rendre joli (transparent)
-        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
-            toggle_favorite(stop_id, stop_name)
-            st.rerun()
-    
+def afficher_live_content(stop_id, clean_name):
     # On prépare des conteneurs vides
     containers = {
         "Header": st.empty(),
@@ -581,7 +559,7 @@ def afficher_tableau_live(stop_id, stop_name):
         "AUTRE": st.container()
     }
     
-    # Fonction de tri accessible partout
+    # Fonction de tri
     def sort_key(k): 
         try: return (0, int(k[1])) 
         except: return (1, k[1])
@@ -881,7 +859,7 @@ def afficher_tableau_live(stop_id, stop_name):
                                         contains_last = True
                                         last_val_tri = val_tri
                                         
-                                        # --- LOGIQUE GRADUELLE 3 NIVEAUX (BUS) ---
+                                        # --- LOGIQUE GRADUELLE (3 Niveaux) ---
                                         if val_tri < 10:
                                             # < 10 min : Grand cadre clignotant géré en bas
                                             txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
@@ -891,6 +869,7 @@ def afficher_tableau_live(stop_id, stop_name):
                                         else:
                                             # > 30 min : Juste le texte jaune et le drapeau
                                             txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                        # -------------------------------------
                                     
                                     html_list.append(txt)
                                 
@@ -937,6 +916,26 @@ def afficher_tableau_live(stop_id, stop_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     if html_badges:
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-
+# ========================================================
+#                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
+# ========================================================
+def afficher_tableau_live(stop_id, stop_name):
+    
+    clean_name = stop_name.split('(')[0].strip()
+    
+    # --- GESTION DU BOUTON FAVORI (HEADER STATIQUE) ---
+    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
+    
+    col_title, col_fav = st.columns([0.9, 0.1], gap="small", vertical_alignment="center")
+    with col_title:
+        st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    with col_fav:
+        # Bouton hors du fragment = rechargement complet de la page = Sidebar à jour !
+        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
+            toggle_favorite(stop_id, stop_name)
+            st.rerun()
+            
+    # Appel du fragment qui gère l'auto-refresh des données
+    afficher_live_content(stop_id, clean_name)
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
