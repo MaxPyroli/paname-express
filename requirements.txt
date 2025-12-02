@@ -3,4 +3,4 @@ requests
 pandas
 pyarrow
 pytz
-streamlit-local-storage
+streamlit_js_eval
