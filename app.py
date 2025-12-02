@@ -1,14 +1,14 @@
 import streamlit as st
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import time
 import pytz
 import os
 from PIL import Image
 import base64
-import json # Indispensable pour stocker la liste
-# Plus besoin d'imports de cookies externes !
+import json
+from streamlit_local_storage import LocalStorage # <--- Nouvelle librairie
 
 # ==========================================
 #              CONFIGURATION
@@ -383,28 +383,29 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (NATIVE JS & CONTEXT) ---
+# --- INITIALISATION DES FAVORIS (LOCAL STORAGE) ---
+localS = LocalStorage()
 
-# 1. Chargement : On lit les cookies reçus par Streamlit (Natif)
-# Note : st.context.cookies est disponible sur les versions récentes de Streamlit
+# 1. Chargement : On récupère ce qu'il y a dans le navigateur
+# La librairie peut mettre une fraction de seconde à répondre, d'où le try/except
+try:
+    ls_item = localS.getItem("gp_favorites")
+    # Si on trouve des données et que la session est vide, on charge !
+    if ls_item and not st.session_state.favorites:
+        st.session_state.favorites = ls_item
+except:
+    pass # Pas encore chargé ou erreur
+
+# Sécurité si toujours vide
 if 'favorites' not in st.session_state:
-    raw_cookie = st.context.cookies.get('gp_favorites')
-    if raw_cookie:
-        try:
-            # Le cookie arrive parfois encodé ou avec des guillemets en trop
-            decoded = requests.utils.unquote(raw_cookie)
-            st.session_state.favorites = json.loads(decoded)
-        except:
-            st.session_state.favorites = []
-    else:
-        st.session_state.favorites = []
+    st.session_state.favorites = []
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute/Retire et sauvegarde via Javascript."""
+    """Ajoute/Retire et sauvegarde dans le LocalStorage du navigateur."""
     clean_name = stop_name.split('(')[0].strip()
     exists = False
     
-    # 1. Mise à jour de la mémoire (Session)
+    # Mise à jour de la liste
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -415,19 +416,13 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. Sauvegarde via Javascript (Le seul moyen fiable à 100% sur Cloud/Iframe)
-    # On force Secure et SameSite=None pour que le navigateur accepte le cookie
-    json_data = json.dumps(st.session_state.favorites)
-    js_code = f"""
-        <script>
-            document.cookie = "gp_favorites={requests.utils.quote(json_data)}; max-age=2592000; path=/; SameSite=None; Secure";
-        </script>
-    """
-    # On injecte le JS qui va écrire le cookie dans ton navigateur
-    st.components.v1.html(js_code, height=0, width=0)
+    # SAUVEGARDE PERMANENTE
+    # On écrit la liste mise à jour dans la mémoire du navigateur
+    # key="save_favs" sert à déclencher l'action côté JS
+    localS.setItem("gp_favorites", st.session_state.favorites, key=f"save_{int(time.time())}")
     
-    # Petite pause pour laisser le JS s'exécuter
-    time.sleep(0.5)
+    # Petite pause pour laisser le temps au navigateur d'enregistrer
+    time.sleep(0.3)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
