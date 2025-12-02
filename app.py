@@ -401,11 +401,11 @@ except:
     # (le composant cookie met quelques millisecondes à se connecter)
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute ou retire un arrêt des favoris et sauvegarde en Cookie Sécurisé."""
+    """Ajoute ou retire un arrêt des favoris et sauvegarde en Cookie."""
     clean_name = stop_name.split('(')[0].strip()
-    
-    # 1. Mise à jour de la mémoire (Session)
     exists = False
+    
+    # 1. Mise à jour de la mémoire
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -416,16 +416,10 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
     
-    # 2. Sauvegarde dans le Cookie (JSON)
-    # CORRECTIF SÉCURITÉ : On force SameSite=None et Secure=True pour que le navigateur accepte le cookie
-    # expires=30 correspond à 30 jours de validité
-    controller.set(
-        'gp_favorites', 
-        json.dumps(st.session_state.favorites), 
-        sameSite='None', 
-        secure=True, 
-        expires=30
-    )
+    # 2. Sauvegarde dans le Cookie (Simplifiée pour éviter le crash)
+    # Cette librairie ne supporte pas les options avancées (Secure, SameSite) en arguments.
+    # On passe juste le nom et la valeur.
+    controller.set('gp_favorites', json.dumps(st.session_state.favorites))
     
     # Pause pour laisser le temps d'écriture
     time.sleep(0.5)
