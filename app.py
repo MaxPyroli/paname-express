@@ -383,72 +383,75 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (COMPATIBLE PY3.13 & PERSISTANT) ---
+# --- INITIALISATION DES FAVORIS (V2 - Robuste) ---
 controller = CookieController()
 
-# 1. On tente de lire le cookie (il peut arriver avec un léger retard)
-cookie_data = controller.get('gp_favorites')
-
-# 2. Initialisation de la session si elle n'existe pas
+# On initialise la liste vide par sécurité
 if 'favorites' not in st.session_state:
     st.session_state.favorites = []
 
-# 3. SYNCHRONISATION FORCÉE (Le Correctif)
-# Si on a un cookie valide, on vérifie s'il faut mettre à jour la session
-if cookie_data:
-    try:
-        cookie_list = json.loads(cookie_data)
-        # Si la session est vide mais que le cookie contient des favoris, on charge le cookie !
-        # (Cela règle le problème du "cookie qui arrive après l'initialisation")
-        if cookie_list and not st.session_state.favorites:
-            st.session_state.favorites = cookie_list
-    except:
-        pass
+# On essaie de charger le cookie SEULEMENT si on ne l'a pas déjà fait cette session
+if 'cookies_loaded' not in st.session_state:
+    cookie_data = controller.get('gp_favorites')
+    
+    if cookie_data:
+        try:
+            st.session_state.favorites = json.loads(cookie_data)
+            st.session_state.cookies_loaded = True # C'est bon, on a les données !
+            st.rerun() # On recharge pour afficher les étoiles tout de suite
+        except:
+            pass # Données corrompues, on garde la liste vide
+            
+    # Note : Si cookie_data est None, on ne fait rien, on attendra le prochain run 
+    # (le composant cookie met quelques millisecondes à se connecter)
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute ou retire un arrêt des favoris et sauvegarde en Cookie."""
+    """Ajoute ou retire un arrêt et sauvegarde."""
     clean_name = stop_name.split('(')[0].strip()
-    
-    # On travaille sur une copie pour éviter les problèmes de référence
-    current_favs = st.session_state.favorites.copy()
     exists = False
     
-    # Vérification et suppression
-    for i, fav in enumerate(current_favs):
+    for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
-            current_favs.pop(i)
+            st.session_state.favorites.pop(i)
             exists = True
-            st.toast(f"❌ {clean_name} retiré des favoris", icon="🗑️")
+            st.toast(f"❌ {clean_name} retiré", icon="🗑️")
             break
-    
-    # Ajout
+            
     if not exists:
-        current_favs.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
-        st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
+        st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
+        st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # MISE À JOUR CRITIQUE
-    # 1. On met à jour la session immédiatement pour l'affichage
-    st.session_state.favorites = current_favs
-    
-    # 2. On écrit le cookie (valable 30 jours)
-    controller.set('gp_favorites', json.dumps(current_favs), max_age=2592000)
-    
-    # 3. Pause obligatoire pour laisser le temps au navigateur d'écrire le cookie
-    time.sleep(0.7)
+    # Sauvegarde et marque comme chargé pour ne pas écraser au prochain F5
+    controller.set('gp_favorites', json.dumps(st.session_state.favorites), max_age=2592000)
+    st.session_state.cookies_loaded = True
+    time.sleep(0.5) # Petite pause pour l'écriture
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
+    
+    # Fonction pour charger un favori et NETTOYER la recherche (pour éviter les conflits)
+    def load_fav(fav_id, fav_name):
+        st.session_state.selected_stop = fav_id
+        st.session_state.selected_name = fav_name
+        # On vide la recherche pour que l'affichage bascule bien
+        st.session_state.search_results = {}
+        st.session_state.last_query = ""
+        st.session_state.search_key += 1
+    
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     else:
         for fav in st.session_state.favorites:
-            if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
-                st.session_state.selected_stop = fav['id']
-                st.session_state.selected_name = fav['full_name']
-                st.session_state.search_key += 1
-                st.rerun()
+            # On utilise on_click pour appeler la fonction proprement
+            st.button(
+                f"📍 {fav['name']}", 
+                key=f"btn_fav_{fav['id']}", 
+                use_container_width=True,
+                on_click=load_fav,
+                args=(fav['id'], fav['full_name'])
+            )
     
     st.markdown("---")
     
@@ -463,7 +466,6 @@ with st.sidebar:
             if i < len(notes_history) - 1: st.divider()
     st.markdown("---")
     st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
-
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
