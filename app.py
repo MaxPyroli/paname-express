@@ -72,9 +72,18 @@ charger_police_locale("GrandParis.otf", "Grand Paris")
 st.markdown("""
 <style>
     /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
+    
+    /* 1. Cache l'instruction "Press Enter to submit form" */
     div[data-testid="InputInstructions"] { display: none !important; }
+    
+    /* 2. Cache les liens d'ancrage (le petit maillon à côté des titres) */
+    [data-testid="stHeaderAction"] { display: none !important; }
+    
+    /* 3. Force l'opacité à 100% (Anti-grisement) */
     div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
     div.element-container { opacity: 1 !important; filter: none !important; }
+    
+    /* 4. Cache les éléments de chargement par défaut */
     div[data-testid="stSpinner"] { display: none !important; }
     .stApp > header { visibility: hidden !important; }
     /* ----------------------------------------- */
