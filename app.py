@@ -180,6 +180,20 @@ st.markdown("""
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+    /* Petit encadré pour départ entre 10 et 30 min */
+    .last-dep-small-frame {
+        border: 1px solid #f1c40f;
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: #f1c40f;
+        font-weight: bold;
+    }
+    
+    /* Juste le texte pour départ > 30 min */
+    .last-dep-text-only {
+        color: #f1c40f;
+        font-weight: bold;
+    }
 
     /* LE STYLE DU BADGE ALPHA (ROUGE) */
     .version-badge {
@@ -807,14 +821,30 @@ def afficher_tableau_live(stop_id, stop_name):
                                 html_list = []
                                 contains_last = False; last_val_tri = 9999
                                 for idx, d_item in enumerate(info['items']):
-                                    val_tri = d_item['tri']
-                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                    txt = d_item['html']
-                                    if d_item.get('is_last'):
-                                        contains_last = True; last_val_tri = val_tri
-                                        if val_tri < 60: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                        else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
-                                    html_list.append(txt)
+                                val_tri = d_item['tri']
+                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    
+                                    # --- LOGIQUE GRADUELLE (3 Niveaux) ---
+                                    if val_tri < 10:
+                                        # < 10 min : Le grand cadre clignotant sera activé par le code plus bas.
+                                        # Ici, on met juste le texte en jaune gras simple.
+                                        txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    
+                                    elif val_tri <= 30:
+                                        # 10 à 30 min : Petit encadré discret
+                                        txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                    
+                                    else:
+                                        # > 30 min : Juste le texte jaune et le drapeau
+                                        txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    # -------------------------------------
+                                    
+                                html_list.append(txt)
                                 if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                                 times_str = "<span class='time-sep'>|</span>".join(html_list)
                                 if contains_last and len(html_list) == 1 and last_val_tri < 10:
