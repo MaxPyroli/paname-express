@@ -7,6 +7,8 @@ import pytz
 import os
 from PIL import Image
 import base64
+import json # <--- Nouveau
+from streamlit_cookies_controller import CookieController # <--- Nouveau
 
 # ==========================================
 #              CONFIGURATION
@@ -381,14 +383,23 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS ---
+# --- INITIALISATION DES FAVORIS (COMPATIBLE PY3.13) ---
+controller = CookieController()
+
+# Chargement initial des favoris depuis le cookie
 if 'favorites' not in st.session_state:
-    st.session_state.favorites = []
+    try:
+        cookie_data = controller.get('gp_favorites')
+        st.session_state.favorites = json.loads(cookie_data) if cookie_data else []
+    except:
+        st.session_state.favorites = []
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute ou retire un arrêt des favoris."""
+    """Ajoute ou retire un arrêt des favoris et sauvegarde en Cookie."""
     clean_name = stop_name.split('(')[0].strip()
     exists = False
+    
+    # 1. Mise à jour de la mémoire
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -398,6 +409,9 @@ def toggle_favorite(stop_id, stop_name):
     if not exists:
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté aux favoris !", icon="✅")
+    
+    # 2. Sauvegarde dans le Cookie (JSON) - expire dans 30 jours
+    controller.set('gp_favorites', json.dumps(st.session_state.favorites), max_age=30*24*3600)
 
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
@@ -486,6 +500,9 @@ if st.session_state.search_results:
 # ========================================================
 #                  AFFICHAGE LIVE (FINAL & INDENTÉ)
 # ========================================================
+# ========================================================
+#                  AFFICHAGE LIVE (FINAL)
+# ========================================================
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
     
@@ -571,7 +588,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
                 code = clean_code_line(info.get('code', '?')) 
                 
-                # --- NETTOYAGE INTELLIGENT DES NOMS ---
+                # Nettoyage intelligent des noms
                 raw_dest = info.get('direction', '')
                 if mode != "BUS":
                     dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
@@ -580,18 +597,13 @@ def afficher_tableau_live(stop_id, stop_name):
                     if match:
                         name_part = match.group(1).strip()
                         city_part = match.group(2).strip()
-                        if city_part.lower() in name_part.lower():
-                            dest = name_part
+                        if city_part.lower() in name_part.lower(): dest = name_part
                         elif '-' in city_part:
                             first_chunk = city_part.split('-')[0].strip()
-                            if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower():
-                                dest = name_part
-                            else:
-                                dest = raw_dest
-                        else:
-                            dest = raw_dest
-                    else:
-                        dest = raw_dest
+                            if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower(): dest = name_part
+                            else: dest = raw_dest
+                        else: dest = raw_dest
+                    else: dest = raw_dest
                 
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
@@ -603,7 +615,7 @@ def afficher_tableau_live(stop_id, stop_name):
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
             
-            # --- NETTOYAGE INTELLIGENT (Copie conforme) ---
+            # Nettoyage intelligent (Copie conforme)
             raw_dest = info.get('direction', '')
             if mode != "BUS":
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
@@ -612,25 +624,19 @@ def afficher_tableau_live(stop_id, stop_name):
                 if match:
                     name_part = match.group(1).strip()
                     city_part = match.group(2).strip()
-                    if city_part.lower() in name_part.lower():
-                        dest = name_part
+                    if city_part.lower() in name_part.lower(): dest = name_part
                     elif '-' in city_part:
                         first_chunk = city_part.split('-')[0].strip()
-                        if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower():
-                            dest = name_part
-                        else:
-                            dest = raw_dest
-                    else:
-                        dest = raw_dest
-                else:
-                    dest = raw_dest
+                        if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower(): dest = name_part
+                        else: dest = raw_dest
+                    else: dest = raw_dest
+                else: dest = raw_dest
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             
             if val_tri < -5: continue 
 
             is_last = False
-            
             # SÉCURITÉ : Mode "Dernier départ" pour RER et TRAIN, et exclusion des Noctiliens
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N'))
             
@@ -710,19 +716,17 @@ def afficher_tableau_live(stop_id, stop_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
+                # === CAS RER/TRAIN ===
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
                     local_mots_1 = geo['mots_1'].copy(); local_mots_2 = geo['mots_2'].copy()
                     
-                    # --- PATCH RER C ---
                     if code == "C":
                         if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
                             if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                             if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
 
-                    # --- PATCH RER D ---
                     if code == "D":
                         zone_nord_d = ["CREIL", "ORRY", "COYE", "SURVILLIERS", "FOSSES", "LOUVRES", "GOUSSAINVILLE", "VILLIERS-LE-BEL", "GARGES", "SARCELLES", "PIERREFITTE", "STAINS", "SAINT-DENIS", "STADE DE FRANCE", "NORD"]
                         if any(k in stop_upper for k in zone_nord_d):
@@ -737,16 +741,14 @@ def afficher_tableau_live(stop_id, stop_name):
                     
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
-                        # Si vide, on affiche le message localement (pour les cas mixtes)
                         if not items:
                             h += """<div class="service-box">😴 Service terminé</div>"""
                             return h
-                        
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
                             val_tri = it['tri']
                             if it.get('is_last'):
-                                # Logique graduelle 3 niveaux
+                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (RER) ---
                                 if val_tri < 10:
                                     h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
                                 elif val_tri <= 30:
@@ -757,27 +759,14 @@ def afficher_tableau_live(stop_id, stop_name):
                                 h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                         return h
 
-                    # --- LOGIQUE D'AFFICHAGE (Correction) ---
-                    # Si p1 ET p2 sont vides, c'est que le service principal est terminé.
-                    # On affiche un seul bandeau global.
                     if not p1 and not p2:
                         card_html += """<div class="service-box">😴 Service terminé</div>"""
-                        
-                        # Cas rare : s'il reste des trains "Autres" (p3) qui ne sont PAS le placeholder "Service terminé"
                         real_p3 = [x for x in p3 if "Service terminé" not in x['dest']]
-                        if real_p3:
-                             card_html += render_group("AUTRES DIRECTIONS", real_p3)
-                    
+                        if real_p3: card_html += render_group("AUTRES DIRECTIONS", real_p3)
                     else:
-                        # Sinon (au moins une direction active), on affiche les colonnes normalement
-                        if not any(k in stop_upper for k in geo['term_1']): 
-                            card_html += render_group(geo['labels'][0], p1)
-                        
-                        if not any(k in stop_upper for k in geo['term_2']): 
-                            card_html += render_group(geo['labels'][1], p2)
-                        
-                        if p3 and any(d['tri'] < 3000 for d in p3): 
-                            card_html += render_group("AUTRES DIRECTIONS", p3)
+                        if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
+                        if not any(k in stop_upper for k in geo['term_2']): card_html += render_group(geo['labels'][1], p2)
+                        if p3 and any(d['tri'] < 3000 for d in p3): card_html += render_group("AUTRES DIRECTIONS", p3)
                     
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
@@ -789,7 +778,6 @@ def afficher_tableau_live(stop_id, stop_name):
                         proches.sort(key=lambda x: x['tri'])
                         for item in proches[:4]:
                             val_tri = item['tri']
-                            
                             if item.get('is_last'):
                                 # --- LOGIQUE GRADUELLE 3 NIVEAUX (BACKUP) ---
                                 if val_tri < 10:
@@ -798,7 +786,6 @@ def afficher_tableau_live(stop_id, stop_name):
                                     card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-small-frame'>{item['html']} 🏁</span></div>"""
                                 else:
                                     card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-text-only'>{item['html']} 🏁</span></div>"""
-                                # --------------------------------------------
                             else:
                                 card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     card_html += "</div>"
@@ -844,15 +831,15 @@ def afficher_tableau_live(stop_id, stop_name):
                                         contains_last = True
                                         last_val_tri = val_tri
                                         
-                                        # --- LOGIQUE GRADUELLE 3 NIVEAUX ---
+                                        # --- LOGIQUE GRADUELLE 3 NIVEAUX (BUS) ---
                                         if val_tri < 10:
                                             # < 10 min : Grand cadre clignotant géré en bas
                                             txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
                                         elif val_tri <= 30:
-                                            # 10 à 30 min : Petit encadré
+                                            # 10 à 30 min : Petit encadré discret
                                             txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
                                         else:
-                                            # > 30 min : Texte jaune simple
+                                            # > 30 min : Juste le texte jaune et le drapeau
                                             txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
                                     
                                     html_list.append(txt)
