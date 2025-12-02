@@ -710,17 +710,19 @@ def afficher_tableau_live(stop_id, stop_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # === CAS RER/TRAIN ===
+                # === CAS 1 : RER ET TRAINS AVEC GÉOGRAPHIE ===
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
                     local_mots_1 = geo['mots_1'].copy(); local_mots_2 = geo['mots_2'].copy()
                     
+                    # --- PATCH RER C ---
                     if code == "C":
                         if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
                             if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                             if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
 
+                    # --- PATCH RER D ---
                     if code == "D":
                         zone_nord_d = ["CREIL", "ORRY", "COYE", "SURVILLIERS", "FOSSES", "LOUVRES", "GOUSSAINVILLE", "VILLIERS-LE-BEL", "GARGES", "SARCELLES", "PIERREFITTE", "STAINS", "SAINT-DENIS", "STADE DE FRANCE", "NORD"]
                         if any(k in stop_upper for k in zone_nord_d):
@@ -735,36 +737,41 @@ def afficher_tableau_live(stop_id, stop_name):
                     
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
+                        # Si vide, on affiche le message localement (pour les cas mixtes)
                         if not items:
                             h += """<div class="service-box">😴 Service terminé</div>"""
                             return h
+                        
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
                             val_tri = it['tri']
-                            
                             if it.get('is_last'):
-                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (RER) ---
+                                # Logique graduelle
                                 if val_tri < 10:
-                                    # < 10 min : Grand cadre clignotant (URGENCE)
-                                    # On laisse le temps normal dedans pour ne pas surcharger
                                     h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
-                                
                                 elif val_tri <= 30:
-                                    # 10 à 30 min : Petit encadré discret (IMMINENT)
-                                    # Pas de grand cadre, juste le style sur l'heure
                                     h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
-                                
                                 else:
-                                    # > 30 min : Texte jaune simple (LOINTAIN)
                                     h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
-                                # -----------------------------------------
                             else:
                                 h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
                         return h
 
-                    if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
-                    if not any(k in stop_upper for k in geo['term_2']): card_html += render_group(geo['labels'][1], p2)
-                    if p3 and any(d['tri'] < 3000 for d in p3): card_html += render_group("AUTRES DIRECTIONS", p3)
+                    # --- LOGIQUE D'AFFICHAGE GLOBALE OU SÉPARÉE ---
+                    # Si TOUT est vide (p1 et p2 et p3), on met un seul gros message
+                    if not p1 and not p2 and not p3:
+                        card_html += """<div class="service-box">😴 Service terminé</div>"""
+                    else:
+                        # Sinon, on affiche colonne par colonne (avec message individuel si besoin)
+                        if not any(k in stop_upper for k in geo['term_1']): 
+                            card_html += render_group(geo['labels'][0], p1)
+                        
+                        if not any(k in stop_upper for k in geo['term_2']): 
+                            card_html += render_group(geo['labels'][1], p2)
+                        
+                        if p3 and any(d['tri'] < 3000 for d in p3): 
+                            card_html += render_group("AUTRES DIRECTIONS", p3)
+                    
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
