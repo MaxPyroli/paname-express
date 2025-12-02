@@ -402,34 +402,36 @@ def get_all_changelogs():
 st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
 st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
 
-# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V2 Auto-Load) ---
+# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
-# 1. Lecture : On demande au navigateur de nous donner le contenu
-# Le key est important pour que Streamlit sache de quel widget on parle
-favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs")
-
-# 2. Chargement dans la session
+# 1. On initialise la session si elle n'existe pas
 if 'favorites' not in st.session_state:
     st.session_state.favorites = []
+if 'favs_loaded' not in st.session_state:
+    st.session_state.favs_loaded = False
 
-# 3. SYNCHRONISATION INSTANTANÉE
-# Si on reçoit des données du navigateur...
-if favs_from_browser:
-    try:
-        loaded_favs = json.loads(favs_from_browser)
-        # ...et que notre session est vide ou différente, on met à jour !
-        if st.session_state.favorites != loaded_favs:
-            st.session_state.favorites = loaded_favs
-            st.rerun() # <--- L'ASTUCE : On force le rafraîchissement immédiat pour afficher la sidebar
-    except:
-        pass
+# 2. Lecture du navigateur (UNE SEULE FOIS au démarrage)
+if not st.session_state.favs_loaded:
+    # On demande les données au navigateur
+    favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs_init")
+    
+    if favs_from_browser:
+        try:
+            # Si on reçoit des données, on remplit la session et on verrouille
+            st.session_state.favorites = json.loads(favs_from_browser)
+            st.session_state.favs_loaded = True
+            st.rerun() # On recharge pour afficher la sidebar remplie
+        except:
+            pass
+    # Si le composant a fini de charger mais renvoie rien (premier lancement), on verrouille aussi
+    # Note : streamlit_js_eval renvoie souvent None au tout premier tick, c'est normal.
 
 def toggle_favorite(stop_id, stop_name):
-    """Ajoute/Retire et sauvegarde via JS."""
+    """Ajoute/Retire : Met à jour l'affichage IMMÉDIATEMENT et sauvegarde en fond."""
     clean_name = stop_name.split('(')[0].strip()
     exists = False
     
-    # 1. Mise à jour Mémoire
+    # 1. MISE À JOUR DE LA SESSION (C'est ce qui compte pour l'affichage)
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -440,7 +442,10 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. Sauvegarde JS
+    # 2. SAUVEGARDE EN ARRIÈRE-PLAN (Pour la prochaine fois)
+    # On force le verrouillage pour être sûr que le script ne recharge pas les vieilles données
+    st.session_state.favs_loaded = True 
+    
     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") 
     streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
     
@@ -926,14 +931,17 @@ def afficher_tableau_live(stop_id, stop_name):
     # --- GESTION DU BOUTON FAVORI (HEADER STATIQUE) ---
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
     
+    # Alignement vertical du bouton et du titre
     col_title, col_fav = st.columns([0.9, 0.1], gap="small", vertical_alignment="center")
+    
     with col_title:
         st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+        
     with col_fav:
-        # Bouton hors du fragment = rechargement complet de la page = Sidebar à jour !
+        # Bouton hors du fragment = action globale
         if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
             toggle_favorite(stop_id, stop_name)
-            st.rerun()
+            st.rerun() # <--- C'est lui qui force la sidebar à se mettre à jour instantanément
             
     # Appel du fragment qui gère l'auto-refresh des données
     afficher_live_content(stop_id, clean_name)
