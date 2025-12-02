@@ -25,7 +25,7 @@ except FileNotFoundError:
 
 # 1. CONFIGURATION DE LA PAGE
 st.set_page_config(
-    page_title="Grand Paname (v1.0 ALPHA)",
+    page_title="Grand Paname (v1.0 Alpha)",
     page_icon=icon_image,
     layout="centered"
 )
@@ -65,36 +65,16 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (Ninja Update v4)
+#              STYLE CSS (Ninja Update v5)
 # ==========================================
 st.markdown("""
 <style>
     /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
-    
-    /* 1. Cache l'instruction "Press Enter to submit form" */
-    div[data-testid="InputInstructions"] {
-        display: none !important;
-    }
-    
-    /* 2. Force l'opacité à 100% (Anti-grisement) */
-    div[data-testid="stFragment"] {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-        filter: none !important;
-    }
-    div.element-container {
-        opacity: 1 !important;
-        filter: none !important;
-    }
-    
-    /* 3. Cache les éléments de chargement par défaut */
-    div[data-testid="stSpinner"] {
-        display: none !important;
-    }
-    .stApp > header {
-        visibility: hidden !important;
-    }
+    div[data-testid="InputInstructions"] { display: none !important; }
+    div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
+    div.element-container { opacity: 1 !important; filter: none !important; }
+    div[data-testid="stSpinner"] { display: none !important; }
+    .stApp > header { visibility: hidden !important; }
     /* ----------------------------------------- */
 
     @keyframes blinker { 50% { opacity: 0; } }
@@ -174,12 +154,14 @@ st.markdown("""
     }
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 
+    /* --- GESTION DERNIER DÉPART --- */
     .last-dep-box {
         border: 2px solid #f1c40f; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
         background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite;
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+
     /* Petit encadré pour départ entre 10 et 30 min */
     .last-dep-small-frame {
         border: 1px solid #f1c40f;
@@ -195,9 +177,8 @@ st.markdown("""
         font-weight: bold;
     }
 
-    /* LE STYLE DU BADGE ALPHA (ROUGE) */
     .version-badge {
-        background: #e74c3c; /* Rouge pur */
+        background: #e74c3c;
         color: white;
         padding: 4px 10px;
         border-radius: 15px;
@@ -267,7 +248,6 @@ GEOGRAPHIE_RER = {
     },
     "J": {
         "labels": ("⇦ OUEST (Mantes / Gisors / Ermont)", "⇨ PARIS ST-LAZARE"),
-        # J'ai ajouté "ARGENTEUIL" ici
         "mots_1": ["MANTES", "JOLIE", "GISORS", "ERMONT", "VERNON", "PONTOISE", "CONFLANS", "BOISSY", "MEULAN", "MUREAUX", "CORMEILLES", "ARGENTEUIL"],
         "term_1": ["MANTES", "GISORS", "ERMONT", "VERNON"],
         "mots_2": ["PARIS", "LAZARE"],
@@ -504,7 +484,7 @@ if st.session_state.search_results:
             st.rerun()
 
 # ========================================================
-#                  AFFICHAGE LIVE (FINAL)
+#                  AFFICHAGE LIVE (FINAL & INDENTÉ)
 # ========================================================
 @st.fragment(run_every=15)
 def afficher_tableau_live(stop_id, stop_name):
@@ -534,7 +514,7 @@ def afficher_tableau_live(stop_id, stop_name):
         "AUTRE": st.container()
     }
     
-    # Fonction de tri accessible partout (Fix UnboundLocalError)
+    # Fonction de tri accessible partout
     def sort_key(k): 
         try: return (0, int(k[1])) 
         except: return (1, k[1])
@@ -582,7 +562,7 @@ def afficher_tableau_live(stop_id, stop_name):
 
     if data_live and 'departures' in data_live:
         
-        # --- PASSE 1 : CALCUL DU MAX (POUR DERNIER DÉPART) ---
+        # --- PASSE 1 : CALCUL DU MAX ---
         for d in data_live['departures']:
             val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             
@@ -649,16 +629,9 @@ def afficher_tableau_live(stop_id, stop_name):
             
             if val_tri < -5: continue 
 
-            # ... (juste après val_tri, html_time = ...)
-
-            # ... (après le calcul de val_tri)
-
-            # ... (code précédent: val_tri, html_time = ...)
-
             is_last = False
             
-            # SÉCURITÉ : On n'active le mode "Dernier départ" QUE pour RER et TRAIN.
-            # On exclut aussi les Noctiliens (N...)
+            # SÉCURITÉ : Mode "Dernier départ" pour RER et TRAIN, et exclusion des Noctiliens
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N'))
             
             if not is_noctilien and val_tri < 3000:
@@ -672,21 +645,17 @@ def afficher_tableau_live(stop_id, stop_name):
                     except: dep_hour = 0
                     current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
                     
-                    # Logique Nuit/Soirée
                     is_evening_mode = (current_hour >= 21)
                     is_night_train = (dep_hour >= 22) or (dep_hour < 4)
                     
                     if is_evening_mode or is_night_train:
                         is_last = True
             
-            # Exclusion pour les Transiliens non officiels (TER)
             TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
             if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
                 is_last = False
 
             cle = (mode, code, color)
-            
-            # CORRECTION DE L'INDENTATION ICI :
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
@@ -741,6 +710,7 @@ def afficher_tableau_live(stop_id, stop_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
+                # === CAS RER/TRAIN ===
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
@@ -791,6 +761,7 @@ def afficher_tableau_live(stop_id, stop_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
+                # === CAS BUS/METRO/TRAM ===
                 else:
                     dest_data = {}
                     for d in proches:
@@ -820,33 +791,32 @@ def afficher_tableau_live(stop_id, stop_name):
                             else:
                                 html_list = []
                                 contains_last = False; last_val_tri = 9999
-                                for idx, d_item in enumerate(info['items']):
-                                val_tri = d_item['tri']
-                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
                                 
-                                txt = d_item['html']
-                                if d_item.get('is_last'):
-                                    contains_last = True
-                                    last_val_tri = val_tri
+                                for idx, d_item in enumerate(info['items']):
+                                    val_tri = d_item['tri']
+                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
                                     
-                                    # --- LOGIQUE GRADUELLE (3 Niveaux) ---
-                                    if val_tri < 10:
-                                        # < 10 min : Le grand cadre clignotant sera activé par le code plus bas.
-                                        # Ici, on met juste le texte en jaune gras simple.
-                                        txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    txt = d_item['html']
+                                    if d_item.get('is_last'):
+                                        contains_last = True
+                                        last_val_tri = val_tri
+                                        
+                                        # --- LOGIQUE GRADUELLE 3 NIVEAUX ---
+                                        if val_tri < 10:
+                                            # < 10 min : Grand cadre clignotant géré en bas
+                                            txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                        elif val_tri <= 30:
+                                            # 10 à 30 min : Petit encadré
+                                            txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                        else:
+                                            # > 30 min : Texte jaune simple
+                                            txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
                                     
-                                    elif val_tri <= 30:
-                                        # 10 à 30 min : Petit encadré discret
-                                        txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                    
-                                    else:
-                                        # > 30 min : Juste le texte jaune et le drapeau
-                                        txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    # -------------------------------------
-                                    
-                                html_list.append(txt)
+                                    html_list.append(txt)
+                                
                                 if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                                 times_str = "<span class='time-sep'>|</span>".join(html_list)
+                                
                                 if contains_last and len(html_list) == 1 and last_val_tri < 10:
                                      rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
                                 else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
