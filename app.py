@@ -197,6 +197,25 @@ st.markdown("""
         font-size: 0.8em;
         margin-left: 5px;
     }
+    /* Alignement vertical parfait du bouton favori */
+    div[data-testid="column"] {
+        display: flex;
+        align-items: center; /* Centre verticalement le contenu des colonnes */
+    }
+    
+    /* Style du bouton favori pour le rendre plus discret/joli */
+    div[data-testid="column"] button {
+        border: none;
+        background: transparent;
+        font-size: 1.5rem;
+        padding: 0;
+    }
+    
+    div[data-testid="column"] button:hover {
+        color: #f1c40f; /* Jaune au survol */
+        border: none;
+        background: transparent;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -533,13 +552,19 @@ def afficher_tableau_live(stop_id, stop_name):
     
     clean_name = stop_name.split('(')[0].strip()
     
-    # --- GESTION DU BOUTON FAVORI ---
+    # --- GESTION DU BOUTON FAVORI (STYLE AMÉLIORÉ) ---
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
-    col_title, col_fav = st.columns([0.85, 0.15])
+    
+    # On utilise des colonnes avec un ratio serré pour rapprocher l'étoile
+    # gap="small" permet de réduire l'espace entre le titre et l'étoile
+    col_title, col_fav = st.columns([0.9, 0.1], gap="small", vertical_alignment="center")
+    
     with col_title:
+        # On garde le titre tel quel
         st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+        
     with col_fav:
-        st.write("") 
+        # Bouton simple, le CSS s'occupera de le rendre joli (transparent)
         if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
             toggle_favorite(stop_id, stop_name)
             st.rerun()
