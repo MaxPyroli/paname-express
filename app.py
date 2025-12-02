@@ -121,6 +121,7 @@ st.markdown("""
         font-weight: 900; color: white; text-align: center; min-width: 35px;
         margin-right: 12px; font-size: 16px; text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        flex-shrink: 0; /* Empêche le badge d'être écrasé */
     }
     
     .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
@@ -151,13 +152,33 @@ st.markdown("""
         background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
     }
 
+    /* --- CORRECTION MOBILE --- */
     .bus-row, .rail-row {
-        display: flex; justify-content: space-between; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid #333; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; /* Aligne verticalement si les hauteurs diffèrent */
+        padding-top: 8px; padding-bottom: 2px; border-top: 1px solid #333; 
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
     
-    .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
+    .bus-dest, .rail-dest { 
+        color: #ccc; 
+        font-size: 15px; 
+        font-weight: 500; 
+        overflow: hidden;
+        text-overflow: ellipsis; /* Ajoute "..." si trop long */
+        white-space: nowrap; /* Empêche le retour à la ligne du nom */
+        margin-right: 10px; /* Espace min avec l'heure */
+        flex: 1; /* Prend toute la place dispo */
+    }
+
+    /* Le bloc des horaires ne doit JAMAIS passer à la ligne */
+    .bus-row > span:last-child, .rail-row > span:last-child {
+        white-space: nowrap;
+        flex-shrink: 0; /* Empêche d'être écrasé */
+        text-align: right;
+    }
     
     .service-box { 
         text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
@@ -189,22 +210,22 @@ st.markdown("""
     }
 
     .version-badge {
-        background: #e74c3c;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.5em; 
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        vertical-align: middle;
-        margin-left: 10px;
-        letter-spacing: 1px;
+        background: linear-gradient(45deg, #FF4B4B, #F76B1C); color: white; padding: 4px 8px; border-radius: 12px;
+        font-size: 0.5em; /* Réduit pour mobile */
+        font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); vertical-align: middle; margin-left: 8px;
+        white-space: nowrap; /* Empêche le badge de se casser */
     }
     
     .verified-badge {
         color: #3498db;
         font-size: 0.8em;
         margin-left: 5px;
+    }
+
+    /* Média Query pour ajuster sur très petits écrans */
+    @media (max-width: 400px) {
+        .station-title, .station-title-pole { font-size: 20px; }
+        h1 { font-size: 24px !important; } /* Réduit le titre principal */
     }
     
     /* Alignement vertical du bouton favori */
