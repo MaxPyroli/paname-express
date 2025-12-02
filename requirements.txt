@@ -3,3 +3,4 @@ requests
 pandas
 pyarrow
 pytz
+pip install extra-streamlit-components
