@@ -653,6 +653,8 @@ def afficher_tableau_live(stop_id, stop_name):
 
             # ... (après le calcul de val_tri)
 
+            # ... (code précédent: val_tri, html_time = ...)
+
             is_last = False
             
             # SÉCURITÉ : On n'active le mode "Dernier départ" QUE pour RER et TRAIN.
@@ -663,8 +665,6 @@ def afficher_tableau_live(stop_id, stop_name):
                 key_check = (mode, code, dest)
                 max_val = last_departures_map.get(key_check)
                 
-                # CORRECTION ICI : On ajoute "is not None"
-                # Avant, si max_val valait 0 (À quai), la condition échouait car 0 = False en Python.
                 if max_val is not None and val_tri == max_val:
                     try:
                         dep_str = d['stop_date_time']['departure_date_time']
@@ -685,8 +685,8 @@ def afficher_tableau_live(stop_id, stop_name):
                 is_last = False
 
             cle = (mode, code, color)
-            # ... (suite du code)
-            # ... (suite du code)
+            
+            # CORRECTION DE L'INDENTATION ICI :
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
