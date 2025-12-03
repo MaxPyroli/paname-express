@@ -564,7 +564,7 @@ with st.sidebar:
     
    # --- SECTION INFOS ---
     st.header("🗄️ Informations")
-    st.info("👋 **Bienvenue à bord !**\n\nGrand Paname passe en version 1.0. Profitez d'une information voyageur claire et rapide pour vos trajets du quotidien.")
+    st.info("👋 **Bienvenue à bord !**\n\nGrand Paname passe en version 1.0 ! Profitez d'une information voyageur claire et rapide pour vos trajets du quotidien.")
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
@@ -1106,22 +1106,22 @@ elif not st.session_state.search_results:
             # Background adaptatif (gris clair ou sombre) + Bordure neutre + Texte adaptatif
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">1. Recherchez</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Recherchez</div>',
                 '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre station ci-dessus.</div>',
-            '</div>',
-            
-            # CARTE 2
-            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
-                '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">2. Favoris</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder.</div>',
             '</div>',
             
             # CARTE 3
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">3. Temps Réel</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Prochains départs actualisés en temps réel.</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Temps Réel</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs actualisés en temps réel.</div>',
+            '</div>',
+
+            # CARTE 2
+            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
+                '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Favoris</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt.</div>',
             '</div>',
             
         '</div>'
