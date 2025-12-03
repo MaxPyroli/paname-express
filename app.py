@@ -1046,8 +1046,7 @@ def afficher_tableau_live(stop_id, stop_name):
             st.rerun() # <--- C'est lui qui force la sidebar à se mettre à jour instantanément
             
     # Appel du fragment qui gère l'auto-refresh des données
-    afficher_live_content(stop_id, clean_name)
-# ========================================================
+    afficher_live_content(stop_id, clean_name)# ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
 
@@ -1057,7 +1056,8 @@ if st.session_state.selected_stop:
 
 # 2. Sinon, si on ne cherche pas encore -> On affiche le Tuto de Bienvenue
 elif not st.session_state.search_results:
-    st.markdown("""
+    # On définit le HTML sans indentation au début des lignes pour éviter les bugs d'affichage
+    html_tuto = """
     <div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">
         <span style="font-size: 50px;">👋</span>
     </div>
@@ -1085,4 +1085,6 @@ elif not st.session_state.search_results:
             <div style="font-size: 0.9em; color: #aaa;">Prochains départs & bus de substitution.</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)  # <--- C'est ce petit bout qui fait toute la différence !
+    """
+    # L'appel qui affiche le tout
+    st.markdown(html_tuto, unsafe_allow_html=True)
