@@ -461,10 +461,28 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-# Titre avec badge v1.0 (Le CSS gère le retour à la ligne sur mobile)
-st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
+# Fonction pour convertir l'image en Base64 (pour l'afficher dans le HTML)
+def get_img_as_base64(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except: return None
 
-# Nouveau sous-titre (Plus propre, sans le badge Officiel)
+# Préparation de l'icône
+img_b64 = get_img_as_base64("app_icon.png")
+
+# Si l'image existe, on crée une balise <img>, sinon on garde l'émoji par défaut
+if img_b64:
+    # On ajuste la hauteur pour correspondre au texte (approx 1.2em) et on aligne verticalement
+    icone_html = f'<img src="data:image/png;base64,{img_b64}" style="height: 1.2em; vertical-align: bottom; margin-right: 10px;">'
+else:
+    icone_html = "🚆"
+
+# Titre avec Logo personnalisé + Badge v1.0
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
+
+# Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
