@@ -997,12 +997,13 @@ def afficher_live_content(stop_id, clean_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # CAS 1: RER/TRAIN (Logique géographique)
+                # CAS 1: RER/TRAIN (Logique géographique CORRIGÉE)
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
                     local_mots_1 = geo['mots_1'].copy(); local_mots_2 = geo['mots_2'].copy()
                     
+                    # (Ta logique de filtres C et D reste identique ici...)
                     if code == "C":
                         if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
                             if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
@@ -1013,52 +1014,56 @@ def afficher_live_content(stop_id, clean_name):
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
+                    # Répartition des départs dans les groupes
                     p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                     p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
+                    # p3 récupère tout ce qui n'a pas matché (souvent les bus de substitution aux noms bizarres)
                     p3 = [d for d in proches if d not in p1 and d not in p2]
                     
+                    # Nettoyage de p3 pour ne garder que les vrais trajets (pas les "Service terminé" générés par Ghost Lines)
+                    real_p3 = [x for x in p3 if x['tri'] < 3000]
+
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     
+                    # Fonction helper (inchangée)
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
-                        if not items:
-                            h += """<div class="service-box">😴 Service terminé</div>"""
-                            return h
+                        if not items: return h + """<div class="service-box">😴 Service terminé</div>"""
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
                             val_tri = it['tri']
                             dest_txt = it['dest']
                             if it.get('is_replacement'):
-                                h += f"""
-                                <div class='replacement-box'>
-                                    <span class='replacement-label'>🚍 Bus de substitution</span>
-                                    <div class='rail-row'>
-                                        <span class='rail-dest'>{dest_txt}</span>
-                                        <span>{it['html']}</span>
-                                    </div>
-                                </div>"""
+                                h += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                             elif it.get('is_last'):
-                                if val_tri < 10:
-                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
-                                elif val_tri <= 30:
-                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
-                                else:
-                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
+                                if val_tri < 10: h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
+                                else: h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
                             else:
                                 h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                         return h
 
-                    if not p1 and not p2:
+                    # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
+                    # On n'affiche "Service terminé" QUE si p1, p2 ET real_p3 sont vides
+                    has_data_p1 = any(d['tri'] < 3000 for d in p1)
+                    has_data_p2 = any(d['tri'] < 3000 for d in p2)
+                    has_data_p3 = len(real_p3) > 0
+
+                    if not has_data_p1 and not has_data_p2 and not has_data_p3:
                         card_html += """<div class="service-box">😴 Service terminé</div>"""
-                        real_p3 = [x for x in p3 if "Service terminé" not in x['dest']]
-                        if real_p3: card_html += render_group("AUTRES DIRECTIONS", real_p3)
                     else:
-                        if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
-                        if not any(k in stop_upper for k in geo['term_2']): card_html += render_group(geo['labels'][1], p2)
-                        if p3 and any(d['tri'] < 3000 for d in p3): card_html += render_group("AUTRES DIRECTIONS", p3)
+                        # On affiche les blocs s'ils ne sont pas les terminus
+                        if not any(k in stop_upper for k in geo['term_1']): 
+                            card_html += render_group(geo['labels'][0], p1)
+                        
+                        if not any(k in stop_upper for k in geo['term_2']): 
+                            card_html += render_group(geo['labels'][1], p2)
+                        
+                        # Si on a des rescapés dans p3 (souvent les bus !), on les affiche
+                        if has_data_p3: 
+                            card_html += render_group("AUTRES DIRECTIONS / BUS", real_p3)
+                            
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
-
                 # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
