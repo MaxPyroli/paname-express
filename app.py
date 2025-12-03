@@ -32,7 +32,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE (CORRIGÉE : APPLIQUE PARTOUT)
+# 2. FONCTION POLICE (CORRIGÉE : FIX ICÔNES STREAMLIT)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         return
@@ -49,24 +49,37 @@ def charger_police_locale(file_path, font_name):
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
-            /* Applique la police au corps global */
+            /* 1. Applique la police au corps global */
             html, body, [class*="css"] {{
                 font-family: '{font_name}', sans-serif;
             }}
             
-            /* Force l'application sur TOUS les éléments textuels, y compris les composants custom */
+            /* 2. Force l'application sur TOUS les éléments textuels */
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, span, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* Cible spécifiquement les conteneurs Streamlit qui résistent parfois */
+            /* 3. Cible spécifiquement les conteneurs Streamlit */
             .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* Pour les placeholders (le texte gris "Ex: Noisiel...") */
+            /* 4. Placeholder des inputs */
             ::placeholder {{
                 font-family: '{font_name}', sans-serif !important;
+            }}
+            
+            /* --- FIX CRITIQUE : Restaure les icônes Streamlit --- */
+            /* Empêche Grand Paris d'écraser les flèches et icônes système */
+            .material-symbols-rounded {{
+                font-family: 'Material Symbols Rounded' !important;
+                font-weight: normal !important;
+                font-style: normal !important;
+            }}
+            
+            /* Protection supplémentaire pour les boutons du header/sidebar */
+            button[kind="header"] span, button[kind="sidebar"] span {{
+                 font-family: 'Material Symbols Rounded' !important;
             }}
             </style>
         """
