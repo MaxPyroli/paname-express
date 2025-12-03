@@ -1164,7 +1164,7 @@ def afficher_live_content(stop_id, clean_name):
                 if mode in footer_data and footer_data[mode]:
                     html_badges = ""
                     items = footer_data[mode]
-                    sorted_codes = sorted(items.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
+                    sorted_codes = sorted(items.keys(), key=lambda x: (1, int(x)) if x.isdigit() else (0, x))
                     for code in sorted_codes:
                         color = items[code]
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
