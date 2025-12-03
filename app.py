@@ -828,45 +828,52 @@ def afficher_live_content(stop_id, clean_name):
             is_replacement = False
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
-            # --- C'EST ICI QUE TOUT SE JOUE (CORRECTION ROBUSTE) ---
+            # --- BLOC DE DETECTION INTELLIGENTE DES REMPLACEMENTS ---
             if mode == "BUS":
-                # 1. Préparation des variables
+                # 1. Variables de détection
                 comm_mode = info.get('commercial_mode', '').upper()
                 raw_dest_upper = info.get('direction', '').upper()
-                
-                # Codes officiels ferrés
                 RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
                 
-                # 2. Détection universelle par mots-clés (Destination)
-                # On inclut "RELAIS", "SUBST", "TRAVAUX" pour être large
+                # 2. Nettoyage préventif du code (ex: "Bus J" -> "J")
+                candidate_code = code.upper().replace("BUS", "").strip()
+                
+                # 3. Détection : Est-ce une substitution ?
+                # A. Par le texte de destination (Mots clés forts)
                 text_is_sub = any(k in raw_dest_upper for k in ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE"])
                 
-                # 3. Tentative de nettoyage du code (au cas où l'API envoie "BUS J" au lieu de "J")
-                clean_code_candidate = code.replace("BUS", "").strip()
-
-                # CAS 1 : C'est un BUS qui remplace un RER ou un TRAIN
-                if clean_code_candidate in RAIL_CODES:
-                    # Vérité administrative (l'API dit que c'est un Train/RER)
-                    admin_is_train = "RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode
-                    
-                    # Si l'un des deux signaux est rouge, on bascule en mode Remplacement
-                    if admin_is_train or text_is_sub:
-                        is_replacement = True
-                        # On réassigne le code propre (pour qu'il s'affiche comme "J" et pas "BUS J")
-                        code = clean_code_candidate
-                        # On force le mode pour qu'il s'affiche dans la section TRAIN/RER
-                        mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
-
-                # CAS 2 : Bus avec code MÉTRO (ex: M4)
-                elif code.startswith('M') and code[1:].isdigit():
-                    is_replacement = True
-                    mode = "METRO"
-                    code = code[1:]
+                # B. Par le mode commercial (L'API dit "C'est un Train" alors que le véhicule est un Bus)
+                admin_is_train = "RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode
                 
-                # CAS 3 : Bus avec code TRAM (ex: T1)
-                elif code.startswith('T') and (code[1:].isdigit() or code[1:] in ['3a', '3b']):
+                # C. Par cohérence (C'est un Bus, mais il porte un code de Train connu genre "J" ou "H")
+                code_matches_rail = candidate_code in RAIL_CODES
+                
+                if (code_matches_rail and (admin_is_train or text_is_sub)) or (code.startswith("M") and text_is_sub):
                     is_replacement = True
-                    mode = "TRAM"
+                    
+                    # 4. TRANSFORMATION : On force le Bus à devenir un Train
+                    code = candidate_code # On applique le code propre ("J")
+                    
+                    # On définit le nouveau mode (RER ou TRAIN)
+                    new_mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
+                    if code.startswith("M"): new_mode = "METRO" # Cas rare MÉTRO
+                    elif code.startswith("T"): new_mode = "TRAM" # Cas rare TRAM
+                    
+                    mode = new_mode
+                    
+                    # 5. FUSION DES COULEURS (L'Étape Magique)
+                    # On cherche si cette ligne existe déjà en théorique pour piquer sa couleur officielle
+                    # Cela permet de fusionner le Bus Gris dans le Train Jaune
+                    key_search = (mode, code)
+                    if key_search in all_lines_at_stop:
+                        # On force la couleur officielle du train
+                        color = all_lines_at_stop[key_search].get('color', color)
+
+                # Gestion des cas Métro/Tram standards simulés par des bus
+                elif code.startswith('M') and code[1:].isdigit():
+                    is_replacement = True; mode = "METRO"; code = code[1:]
+                elif code.startswith('T') and (code[1:].isdigit() or code[1:] in ['3a', '3b']):
+                    is_replacement = True; mode = "TRAM"
 
             raw_dest = info.get('direction', '')
             if mode != "BUS" or is_replacement:
