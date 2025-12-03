@@ -944,56 +944,56 @@ def afficher_live_content(stop_id, clean_name):
                         else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
                     else:
                         # ... (Dans le else du bas) ...
-                    for dest_name, info in sorted_dests:
-                        if "Service terminé" in dest_name: 
-                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
-                        else:
-                            html_list = []
-                            contains_last = False; last_val_tri = 9999
-                            
-                            # On regarde si ce groupe est une substitution
-                            is_group_replacement = False
-                            if info['items'] and info['items'][0].get('is_replacement'):
-                                is_group_replacement = True
-
-                            for idx, d_item in enumerate(info['items']):
-                                val_tri = d_item['tri']
-                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                
-                                txt = d_item['html']
-                                if d_item.get('is_last'):
-                                    contains_last = True
-                                    last_val_tri = val_tri
-                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                
-                                html_list.append(txt)
-                            
-                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                            times_str = "<span class='time-sep'>|</span>".join(html_list)
-                            
-                            # Préparation de la ligne (standard)
-                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
-
-                            # LOGIQUE D'AFFICHAGE FINALE
-                            if is_group_replacement:
-                                rows_html += f"""
-                                <div class='replacement-box'>
-                                    <span class='replacement-label'>🚍 Bus de substitution</span>
-                                    {row_content}
-                                </div>"""
-                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                        for dest_name, info in sorted_dests:
+                            if "Service terminé" in dest_name: 
+                                rows_html += f'<div class="service-box">😴 Service terminé</div>'
                             else:
-                                rows_html += row_content                    
-                    if code == "C1":
-                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                         now = datetime.now(pytz.timezone('Europe/Paris'))
-                         if target_date > now:
-                             delta = target_date - now
-                             st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
-                             st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
+                                html_list = []
+                                contains_last = False; last_val_tri = 9999
+                                
+                                # On regarde si ce groupe est une substitution
+                                is_group_replacement = False
+                                if info['items'] and info['items'][0].get('is_replacement'):
+                                    is_group_replacement = True
+    
+                                for idx, d_item in enumerate(info['items']):
+                                    val_tri = d_item['tri']
+                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                    
+                                    txt = d_item['html']
+                                    if d_item.get('is_last'):
+                                        contains_last = True
+                                        last_val_tri = val_tri
+                                        if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                        elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                        else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    
+                                    html_list.append(txt)
+                                
+                                if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                                times_str = "<span class='time-sep'>|</span>".join(html_list)
+                                
+                                # Préparation de la ligne (standard)
+                                row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+    
+                                # LOGIQUE D'AFFICHAGE FINALE
+                                if is_group_replacement:
+                                    rows_html += f"""
+                                    <div class='replacement-box'>
+                                        <span class='replacement-label'>🚍 Bus de substitution</span>
+                                        {row_content}
+                                    </div>"""
+                                elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                    rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                                else:
+                                    rows_html += row_content                    
+                        if code == "C1":
+                             target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                             now = datetime.now(pytz.timezone('Europe/Paris'))
+                             if target_date > now:
+                                 delta = target_date - now
+                                 st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
+                                 st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
