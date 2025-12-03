@@ -32,7 +32,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE
+# 2. FONCTION POLICE (CORRIGÉE : APPLIQUE PARTOUT)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         return
@@ -48,14 +48,24 @@ def charger_police_locale(file_path, font_name):
                 font-family: '{font_name}';
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
-            html, body {{ font-family: '{font_name}', sans-serif; }}
-            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea {{
+            
+            /* Applique la police au corps global */
+            html, body, [class*="css"] {{
+                font-family: '{font_name}', sans-serif;
+            }}
+            
+            /* Force l'application sur TOUS les éléments textuels, y compris les composants custom */
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, span, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            .stMarkdown, .stButton, .stTextInput, .stSelectbox {{
+            
+            /* Cible spécifiquement les conteneurs Streamlit qui résistent parfois */
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            .streamlit-expanderHeader {{
+            
+            /* Pour les placeholders (le texte gris "Ex: Noisiel...") */
+            ::placeholder {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             </style>
