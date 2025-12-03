@@ -568,7 +568,7 @@ with st.sidebar:
 
         if not st.session_state.confirm_reset:
             # Étape 1 : Le bouton poubelle simple
-            if st.button("🗑️ Réinitialiser les favoris", use_container_width=True):
+            if st.button("🗑️ Réinitialiser les favoris", use_container_width=True, type="primary"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
