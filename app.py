@@ -962,7 +962,12 @@ def afficher_live_content(stop_id, clean_name):
     has_data = False
 
     for mode_actuel in ordre_affichage:
+        # DOUBLE SÉCURITÉ : Si la catégorie n'existe plus ou est vide, on passe
+        if mode_actuel not in buckets or not buckets[mode_actuel]: 
+            continue
+            
         lignes_du_mode = buckets[mode_actuel]
+        # ... suite du code ...
         if not lignes_du_mode: continue
             
         has_data = True
