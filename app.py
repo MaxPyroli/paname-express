@@ -758,7 +758,7 @@ def afficher_live_content(stop_id, clean_name):
         """
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
-    update_header("Actualisation rapide...", is_loading=True)
+    update_header("Actualisation en cours...", is_loading=True)
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
