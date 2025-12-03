@@ -919,11 +919,30 @@ def afficher_live_content(stop_id, clean_name):
         keys_to_remove = []
         for cle in buckets[mode]:
             code_clean = cle[1]; color_clean = cle[2]
+            
+            # Y a-t-il des départs actifs (< 50 min) pour cette ligne ?
             has_active = any(d['tri'] < 3000 for d in buckets[mode][cle])
-            if has_active: displayed_lines_keys.add((mode, code_clean))
+            
+            if has_active: 
+                # On marque cette ligne (ex: TRAIN J) comme affichée
+                displayed_lines_keys.add((mode, code_clean))
+                
+                # --- CORRECTIF FOOTER ---
+                # Si cette ligne contient des substitutions (ex: Bus J déguisé en Train J),
+                # on doit aussi marquer "BUS J" comme affiché pour qu'il n'apparaisse pas en bas.
+                is_sub = any(d.get('is_replacement') for d in buckets[mode][cle])
+                if is_sub:
+                    displayed_lines_keys.add(("BUS", code_clean))
             else:
-                if mode == "BUS": keys_to_remove.append(cle); footer_data[mode][code_clean] = color_clean
-                else: displayed_lines_keys.add((mode, code_clean))
+                # Si la ligne est inactive (pas de départ proche)
+                if mode == "BUS": 
+                    # Les bus inactifs vont dans le footer
+                    keys_to_remove.append(cle)
+                    footer_data[mode][code_clean] = color_clean
+                else: 
+                    # Les trains/RER inactifs restent affichés (avec "Service terminé")
+                    displayed_lines_keys.add((mode, code_clean))
+                    
         for k in keys_to_remove: del buckets[mode][k]
 
     # 5. RENDU HTML
