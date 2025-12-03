@@ -126,17 +126,29 @@ st.markdown("""
         animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    /* --- AJOUT : STYLE BUS REMPLACEMENT --- */
-    .replacement-row {
-        background-color: rgba(230, 126, 34, 0.15);
-        border-radius: 4px;
-        margin-top: 2px;
-        padding-left: 4px;
-        border-left: 2px dashed #e67e22;
+    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge) --- */
+    .replacement-box {
+        border: 2px solid #e74c3c; /* Rouge */
+        border-radius: 6px; 
+        padding: 8px 10px; 
+        margin-top: 8px; 
+        margin-bottom: 8px;
+        background-color: rgba(231, 76, 60, 0.1); /* Fond rouge très léger */
     }
-    .replacement-badge {
-        font-size: 0.8em;
-        margin-right: 5px;
+    .replacement-label { 
+        display: block; 
+        font-size: 0.75em; 
+        text-transform: uppercase; 
+        font-weight: bold; 
+        color: #e74c3c; 
+        margin-bottom: 4px; 
+        letter-spacing: 1px; 
+    }
+    /* Annule les bordures de la ligne interne car c'est la box qui cadre */
+    .replacement-box .rail-row, .replacement-box .bus-row { 
+        border-top: none !important; 
+        padding-top: 0 !important; 
+        margin-top: 0 !important; 
     }
 </style>
 """, unsafe_allow_html=True)
@@ -315,19 +327,33 @@ def afficher_demo():
                 p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
                 p2 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_2'])]
                 
-                # Fonction de rendu mise à jour pour le bus
+                # Fonction de rendu mise à jour (Box Rouge Substitution)
                 def render_grp(t, l):
                     h = f"<div class='rer-direction'>{t}</div>"
                     for it in l:
-                        # Style spécial
-                        row_class = "replacement-row" if it.get('is_replacement') else "rail-row"
-                        icon_html = "<span class='replacement-badge'>🚌</span>" if it.get('is_replacement') else ""
-                        dest_txt = f"{icon_html}{it['dest']}"
-
-                        if it.get('is_last'):
-                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
+                        # On prépare le contenu texte (Icone + Dest)
+                        # Note : plus besoin de replacement-badge car le titre l'indique déjà
+                        dest_txt = f"{it['dest']}"
+                        
+                        # LOGIQUE D'ENCADREMENT
+                        if it.get('is_replacement'):
+                            # C'est un bus de remplacement -> Box Rouge
+                            h += f"""
+                            <div class='replacement-box'>
+                                <span class='replacement-label'>🚍 Bus de substitution</span>
+                                <div class='rail-row'>
+                                    <span class='rail-dest'>{dest_txt}</span>
+                                    <span>{it['html']}</span>
+                                </div>
+                            </div>"""
+                        
+                        elif it.get('is_last'):
+                            # C'est un dernier départ -> Box Jaune (existante)
+                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
+                        
                         else:
-                             h += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
+                            # Cas standard
+                             h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                     return h
                 
                 if p1: card_html += render_grp(geo['labels'][0], p1)
@@ -382,14 +408,22 @@ def afficher_demo():
                     times_str = "<span class='time-sep'>|</span>".join(html_list)
 
                     # Style spécial Bus de remplacement
-                    row_class = "replacement-row" if is_group_replacement else "bus-row"
-                    icon_html = "<span class='replacement-badge'>🚌</span> " if is_group_replacement else "➜ "
+                    # Si c'est un remplacement, on garde 'bus-row' pour l'alignement, mais on l'encadre
+                    
+                    row_html_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
 
-                    if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                         rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='{row_class}'><span class='bus-dest'>{icon_html}{dest_name}</span><span>{times_str}</span></div></div>"""
+                    if is_group_replacement:
+                        rows_html += f"""
+                        <div class='replacement-box'>
+                            <span class='replacement-label'>🚍 Bus de substitution</span>
+                            {row_html_content}
+                        </div>"""
+                        
+                    elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                         rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>{row_html_content}</div>"""
+                    
                     else:
-                        rows_html += f'<div class="{row_class}"><span class="bus-dest">{icon_html}{dest_name}</span><span>{times_str}</span></div>'
-
+                        rows_html += row_html_content
                 st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
     if count_visible_footer > 0:
