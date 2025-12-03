@@ -32,7 +32,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE (CORRIGÉE : FIX ICÔNES STREAMLIT)
+# 2. FONCTION POLICE (CORRIGÉE : FIX ICÔNES MENU)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         return
@@ -70,16 +70,15 @@ def charger_police_locale(file_path, font_name):
             }}
             
             /* --- FIX CRITIQUE : Restaure les icônes Streamlit --- */
-            /* Empêche Grand Paris d'écraser les flèches et icônes système */
+            
+            /* Cible spécifiquement les boutons d'ouverture/fermeture de la sidebar */
+            [data-testid="stSidebarCollapsedControl"] *, 
+            [data-testid="stSidebarExpandedControl"] *,
+            /* Cible les icônes génériques Material (utilisées un peu partout par Streamlit) */
             .material-symbols-rounded {{
                 font-family: 'Material Symbols Rounded' !important;
                 font-weight: normal !important;
                 font-style: normal !important;
-            }}
-            
-            /* Protection supplémentaire pour les boutons du header/sidebar */
-            button[kind="header"] span, button[kind="sidebar"] span {{
-                 font-family: 'Material Symbols Rounded' !important;
             }}
             </style>
         """
