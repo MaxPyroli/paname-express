@@ -1168,6 +1168,7 @@ def afficher_live_content(stop_id, clean_name):
             if (mode_theo, code_theo) not in displayed_lines_keys:
                 if mode_theo not in footer_data: footer_data[mode_theo] = {}
                 footer_data[mode_theo][code_theo] = info['color']
+        
         count_visible = sum(len(footer_data[m]) for m in footer_data if m != "AUTRE")
 
         if not has_data:
@@ -1177,17 +1178,40 @@ def afficher_live_content(stop_id, clean_name):
         if count_visible > 0:
             st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
             st.caption("Autres lignes desservant cet arrêt :")
+            
             for mode in ordre_affichage:
                 if mode == "AUTRE": continue
                 if mode in footer_data and footer_data[mode]:
                     html_badges = ""
                     items = footer_data[mode]
-                    sorted_codes = sorted(items.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
+                    
+                    # --- MÉTHODE TRI INFAILLIBLE (SÉPARATION) ---
+                    liste_lettres = []
+                    liste_chiffres = []
+                    
+                    for code in items.keys():
+                        c_str = str(code).strip()
+                        if c_str.isdigit():
+                            liste_chiffres.append(c_str)
+                        else:
+                            liste_lettres.append(c_str)
+                    
+                    # 1. On trie les lettres par ordre alphabétique (A, B, J, N137...)
+                    liste_lettres.sort()
+                    
+                    # 2. On trie les chiffres par valeur numérique (1, 10, 100...)
+                    liste_chiffres.sort(key=lambda x: int(x))
+                    
+                    # 3. ON COLLE : Lettres D'ABORD, Chiffres ENSUITE
+                    sorted_codes = liste_lettres + liste_chiffres
+                    # --------------------------------------------
+
                     for code in sorted_codes:
                         color = items[code]
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
+                    
                     if html_badges:
-                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)                        
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
