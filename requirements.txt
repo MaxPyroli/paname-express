@@ -3,3 +3,4 @@ requests
 pandas
 pyarrow
 pytz
+streamlit_js_eval
