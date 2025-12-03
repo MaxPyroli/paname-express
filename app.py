@@ -1070,19 +1070,19 @@ elif not st.session_state.search_results:
         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
             <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
             <div style="font-weight: bold; color: white; margin-bottom: 5px;">1. Recherchez</div>
-            <div style="font-size: 0.9em; color: #aaa;">Entrez le nom de votre gare (RER, Métro, Train...) ci-dessus.</div>
+            <div style="font-size: 0.9em; color: #aaa;">Entrez le nom de votre gare ci-dessus.</div>
         </div>
         
         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
             <div style="font-size: 24px; margin-bottom: 10px;">⭐</div>
             <div style="font-weight: bold; color: white; margin-bottom: 5px;">2. Favoris</div>
-            <div style="font-size: 0.9em; color: #aaa;">Cliquez sur l'étoile à côté du nom de la gare pour la retrouver ici.</div>
+            <div style="font-size: 0.9em; color: #aaa;">Cliquez sur l'étoile pour sauvegarder.</div>
         </div>
         
         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
             <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
             <div style="font-weight: bold; color: white; margin-bottom: 5px;">3. Temps Réel</div>
-            <div style="font-size: 0.9em; color: #aaa;">Accédez aux prochains départs et aux bus de substitution.</div>
+            <div style="font-size: 0.9em; color: #aaa;">Prochains départs & bus de substitution.</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # <--- C'est ce petit bout qui fait toute la différence !
