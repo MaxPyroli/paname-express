@@ -126,9 +126,9 @@ st.markdown("""
         animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge) --- */
+    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge & Pointillés) --- */
     .replacement-box {
-        border: 2px solid #e74c3c; /* Rouge */
+        border: 2px dashed #e74c3c; /* <--- CHANGEMENT : dashed */
         border-radius: 6px; 
         padding: 8px 10px; 
         margin-top: 8px; 
@@ -327,17 +327,15 @@ def afficher_demo():
                 p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
                 p2 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_2'])]
                 
-                # Fonction de rendu mise à jour (Box Rouge Substitution)
+                # Fonction de rendu (Box Rouge Substitution)
                 def render_grp(t, l):
                     h = f"<div class='rer-direction'>{t}</div>"
                     for it in l:
-                        # On prépare le contenu texte (Icone + Dest)
-                        # Note : plus besoin de replacement-badge car le titre l'indique déjà
                         dest_txt = f"{it['dest']}"
                         
                         # LOGIQUE D'ENCADREMENT
                         if it.get('is_replacement'):
-                            # C'est un bus de remplacement -> Box Rouge
+                            # Box Rouge avec titre + temps aligné à droite
                             h += f"""
                             <div class='replacement-box'>
                                 <span class='replacement-label'>🚍 Bus de substitution</span>
@@ -348,11 +346,9 @@ def afficher_demo():
                             </div>"""
                         
                         elif it.get('is_last'):
-                            # C'est un dernier départ -> Box Jaune (existante)
                              h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                         
                         else:
-                            # Cas standard
                              h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                     return h
                 
@@ -410,8 +406,10 @@ def afficher_demo():
                     # Style spécial Bus de remplacement
                     # Si c'est un remplacement, on garde 'bus-row' pour l'alignement, mais on l'encadre
                     
+                    # Préparation de la ligne standard (pour l'alignement flex)
                     row_html_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
 
+                    # ENCADREMENT
                     if is_group_replacement:
                         rows_html += f"""
                         <div class='replacement-box'>
