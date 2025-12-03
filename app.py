@@ -760,13 +760,9 @@ def afficher_live_content(stop_id, clean_name):
 
     update_header("Actualisation rapide...", is_loading=True)
 
-    # 1. LIGNES THEORIQUES (ET DÉTECTION DU CONTEXTE FERROVIAIRE)
+    # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
-    all_lines_at_stop = {}
-    
-    # On crée une liste des codes RER/Train présents dans cette gare
-    # Ex: À Poissy -> {'A', 'J'}
-    lignes_ferrees_presentes = set() 
+    all_lines_at_stop = {} 
 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
@@ -779,12 +775,7 @@ def afficher_live_content(stop_id, clean_name):
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
-            
             all_lines_at_stop[(mode, code)] = {'color': color}
-            
-            # Si c'est un RER ou un Train, on l'ajoute à notre liste de référence
-            if mode in ["RER", "TRAIN"]:
-                lignes_ferrees_presentes.add(code)
 
     # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
@@ -802,6 +793,7 @@ def afficher_live_content(stop_id, clean_name):
                 mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
                 code = clean_code_line(info.get('code', '?')) 
                 raw_dest = info.get('direction', '')
+                # Nettoyage standard
                 if mode != "BUS":
                     dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
                 else:
@@ -819,7 +811,7 @@ def afficher_live_content(stop_id, clean_name):
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
 
-        # PASSE 2 : REMPLISSAGE (AVEC INTELLIGENCE CONTEXTUELLE)
+        # PASSE 2 : REMPLISSAGE (LOGIQUE STRICTE ANTI-COLLISION)
         for d in data_live['departures']:
             info = d['display_informations']
             raw_mode = info.get('physical_mode', 'AUTRE')
@@ -830,19 +822,28 @@ def afficher_live_content(stop_id, clean_name):
             is_replacement = False
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
+            # --- C'EST ICI QUE TOUT SE JOUE ---
             if mode == "BUS":
-                # CAS 1 : Bus avec code RER/TRAIN (A, B, J...)
+                # Récupération du "Mode Commercial" (ex: RER, Train, ou Bus)
+                # C'est la vérité administrative de la ligne, indépendamment du véhicule (Bus)
+                comm_mode = info.get('commercial_mode', '').upper()
+                raw_dest_upper = info.get('direction', '').upper()
+                
+                # CAS 1 : C'est un BUS qui porte un code RER/TRAIN (A, J, L...)
                 if code in RAIL_CODES:
-                    # LA NOUVELLE LOGIQUE :
-                    # On vérifie si la ligne ferroviaire existe VRAIMENT dans cette gare
-                    # OU si le texte contient explicitement "Remplacement/Travaux" (ceinture et bretelles)
-                    raw_dest_upper = info.get('direction', '').upper()
-                    is_explicit = "REMPLACEMENT" in raw_dest_upper or "SUBSTITUTION" in raw_dest_upper or "TRAVAUX" in raw_dest_upper
+                    # Condition A : Le mode commercial dit explicitement que c'est un Train/RER/Transilien
+                    # (Ça arrive souvent pour les substitutions officielles)
+                    admin_is_train = "RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode
                     
-                    if code in lignes_ferrees_presentes or is_explicit:
+                    # Condition B : Le texte de destination crie "TRAVAUX" ou "REMPLACEMENT"
+                    text_is_sub = "REMPLACEMENT" in raw_dest_upper or "SUBSTITUTION" in raw_dest_upper or "TRAVAUX" in raw_dest_upper
+                    
+                    if admin_is_train or text_is_sub:
                         is_replacement = True
                         mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
-                    # Sinon, c'est un bus local (ex: Bus A à Melun) -> on ne fait rien, il reste "BUS"
+                    
+                    # Si ni A ni B ne sont vrais, alors c'est le Bus J de Sartrouville (Bus Local)
+                    # -> On ne fait RIEN, il reste dans la catégorie BUS.
 
                 # CAS 2 : Bus avec code MÉTRO (M4...)
                 elif code.startswith('M') and code[1:].isdigit():
