@@ -559,7 +559,40 @@ with st.sidebar:
                 on_click=load_fav,
                 args=(fav['id'], fav['full_name'])
             )
-    
+        # --- BOUTON DE RÉINITIALISATION (NOUVEAU) ---
+        st.markdown("---")
+        
+        # Initialisation de l'état de confirmation si inexistant
+        if 'confirm_reset' not in st.session_state:
+            st.session_state.confirm_reset = False
+
+        if not st.session_state.confirm_reset:
+            # Étape 1 : Le bouton poubelle simple
+            if st.button("🗑️ Réinitialiser les favoris", use_container_width=True):
+                st.session_state.confirm_reset = True
+                st.rerun()
+        else:
+            # Étape 2 : Le panneau de confirmation
+            with st.container(border=True):
+                st.warning("⚠️ Tout effacer ?")
+                col_yes, col_no = st.columns(2)
+                
+                with col_yes:
+                    if st.button("✅ Oui", use_container_width=True, type="primary"):
+                        # 1. Vider la session
+                        st.session_state.favorites = []
+                        st.session_state.confirm_reset = False
+                        # 2. Vider le LocalStorage du navigateur
+                        streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                        st.toast("Favoris supprimés !", icon="🗑️")
+                        time.sleep(0.5)
+                        st.rerun()
+                
+                with col_no:
+                    if st.button("❌ Non", use_container_width=True):
+                        st.session_state.confirm_reset = False
+                        st.rerun()
+
     st.markdown("---")
     
    # --- SECTION INFOS ---
