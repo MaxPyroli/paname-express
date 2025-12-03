@@ -244,17 +244,29 @@ st.markdown("""
         border: none;
         background: transparent;
     }
-    /* --- AJOUT : STYLE BUS REMPLACEMENT --- */
-    .replacement-row {
-        background-color: rgba(230, 126, 34, 0.15); /* Fond orange très léger */
-        border-radius: 4px;
-        margin-top: 2px;
-        padding-left: 4px;
-        border-left: 2px dashed #e67e22; /* Bordure pointillée pour signifier "alternatif" */
+    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge & Pointillés) --- */
+    .replacement-box {
+        border: 2px dashed #e74c3c; 
+        border-radius: 6px; 
+        padding: 8px 10px; 
+        margin-top: 8px; 
+        margin-bottom: 8px;
+        background-color: rgba(231, 76, 60, 0.1); 
     }
-    .replacement-badge {
-        font-size: 0.8em;
-        margin-right: 5px;
+    .replacement-label { 
+        display: block; 
+        font-size: 0.75em; 
+        text-transform: uppercase; 
+        font-weight: bold; 
+        color: #e74c3c; 
+        margin-bottom: 4px; 
+        letter-spacing: 1px; 
+    }
+    /* Annule les bordures internes */
+    .replacement-box .rail-row, .replacement-box .bus-row { 
+        border-top: none !important; 
+        padding-top: 0 !important; 
+        margin-top: 0 !important; 
     }
 </style>
 """, unsafe_allow_html=True)
@@ -681,7 +693,7 @@ def afficher_live_content(stop_id, clean_name):
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
 
-        # --- PASSE 2 : REMPLISSAGE DES BUCKETS (VERSION METRO/TRAM/RAIL) ---
+        # --- PASSE 2 : REMPLISSAGE DES BUCKETS (AVEC DETECTION SUBSTITUTION) ---
         for d in data_live['departures']:
             info = d['display_informations']
             raw_mode = info.get('physical_mode', 'AUTRE')
@@ -689,34 +701,30 @@ def afficher_live_content(stop_id, clean_name):
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
             
-            # --- DÉTECTION SUBSTITUTION (RAIL + METRO + TRAM) ---
+            # --- DÉTECTION INTELLIGENTE SUBSTITUTION ---
             is_replacement = False
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
             if mode == "BUS":
-                # 1. Cas RER / TRAIN (Ex: Bus D, Bus J)
+                # Cas 1: Bus remplaçant un RER/TRAIN (ex: Bus D, Bus J)
                 if code in RAIL_CODES:
                     is_replacement = True
                     mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
                 
-                # 2. Cas MÉTRO (Ex: Bus M4, Bus M14)
-                # On cherche si ça commence par M suivi d'un chiffre
+                # Cas 2: Bus remplaçant un MÉTRO (ex: Bus M4, Bus M14)
                 elif code.startswith('M') and code[1:].isdigit():
                     is_replacement = True
                     mode = "METRO"
-                    code = code[1:] # On enlève le 'M' pour fusionner avec la ligne "4" ou "14" existante
+                    code = code[1:] # On enlève le M pour l'affichage
                 
-                # 3. Cas TRAM (Ex: Bus T1, Bus T3b)
-                # On cherche si ça commence par T (souvent IDFM envoie déjà le bon code T1, mais en mode BUS)
+                # Cas 3: Bus remplaçant un TRAM (ex: Bus T1)
                 elif code.startswith('T') and (code[1:].isdigit() or code[1:] in ['3a', '3b']):
                     is_replacement = True
                     mode = "TRAM"
-                    # On garde le 'T' car les codes Trams sont stockés comme "T1", "T2" etc.
 
-            # Nettoyage intelligent
+            # Nettoyage intelligent du nom
             raw_dest = info.get('direction', '')
-            # Si c'est un remplacement, on nettoie comme un train (pas de logique ville/parenthèses complexe)
-            if mode != "BUS" or is_replacement:
+            if mode != "BUS" or is_replacement: # Si c'est un train ou une substitution
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             else:
                 match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
@@ -736,7 +744,6 @@ def afficher_live_content(stop_id, clean_name):
             if val_tri < -5: continue 
 
             is_last = False
-            # Exclusion Noctiliens sauf si c'est un remplacement (parfois les bus de nuit font office de sub)
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N') and not is_replacement)
             
             if not is_noctilien and val_tri < 3000:
@@ -834,6 +841,7 @@ def afficher_live_content(stop_id, clean_name):
                     
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     
+                    # Fonction interne mise à jour pour RER
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
                         if not items:
@@ -842,22 +850,29 @@ def afficher_live_content(stop_id, clean_name):
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
                             val_tri = it['tri']
+                            dest_txt = it['dest']
                             
-                            # Préfixe visuel pour le bus
-                            icon_html = "<span class='replacement-badge'>🚌</span>" if it.get('is_replacement') else ""
-                            row_class = "replacement-row" if it.get('is_replacement') else "rail-row"
-                            dest_txt = f"{icon_html}{it['dest']}"
+                            if it.get('is_replacement'):
+                                # --- CAS SUBSTITUTION : BOX ROUGE ---
+                                h += f"""
+                                <div class='replacement-box'>
+                                    <span class='replacement-label'>🚍 Bus de substitution</span>
+                                    <div class='rail-row'>
+                                        <span class='rail-dest'>{dest_txt}</span>
+                                        <span>{it['html']}</span>
+                                    </div>
+                                </div>"""
                             
-                            if it.get('is_last'):
-                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (RER) ---
+                            elif it.get('is_last'):
+                                # --- CAS DERNIER DÉPART : BOX JAUNE ---
                                 if val_tri < 10:
-                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
+                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                                 elif val_tri <= 30:
-                                    h += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
                                 else:
-                                    h += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
                             else:
-                                h += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
+                                h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                         return h
 
                     if not p1 and not p2:
@@ -879,22 +894,27 @@ def afficher_live_content(stop_id, clean_name):
                         proches.sort(key=lambda x: x['tri'])
                         for item in proches[:4]:
                             val_tri = item['tri']
-                            
-                            # Préfixe visuel pour le bus
-                            icon_html = "<span class='replacement-badge'>🚌</span>" if item.get('is_replacement') else ""
-                            row_class = "replacement-row" if item.get('is_replacement') else "rail-row"
-                            dest_txt = f"{icon_html}{item['dest']}"
+                            dest_txt = item['dest']
 
-                            if item.get('is_last'):
-                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (BACKUP) ---
+                            if item.get('is_replacement'):
+                                card_html += f"""
+                                <div class='replacement-box'>
+                                    <span class='replacement-label'>🚍 Bus de substitution</span>
+                                    <div class='rail-row'>
+                                        <span class='rail-dest'>{dest_txt}</span>
+                                        <span>{item['html']}</span>
+                                    </div>
+                                </div>"""
+                            
+                            elif item.get('is_last'):
                                 if val_tri < 10:
-                                    card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{item['html']}</span></div></div>"""
+                                    card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{item['html']}</span></div></div>"""
                                 elif val_tri <= 30:
-                                    card_html += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{item['html']} 🏁</span></div>"""
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{item['html']} 🏁</span></div>"""
                                 else:
-                                    card_html += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{item['html']} 🏁</span></div>"""
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{item['html']} 🏁</span></div>"""
                             else:
-                                card_html += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{item['html']}</span></div>"""
+                                card_html += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{item['html']}</span></div>"""
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
@@ -923,45 +943,50 @@ def afficher_live_content(stop_id, clean_name):
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {mins}min</span></div>'
                         else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
                     else:
-                        for dest_name, info in sorted_dests:
-                            if "Service terminé" in dest_name: 
-                                rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        # ... (Dans le else du bas) ...
+                    for dest_name, info in sorted_dests:
+                        if "Service terminé" in dest_name: 
+                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        else:
+                            html_list = []
+                            contains_last = False; last_val_tri = 9999
+                            
+                            # On regarde si ce groupe est une substitution
+                            is_group_replacement = False
+                            if info['items'] and info['items'][0].get('is_replacement'):
+                                is_group_replacement = True
+
+                            for idx, d_item in enumerate(info['items']):
+                                val_tri = d_item['tri']
+                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                
+                                html_list.append(txt)
+                            
+                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                            times_str = "<span class='time-sep'>|</span>".join(html_list)
+                            
+                            # Préparation de la ligne (standard)
+                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+
+                            # LOGIQUE D'AFFICHAGE FINALE
+                            if is_group_replacement:
+                                rows_html += f"""
+                                <div class='replacement-box'>
+                                    <span class='replacement-label'>🚍 Bus de substitution</span>
+                                    {row_content}
+                                </div>"""
+                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
                             else:
-                                html_list = []
-                                contains_last = False; last_val_tri = 9999
-                                
-                                # Vérifie si ce groupe de destinations contient une substitution
-                                # On regarde le premier item (souvent homogène par destination)
-                                is_group_replacement = False
-                                if info['items'] and info['items'][0].get('is_replacement'):
-                                    is_group_replacement = True
-    
-                                for idx, d_item in enumerate(info['items']):
-                                    val_tri = d_item['tri']
-                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                    
-                                    txt = d_item['html']
-                                    if d_item.get('is_last'):
-                                        contains_last = True
-                                        last_val_tri = val_tri
-                                        if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                        elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                        else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    
-                                    html_list.append(txt)
-                                
-                                if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                                times_str = "<span class='time-sep'>|</span>".join(html_list)
-                                
-                                # --- GESTION STYLE SUBSTITUTION ---
-                                row_class = "replacement-row" if is_group_replacement else "bus-row"
-                                icon_html = "<span class='replacement-badge'>🚌</span> " if is_group_replacement else "➜ "
-                                
-                                if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                     rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='{row_class}'><span class='bus-dest'>{icon_html}{dest_name}</span><span>{times_str}</span></div></div>"""
-                                else: 
-                                    rows_html += f'<div class="{row_class}"><span class="bus-dest">{icon_html}{dest_name}</span><span>{times_str}</span></div>'
-                    
+                                rows_html += row_content                    
                     if code == "C1":
                          target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
                          now = datetime.now(pytz.timezone('Europe/Paris'))
