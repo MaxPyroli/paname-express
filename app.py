@@ -32,7 +32,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE (CORRIGÉE : MÉTHODE D'EXCLUSION)
+# 2. FONCTION POLICE (CORRIGÉE : PROTECTION DES LIGATURES)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         return
@@ -44,39 +44,43 @@ def charger_police_locale(file_path, font_name):
         format_str = "opentype" if ext == "otf" else "truetype"
         css = f"""
             <style>
+            /* 1. Chargement de la police */
             @font-face {{
                 font-family: '{font_name}';
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
-            /* 1. Base globale */
+            /* 2. Application globale sur le corps */
             html, body, [class*="css"] {{
                 font-family: '{font_name}', sans-serif;
             }}
             
-            /* 2. Liste des éléments à forcer (SANS les balises sensibles 'i' ou 'span' brutes) */
-            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, td, th {{
+            /* 3. Application sur les balises de TEXTE (On évite 'span' et 'i' ici) */
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* 3. Pour les DIV et SPAN, on EXCLUT les classes d'icônes Streamlit */
-            div:not(.material-symbols-rounded):not(.material-icons),
-            span:not(.material-symbols-rounded):not(.material-icons) {{
+            /* 4. On force la police sur vos classes perso (au cas où elles utilisent des spans) */
+            .station-title, .rail-dest, .bus-dest, .version-badge, .last-dep-label {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* 4. Streamlit UI Fixes */
+            /* 5. Cible les zones de texte Streamlit */
             .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            ::placeholder {{
-                font-family: '{font_name}', sans-serif !important;
-            }}
-
-            /* 5. Ceinture et bretelles : On force la police d'icônes sur les contrôles sidebar */
-            [data-testid="stSidebarCollapsedControl"] span,
-            [data-testid="stSidebarExpandedControl"] span {{
+            
+            /* 6. FIX NUCLÉAIRE POUR LES ICÔNES DU MENU */
+            /* On force le retour à la police d'icônes pour les boutons de la sidebar */
+            button[data-testid="stSidebarCollapsedControl"] *,
+            button[data-testid="stSidebarExpandedControl"] * {{
                 font-family: "Material Symbols Rounded", sans-serif !important;
+                font-weight: normal !important;
+                font-style: normal !important;
+                letter-spacing: normal !important;
+                text-transform: none !important;
+                white-space: nowrap !important;
+                direction: ltr !important;
             }}
             </style>
         """
