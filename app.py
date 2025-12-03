@@ -844,37 +844,27 @@ def afficher_live_content(stop_id, clean_name):
             if is_admin_train or has_keywords or matches_rail_code:
                 is_replacement = True
 
-            # 3. VALIDATION GEO-STRICTE (LE FIX ANTI-FANTOME)
-            # Si on pense que c'est un remplacement, on doit vérifier si la ligne remplacée EXISTE ici.
+            # 3. VALIDATION GEO-STRICTE (CORRIGÉE : SCAN LARGE)
             if is_replacement:
                 match_found = None
                 
-                # On teste les combinaisons possibles dans les lignes officielles de l'arrêt
-                # (On teste RER et TRAIN car parfois l'API inverse les deux)
-                candidates_to_check = [("RER", clean_code), ("TRAIN", clean_code)]
-                
-                # Cas spécial Métro/Tram
-                if clean_code.startswith("M"): candidates_to_check = [("METRO", clean_code[1:])]
-                elif clean_code.startswith("T"): candidates_to_check = [("TRAM", clean_code)]
-                
-                # Vérification dans la liste théorique chargée au début (all_lines_at_stop)
-                for (theo_mode, theo_code) in candidates_to_check:
-                    if (theo_mode, theo_code) in all_lines_at_stop:
+                # Au lieu de deviner si c'est "RER" ou "TRAIN", on scanne ce qui existe vraiment à l'arrêt
+                # Si l'arrêt contient une ligne ferrée (Train/RER/Metro/Tram) avec ce code, BINGO.
+                for (theo_mode, theo_code) in all_lines_at_stop.keys():
+                    if theo_code == clean_code and theo_mode in ["RER", "TRAIN", "METRO", "TRAM"]:
                         match_found = (theo_mode, theo_code)
                         break
                 
                 if match_found:
-                    # ✅ VALIDÉ : La ligne existe bien à cet arrêt
-                    mode = match_found[0] # On prend le mode officiel (ex: RER)
-                    code = match_found[1] # On prend le code officiel
-                    # On vole la couleur officielle
+                    # ✅ C'est validé : La ligne P existe bien à cet arrêt (en tant que Train ou RER)
+                    mode = match_found[0] 
+                    code = match_found[1] 
                     color = all_lines_at_stop[match_found]['color']
                 else:
-                    # ❌ REJETÉ : C'est un bus local qui porte un nom de lettre (ex: Bus B à Pontault)
-                    # On annule le statut de remplacement
+                    # ❌ Rejeté (Cas du Bus B à Pontault) : Pas de ligne ferroviaire correspondante trouvée
                     is_replacement = False
-                    code = clean_code # On garde le code "B" mais il restera dans la section BUS
-                    mode = "BUS" # On force le maintien en BUS
+                    code = clean_code
+                    mode = "BUS"
 
             else:
                 # Si ce n'est pas un remplacement, traitement standard
