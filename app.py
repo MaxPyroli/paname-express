@@ -25,7 +25,7 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# 1. CONFIGURATION DE LA PAGE
+# 1. CONFIGURATION
 st.set_page_config(
     page_title="Grand Paname",
     page_icon=icon_image,
@@ -763,6 +763,7 @@ def afficher_live_content(stop_id, clean_name):
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
     all_lines_at_stop = {} 
+    has_c1_cable = False # Flag pour détecter le Câble C1
 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
@@ -776,6 +777,10 @@ def afficher_live_content(stop_id, clean_name):
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
             all_lines_at_stop[(mode, code)] = {'color': color}
+            
+            # DÉTECTION CÂBLE C1
+            if mode == "CABLE" and code == "C1":
+                has_c1_cable = True
 
     # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
@@ -809,7 +814,8 @@ def afficher_live_content(stop_id, clean_name):
                         else: dest = raw_dest
                     else: dest = raw_dest
                 key = (mode, code, dest)
-                if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
+                current_max = last_departures_map.get(key, -999999)
+                if val_tri > current_max: last_departures_map[key] = val_tri
 
         # PASSE 2 : REMPLISSAGE (LOGIQUE STRICTE ANTI-COLLISION)
         for d in data_live['departures']:
@@ -905,11 +911,13 @@ def afficher_live_content(stop_id, clean_name):
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
             if code_t in ["TER", "R"]: continue
-            exists = False
+            exists_in_buckets = False
             if mode_t in buckets:
                 for (b_mode, b_code, b_color) in buckets[mode_t]:
-                    if b_code == code_t: exists = True; break
-            if not exists:
+                    if b_code == code_t:
+                        exists_in_buckets = True
+                        break
+            if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
@@ -950,14 +958,20 @@ def afficher_live_content(stop_id, clean_name):
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     update_header(f"Dernière mise à jour : {heure_actuelle} • LIVE <span class='live-icon'>🟢</span>", is_loading=False)
 
+    # 3. AFFICHAGE
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
     for mode_actuel in ordre_affichage:
         lignes_du_mode = buckets[mode_actuel]
         if not lignes_du_mode: continue
-        
+            
         has_data = True
+        st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
+
+        def sort_key(k): 
+            try: return (0, int(k[1])) 
+            except: return (1, k[1])
         
         with containers[mode_actuel]:
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
