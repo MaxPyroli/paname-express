@@ -39,7 +39,7 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (v0.12.2)
+#                  STYLE CSS
 # ==========================================
 st.markdown("""
 <style>
@@ -126,6 +126,18 @@ st.markdown("""
         animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* --- AJOUT : STYLE BUS REMPLACEMENT --- */
+    .replacement-row {
+        background-color: rgba(230, 126, 34, 0.15);
+        border-radius: 4px;
+        margin-top: 2px;
+        padding-left: 4px;
+        border-left: 2px dashed #e67e22;
+    }
+    .replacement-badge {
+        font-size: 0.8em;
+        margin-right: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -200,6 +212,17 @@ def get_demo_data():
     data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 15, 'color': '000000'})
     data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 75, 'color': '000000'})
 
+    # 7. BUS DE REMPLACEMENT RER A (Branche Poissy fermée par ex)
+    # Note : Le code est 'A' mais le mode est 'BUS' dans l'API
+    data['lines'].append({'physical_mode': 'BUS', 'code': 'A', 'color': 'E3051C'}) # Ligne fantôme pour la couleur
+    data['departures'].append({'mode': 'BUS', 'code': 'A', 'dest': 'Poissy (Bus de remplacement)', 'min': 5, 'color': 'E3051C'})
+    
+    # 8. BUS DE REMPLACEMENT MÉTRO 6 (Travaux)
+    # Code 'M6' pour simuler le format RATP
+    data['lines'].append({'physical_mode': 'METRO', 'code': '6', 'color': '75C695'})
+    data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Nation', 'min': 2, 'color': '75C695'})
+    data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Charles de Gaulle - Étoile', 'min': 6, 'color': '75C695'})
+
     return data
 
 # ==========================================
@@ -221,11 +244,12 @@ def afficher_demo():
     # 1. Calcul des max
     last_departures_map = {}
     for d in mock_data['departures']:
+        # On normalise la clé pour le calcul du dernier départ
         key = (d['mode'], d['code'], d['dest'])
         current_max = last_departures_map.get(key, -999)
         if d['min'] > current_max: last_departures_map[key] = d['min']
 
-    # 2. Remplissage
+    # 2. Remplissage INTELLIGENT
     for d in mock_data['departures']:
         mode = d['mode']
         code = d['code']
@@ -233,9 +257,25 @@ def afficher_demo():
         color = d['color']
         minutes = d['min']
         
+        # --- LOGIQUE DE DÉTECTION SUBSTITUTION ---
+        is_replacement = False
+        
+        if mode == "BUS":
+            # Cas RER / TRAIN (Ex: Bus A)
+            if code in ["A", "B", "C", "D", "E", "H", "J", "K", "L", "N", "P", "R", "U", "V"]:
+                is_replacement = True
+                mode = "RER" if code in ["A", "B", "C", "D", "E"] else "TRAIN"
+            
+            # Cas MÉTRO (Ex: Bus M6)
+            elif code.startswith('M') and code[1:].isdigit():
+                is_replacement = True
+                mode = "METRO"
+                code = code[1:] # On enlève le M pour fusionner avec la ligne
+        # -----------------------------------------
+
         is_last = False
-        if d.get('is_last') or (minutes == last_departures_map.get((mode, code, dest)) and (minutes > 60)):
-            is_last = True
+        # Logique simplifiée pour la démo
+        if d.get('is_last'): is_last = True
             
         _, html = format_html_time(minutes)
         displayed_lines_keys.add((mode, code))
@@ -243,7 +283,7 @@ def afficher_demo():
         if mode in buckets:
             cle = (mode, code, color)
             if cle not in buckets[mode]: buckets[mode][cle] = []
-            buckets[mode][cle].append({'dest': dest, 'html': html, 'tri': minutes, 'is_last': is_last})
+            buckets[mode][cle].append({'dest': dest, 'html': html, 'tri': minutes, 'is_last': is_last, 'is_replacement': is_replacement})
 
     # Footer filling
     for l in mock_data['lines']:
@@ -254,8 +294,6 @@ def afficher_demo():
 
     # 3. Rendu
     count_visible_footer = sum(len(footer_data[m]) for m in footer_data if m != "AUTRE")
-    
-    # ORDRE MIS À JOUR : RER > TRAIN > METRO > CABLE > ...
     ordre = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     
     for mode_actuel in ordre:
@@ -269,43 +307,29 @@ def afficher_demo():
             _, code, color = cle
             departs = lignes[cle]
             
-            # --- CAS 1 : RER (Smart Geo) ---
-            if mode_actuel == "RER" and code in GEOGRAPHIE_RER:
+            # --- CAS 1 & 2 : RER / TRAIN (Avec Branches) ---
+            if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                 card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                 
                 geo = GEOGRAPHIE_RER[code]
                 p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
                 p2 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_2'])]
                 
+                # Fonction de rendu mise à jour pour le bus
                 def render_grp(t, l):
                     h = f"<div class='rer-direction'>{t}</div>"
                     for it in l:
+                        # Style spécial
+                        row_class = "replacement-row" if it.get('is_replacement') else "rail-row"
+                        icon_html = "<span class='replacement-badge'>🚌</span>" if it.get('is_replacement') else ""
+                        dest_txt = f"{icon_html}{it['dest']}"
+
                         if it.get('is_last'):
-                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                             h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                         else:
-                             h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                             h += f"""<div class='{row_class}'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                     return h
                 
-                if p1: card_html += render_grp(geo['labels'][0], p1)
-                if p2: card_html += render_grp(geo['labels'][1], p2)
-                card_html += "</div>"
-                st.markdown(card_html, unsafe_allow_html=True)
-
-            # --- CAS 2 : TRAINS (Avec Branches pour la démo ligne H) ---
-            elif mode_actuel == "TRAIN" and code in GEOGRAPHIE_RER:
-                # MÊME LOGIQUE QUE LE RER pour la démo H
-                card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
-                
-                geo = GEOGRAPHIE_RER[code]
-                p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
-                p2 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_2'])]
-                
-                def render_grp(t, l):
-                    h = f"<div class='rer-direction'>{t}</div>"
-                    for it in l:
-                        h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
-                    return h
-
                 if p1: card_html += render_grp(geo['labels'][0], p1)
                 if p2: card_html += render_grp(geo['labels'][1], p2)
                 card_html += "</div>"
@@ -337,6 +361,9 @@ def afficher_demo():
                     contains_last = False
                     last_val_tri = 999
                     is_noctilien = code.startswith('N')
+                    
+                    # Est-ce que ce groupe est une substitution ? (On regarde le 1er item)
+                    is_group_replacement = items[0].get('is_replacement') if items else False
 
                     for idx, d in enumerate(items):
                          if idx > 0 and d['tri'] > 62 and not is_noctilien: continue
@@ -354,10 +381,14 @@ def afficher_demo():
                     
                     times_str = "<span class='time-sep'>|</span>".join(html_list)
 
+                    # Style spécial Bus de remplacement
+                    row_class = "replacement-row" if is_group_replacement else "bus-row"
+                    icon_html = "<span class='replacement-badge'>🚌</span> " if is_group_replacement else "➜ "
+
                     if contains_last and len(html_list) == 1 and last_val_tri < 10:
-                         rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='bus-row'><span class='bus-dest'>➜ {dest_name}</span><span>{times_str}</span></div></div>"""
+                         rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span><div class='{row_class}'><span class='bus-dest'>{icon_html}{dest_name}</span><span>{times_str}</span></div></div>"""
                     else:
-                        rows_html += f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                        rows_html += f'<div class="{row_class}"><span class="bus-dest">{icon_html}{dest_name}</span><span>{times_str}</span></div>'
 
                 st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
@@ -368,7 +399,6 @@ def afficher_demo():
             if mode in footer_data and footer_data[mode]:
                 badges = "".join([f'<span class="line-badge footer-badge" style="background-color:#{c};">{cd}</span>' for cd, c in footer_data[mode].items()])
                 st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{badges}</div></div>""", unsafe_allow_html=True)
-
 # ==========================================
 #              FAUX PANNEAU LATÉRAL
 # ==========================================
