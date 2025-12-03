@@ -372,7 +372,7 @@ GEOGRAPHIE_RER = {
         "term_2": ["DOURDAN", "ETAMPES", "ÉTAMPES", "MASSY", "BRÉTIGNY"]
     },
     "D": {
-        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Paris / Creil)"),
+        "labels": ("⇩ SUD (Melun / Corbeil)", "⇧ NORD (Creil)"),
         "mots_1": ["MELUN", "CORBEIL", "MALESHERBES", "VILLENEUVE", "COMBS", "FERTE", "LIEUSAINT", "MOISSELLES", "JUVISY"],
         "term_1": ["MELUN", "CORBEIL", "MALESHERBES"],
         "mots_2": ["CREIL", "GOUSSAINVILLE", "ORRY", "VILLIERS", "STADE", "DENIS", "LOUVRES", "SURVILLIERS", "GARE DE LYON", "PARIS", "CHATELET", "NORD"],
