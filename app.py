@@ -110,18 +110,22 @@ st.markdown("""
     div[data-testid="stSpinner"] { display: none !important; }
     .stApp > header { visibility: hidden !important; }
     /* ----------------------------------------- */
-    /* NOUVEAU : Animation de pulsation pour le point vert LIVE */
-    @keyframes pulse-live {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.9); }
-        100% { opacity: 1; transform: scale(1); }
+    /* NOUVEAU : Animation Clignotement (Blink) */
+    @keyframes blink-live {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
     }
     .live-icon {
         display: inline-block;
-        animation: pulse-live 2s infinite ease-in-out;
+        /* Animation plus rapide (1s) pour un vrai clignotement */
+        animation: blink-live 1.5s infinite step-start; 
+        /* step-start fait un clignotement net (on/off). 
+           Si tu préfères une transition douce, retire 'step-start' et laisse juste 'infinite' */
+        animation: blink-live 1s infinite; 
         margin: 0 4px;
         vertical-align: middle;
-        font-size: 0.6em; /* Ajuste la taille du rond vert */
+        font-size: 0.6em;
     }
 
     @keyframes blinker { 50% { opacity: 0; } }
@@ -272,6 +276,15 @@ st.markdown("""
         font-size: 0.8em;
         margin-left: 5px;
     }
+    /* CONFIGURATION TITRE (Taille & Alignement) */
+    h1 {
+        font-size: 3.5rem !important; /* Taille PC augmentée */
+        display: flex !important;     /* Active l'alignement flexible */
+        align-items: center !important;
+        flex-wrap: wrap !important;   /* Permet au badge de passer à la ligne proprement */
+        gap: 15px !important;         /* Espace entre le logo, le titre et le badge */
+        line-height: 1.1 !important;
+    }
 
     /* Média Query pour ajuster sur très petits écrans */
     @media (max-width: 400px) {
@@ -279,7 +292,7 @@ st.markdown("""
         
         /* Ajustements du titre sur mobile */
         h1 { 
-            font-size: 28px !important; /* Un peu plus petit */
+            font-size: 40px !important; /* Un peu plus petit */
             gap: 10px !important;       /* On resserre l'espace */
         }
         
@@ -526,7 +539,7 @@ img_b64 = get_img_as_base64("app_icon.png")
 # Si l'image existe, on crée une balise <img>, sinon on garde l'émoji par défaut
 if img_b64:
     # On ajuste la hauteur pour correspondre au texte (approx 1.2em) et on aligne verticalement
-    icone_html = f'<img src="data:image/png;base64,{img_b64}" style="height: 1.2em; vertical-align: bottom; margin-right: 10px;">'
+    icone_html = f'<img src="data:image/png;base64,{img_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
 else:
     icone_html = "🚆"
 
@@ -735,13 +748,14 @@ def afficher_live_content(stop_id, clean_name):
         try: return (0, int(k[1])) 
         except: return (1, k[1])
 
-    # --- FIX STABILITÉ HTML ---
+    # --- FIX STABILITÉ HTML (Sans Italique) ---
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
+        # J'ai retiré "font-style: italic;" du style ci-dessous
         html_content = f"""
         <div style='
-            display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;
-            height: 30px; line-height: 30px; overflow: hidden;
+            display: flex; align-items: center; color: #888; font-size: 0.8rem; margin-bottom: 10px;
+            height: 30px; line-height: 30px; overflow: hidden; font-weight: 500;
         '>
             {loader_html} <span style='margin-left: 8px;'>{text}</span>
         </div>
