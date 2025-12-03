@@ -911,7 +911,9 @@ def afficher_live_content(stop_id, clean_name):
     # 6. AFFICHAGE FINAL
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    update_header(f"Dernière mise à jour : {heure_actuelle} 🔴 LIVE", is_loading=False)
+    
+    # On remplace "🔴 LIVE" par le point vert avec la classe d'animation
+    update_header(f"Dernière mise à jour : {heure_actuelle} • LIVE <span class='live-icon'>🟢</span>", is_loading=False)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
