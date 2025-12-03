@@ -1144,9 +1144,8 @@ def afficher_live_content(stop_id, clean_name):
                              st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
-    # 6. FOOTER (CORRIGÉ : TRI STRICT LETTRES D'ABORD)
+    # 6. FOOTER
     with containers["AUTRE"]:
-        # Remplissage des données du footer
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
             if (mode_theo, code_theo) not in displayed_lines_keys:
                 if mode_theo not in footer_data: footer_data[mode_theo] = {}
@@ -1154,14 +1153,10 @@ def afficher_live_content(stop_id, clean_name):
         
         count_visible = sum(len(footer_data[m]) for m in footer_data if m != "AUTRE")
 
-        # Message si vide
         if not has_data:
-            if count_visible > 0: 
-                st.markdown("""<div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px; margin-bottom: 20px;'><h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3></div>""", unsafe_allow_html=True)
-            else: 
-                st.markdown("""<div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'><h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3></div>""", unsafe_allow_html=True)
+            if count_visible > 0: st.markdown("""<div style='text-align: center; padding: 20px; background-color: rgba(52, 152, 219, 0.1); border-radius: 10px; margin-top: 20px; margin-bottom: 20px;'><h3 style='margin:0; color: #3498db;'>😴 Aucun départ immédiat</h3></div>""", unsafe_allow_html=True)
+            else: st.markdown("""<div style='text-align: center; padding: 20px; background-color: rgba(231, 76, 60, 0.1); border-radius: 10px; margin-top: 20px;'><h3 style='margin:0; color: #e74c3c;'>📭 Aucune information</h3></div>""", unsafe_allow_html=True)
 
-        # Affichage des badges
         if count_visible > 0:
             st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
             st.caption("Autres lignes desservant cet arrêt :")
@@ -1172,27 +1167,33 @@ def afficher_live_content(stop_id, clean_name):
                     html_badges = ""
                     items = footer_data[mode]
                     
-                    # --- FONCTION DE TRI EXPLICITE ---
-                    def tri_bus_lettres_en_premier(code):
-                        c = str(code).strip()
-                        if c.isdigit():
-                            # C'est un nombre (ex: 393) -> Groupe 1 (Fin), trié par valeur numérique
-                            return (1, int(c))
+                    # --- MÉTHODE TRI INFAILLIBLE (SÉPARATION) ---
+                    liste_lettres = []
+                    liste_chiffres = []
+                    
+                    for code in items.keys():
+                        c_str = str(code).strip()
+                        if c_str.isdigit():
+                            liste_chiffres.append(c_str)
                         else:
-                            # C'est une lettre ou mixte (ex: A, J, N137) -> Groupe 0 (Début), trié par texte
-                            return (0, c)
-                    # ---------------------------------
-
-                    # Application du tri
-                    sorted_codes = sorted(items.keys(), key=tri_bus_lettres_en_premier)
+                            liste_lettres.append(c_str)
+                    
+                    # 1. On trie les lettres par ordre alphabétique (A, B, J, N137...)
+                    liste_lettres.sort()
+                    
+                    # 2. On trie les chiffres par valeur numérique (1, 10, 100...)
+                    liste_chiffres.sort(key=lambda x: int(x))
+                    
+                    # 3. ON COLLE : Lettres D'ABORD, Chiffres ENSUITE
+                    sorted_codes = liste_lettres + liste_chiffres
+                    # --------------------------------------------
 
                     for code in sorted_codes:
                         color = items[code]
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     
                     if html_badges:
-                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-                        
+                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)                        
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
