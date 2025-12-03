@@ -32,7 +32,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. FONCTION POLICE (CORRIGÉE : FIX ICÔNES MENU)
+# 2. FONCTION POLICE (CORRIGÉE : FIX ULTRA CIBLÉ)
 def charger_police_locale(file_path, font_name):
     if not os.path.exists(file_path):
         return
@@ -44,41 +44,48 @@ def charger_police_locale(file_path, font_name):
         format_str = "opentype" if ext == "otf" else "truetype"
         css = f"""
             <style>
+            /* 1. Chargement de la police Grand Paris */
             @font-face {{
                 font-family: '{font_name}';
                 src: url('data:font/{ext};base64,{b64}') format('{format_str}');
             }}
             
-            /* 1. Applique la police au corps global */
+            /* 2. Application Globale (Le rouleau compresseur) */
             html, body, [class*="css"] {{
                 font-family: '{font_name}', sans-serif;
             }}
             
-            /* 2. Force l'application sur TOUS les éléments textuels */
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, span, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* 3. Cible spécifiquement les conteneurs Streamlit */
+            /* 3. Streamlit UI Fixes */
             .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            
-            /* 4. Placeholder des inputs */
             ::placeholder {{
                 font-family: '{font_name}', sans-serif !important;
             }}
             
-            /* --- FIX CRITIQUE : Restaure les icônes Streamlit --- */
+            /* --- 4. LA PROTECTION DES ICÔNES (Fix Nucléaire) --- */
             
-            /* Cible spécifiquement les boutons d'ouverture/fermeture de la sidebar */
-            [data-testid="stSidebarCollapsedControl"] *, 
-            [data-testid="stSidebarExpandedControl"] *,
-            /* Cible les icônes génériques Material (utilisées un peu partout par Streamlit) */
-            .material-symbols-rounded {{
-                font-family: 'Material Symbols Rounded' !important;
+            /* Cible spécifiquement les boutons de la sidebar (fermé et ouvert) */
+            button[data-testid="stSidebarCollapsedControl"] *, 
+            button[data-testid="stSidebarExpandedControl"] * {{
+                font-family: 'Material Symbols Rounded', sans-serif !important;
                 font-weight: normal !important;
                 font-style: normal !important;
+                letter-spacing: normal !important;
+                text-transform: none !important;
+                display: inline-block !important;
+                white-space: nowrap !important;
+                word-wrap: normal !important;
+                direction: ltr !important;
+            }}
+            
+            /* Protection générale pour les icônes Material (utilisées ailleurs) */
+            .material-symbols-rounded {{
+                font-family: 'Material Symbols Rounded', sans-serif !important;
             }}
             </style>
         """
