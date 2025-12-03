@@ -244,12 +244,6 @@ st.markdown("""
         border: none;
         background: transparent;
     }
-    /* Style pour les Bus de Remplacement (Orange Travaux) */
-    .replacement-bus {
-        color: #f39c12 !important;
-        font-style: italic;
-        font-weight: 600;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -675,60 +669,63 @@ def afficher_live_content(stop_id, clean_name):
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
 
-        # Passe 2 : Buckets avec DÉTECTION BUS DE REMPLACEMENT
-        for d in all_departures:
+        # --- PASSE 2 : REMPLISSAGE DES BUCKETS ---
+        for d in data_live['departures']:
             info = d['display_informations']
             mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
+            
+            # Nettoyage intelligent (Copie conforme)
             raw_dest = info.get('direction', '')
+            if mode != "BUS":
+                dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
+            else:
+                match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
+                if match:
+                    name_part = match.group(1).strip()
+                    city_part = match.group(2).strip()
+                    if city_part.lower() in name_part.lower(): dest = name_part
+                    elif '-' in city_part:
+                        first_chunk = city_part.split('-')[0].strip()
+                        if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower(): dest = name_part
+                        else: dest = raw_dest
+                    else: dest = raw_dest
+                else: dest = raw_dest
             
-            # Nettoyage nom
-            if mode == "BUS": dest = raw_dest
-            else: dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
-            
-            freshness = d.get('data_freshness', 'realtime')
-            val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], freshness)
+            val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             
             if val_tri < -5: continue 
 
-            # --- LOGIQUE BUS DE REMPLACEMENT ---
-            is_replacement = False
-            if mode == "BUS":
-                # On regarde si ce bus porte le code d'un RER/TRAIN de la gare
-                for (l_mode, l_code), l_info in all_lines_at_stop.items():
-                    if l_mode in ["RER", "TRAIN"] and l_code == code:
-                        mode = l_mode # Il devient un TRAIN
-                        color = l_info['color'] # Il prend la couleur du train
-                        is_replacement = True
-                        dest = f"🚌 {dest}" # On ajoute l'émoji
-                        break
-            # -----------------------------------
-
             is_last = False
-            if val_tri < 3000:
-                key = (mode, code, dest)
-                max_val = last_departures_map.get(key)
-                if max_val and val_tri == max_val:
-                    if mode in ["RER", "TRAIN"]:
-                        is_last = True
-                    elif val_tri > 60 or datetime.now(pytz.timezone('Europe/Paris')).hour >= 21:
-                        is_last = True
-
-            origin_key = d['origin_name'] if is_pole_mode else "MAIN"
-            if mode in ["RER", "TRAIN"]: origin_key = "MAIN"
-
-            cle = (mode, code, color, origin_key)
+            # SÉCURITÉ : Mode "Dernier départ" pour RER et TRAIN, et exclusion des Noctiliens
+            is_noctilien = (mode == "BUS" and str(code).upper().startswith('N'))
             
+            if not is_noctilien and val_tri < 3000:
+                key_check = (mode, code, dest)
+                max_val = last_departures_map.get(key_check)
+                
+                if max_val is not None and val_tri == max_val:
+                    try:
+                        dep_str = d['stop_date_time']['departure_date_time']
+                        dep_hour = int(dep_str.split('T')[1][:2])
+                    except: dep_hour = 0
+                    current_hour = datetime.now(pytz.timezone('Europe/Paris')).hour
+                    
+                    is_evening_mode = (current_hour >= 21)
+                    is_night_train = (dep_hour >= 22) or (dep_hour < 4)
+                    
+                    if is_evening_mode or is_night_train:
+                        is_last = True
+            
+            TRANSILIENS_OFFICIELS = ["H", "J", "K", "L", "N", "P", "R", "U", "V"]
+            if is_last and mode == "TRAIN" and code not in TRANSILIENS_OFFICIELS:
+                is_last = False
+
+            cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                is_duplicate = False
-                for existing in buckets[mode][cle]:
-                    if existing['dest'] == dest and existing['tri'] == val_tri:
-                        is_duplicate = True; break
-                if not is_duplicate:
-                    # On ajoute 'is_replacement' ici
-                    buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'origin': origin_key, 'is_replacement': is_replacement})
+                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last})
 
     # 4. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
@@ -804,20 +801,24 @@ def afficher_live_content(stop_id, clean_name):
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     
                     def render_group(titre, items):
-                    h = f"<div class='rer-direction'>{titre}</div>"
-                    items.sort(key=lambda x: x['tri'])
-                    for it in items[:4]:
-                        # Détection du style
-                        style_class = "rail-dest replacement-bus" if it.get('is_replacement') else "rail-dest"
-                        
-                        # Ajout origine (Pôle)
-                        origin_txt = f"<span style='font-size:0.7em; color:#888; margin-left:5px; font-style:italic;'>({it['origin_name']})</span>" if is_pole_mode and it.get('origin_name') else ""
-                        
-                        if it.get('is_last'):
-                            h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='{style_class}'>{it['dest']}{origin_txt}</span><span>{it['html']}</span></div></div>"""
-                        else:
-                            h += f"""<div class='rail-row'><span class='{style_class}'>{it['dest']}{origin_txt}</span><span>{it['html']}</span></div>"""
-                    return h
+                        h = f"<div class='rer-direction'>{titre}</div>"
+                        if not items:
+                            h += """<div class="service-box">😴 Service terminé</div>"""
+                            return h
+                        items.sort(key=lambda x: x['tri'])
+                        for it in items[:4]:
+                            val_tri = it['tri']
+                            if it.get('is_last'):
+                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (RER) ---
+                                if val_tri < 10:
+                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div></div>"""
+                                elif val_tri <= 30:
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
+                                else:
+                                    h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
+                            else:
+                                h += f"""<div class='rail-row'><span class='rail-dest'>{it['dest']}</span><span>{it['html']}</span></div>"""
+                        return h
 
                     if not p1 and not p2:
                         card_html += """<div class="service-box">😴 Service terminé</div>"""
@@ -837,13 +838,17 @@ def afficher_live_content(stop_id, clean_name):
                     else:
                         proches.sort(key=lambda x: x['tri'])
                         for item in proches[:4]:
-                        style_class = "rail-dest replacement-bus" if item.get('is_replacement') else "rail-dest"
-                        origin_txt = f"<span style='font-size:0.7em; color:#888; margin-left:5px; font-style:italic;'>({item['origin_name']})</span>" if is_pole_mode and item.get('origin_name') else ""
-                        
-                        if item.get('is_last'):
-                            card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='{style_class}'>{item['dest']}{origin_txt}</span><span>{item['html']}</span></div></div>"""
-                        else:
-                            card_html += f"""<div class='rail-row'><span class='{style_class}'>{item['dest']}{origin_txt}</span><span>{item['html']}</span></div>"""
+                            val_tri = item['tri']
+                            if item.get('is_last'):
+                                # --- LOGIQUE GRADUELLE 3 NIVEAUX (BACKUP) ---
+                                if val_tri < 10:
+                                    card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div></div>"""
+                                elif val_tri <= 30:
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-small-frame'>{item['html']} 🏁</span></div>"""
+                                else:
+                                    card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span class='last-dep-text-only'>{item['html']} 🏁</span></div>"""
+                            else:
+                                card_html += f"""<div class='rail-row'><span class='rail-dest'>{item['dest']}</span><span>{item['html']}</span></div>"""
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
