@@ -726,12 +726,11 @@ if st.session_state.search_results:
             st.rerun()
 
 
-# ========================================================
-#           LE MOTEUR LIVE (FRAGMENT ISOLÉ)
-# ========================================================
+# ==========================================
+#           FRAGMENT LIVE (AUTO-REFRESH)
+# ==========================================
 @st.fragment(run_every=15)
 def afficher_live_content(stop_id, clean_name):
-    # On prépare des conteneurs vides
     containers = {
         "Header": st.empty(),
         "RER": st.container(),
@@ -743,15 +742,12 @@ def afficher_live_content(stop_id, clean_name):
         "AUTRE": st.container()
     }
     
-    # Fonction de tri
     def sort_key(k): 
         try: return (0, int(k[1])) 
         except: return (1, k[1])
 
-    # --- FIX STABILITÉ HTML (Sans Italique) ---
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
-        # J'ai retiré "font-style: italic;" du style ci-dessous
         html_content = f"""
         <div style='
             display: flex; align-items: center; color: #888; font-size: 0.8rem; margin-bottom: 10px;
@@ -762,12 +758,15 @@ def afficher_live_content(stop_id, clean_name):
         """
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
-    # 1. ÉTAT CHARGEMENT
     update_header("Actualisation rapide...", is_loading=True)
 
-    # 2. LIGNES THEORIQUES
+    # 1. LIGNES THEORIQUES (ET DÉTECTION DU CONTEXTE FERROVIAIRE)
     data_lines = demander_lignes_arret(stop_id)
-    all_lines_at_stop = {} 
+    all_lines_at_stop = {}
+    
+    # On crée une liste des codes RER/Train présents dans cette gare
+    # Ex: À Poissy -> {'A', 'J'}
+    lignes_ferrees_presentes = set() 
 
     if data_lines and 'lines' in data_lines:
         for line in data_lines['lines']:
@@ -780,28 +779,28 @@ def afficher_live_content(stop_id, clean_name):
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
+            
             all_lines_at_stop[(mode, code)] = {'color': color}
+            
+            # Si c'est un RER ou un Train, on l'ajoute à notre liste de référence
+            if mode in ["RER", "TRAIN"]:
+                lignes_ferrees_presentes.add(code)
 
-    # 3. TEMPS REEL
+    # 2. TEMPS REEL
     data_live = demander_api(f"stop_areas/{stop_id}/departures?count=600")
-    
     buckets = {"RER": {}, "TRAIN": {}, "METRO": {}, "CABLE": {}, "TRAM": {}, "BUS": {}, "AUTRE": {}}
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
     last_departures_map = {} 
 
     if data_live and 'departures' in data_live:
-        
-        # --- PASSE 1 : CALCUL DU MAX ---
+        # PASSE 1 : CALCUL DU MAX
         for d in data_live['departures']:
             val_tri, _ = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
-            
             if val_tri < 3000:
                 info = d['display_informations']
                 mode = normaliser_mode(info.get('physical_mode', 'AUTRE'))
                 code = clean_code_line(info.get('code', '?')) 
-                
-                # Nettoyage intelligent des noms
                 raw_dest = info.get('direction', '')
                 if mode != "BUS":
                     dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
@@ -817,11 +816,10 @@ def afficher_live_content(stop_id, clean_name):
                             else: dest = raw_dest
                         else: dest = raw_dest
                     else: dest = raw_dest
-                
                 key = (mode, code, dest)
                 if val_tri > last_departures_map.get(key, -999999): last_departures_map[key] = val_tri
 
-        # --- PASSE 2 : REMPLISSAGE DES BUCKETS (AVEC DETECTION SUBSTITUTION) ---
+        # PASSE 2 : REMPLISSAGE (AVEC INTELLIGENCE CONTEXTUELLE)
         for d in data_live['departures']:
             info = d['display_informations']
             raw_mode = info.get('physical_mode', 'AUTRE')
@@ -829,30 +827,36 @@ def afficher_live_content(stop_id, clean_name):
             code = clean_code_line(info.get('code', '?')) 
             color = info.get('color', '666666')
             
-            # --- DÉTECTION INTELLIGENTE SUBSTITUTION ---
             is_replacement = False
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
             if mode == "BUS":
-                # Cas 1: Bus remplaçant un RER/TRAIN (ex: Bus D, Bus J)
+                # CAS 1 : Bus avec code RER/TRAIN (A, B, J...)
                 if code in RAIL_CODES:
-                    is_replacement = True
-                    mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
-                
-                # Cas 2: Bus remplaçant un MÉTRO (ex: Bus M4, Bus M14)
+                    # LA NOUVELLE LOGIQUE :
+                    # On vérifie si la ligne ferroviaire existe VRAIMENT dans cette gare
+                    # OU si le texte contient explicitement "Remplacement/Travaux" (ceinture et bretelles)
+                    raw_dest_upper = info.get('direction', '').upper()
+                    is_explicit = "REMPLACEMENT" in raw_dest_upper or "SUBSTITUTION" in raw_dest_upper or "TRAVAUX" in raw_dest_upper
+                    
+                    if code in lignes_ferrees_presentes or is_explicit:
+                        is_replacement = True
+                        mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
+                    # Sinon, c'est un bus local (ex: Bus A à Melun) -> on ne fait rien, il reste "BUS"
+
+                # CAS 2 : Bus avec code MÉTRO (M4...)
                 elif code.startswith('M') and code[1:].isdigit():
                     is_replacement = True
                     mode = "METRO"
-                    code = code[1:] # On enlève le M pour l'affichage
+                    code = code[1:]
                 
-                # Cas 3: Bus remplaçant un TRAM (ex: Bus T1)
+                # CAS 3 : Bus avec code TRAM (T1...)
                 elif code.startswith('T') and (code[1:].isdigit() or code[1:] in ['3a', '3b']):
                     is_replacement = True
                     mode = "TRAM"
 
-            # Nettoyage intelligent du nom
             raw_dest = info.get('direction', '')
-            if mode != "BUS" or is_replacement: # Si c'est un train ou une substitution
+            if mode != "BUS" or is_replacement:
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             else:
                 match = re.search(r'(.*)\s*\(([^)]+)\)$', raw_dest)
@@ -868,12 +872,10 @@ def afficher_live_content(stop_id, clean_name):
                 else: dest = raw_dest
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
-            
             if val_tri < -5: continue 
 
             is_last = False
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N') and not is_replacement)
-            
             if not is_noctilien and val_tri < 3000:
                 key_check = (mode, code, dest)
                 max_val = last_departures_map.get(key_check)
@@ -896,7 +898,8 @@ def afficher_live_content(stop_id, clean_name):
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'is_replacement': is_replacement})
-    # 4. GHOST LINES
+
+    # 3. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
@@ -910,7 +913,7 @@ def afficher_live_content(stop_id, clean_name):
                 if mode_t not in buckets: buckets[mode_t] = {}
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
     
-    # 5. FILTRAGE
+    # 4. FILTRAGE
     for mode in list(buckets.keys()):
         keys_to_remove = []
         for cle in buckets[mode]:
@@ -922,11 +925,9 @@ def afficher_live_content(stop_id, clean_name):
                 else: displayed_lines_keys.add((mode, code_clean))
         for k in keys_to_remove: del buckets[mode][k]
 
-    # 6. AFFICHAGE FINAL
+    # 5. RENDU HTML
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    
-    # On remplace "🔴 LIVE" par le point vert avec la classe d'animation
     update_header(f"Dernière mise à jour : {heure_actuelle} • LIVE <span class='live-icon'>🟢</span>", is_loading=False)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
@@ -948,7 +949,7 @@ def afficher_live_content(stop_id, clean_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # === CAS RER/TRAIN ===
+                # CAS 1: RER/TRAIN
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
@@ -958,7 +959,6 @@ def afficher_live_content(stop_id, clean_name):
                         if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
                             if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
                             if "INVALIDES" not in local_mots_2: local_mots_2.append("INVALIDES")
-
                     if code == "D":
                         zone_nord_d = ["CREIL", "ORRY", "COYE", "SURVILLIERS", "FOSSES", "LOUVRES", "GOUSSAINVILLE", "VILLIERS-LE-BEL", "GARGES", "SARCELLES", "PIERREFITTE", "STAINS", "SAINT-DENIS", "STADE DE FRANCE", "NORD"]
                         if any(k in stop_upper for k in zone_nord_d):
@@ -971,7 +971,6 @@ def afficher_live_content(stop_id, clean_name):
                     
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     
-                    # Fonction interne mise à jour pour RER
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
                         if not items:
@@ -981,9 +980,7 @@ def afficher_live_content(stop_id, clean_name):
                         for it in items[:4]:
                             val_tri = it['tri']
                             dest_txt = it['dest']
-                            
                             if it.get('is_replacement'):
-                                # --- CAS SUBSTITUTION : BOX ROUGE ---
                                 h += f"""
                                 <div class='replacement-box'>
                                     <span class='replacement-label'>🚍 Bus de substitution</span>
@@ -992,9 +989,7 @@ def afficher_live_content(stop_id, clean_name):
                                         <span>{it['html']}</span>
                                     </div>
                                 </div>"""
-                            
                             elif it.get('is_last'):
-                                # --- CAS DERNIER DÉPART : BOX JAUNE ---
                                 if val_tri < 10:
                                     h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                                 elif val_tri <= 30:
@@ -1013,10 +1008,10 @@ def afficher_live_content(stop_id, clean_name):
                         if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
                         if not any(k in stop_upper for k in geo['term_2']): card_html += render_group(geo['labels'][1], p2)
                         if p3 and any(d['tri'] < 3000 for d in p3): card_html += render_group("AUTRES DIRECTIONS", p3)
-                    
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
+                # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
@@ -1025,7 +1020,6 @@ def afficher_live_content(stop_id, clean_name):
                         for item in proches[:4]:
                             val_tri = item['tri']
                             dest_txt = item['dest']
-
                             if item.get('is_replacement'):
                                 card_html += f"""
                                 <div class='replacement-box'>
@@ -1035,7 +1029,6 @@ def afficher_live_content(stop_id, clean_name):
                                         <span>{item['html']}</span>
                                     </div>
                                 </div>"""
-                            
                             elif item.get('is_last'):
                                 if val_tri < 10:
                                     card_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{item['html']}</span></div></div>"""
@@ -1048,7 +1041,7 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
-                # === CAS BUS/METRO/TRAM ===
+                # CAS 3: BUS/METRO/TRAM
                 else:
                     dest_data = {}
                     for d in proches:
@@ -1073,15 +1066,12 @@ def afficher_live_content(stop_id, clean_name):
                             rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {mins}min</span></div>'
                         else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
                     else:
-                        # ... (Dans le else du bas) ...
                         for dest_name, info in sorted_dests:
                             if "Service terminé" in dest_name: 
                                 rows_html += f'<div class="service-box">😴 Service terminé</div>'
                             else:
                                 html_list = []
                                 contains_last = False; last_val_tri = 9999
-                                
-                                # On regarde si ce groupe est une substitution
                                 is_group_replacement = False
                                 if info['items'] and info['items'][0].get('is_replacement'):
                                     is_group_replacement = True
@@ -1089,7 +1079,6 @@ def afficher_live_content(stop_id, clean_name):
                                 for idx, d_item in enumerate(info['items']):
                                     val_tri = d_item['tri']
                                     if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                    
                                     txt = d_item['html']
                                     if d_item.get('is_last'):
                                         contains_last = True
@@ -1097,16 +1086,12 @@ def afficher_live_content(stop_id, clean_name):
                                         if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
                                         elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
                                         else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    
                                     html_list.append(txt)
                                 
                                 if not html_list and info['items']: html_list.append(info['items'][0]['html'])
                                 times_str = "<span class='time-sep'>|</span>".join(html_list)
-                                
-                                # Préparation de la ligne (standard)
                                 row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
     
-                                # LOGIQUE D'AFFICHAGE FINALE
                                 if is_group_replacement:
                                     rows_html += f"""
                                     <div class='replacement-box'>
@@ -1127,7 +1112,7 @@ def afficher_live_content(stop_id, clean_name):
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
-    # 7. FOOTER
+    # 6. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
             if (mode_theo, code_theo) not in displayed_lines_keys:
@@ -1152,7 +1137,6 @@ def afficher_live_content(stop_id, clean_name):
                         color = items[code]
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     if html_badges:
-                        # Footer avec animation LIVE
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
