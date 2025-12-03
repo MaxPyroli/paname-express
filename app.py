@@ -828,36 +828,42 @@ def afficher_live_content(stop_id, clean_name):
             is_replacement = False
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
-            # --- C'EST ICI QUE TOUT SE JOUE ---
+            # --- C'EST ICI QUE TOUT SE JOUE (CORRECTION ROBUSTE) ---
             if mode == "BUS":
-                # Récupération du "Mode Commercial" (ex: RER, Train, ou Bus)
-                # C'est la vérité administrative de la ligne, indépendamment du véhicule (Bus)
+                # 1. Préparation des variables
                 comm_mode = info.get('commercial_mode', '').upper()
                 raw_dest_upper = info.get('direction', '').upper()
                 
-                # CAS 1 : C'est un BUS qui porte un code RER/TRAIN (A, J, L...)
-                if code in RAIL_CODES:
-                    # Condition A : Le mode commercial dit explicitement que c'est un Train/RER/Transilien
-                    # (Ça arrive souvent pour les substitutions officielles)
+                # Codes officiels ferrés
+                RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
+                
+                # 2. Détection universelle par mots-clés (Destination)
+                # On inclut "RELAIS", "SUBST", "TRAVAUX" pour être large
+                text_is_sub = any(k in raw_dest_upper for k in ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE"])
+                
+                # 3. Tentative de nettoyage du code (au cas où l'API envoie "BUS J" au lieu de "J")
+                clean_code_candidate = code.replace("BUS", "").strip()
+
+                # CAS 1 : C'est un BUS qui remplace un RER ou un TRAIN
+                if clean_code_candidate in RAIL_CODES:
+                    # Vérité administrative (l'API dit que c'est un Train/RER)
                     admin_is_train = "RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode
                     
-                    # Condition B : Le texte de destination crie "TRAVAUX" ou "REMPLACEMENT"
-                    text_is_sub = "REMPLACEMENT" in raw_dest_upper or "SUBSTITUTION" in raw_dest_upper or "TRAVAUX" in raw_dest_upper
-                    
+                    # Si l'un des deux signaux est rouge, on bascule en mode Remplacement
                     if admin_is_train or text_is_sub:
                         is_replacement = True
+                        # On réassigne le code propre (pour qu'il s'affiche comme "J" et pas "BUS J")
+                        code = clean_code_candidate
+                        # On force le mode pour qu'il s'affiche dans la section TRAIN/RER
                         mode = "RER" if code in ["A","B","C","D","E"] else "TRAIN"
-                    
-                    # Si ni A ni B ne sont vrais, alors c'est le Bus J de Sartrouville (Bus Local)
-                    # -> On ne fait RIEN, il reste dans la catégorie BUS.
 
-                # CAS 2 : Bus avec code MÉTRO (M4...)
+                # CAS 2 : Bus avec code MÉTRO (ex: M4)
                 elif code.startswith('M') and code[1:].isdigit():
                     is_replacement = True
                     mode = "METRO"
                     code = code[1:]
                 
-                # CAS 3 : Bus avec code TRAM (T1...)
+                # CAS 3 : Bus avec code TRAM (ex: T1)
                 elif code.startswith('T') and (code[1:].isdigit() or code[1:] in ['3a', '3b']):
                     is_replacement = True
                     mode = "TRAM"
