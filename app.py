@@ -225,7 +225,17 @@ st.markdown("""
     /* Média Query pour ajuster sur très petits écrans */
     @media (max-width: 400px) {
         .station-title, .station-title-pole { font-size: 20px; }
-        h1 { font-size: 24px !important; } /* Réduit le titre principal */
+        /* On agrandit le titre principal */
+        h1 { 
+            font-size: 32px !important; 
+            line-height: 1.2 !important; /* Un peu d'air pour éviter que le badge touche le texte */
+        } 
+        /* Le badge s'adapte s'il passe à la ligne */
+        .version-badge { 
+            font-size: 0.4em !important; 
+            vertical-align: middle;
+            margin-top: 5px;
+        }
     }
     
     /* Alignement vertical du bouton favori */
@@ -451,9 +461,11 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0 Alpha</span></h1>", unsafe_allow_html=True)
-st.markdown("##### *L'application de référence pour vos départs en Île-de-France* <span class='verified-badge'>✔ Officiel</span>", unsafe_allow_html=True)
+# Titre avec badge v1.0 (Le CSS gère le retour à la ligne sur mobile)
+st.markdown("<h1>🚆 Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
 
+# Nouveau sous-titre (Plus propre, sans le badge Officiel)
+st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
 # 1. On initialise la session si elle n'existe pas
@@ -1077,7 +1089,7 @@ elif not st.session_state.search_results:
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">1. Recherchez</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre gare ci-dessus.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre station ci-dessus.</div>',
             '</div>',
             
             # CARTE 2
@@ -1091,7 +1103,7 @@ elif not st.session_state.search_results:
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">3. Temps Réel</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Prochains départs & bus de substitution.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Prochains départs actualisés en temps réel.</div>',
             '</div>',
             
         '</div>'
