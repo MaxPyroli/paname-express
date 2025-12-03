@@ -1055,36 +1055,45 @@ def afficher_tableau_live(stop_id, stop_name):
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
 
-# 2. Sinon -> Tuto de Bienvenue (Construction sécurisée)
+# 2. Sinon -> Tuto de Bienvenue (Construction sécurisée & Couleurs dynamiques)
 elif not st.session_state.search_results:
     # On construit le HTML morceau par morceau pour éviter les erreurs d'indentation
     html_content = "".join([
         '<div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">',
             '<span style="font-size: 50px;">👋</span>',
         '</div>',
-        '<div style="text-align: center; color: #ccc; margin-bottom: 30px;">',
-            '<h3 style="color: white; margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
-            '<p style="font-size: 1.1em; opacity: 0.8;">Votre compagnon de voyage pour l\'Île-de-France.</p>',
+        
+        '<div style="text-align: center; margin-bottom: 30px;">',
+            # Titre adaptatif
+            '<h3 style="color: var(--text-color); margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
+            # Sous-titre adaptatif
+            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage pour l\'Île-de-France.</p>',
         '</div>',
+        
         '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">',
+            
             # CARTE 1
-            '<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">',
+            # Background adaptatif (gris clair ou sombre) + Bordure neutre + Texte adaptatif
+            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
-                '<div style="font-weight: bold; color: white; margin-bottom: 5px;">1. Recherchez</div>',
-                '<div style="font-size: 0.9em; color: #aaa;">Entrez le nom de votre gare ci-dessus.</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">1. Recherchez</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre gare ci-dessus.</div>',
             '</div>',
+            
             # CARTE 2
-            '<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">',
+            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
-                '<div style="font-weight: bold; color: white; margin-bottom: 5px;">2. Favoris</div>',
-                '<div style="font-size: 0.9em; color: #aaa;">Cliquez sur l\'étoile pour sauvegarder.</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">2. Favoris</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder.</div>',
             '</div>',
+            
             # CARTE 3
-            '<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">',
+            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
-                '<div style="font-weight: bold; color: white; margin-bottom: 5px;">3. Temps Réel</div>',
-                '<div style="font-size: 0.9em; color: #aaa;">Prochains départs & bus de substitution.</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">3. Temps Réel</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Prochains départs & bus de substitution.</div>',
             '</div>',
+            
         '</div>'
     ])
     
