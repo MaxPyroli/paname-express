@@ -1046,7 +1046,9 @@ def afficher_tableau_live(stop_id, stop_name):
             st.rerun() # <--- C'est lui qui force la sidebar à se mettre à jour instantanément
             
     # Appel du fragment qui gère l'auto-refresh des données
-    afficher_live_content(stop_id, clean_name)# ========================================================
+    afficher_live_content(stop_id, clean_name)
+    
+# ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
 
@@ -1054,37 +1056,39 @@ def afficher_tableau_live(stop_id, stop_name):
 if st.session_state.selected_stop:
     afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
 
-# 2. Sinon, si on ne cherche pas encore -> On affiche le Tuto de Bienvenue
+# 2. Sinon -> Tuto de Bienvenue
 elif not st.session_state.search_results:
-    # On définit le HTML sans indentation au début des lignes pour éviter les bugs d'affichage
-    html_tuto = """
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">
-        <span style="font-size: 50px;">👋</span>
-    </div>
-    <div style="text-align: center; color: #ccc; margin-bottom: 30px;">
-        <h3 style="color: white; margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>
-        <p style="font-size: 1.1em; opacity: 0.8;">Votre compagnon de voyage pour l'Île-de-France.</p>
-    </div>
+    import textwrap # <--- L'astuce magique est ici
     
-    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
-            <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
-            <div style="font-weight: bold; color: white; margin-bottom: 5px;">1. Recherchez</div>
-            <div style="font-size: 0.9em; color: #aaa;">Entrez le nom de votre gare ci-dessus.</div>
+    # On utilise dedent pour retirer les espaces qui cassent l'affichage
+    html_tuto = textwrap.dedent("""
+        <div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">
+            <span style="font-size: 50px;">👋</span>
+        </div>
+        <div style="text-align: center; color: #ccc; margin-bottom: 30px;">
+            <h3 style="color: white; margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>
+            <p style="font-size: 1.1em; opacity: 0.8;">Votre compagnon de voyage pour l'Île-de-France.</p>
         </div>
         
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
-            <div style="font-size: 24px; margin-bottom: 10px;">⭐</div>
-            <div style="font-weight: bold; color: white; margin-bottom: 5px;">2. Favoris</div>
-            <div style="font-size: 0.9em; color: #aaa;">Cliquez sur l'étoile pour sauvegarder.</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
+                <div style="font-weight: bold; color: white; margin-bottom: 5px;">1. Recherchez</div>
+                <div style="font-size: 0.9em; color: #aaa;">Entrez le nom de votre gare ci-dessus.</div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⭐</div>
+                <div style="font-weight: bold; color: white; margin-bottom: 5px;">2. Favoris</div>
+                <div style="font-size: 0.9em; color: #aaa;">Cliquez sur l'étoile pour sauvegarder.</div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
+                <div style="font-weight: bold; color: white; margin-bottom: 5px;">3. Temps Réel</div>
+                <div style="font-size: 0.9em; color: #aaa;">Prochains départs & bus de substitution.</div>
+            </div>
         </div>
-        
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center;">
-            <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
-            <div style="font-weight: bold; color: white; margin-bottom: 5px;">3. Temps Réel</div>
-            <div style="font-size: 0.9em; color: #aaa;">Prochains départs & bus de substitution.</div>
-        </div>
-    </div>
-    """
-    # L'appel qui affiche le tout
+    """)
+    
     st.markdown(html_tuto, unsafe_allow_html=True)
