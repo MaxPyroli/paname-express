@@ -817,74 +817,70 @@ def afficher_live_content(stop_id, clean_name):
                 current_max = last_departures_map.get(key, -999999)
                 if val_tri > current_max: last_departures_map[key] = val_tri
 
-        # PASSE 2 : REMPLISSAGE (LOGIQUE CORRIGÉE ET ROBUSTE)
+        # PASSE 2 : REMPLISSAGE AVEC VALIDATION STRICTE
         for d in data_live['departures']:
             info = d['display_informations']
             
-            # 1. RECUPERATION DES DONNEES BRUTES
-            raw_mode = info.get('physical_mode', 'AUTRE') # Ex: "Bus"
-            comm_mode = info.get('commercial_mode', '').upper() # Ex: "Transilien", "RER", "Bus"
-            raw_code = str(info.get('code', '?')).strip().upper() # Ex: "J", "Bus J", "123"
+            # 1. RECUPERATION DONNEES
+            raw_mode = info.get('physical_mode', 'AUTRE')
+            comm_mode = info.get('commercial_mode', '').upper()
+            raw_code = str(info.get('code', '?')).strip().upper()
             raw_dest = info.get('direction', '')
             color = info.get('color', '666666')
             
             mode = normaliser_mode(raw_mode)
-            
-            # 2. NETTOYAGE DU CODE (Pour gérer "Bus J" -> "J")
-            # On enlève "BUS " au début, et on garde le reste
             clean_code = raw_code.replace("BUS ", "").replace("BUS", "").strip()
             
-            # 3. LOGIQUE DE DÉTECTION "IS_REPLACEMENT"
+            # 2. HYPOTHESE DE DEPART : EST-CE UN REMPLACEMENT ?
             is_replacement = False
-            
-            # Liste des "Nobles" (Lignes ferrées)
             RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
             
-            # A. Détection par le Mode Commercial (Le plus fiable)
-            # Si c'est physiquement un Bus mais vendu comme du Train/RER
-            if mode == "BUS" and ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode):
-                is_replacement = True
-            
-            # B. Détection par Mots-Clés (Travaux, Substitution...)
+            # A. Indices (Mode commercial ou Mots-clés ou Code suspect)
+            is_admin_train = mode == "BUS" and ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
             keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE", "DE SUBSTITUTION"]
-            if any(k in raw_dest.upper() for k in keywords):
+            has_keywords = any(k in raw_dest.upper() for k in keywords)
+            matches_rail_code = mode == "BUS" and clean_code in RAIL_CODES
+            
+            if is_admin_train or has_keywords or matches_rail_code:
                 is_replacement = True
-                
-            # C. Détection par Code Suspect (Un bus qui s'appelle "J")
-            # Uniquement si on est sur un mode BUS
-            if mode == "BUS" and clean_code in RAIL_CODES:
-                 # Double vérification : soit le mode commercial suit, soit la destination est louche, 
-                 # soit c'est juste un code orphelin (souvent suffisant pour les substitutions SNCF)
-                 is_replacement = True
 
-            # 4. TRANSFORMATION DU BUS EN TRAIN (L'intégration)
+            # 3. VALIDATION GEO-STRICTE (LE FIX ANTI-FANTOME)
+            # Si on pense que c'est un remplacement, on doit vérifier si la ligne remplacée EXISTE ici.
             if is_replacement:
-                # On force le mode pour qu'il aille dans la case RER/TRAIN
-                if clean_code in ["A","B","C","D","E"]:
-                    mode = "RER"
-                elif clean_code in ["H","J","K","L","N","P","R","U","V"]:
-                    mode = "TRAIN"
-                elif clean_code.startswith("M") and clean_code[1:].isdigit():
-                     mode = "METRO"
+                match_found = None
                 
-                # IMPORTANT : On force le CODE propre ("J" au lieu de "Bus J")
-                code = clean_code
+                # On teste les combinaisons possibles dans les lignes officielles de l'arrêt
+                # (On teste RER et TRAIN car parfois l'API inverse les deux)
+                candidates_to_check = [("RER", clean_code), ("TRAIN", clean_code)]
                 
-                # CRITIQUE : UNIFICATION DE LA COULEUR
-                # Si le bus arrive avec une couleur grise (souvent le cas), 
-                # on va chercher la vraie couleur du train dans les données théoriques
-                # pour qu'il se fusionne dans la même carte.
-                key_theo = (mode, code)
-                if key_theo in all_lines_at_stop:
-                    color = all_lines_at_stop[key_theo]['color']
+                # Cas spécial Métro/Tram
+                if clean_code.startswith("M"): candidates_to_check = [("METRO", clean_code[1:])]
+                elif clean_code.startswith("T"): candidates_to_check = [("TRAM", clean_code)]
                 
+                # Vérification dans la liste théorique chargée au début (all_lines_at_stop)
+                for (theo_mode, theo_code) in candidates_to_check:
+                    if (theo_mode, theo_code) in all_lines_at_stop:
+                        match_found = (theo_mode, theo_code)
+                        break
+                
+                if match_found:
+                    # ✅ VALIDÉ : La ligne existe bien à cet arrêt
+                    mode = match_found[0] # On prend le mode officiel (ex: RER)
+                    code = match_found[1] # On prend le code officiel
+                    # On vole la couleur officielle
+                    color = all_lines_at_stop[match_found]['color']
+                else:
+                    # ❌ REJETÉ : C'est un bus local qui porte un nom de lettre (ex: Bus B à Pontault)
+                    # On annule le statut de remplacement
+                    is_replacement = False
+                    code = clean_code # On garde le code "B" mais il restera dans la section BUS
+                    mode = "BUS" # On force le maintien en BUS
+
             else:
-                # Si ce n'est pas un remplacement, on garde le code normal
+                # Si ce n'est pas un remplacement, traitement standard
                 code = clean_code_line(info.get('code', '?'))
 
-            # --- FIN DE LA LOGIQUE DE DÉTECTION ---
-            
-            # La suite est ton code standard de nettoyage de destination...
+            # --- SUITE DU TRAITEMENT (DESTINATION & FORMATAGE) ---
             if mode != "BUS" or is_replacement:
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             else:
@@ -898,13 +894,12 @@ def afficher_live_content(stop_id, clean_name):
                         if len(first_chunk) > 2 and first_chunk.lower() in name_part.lower(): dest = name_part
                         else: dest = raw_dest
                     else: dest = raw_dest
-                else: dest = raw_dest
             
             val_tri, html_time = format_html_time(d['stop_date_time']['departure_date_time'], d.get('data_freshness', 'realtime'))
             if val_tri < -5: continue 
 
             is_last = False
-            # (Reste de ta logique 'is_last' inchangée...)
+            # (Ta logique is_last reste identique ici)
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N') and not is_replacement)
             if not is_noctilien and val_tri < 3000:
                 key_check = (mode, code, dest)
