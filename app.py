@@ -952,6 +952,12 @@ def afficher_live_content(stop_id, clean_name):
                     displayed_lines_keys.add((mode, code_clean))
                     
         for k in keys_to_remove: del buckets[mode][k]
+    cats_to_remove = []
+    for m in buckets:
+        if not buckets[m]: 
+            cats_to_remove.append(m)
+    for m in cats_to_remove:
+        del buckets[m]
 
     # 5. RENDU HTML
     paris_tz = pytz.timezone('Europe/Paris')
@@ -963,9 +969,11 @@ def afficher_live_content(stop_id, clean_name):
     has_data = False
 
     for mode_actuel in ordre_affichage:
+        # CORRECTION ICI : On vérifie si la clé existe dans buckets
+        if mode_actuel not in buckets or not buckets[mode_actuel]: 
+            continue
+        
         lignes_du_mode = buckets[mode_actuel]
-        if not lignes_du_mode: continue
-            
         has_data = True
         st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
 
