@@ -922,68 +922,59 @@ def afficher_live_content(stop_id, clean_name):
                 if mode_t not in buckets: buckets[mode_t] = {}
                 buckets[mode_t][cle_ghost] = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
     
-    # 4. FILTRAGE
+    # 4. FILTRAGE & NETTOYAGE
     for mode in list(buckets.keys()):
         keys_to_remove = []
+        # On vérifie chaque ligne dans le mode
         for cle in buckets[mode]:
             code_clean = cle[1]; color_clean = cle[2]
             
-            # Y a-t-il des départs actifs (< 50 min) pour cette ligne ?
+            # Est-ce qu'il y a des départs affichables (< 50 min) ?
             has_active = any(d['tri'] < 3000 for d in buckets[mode][cle])
             
             if has_active: 
-                # On marque cette ligne (ex: TRAIN J) comme affichée
                 displayed_lines_keys.add((mode, code_clean))
-                
-                # --- CORRECTIF FOOTER ---
-                # Si cette ligne contient des substitutions (ex: Bus J déguisé en Train J),
-                # on doit aussi marquer "BUS J" comme affiché pour qu'il n'apparaisse pas en bas.
-                is_sub = any(d.get('is_replacement') for d in buckets[mode][cle])
-                if is_sub:
+                # Si c'est une substitution, on marque aussi le BUS d'origine comme "traité" pour le footer
+                if any(d.get('is_replacement') for d in buckets[mode][cle]):
                     displayed_lines_keys.add(("BUS", code_clean))
             else:
-                # Si la ligne est inactive (pas de départ proche)
+                # Si pas de départs actifs
                 if mode == "BUS": 
-                    # Les bus inactifs vont dans le footer
+                    # Les bus inactifs sont supprimés de l'affichage principal (-> footer)
                     keys_to_remove.append(cle)
                     footer_data[mode][code_clean] = color_clean
                 else: 
                     # Les trains/RER inactifs restent affichés (avec "Service terminé")
                     displayed_lines_keys.add((mode, code_clean))
                     
-        for k in keys_to_remove: del buckets[mode][k]
-    cats_to_remove = []
-    for m in buckets:
-        if not buckets[m]: 
-            cats_to_remove.append(m)
-    for m in cats_to_remove:
-        del buckets[m]
+        # On supprime les lignes inactives du dictionnaire
+        for k in keys_to_remove: 
+            del buckets[mode][k]
+            
+        # --- CORRECTIF CRITIQUE : Si le mode est devenu vide, on supprime la clé ---
+        if not buckets[mode]:
+            del buckets[mode]
 
     # 5. RENDU HTML
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     update_header(f"Dernière mise à jour : {heure_actuelle} • LIVE <span class='live-icon'>🟢</span>", is_loading=False)
 
-    # 3. AFFICHAGE
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
     for mode_actuel in ordre_affichage:
-        # CORRECTION ICI : On vérifie si la clé existe dans buckets
-        if mode_actuel not in buckets or not buckets[mode_actuel]: 
+        # SÉCURITÉ ABSOLUE : Si le mode n'est plus dans les buckets, on passe au suivant
+        if mode_actuel not in buckets: 
             continue
         
         lignes_du_mode = buckets[mode_actuel]
         has_data = True
-        st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
-
-        def sort_key(k): 
-            try: return (0, int(k[1])) 
-            except: return (1, k[1])
         
         with containers[mode_actuel]:
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
             
+            # ... (Le reste de la boucle d'affichage reste identique) ...
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
                 departs = lignes_du_mode[cle]
@@ -991,7 +982,7 @@ def afficher_live_content(stop_id, clean_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # CAS 1: RER/TRAIN
+                # CAS 1: RER/TRAIN (Logique géographique)
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
@@ -1153,7 +1144,6 @@ def afficher_live_content(stop_id, clean_name):
                              st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
-
     # 6. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
