@@ -562,10 +562,9 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # --- SECTION INFOS ---
+   # --- SECTION INFOS ---
     st.header("🗄️ Informations")
-    st.warning("🚧 **Zone de travaux !**\n\nBienvenue sur la version 1.0. Nous reconstruisons les fondations pour plus de rapidité. Si vous croisez un bug, soyez sympa ! 🥺")
-    st.markdown("---")
+    st.info("👋 **Bienvenue à bord !**\n\nGrand Paname passe en version 1.0. Profitez d'une information voyageur claire et rapide pour vos trajets du quotidien.")    st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
         for i, note in enumerate(notes_history):
