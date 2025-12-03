@@ -138,47 +138,6 @@ st.markdown("""
     .text-orange { color: #f39c12; font-weight: bold; }
     .text-green { color: #2ecc71; font-weight: bold; }
     .text-blue { color: #3498db; font-weight: bold; }
-
-    /* NOUVEAU : Animation de pulsation pour le LIVE */
-    @keyframes pulse-live {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.9); }
-        100% { opacity: 1; transform: scale(1); }
-    }
-    .live-icon {
-        display: inline-block;
-        animation: pulse-live 2s infinite ease-in-out;
-        margin: 0 2px;
-    }
-
-    /* --- STYLES GÉNÉRAUX --- */
-    .main > div { padding-top: 2rem; }
-    
-    /* Header en Flexbox pour un alignement parfait */
-    h1 {
-        color: var(--text-color);
-        font-weight: 900 !important;
-        letter-spacing: -1px;
-        margin-bottom: 0.5rem;
-        animation: fadeIn 0.8s ease-out;
-        display: flex;            /* Flexbox active */
-        align-items: center;      /* Centrage vertical */
-        flex-wrap: wrap;          /* Autorise le passage à la ligne */
-        gap: 15px;                /* Espace entre les éléments */
-    }
-
-    /* Badge de version optimisé pour le flexbox */
-    .version-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.4em;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        /* Plus de marges ou de vertical-align ici, le flexbox gère le reste */
     
     .line-badge {
         display: inline-block; padding: 4px 10px; border-radius: 6px;
