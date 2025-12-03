@@ -817,70 +817,69 @@ def afficher_live_content(stop_id, clean_name):
                 current_max = last_departures_map.get(key, -999999)
                 if val_tri > current_max: last_departures_map[key] = val_tri
 
-        # PASSE 2 : REMPLISSAGE AVEC VALIDATION STRICTE
+        # PASSE 2 : REMPLISSAGE AVEC FUSION PRIORITAIRE
         for d in data_live['departures']:
             info = d['display_informations']
             
-            # 1. RECUPERATION DONNEES
+            # 1. DONNÉES BRUTES
             raw_mode = info.get('physical_mode', 'AUTRE')
             comm_mode = info.get('commercial_mode', '').upper()
             raw_code = str(info.get('code', '?')).strip().upper()
             raw_dest = info.get('direction', '')
             color = info.get('color', '666666')
             
+            # Nettoyage du code (Ex: "BUS P" -> "P")
+            clean_code = raw_code.replace("BUS", "").strip()
             mode = normaliser_mode(raw_mode)
-            clean_code = raw_code.replace("BUS ", "").replace("BUS", "").strip()
-            
-            # 2. HYPOTHESE DE DEPART : EST-CE UN REMPLACEMENT ?
-            is_replacement = False
-            RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
-            
-            # A. Indices (Mode commercial ou Mots-clés ou Code suspect)
-            is_admin_train = mode == "BUS" and ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
-            keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE", "DE SUBSTITUTION"]
-            has_keywords = any(k in raw_dest.upper() for k in keywords)
-            matches_rail_code = mode == "BUS" and clean_code in RAIL_CODES
-            
-            if is_admin_train or has_keywords or matches_rail_code:
-                is_replacement = True
 
-            # 3. VALIDATION GEO-STRICTE (LE FIX ANTI-FANTOME)
-            # Si on pense que c'est un remplacement, on doit vérifier si la ligne remplacée EXISTE ici.
-            if is_replacement:
-                match_found = None
-                
-                # On teste les combinaisons possibles dans les lignes officielles de l'arrêt
-                # (On teste RER et TRAIN car parfois l'API inverse les deux)
-                candidates_to_check = [("RER", clean_code), ("TRAIN", clean_code)]
-                
-                # Cas spécial Métro/Tram
-                if clean_code.startswith("M"): candidates_to_check = [("METRO", clean_code[1:])]
-                elif clean_code.startswith("T"): candidates_to_check = [("TRAM", clean_code)]
-                
-                # Vérification dans la liste théorique chargée au début (all_lines_at_stop)
-                for (theo_mode, theo_code) in candidates_to_check:
-                    if (theo_mode, theo_code) in all_lines_at_stop:
+            is_replacement = False
+            match_found = None
+
+            # 2. RECHERCHE DE CORRESPONDANCE THEORIQUE (Le point clé)
+            # On regarde si une ligne ferrée portant ce code (ex: "P") existe DÉJÀ à cet arrêt.
+            if mode == "BUS":
+                for (theo_mode, theo_code) in all_lines_at_stop.keys():
+                    # Si on trouve un Train/RER/Metro/Tram qui a le même code que notre bus
+                    if theo_code == clean_code and theo_mode in ["RER", "TRAIN", "METRO", "TRAM"]:
                         match_found = (theo_mode, theo_code)
                         break
+
+            # 3. DÉCISION DU STATUT
+            if match_found:
+                # CAS 1 : FUSION (Gare de l'Est)
+                # Le bus s'appelle "P", et il y a un Train "P" ici -> C'est un remplacement !
+                is_replacement = True
+                mode = match_found[0] # On force le mode TRAIN
+                code = match_found[1] # On force le code P
+                color = all_lines_at_stop[match_found]['color'] # On vole la couleur (Orange)
+
+            elif mode == "BUS":
+                # CAS 2 : PAS DE FUSION (Pontault)
+                # Le bus s'appelle "B", mais il n'y a pas de Train "B" ici.
+                # On vérifie quand même les indices forts (Travaux/Admin) pour les gares complexes
                 
-                if match_found:
-                    # ✅ VALIDÉ : La ligne existe bien à cet arrêt
-                    mode = match_found[0] # On prend le mode officiel (ex: RER)
-                    code = match_found[1] # On prend le code officiel
-                    # On vole la couleur officielle
-                    color = all_lines_at_stop[match_found]['color']
+                is_admin_train = ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
+                keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE"]
+                has_keywords = any(k in raw_dest.upper() for k in keywords)
+                
+                # Si indices forts, on crée une substitution "Orpheline" (sans ligne théorique)
+                if is_admin_train or (clean_code in ["A","B","C","D","E","H","J","K","L","N","P","R","U"] and has_keywords):
+                    is_replacement = True
+                    code = clean_code
+                    # On devine le mode
+                    if code in ["A","B","C","D","E"]: mode = "RER"
+                    elif code.startswith("T"): mode = "TRAM"
+                    elif code.startswith("M"): mode = "METRO"
+                    else: mode = "TRAIN"
                 else:
-                    # ❌ REJETÉ : C'est un bus local qui porte un nom de lettre (ex: Bus B à Pontault)
-                    # On annule le statut de remplacement
-                    is_replacement = False
-                    code = clean_code # On garde le code "B" mais il restera dans la section BUS
-                    mode = "BUS" # On force le maintien en BUS
+                    # C'est juste un bus local -> On ne touche à rien
+                    code = clean_code_line(info.get('code', '?'))
 
             else:
-                # Si ce n'est pas un remplacement, traitement standard
+                # Ce n'est pas un bus, on garde tel quel
                 code = clean_code_line(info.get('code', '?'))
 
-            # --- SUITE DU TRAITEMENT (DESTINATION & FORMATAGE) ---
+            # --- SUITE STANDARD (Destination & Calculs) ---
             if mode != "BUS" or is_replacement:
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             else:
@@ -899,7 +898,6 @@ def afficher_live_content(stop_id, clean_name):
             if val_tri < -5: continue 
 
             is_last = False
-            # (Ta logique is_last reste identique ici)
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N') and not is_replacement)
             if not is_noctilien and val_tri < 3000:
                 key_check = (mode, code, dest)
@@ -923,7 +921,6 @@ def afficher_live_content(stop_id, clean_name):
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'is_replacement': is_replacement})
-
     # 3. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
@@ -1000,12 +997,13 @@ def afficher_live_content(stop_id, clean_name):
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
 
-                # CAS 1: RER/TRAIN (Logique géographique)
+                # CAS 1: RER/TRAIN (Logique géographique CORRIGÉE)
                 if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
                     geo = GEOGRAPHIE_RER[code]
                     stop_upper = clean_name.upper()
                     local_mots_1 = geo['mots_1'].copy(); local_mots_2 = geo['mots_2'].copy()
                     
+                    # (Ta logique de filtres C et D reste identique ici...)
                     if code == "C":
                         if any(k in stop_upper for k in ["MAILLOT", "PEREIRE", "CLICHY", "ST-OUEN", "GENNEVILLIERS", "ERMONT", "PONTOISE", "FOCH", "MARTIN", "BOULAINVILLIERS", "KENNEDY", "JAVEL", "GARIGLIANO"]):
                             if "INVALIDES" in local_mots_1: local_mots_1.remove("INVALIDES")
@@ -1016,52 +1014,56 @@ def afficher_live_content(stop_id, clean_name):
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
+                    # Répartition des départs dans les groupes
                     p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
                     p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
+                    # p3 récupère tout ce qui n'a pas matché (souvent les bus de substitution aux noms bizarres)
                     p3 = [d for d in proches if d not in p1 and d not in p2]
                     
+                    # Nettoyage de p3 pour ne garder que les vrais trajets (pas les "Service terminé" générés par Ghost Lines)
+                    real_p3 = [x for x in p3 if x['tri'] < 3000]
+
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
                     
+                    # Fonction helper (inchangée)
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
-                        if not items:
-                            h += """<div class="service-box">😴 Service terminé</div>"""
-                            return h
+                        if not items: return h + """<div class="service-box">😴 Service terminé</div>"""
                         items.sort(key=lambda x: x['tri'])
                         for it in items[:4]:
                             val_tri = it['tri']
                             dest_txt = it['dest']
                             if it.get('is_replacement'):
-                                h += f"""
-                                <div class='replacement-box'>
-                                    <span class='replacement-label'>🚍 Bus de substitution</span>
-                                    <div class='rail-row'>
-                                        <span class='rail-dest'>{dest_txt}</span>
-                                        <span>{it['html']}</span>
-                                    </div>
-                                </div>"""
+                                h += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                             elif it.get('is_last'):
-                                if val_tri < 10:
-                                    h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
-                                elif val_tri <= 30:
-                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-small-frame'>{it['html']} 🏁</span></div>"""
-                                else:
-                                    h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
+                                if val_tri < 10: h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
+                                else: h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span class='last-dep-text-only'>{it['html']} 🏁</span></div>"""
                             else:
                                 h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                         return h
 
-                    if not p1 and not p2:
+                    # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
+                    # On n'affiche "Service terminé" QUE si p1, p2 ET real_p3 sont vides
+                    has_data_p1 = any(d['tri'] < 3000 for d in p1)
+                    has_data_p2 = any(d['tri'] < 3000 for d in p2)
+                    has_data_p3 = len(real_p3) > 0
+
+                    if not has_data_p1 and not has_data_p2 and not has_data_p3:
                         card_html += """<div class="service-box">😴 Service terminé</div>"""
-                        real_p3 = [x for x in p3 if "Service terminé" not in x['dest']]
-                        if real_p3: card_html += render_group("AUTRES DIRECTIONS", real_p3)
                     else:
-                        if not any(k in stop_upper for k in geo['term_1']): card_html += render_group(geo['labels'][0], p1)
-                        if not any(k in stop_upper for k in geo['term_2']): card_html += render_group(geo['labels'][1], p2)
-                        if p3 and any(d['tri'] < 3000 for d in p3): card_html += render_group("AUTRES DIRECTIONS", p3)
+                        # On affiche les blocs s'ils ne sont pas les terminus
+                        if not any(k in stop_upper for k in geo['term_1']): 
+                            card_html += render_group(geo['labels'][0], p1)
+                        
+                        if not any(k in stop_upper for k in geo['term_2']): 
+                            card_html += render_group(geo['labels'][1], p2)
+                        
+                        # Si on a des rescapés dans p3 (souvent les bus !), on les affiche
+                        if has_data_p3: 
+                            card_html += render_group("AUTRES DIRECTIONS / BUS", real_p3)
+                            
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
-
                 # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
                     card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
