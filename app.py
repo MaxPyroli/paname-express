@@ -1137,11 +1137,7 @@ def afficher_live_content(stop_id, clean_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     if html_badges:
                         # Footer avec animation LIVE
-                        st.markdown(f"""
-                        <div style='text-align: center; color: gray; font-size: 0.8em; margin-top: 30px; opacity: 0.8;'>
-                            Données IDFM • LIVE <span class='live-icon'>🟢</span> • Maj : {time_str}
-                        </div>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
