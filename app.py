@@ -817,60 +817,69 @@ def afficher_live_content(stop_id, clean_name):
                 current_max = last_departures_map.get(key, -999999)
                 if val_tri > current_max: last_departures_map[key] = val_tri
 
-        # PASSE 2 : REMPLISSAGE AVEC VALIDATION STRICTE
+        # PASSE 2 : REMPLISSAGE AVEC FUSION PRIORITAIRE
         for d in data_live['departures']:
             info = d['display_informations']
             
-            # 1. RECUPERATION DONNEES
+            # 1. DONNÉES BRUTES
             raw_mode = info.get('physical_mode', 'AUTRE')
             comm_mode = info.get('commercial_mode', '').upper()
             raw_code = str(info.get('code', '?')).strip().upper()
             raw_dest = info.get('direction', '')
             color = info.get('color', '666666')
             
+            # Nettoyage du code (Ex: "BUS P" -> "P")
+            clean_code = raw_code.replace("BUS", "").strip()
             mode = normaliser_mode(raw_mode)
-            clean_code = raw_code.replace("BUS ", "").replace("BUS", "").strip()
-            
-            # 2. HYPOTHESE DE DEPART : EST-CE UN REMPLACEMENT ?
-            is_replacement = False
-            RAIL_CODES = ["A","B","C","D","E","H","J","K","L","N","P","R","U","V"]
-            
-            # A. Indices (Mode commercial ou Mots-clés ou Code suspect)
-            is_admin_train = mode == "BUS" and ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
-            keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE", "DE SUBSTITUTION"]
-            has_keywords = any(k in raw_dest.upper() for k in keywords)
-            matches_rail_code = mode == "BUS" and clean_code in RAIL_CODES
-            
-            if is_admin_train or has_keywords or matches_rail_code:
-                is_replacement = True
 
-            # 3. VALIDATION GEO-STRICTE (CORRIGÉE : SCAN LARGE)
-            if is_replacement:
-                match_found = None
-                
-                # Au lieu de deviner si c'est "RER" ou "TRAIN", on scanne ce qui existe vraiment à l'arrêt
-                # Si l'arrêt contient une ligne ferrée (Train/RER/Metro/Tram) avec ce code, BINGO.
+            is_replacement = False
+            match_found = None
+
+            # 2. RECHERCHE DE CORRESPONDANCE THEORIQUE (Le point clé)
+            # On regarde si une ligne ferrée portant ce code (ex: "P") existe DÉJÀ à cet arrêt.
+            if mode == "BUS":
                 for (theo_mode, theo_code) in all_lines_at_stop.keys():
+                    # Si on trouve un Train/RER/Metro/Tram qui a le même code que notre bus
                     if theo_code == clean_code and theo_mode in ["RER", "TRAIN", "METRO", "TRAM"]:
                         match_found = (theo_mode, theo_code)
                         break
+
+            # 3. DÉCISION DU STATUT
+            if match_found:
+                # CAS 1 : FUSION (Gare de l'Est)
+                # Le bus s'appelle "P", et il y a un Train "P" ici -> C'est un remplacement !
+                is_replacement = True
+                mode = match_found[0] # On force le mode TRAIN
+                code = match_found[1] # On force le code P
+                color = all_lines_at_stop[match_found]['color'] # On vole la couleur (Orange)
+
+            elif mode == "BUS":
+                # CAS 2 : PAS DE FUSION (Pontault)
+                # Le bus s'appelle "B", mais il n'y a pas de Train "B" ici.
+                # On vérifie quand même les indices forts (Travaux/Admin) pour les gares complexes
                 
-                if match_found:
-                    # ✅ C'est validé : La ligne P existe bien à cet arrêt (en tant que Train ou RER)
-                    mode = match_found[0] 
-                    code = match_found[1] 
-                    color = all_lines_at_stop[match_found]['color']
-                else:
-                    # ❌ Rejeté (Cas du Bus B à Pontault) : Pas de ligne ferroviaire correspondante trouvée
-                    is_replacement = False
+                is_admin_train = ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
+                keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE"]
+                has_keywords = any(k in raw_dest.upper() for k in keywords)
+                
+                # Si indices forts, on crée une substitution "Orpheline" (sans ligne théorique)
+                if is_admin_train or (clean_code in ["A","B","C","D","E","H","J","K","L","N","P","R","U"] and has_keywords):
+                    is_replacement = True
                     code = clean_code
-                    mode = "BUS"
+                    # On devine le mode
+                    if code in ["A","B","C","D","E"]: mode = "RER"
+                    elif code.startswith("T"): mode = "TRAM"
+                    elif code.startswith("M"): mode = "METRO"
+                    else: mode = "TRAIN"
+                else:
+                    # C'est juste un bus local -> On ne touche à rien
+                    code = clean_code_line(info.get('code', '?'))
 
             else:
-                # Si ce n'est pas un remplacement, traitement standard
+                # Ce n'est pas un bus, on garde tel quel
                 code = clean_code_line(info.get('code', '?'))
 
-            # --- SUITE DU TRAITEMENT (DESTINATION & FORMATAGE) ---
+            # --- SUITE STANDARD (Destination & Calculs) ---
             if mode != "BUS" or is_replacement:
                 dest = re.sub(r'\s*\([^)]+\)$', '', raw_dest)
             else:
@@ -889,7 +898,6 @@ def afficher_live_content(stop_id, clean_name):
             if val_tri < -5: continue 
 
             is_last = False
-            # (Ta logique is_last reste identique ici)
             is_noctilien = (mode == "BUS" and str(code).upper().startswith('N') and not is_replacement)
             if not is_noctilien and val_tri < 3000:
                 key_check = (mode, code, dest)
@@ -913,7 +921,6 @@ def afficher_live_content(stop_id, clean_name):
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
                 buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'is_replacement': is_replacement})
-
     # 3. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
