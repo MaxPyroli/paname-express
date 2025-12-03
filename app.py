@@ -90,7 +90,7 @@ def charger_police_locale(file_path, font_name):
 charger_police_locale("GrandParis.otf", "Grand Paris")
 
 # ==========================================
-#              STYLE CSS (Ninja Update v6)
+#                  STYLE CSS
 # ==========================================
 st.markdown("""
 <style>
@@ -110,6 +110,19 @@ st.markdown("""
     div[data-testid="stSpinner"] { display: none !important; }
     .stApp > header { visibility: hidden !important; }
     /* ----------------------------------------- */
+    /* NOUVEAU : Animation de pulsation pour le point vert LIVE */
+    @keyframes pulse-live {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .live-icon {
+        display: inline-block;
+        animation: pulse-live 2s infinite ease-in-out;
+        margin: 0 4px;
+        vertical-align: middle;
+        font-size: 0.6em; /* Ajuste la taille du rond vert */
+    }
 
     @keyframes blinker { 50% { opacity: 0; } }
     .blink { animation: blinker 1s linear infinite; font-weight: bold; }
@@ -126,6 +139,15 @@ st.markdown("""
         100% { transform: translateY(0px); } 
     } 
     .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
+
+    /* Header en Flexbox pour un alignement parfait (Mobile & Desktop) */
+    h1 {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important; /* Permet au badge de passer à la ligne proprement */
+        gap: 15px !important;       /* Espace entre le titre et le badge */
+        margin-bottom: 0.5rem !important;
+    }
 
     .custom-loader {
         border: 2px solid rgba(255, 255, 255, 0.1);
@@ -233,10 +255,16 @@ st.markdown("""
     }
 
     .version-badge {
-        background: linear-gradient(45deg, #FF4B4B, #F76B1C); color: white; padding: 4px 8px; border-radius: 12px;
-        font-size: 0.5em; /* Réduit pour mobile */
-        font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); vertical-align: middle; margin-left: 8px;
-        white-space: nowrap; /* Empêche le badge de se casser */
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Nouveau dégradé plus moderne */
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.4em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        margin-left: 0 !important; /* Le Flexbox gère l'espace */
     }
     
     .verified-badge {
@@ -248,16 +276,16 @@ st.markdown("""
     /* Média Query pour ajuster sur très petits écrans */
     @media (max-width: 400px) {
         .station-title, .station-title-pole { font-size: 20px; }
-        /* On agrandit le titre principal */
+        
+        /* Ajustements du titre sur mobile */
         h1 { 
-            font-size: 32px !important; 
-            line-height: 1.2 !important; /* Un peu d'air pour éviter que le badge touche le texte */
-        } 
-        /* Le badge s'adapte s'il passe à la ligne */
-        .version-badge { 
-            font-size: 0.4em !important; 
-            vertical-align: middle;
-            margin-top: 5px;
+            font-size: 28px !important; /* Un peu plus petit */
+            gap: 10px !important;       /* On resserre l'espace */
+        }
+        
+        /* Le badge garde sa taille lisible */
+        .version-badge {
+            font-size: 0.45em !important;
         }
     }
     
