@@ -180,9 +180,19 @@ st.markdown("""
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
-        margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
+        /* AJOUTS FLEXBOX POUR CENTRAGE */
+        display: flex !important;
+        align-items: center !important; /* Centre verticalement */
+        
+        /* Tes styles existants conservés */
+        margin-top: 25px; 
+        margin-bottom: 15px; 
+        padding-bottom: 8px;
         border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
-        font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px;
+        font-size: 20px; 
+        font-weight: bold; 
+        color: var(--text-color); 
+        letter-spacing: 1px;
     }
     
     .station-title {
@@ -344,11 +354,14 @@ st.markdown("""
     }
     /* --- CSS ICONES ADAPTATIVES --- */
     .mode-icon {
-        height: 1.4em;
+        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
         width: auto;
-        vertical-align: sub;
-        margin-right: 8px;
-        transition: filter 0.3s ease; /* Transition douce si on change de thème */
+        
+        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
+        /* Flexbox gère l'alignement maintenant */
+        
+        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+        transition: filter 0.3s ease;
     }
 
     /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
