@@ -823,22 +823,28 @@ def afficher_live_content(stop_id, clean_name):
     }
     
     def sort_key(k): 
-        code = str(k[1])
+        code = str(k[1]).strip().upper()
         
-        # 1. Si c'est juste un nombre (ex: Bus 123, Métro 14) -> Tri Numérique pur
-        if code.isdigit(): 
-            return (0, int(code))
-        
-        # 2. Si c'est Lettres + Chiffres (ex: T8, T11, M4, N01) -> Tri "Naturel"
-        # On sépare le préfixe (T) du nombre (8)
+        # 1. PRIORITÉ ABSOLUE : Les Lettres pures (ex: A, B, C, D, CDL)
+        # On veut qu'elles soient tout en haut.
+        if code.isalpha():
+            return (0, code)
+            
+        # 2. PRIORITÉ SECONDAIRE : Lettres + Chiffres (ex: T8, N145, M4)
+        # On garde le tri naturel (T8 avant T11)
         match = re.match(r"^([a-zA-Z]+)(\d+)", code)
         if match:
             prefix = match.group(1)       # "T"
-            number = int(match.group(2))  # 8 (en entier, pas en texte)
+            number = int(match.group(2))  # 8
             return (1, prefix, number)
+        
+        # 3. PRIORITÉ BASSE : Les Chiffres purs (ex: 212, 421)
+        # Ils passent après les lettres
+        if code.isdigit(): 
+            return (2, int(code))
             
-        # 3. Sinon (RER A, B...) -> Tri Alphabétique standard
-        return (2, code)
+        # 4. POUBELLE : Le reste (Caractères spéciaux, etc.)
+        return (3, code)
 
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
