@@ -372,6 +372,33 @@ st.markdown("""
             filter: invert(1) brightness(2); 
         }
     }
+    /* --- STYLING DU BOUTON FAVORI (GHOST) --- */
+    /* On cible le bouton qui sera dans la colonne de droite */
+    .fav-btn-container button {
+        background-color: transparent !important;
+        border: 2px solid rgba(255, 255, 255, 0.1) !important;
+        color: #f1c40f !important; /* Couleur Or */
+        font-size: 24px !important; /* Gros emoji */
+        padding: 0px !important;
+        line-height: 1 !important;
+        height: 45px !important;
+        width: 100% !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    
+    .fav-btn-container button:hover {
+        background-color: rgba(241, 196, 15, 0.1) !important; /* Petit fond jaune au survol */
+        border-color: #f1c40f !important;
+        transform: scale(1.05); /* Petit effet de zoom */
+    }
+
+    /* On force l'alignement à droite */
+    div[data-testid="column"]:has(.fav-btn-container) {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -809,10 +836,16 @@ if st.session_state.search_results:
 # ==========================================
 #           FRAGMENT LIVE (AUTO-REFRESH)
 # ==========================================
+# Ajoute l'argument 'container_header=None'
 @st.fragment(run_every=15)
-def afficher_live_content(stop_id, clean_name):
+def afficher_live_content(stop_id, clean_name, container_header=None):
+    
+    # Si on a fourni un conteneur externe (la colonne de gauche), on l'utilise
+    # Sinon (fallback), on utilise st.empty() standard
+    target_header = container_header.empty() if container_header else st.empty()
+
     containers = {
-        "Header": st.empty(),
+        "Header": target_header, # <--- C'est ici que ça change
         "RER": st.container(),
         "TRAIN": st.container(),
         "METRO": st.container(),
@@ -821,6 +854,8 @@ def afficher_live_content(stop_id, clean_name):
         "BUS": st.container(),
         "AUTRE": st.container()
     }
+    
+    # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
     
     def sort_key(k): 
         code = str(k[1]).strip().upper()
@@ -1320,24 +1355,34 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     
     clean_name = stop_name.split('(')[0].strip()
-    
-    # --- GESTION DU BOUTON FAVORI (HEADER STATIQUE) ---
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
     
-    # Alignement vertical du bouton et du titre
-    col_title, col_fav = st.columns([0.9, 0.1], gap="small", vertical_alignment="center")
+    # 1. TITRE (PLEINE LARGEUR)
+    # Plus de colonnes ici, le titre respire !
+    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
     
-    with col_title:
-        st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
-        
+    # 2. BARRE D'ACTION (Header Live + Bouton Favori)
+    # On crée deux colonnes : 
+    # - Col 1 (85%) : Pour le texte "Dernière mise à jour..." (géré par le fragment)
+    # - Col 2 (15%) : Pour le bouton Favori
+    col_header, col_fav = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+    
+    # On prépare le conteneur vide pour le header (qui sera rempli par afficher_live_content)
+    # On le stocke dans le session_state ou on le passe en argument si besoin, 
+    # mais ici l'astuce est de passer ce container à la fonction suivante.
+    
     with col_fav:
-        # Bouton hors du fragment = action globale
-        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Ajouter/Retirer des favoris"):
+        # On ajoute une div autour pour le ciblage CSS
+        st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
+        # Le bouton
+        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Gérer les favoris"):
             toggle_favorite(stop_id, stop_name)
-            st.rerun() # <--- C'est lui qui force la sidebar à se mettre à jour instantanément
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
             
     # Appel du fragment qui gère l'auto-refresh des données
-    afficher_live_content(stop_id, clean_name)
+    # NOTE : On va modifier légèrement 'afficher_live_content' pour qu'il écrive dans 'col_header'
+    afficher_live_content(stop_id, clean_name, container_header=col_header)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
