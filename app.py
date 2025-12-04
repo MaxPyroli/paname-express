@@ -914,6 +914,8 @@ def afficher_live_content(stop_id, clean_name):
         "AUTRE": st.container()
     }
     
+    # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
+    
     def sort_key(k): 
         code = str(k[1]).strip().upper()
         if code.isalpha(): return (0, code)
