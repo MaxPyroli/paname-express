@@ -372,34 +372,24 @@ st.markdown("""
             filter: invert(1) brightness(2); 
         }
     }
-    /* --- STYLING DU BOUTON FAVORI --- */
-    .fav-btn-container {
-        width: 100%; /* Le conteneur prend toute la place */
-    }
+    /* --- BOUTON FAVORI LARGE ET PROPRE --- */
+    .fav-btn-container { width: 100%; }
     .fav-btn-container button {
-        background-color: rgba(255, 255, 255, 0.05) !important; /* Fond léger */
-        border: 2px solid rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         color: #f1c40f !important;
-        font-size: 20px !important; /* Ajusté pour l'équilibre */
-        font-weight: bold !important;
-        padding: 0px !important;
-        line-height: 42px !important; /* Centrage vertical du texte */
+        font-size: 16px !important; /* Texte un peu plus fin */
+        font-weight: 600 !important;
         height: 45px !important;
-        width: 100% !important; /* Prend toute la largeur de sa colonne */
         border-radius: 8px !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: background-color 0.2s, transform 0.1s !important;
     }
-    
     .fav-btn-container button:hover {
         background-color: rgba(241, 196, 15, 0.15) !important;
         border-color: #f1c40f !important;
-        transform: scale(1.02);
     }
-    
-    /* Force l'alignement vertical des colonnes du header */
-    [data-testid="column"] {
-        align-items: center !important;
-    }
+    /* Force l'alignement vertical */
+    div[data-testid="column"] { align-items: center; }
 
     /* On force l'alignement à droite */
     div[data-testid="column"]:has(.fav-btn-container) {
@@ -692,7 +682,7 @@ def toggle_favorite(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     exists = False
     
-    # 1. MISE À JOUR DE LA SESSION (C'est ce qui compte pour l'affichage)
+    # 1. MISE À JOUR DE LA SESSION
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -703,14 +693,15 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. SAUVEGARDE EN ARRIÈRE-PLAN (Pour la prochaine fois)
-    # On force le verrouillage pour être sûr que le script ne recharge pas les vieilles données
+    # 2. SAUVEGARDE (FIX BLOC GRIS : On le cache dans la sidebar)
     st.session_state.favs_loaded = True 
+    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
     
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") 
-    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
+    # L'astuce est ici : 'with st.sidebar' empêche le composant d'apparaître sous le bouton
+    with st.sidebar:
+        streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
     
-    time.sleep(0.3)
+    time.sleep(0.1) # Petit délai réduit
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
