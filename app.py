@@ -342,6 +342,14 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
+    /* --- CSS ICONES SVG --- */
+    .mode-icon {
+        height: 1.4em;       /* Taille relative à la police (un peu plus grand que le texte) */
+        width: auto;         /* Garde les proportions */
+        vertical-align: sub; /* Aligne l'image avec la ligne de base du texte */
+        margin-right: 8px;   /* Espace entre l'icône et le texte */
+        filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.3)); /* Petite ombre portée pour le style */
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -451,10 +459,57 @@ GEOGRAPHIE_RER = {
     }
 }
 
-ICONES_TITRE = {
-    "RER": "🚆 RER", "TRAIN": "🚆 TRAIN", "METRO": "🚇 MÉTRO", 
-    "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
-}
+# ==========================================
+#        GESTION DES LOGOS SVG
+# ==========================================
+def generer_icones_html():
+    # 1. Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
+    mapping_files = {
+        "RER":   "img/rer.svg",
+        "TRAIN": "img/train.svg",
+        "METRO": "img/metro.svg",
+        "TRAM":  "img/tram.svg",
+        "CABLE": "img/cable.svg",
+        "BUS":   "img/bus.svg",
+        "AUTRE": "img/autre.svg" # Optionnel
+    }
+    
+    # 2. Textes à afficher à côté du logo
+    labels = {
+        "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
+        "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
+    }
+    
+    # 3. Fallback (Emoji de secours si le fichier SVG n'est pas trouvé)
+    fallbacks = {
+        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
+        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
+    }
+    
+    resultat = {}
+    
+    for mode, label in labels.items():
+        filepath = mapping_files.get(mode)
+        b64_data = None
+        
+        # On essaie de charger l'image si le fichier est défini
+        if filepath:
+            b64_data = get_img_as_base64(filepath)
+            
+        if b64_data:
+            # SUCCÈS : On injecte le SVG. 
+            # Note le mime-type spécifique pour le SVG : image/svg+xml
+            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
+            resultat[mode] = html
+        else:
+            # ÉCHEC : On remet l'émoji
+            emoji = fallbacks.get(mode, "❓")
+            resultat[mode] = f"{emoji} {label}"
+            
+    return resultat
+
+# Initialisation de la constante avec les logos chargés
+ICONES_TITRE = generer_icones_html()
 
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
 
