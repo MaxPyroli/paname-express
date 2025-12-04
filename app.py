@@ -810,7 +810,31 @@ if st.session_state.search_error:
 if submitted and search_query:
     st.session_state.last_query = search_query 
     st.session_state.search_error = None
+
+    # --- 🥚 DEBUT EASTER EGG : QUOI-FEUR 🥚 ---
+    # On nettoie le texte (minuscules, sans espaces autour, sans ponctuation)
+    trigger_word = re.sub(r'[^\w\s]', '', search_query.lower().strip())
+    
+    if trigger_word in ["quoi", "feur", "coiffure"]:
+        # 1. Petite animation festive
+        st.balloons()
+        
+        # 2. Titre drôle
+        if trigger_word == "quoi":
+            st.markdown("<h1 style='text-align: center; font-size: 80px;'>FEUR ! 💇‍♂️</h1>", unsafe_allow_html=True)
+        else:
+            st.markdown("<h1 style='text-align: center; font-size: 80px;'>ROUGE ! 🚤</h1>", unsafe_allow_html=True)
+            
+        # 3. La Vidéo (Remplace l'URL par celle de ton choix, ici une vidéo YouTube classique)
+        # Tu peux mettre un lien YouTube, ou un fichier local "feur.mp4" si tu l'as uploadé
+        st.video("autre/feur.mp4", autoplay=True)
+        
+        # 4. On arrête tout ici pour ne pas chercher "Quoi" dans l'API Navitia
+        st.stop()
+    # --- FIN EASTER EGG ---
+
     with st.spinner("Recherche des arrêts..."):
+        # ... (La suite de ton code habituel reste ici) ...
         data = demander_api(f"places?q={search_query}")
         opts = {}
         if data and 'places' in data:
