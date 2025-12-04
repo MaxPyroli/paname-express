@@ -827,11 +827,17 @@ if st.session_state.search_error:
     st.warning(st.session_state.search_error)
 
 if submitted and search_query:
+    # --- 1. FERMETURE DU CLAVIER MOBILE (Le retour !) ---
+    # Cette commande JS enlève le focus du champ texte, ce qui ferme le clavier Android/iOS
+    streamlit_js_eval(js_expressions="document.activeElement.blur()", key=f"blur_{time.time()}")
+
+    # --- SUITE DU CODE EXISTANT ---
     st.session_state.last_query = search_query 
     st.session_state.search_error = None
 
     # --- 🥚 DEBUT EASTER EGG : QUOI-FEUR (MODE DIALOGUE) 🥚 ---
     trigger_word = re.sub(r'[^\w\s]', '', search_query.lower().strip())
+    # ...
     
     if trigger_word in ["quoi", "feur", "coiffure"]:
         # On appelle la fonction décorée avec @st.dialog
