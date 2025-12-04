@@ -823,8 +823,22 @@ def afficher_live_content(stop_id, clean_name):
     }
     
     def sort_key(k): 
-        try: return (0, int(k[1])) 
-        except: return (1, k[1])
+        code = str(k[1])
+        
+        # 1. Si c'est juste un nombre (ex: Bus 123, Métro 14) -> Tri Numérique pur
+        if code.isdigit(): 
+            return (0, int(code))
+        
+        # 2. Si c'est Lettres + Chiffres (ex: T8, T11, M4, N01) -> Tri "Naturel"
+        # On sépare le préfixe (T) du nombre (8)
+        match = re.match(r"^([a-zA-Z]+)(\d+)", code)
+        if match:
+            prefix = match.group(1)       # "T"
+            number = int(match.group(2))  # 8 (en entier, pas en texte)
+            return (1, prefix, number)
+            
+        # 3. Sinon (RER A, B...) -> Tri Alphabétique standard
+        return (2, code)
 
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
