@@ -397,6 +397,12 @@ st.markdown("""
         align-items: center;
         justify-content: flex-end;
     }
+    /* --- HACK : CACHER LE COMPOSANT JS_EVAL --- */
+    /* On cache l'iframe générée par streamlit_js_eval pour ne pas avoir de bloc vide */
+    iframe[title="streamlit_js_eval.streamlit_js_eval"] {
+        display: none !important;
+        height: 0 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -693,15 +699,15 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. SAUVEGARDE (FIX BLOC GRIS : On le cache dans la sidebar)
+    # 2. SAUVEGARDE
+    # CORRECTION CRITIQUE : On a retiré 'with st.sidebar' qui faisait planter le Fragment.
+    # Le CSS ajouté plus haut se charge de rendre ce composant invisible.
     st.session_state.favs_loaded = True 
     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
     
-    # L'astuce est ici : 'with st.sidebar' empêche le composant d'apparaître sous le bouton
-    with st.sidebar:
-        streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
+    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
     
-    time.sleep(0.1) # Petit délai réduit
+    time.sleep(0.1)
 with st.sidebar:
     st.caption("v1.0.0 - Abondance 🧀")
     
