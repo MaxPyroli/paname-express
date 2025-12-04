@@ -469,10 +469,27 @@ GEOGRAPHIE_RER = {
 }
 
 # ==========================================
+#          FONCTIONS UTILITAIRES
+# ==========================================
+
+# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
+def get_img_as_base64(file_path):
+    # Sécurité : si le fichier n'existe pas, on renvoie None
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except: return None
+
+# ==========================================
 #        GESTION DES LOGOS SVG
 # ==========================================
+
+# 2. ENSUITE : La fonction qui utilise la précédente
 def generer_icones_html():
-    # 1. Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
+    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
     mapping_files = {
         "RER":   "img/rer.svg",
         "TRAIN": "img/train.svg",
@@ -480,16 +497,14 @@ def generer_icones_html():
         "TRAM":  "img/tram.svg",
         "CABLE": "img/cable.svg",
         "BUS":   "img/bus.svg",
-        "AUTRE": "img/autre.svg" # Optionnel
+        "AUTRE": "img/autre.svg"
     }
     
-    # 2. Textes à afficher à côté du logo
     labels = {
         "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
         "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
     }
     
-    # 3. Fallback (Emoji de secours si le fichier SVG n'est pas trouvé)
     fallbacks = {
         "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
@@ -501,23 +516,21 @@ def generer_icones_html():
         filepath = mapping_files.get(mode)
         b64_data = None
         
-        # On essaie de charger l'image si le fichier est défini
         if filepath:
+            # C'est ici que ça plantait avant : maintenant la fonction est connue !
             b64_data = get_img_as_base64(filepath)
             
         if b64_data:
-            # SUCCÈS : On injecte le SVG. 
-            # Note le mime-type spécifique pour le SVG : image/svg+xml
+            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
             html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
             resultat[mode] = html
         else:
-            # ÉCHEC : On remet l'émoji
             emoji = fallbacks.get(mode, "❓")
             resultat[mode] = f"{emoji} {label}"
             
     return resultat
 
-# Initialisation de la constante avec les logos chargés
+# 3. ENFIN : On lance la génération
 ICONES_TITRE = generer_icones_html()
 
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
@@ -588,71 +601,6 @@ def get_all_changelogs():
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
-
-# ==========================================
-#          FONCTIONS UTILITAIRES
-# ==========================================
-
-# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
-def get_img_as_base64(file_path):
-    # Sécurité : si le fichier n'existe pas, on renvoie None
-    if not os.path.exists(file_path):
-        return None
-    try:
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
-    except: return None
-
-# ==========================================
-#        GESTION DES LOGOS SVG
-# ==========================================
-
-# 2. ENSUITE : La fonction qui utilise la précédente
-def generer_icones_html():
-    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
-    mapping_files = {
-        "RER":   "img/rer.svg",
-        "TRAIN": "img/train.svg",
-        "METRO": "img/metro.svg",
-        "TRAM":  "img/tram.svg",
-        "CABLE": "img/cable.svg",
-        "BUS":   "img/bus.svg",
-        "AUTRE": "img/autre.svg"
-    }
-    
-    labels = {
-        "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
-        "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
-    }
-    
-    fallbacks = {
-        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
-        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
-    }
-    
-    resultat = {}
-    
-    for mode, label in labels.items():
-        filepath = mapping_files.get(mode)
-        b64_data = None
-        
-        if filepath:
-            # C'est ici que ça plantait avant : maintenant la fonction est connue !
-            b64_data = get_img_as_base64(filepath)
-            
-        if b64_data:
-            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
-            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
-            resultat[mode] = html
-        else:
-            emoji = fallbacks.get(mode, "❓")
-            resultat[mode] = f"{emoji} {label}"
-            
-    return resultat
-
-# 3. ENFIN : On lance la génération
-ICONES_TITRE = generer_icones_html()
 
 # Titre avec Logo personnalisé + Badge v1.0
 st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
