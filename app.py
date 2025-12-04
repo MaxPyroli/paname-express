@@ -589,23 +589,70 @@ def get_all_changelogs():
 #              INTERFACE GLOBALE
 # ==========================================
 
-# Fonction pour convertir l'image en Base64 (pour l'afficher dans le HTML)
+# ==========================================
+#          FONCTIONS UTILITAIRES
+# ==========================================
+
+# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
 def get_img_as_base64(file_path):
+    # Sécurité : si le fichier n'existe pas, on renvoie None
+    if not os.path.exists(file_path):
+        return None
     try:
         with open(file_path, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
     except: return None
 
-# Préparation de l'icône
-img_b64 = get_img_as_base64("app_icon.png")
+# ==========================================
+#        GESTION DES LOGOS SVG
+# ==========================================
 
-# Si l'image existe, on crée une balise <img>, sinon on garde l'émoji par défaut
-if img_b64:
-    # On ajuste la hauteur pour correspondre au texte (approx 1.2em) et on aligne verticalement
-    icone_html = f'<img src="data:image/png;base64,{img_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
-else:
-    icone_html = "🚆"
+# 2. ENSUITE : La fonction qui utilise la précédente
+def generer_icones_html():
+    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
+    mapping_files = {
+        "RER":   "img/rer.svg",
+        "TRAIN": "img/train.svg",
+        "METRO": "img/metro.svg",
+        "TRAM":  "img/tram.svg",
+        "CABLE": "img/cable.svg",
+        "BUS":   "img/bus.svg",
+        "AUTRE": "img/autre.svg"
+    }
+    
+    labels = {
+        "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
+        "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
+    }
+    
+    fallbacks = {
+        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
+        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
+    }
+    
+    resultat = {}
+    
+    for mode, label in labels.items():
+        filepath = mapping_files.get(mode)
+        b64_data = None
+        
+        if filepath:
+            # C'est ici que ça plantait avant : maintenant la fonction est connue !
+            b64_data = get_img_as_base64(filepath)
+            
+        if b64_data:
+            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
+            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
+            resultat[mode] = html
+        else:
+            emoji = fallbacks.get(mode, "❓")
+            resultat[mode] = f"{emoji} {label}"
+            
+    return resultat
+
+# 3. ENFIN : On lance la génération
+ICONES_TITRE = generer_icones_html()
 
 # Titre avec Logo personnalisé + Badge v1.0
 st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
