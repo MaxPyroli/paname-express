@@ -823,7 +823,7 @@ if submitted and search_query:
         if trigger_word == "quoi":
             st.markdown("<h1 style='text-align: center; font-size: 80px;'>FEUR ! 💇‍♂️</h1>", unsafe_allow_html=True)
         else:
-            st.markdown("<h1 style='text-align: center; font-size: 80px;'>ROUGE ! 🚤</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; font-size: 80px;'>FEUR ! 🚤</h1>", unsafe_allow_html=True)
             
         # 3. La Vidéo (Remplace l'URL par celle de ton choix, ici une vidéo YouTube classique)
         # Tu peux mettre un lien YouTube, ou un fichier local "feur.mp4" si tu l'as uploadé
