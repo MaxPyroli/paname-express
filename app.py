@@ -372,25 +372,33 @@ st.markdown("""
             filter: invert(1) brightness(2); 
         }
     }
-    /* --- STYLING DU BOUTON FAVORI (GHOST) --- */
-    /* On cible le bouton qui sera dans la colonne de droite */
+    /* --- STYLING DU BOUTON FAVORI --- */
+    .fav-btn-container {
+        width: 100%; /* Le conteneur prend toute la place */
+    }
     .fav-btn-container button {
-        background-color: transparent !important;
+        background-color: rgba(255, 255, 255, 0.05) !important; /* Fond léger */
         border: 2px solid rgba(255, 255, 255, 0.1) !important;
-        color: #f1c40f !important; /* Couleur Or */
-        font-size: 24px !important; /* Gros emoji */
+        color: #f1c40f !important;
+        font-size: 20px !important; /* Ajusté pour l'équilibre */
+        font-weight: bold !important;
         padding: 0px !important;
-        line-height: 1 !important;
+        line-height: 42px !important; /* Centrage vertical du texte */
         height: 45px !important;
-        width: 100% !important;
+        width: 100% !important; /* Prend toute la largeur de sa colonne */
         border-radius: 8px !important;
         transition: all 0.2s ease-in-out !important;
     }
     
     .fav-btn-container button:hover {
-        background-color: rgba(241, 196, 15, 0.1) !important; /* Petit fond jaune au survol */
+        background-color: rgba(241, 196, 15, 0.15) !important;
         border-color: #f1c40f !important;
-        transform: scale(1.05); /* Petit effet de zoom */
+        transform: scale(1.02);
+    }
+    
+    /* Force l'alignement vertical des colonnes du header */
+    [data-testid="column"] {
+        align-items: center !important;
     }
 
     /* On force l'alignement à droite */
@@ -838,14 +846,29 @@ if st.session_state.search_results:
 # ==========================================
 # Ajoute l'argument 'container_header=None'
 @st.fragment(run_every=15)
-def afficher_live_content(stop_id, clean_name, container_header=None):
+def afficher_live_content(stop_id, clean_name):
+    # 1. CRÉATION DE LA BARRE D'ACTIONS (Interne au fragment pour éviter les bugs d'accumulation)
+    # On donne plus de place au bouton (20%) pour qu'il soit plus large
+    col_header, col_fav = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
     
-    # Si on a fourni un conteneur externe (la colonne de gauche), on l'utilise
-    # Sinon (fallback), on utilise st.empty() standard
-    target_header = container_header.empty() if container_header else st.empty()
+    # A. Le Header (à gauche)
+    header_placeholder = col_header.empty()
+    
+    # B. Le Bouton Favori (à droite)
+    # On recalcule l'état favori ici car le fragment est isolé
+    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
+    with col_fav:
+        st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
+        # On ajoute un label au bouton pour qu'il soit plus large et explicite
+        label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
+        if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
+            toggle_favorite(stop_id, clean_name) # On passe clean_name, c'est suffisant
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    # C. Préparation des conteneurs pour les résultats
     containers = {
-        "Header": target_header, # <--- C'est ici que ça change
+        "Header": header_placeholder, # On pointe vers le placeholder créé juste au-dessus
         "RER": st.container(),
         "TRAIN": st.container(),
         "METRO": st.container(),
@@ -855,38 +878,20 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
         "AUTRE": st.container()
     }
     
-    # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
-    
     def sort_key(k): 
         code = str(k[1]).strip().upper()
-        
-        # 1. PRIORITÉ ABSOLUE : Les Lettres pures (ex: A, B, C, D, CDL)
-        # On veut qu'elles soient tout en haut.
-        if code.isalpha():
-            return (0, code)
-            
-        # 2. PRIORITÉ SECONDAIRE : Lettres + Chiffres (ex: T8, N145, M4)
-        # On garde le tri naturel (T8 avant T11)
+        if code.isalpha(): return (0, code)
         match = re.match(r"^([a-zA-Z]+)(\d+)", code)
-        if match:
-            prefix = match.group(1)       # "T"
-            number = int(match.group(2))  # 8
-            return (1, prefix, number)
-        
-        # 3. PRIORITÉ BASSE : Les Chiffres purs (ex: 212, 421)
-        # Ils passent après les lettres
-        if code.isdigit(): 
-            return (2, int(code))
-            
-        # 4. POUBELLE : Le reste (Caractères spéciaux, etc.)
+        if match: return (1, match.group(1), int(match.group(2)))
+        if code.isdigit(): return (2, int(code))
         return (3, code)
 
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
         html_content = f"""
         <div style='
-            display: flex; align-items: center; color: #888; font-size: 0.8rem; margin-bottom: 10px;
-            height: 30px; line-height: 30px; overflow: hidden; font-weight: 500;
+            display: flex; align-items: center; color: #888; font-size: 0.8rem;
+            height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;
         '>
             {loader_html} <span style='margin-left: 8px;'>{text}</span>
         </div>
@@ -894,6 +899,10 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
     update_header("Actualisation en cours...", is_loading=True)
+
+    # ... [LE RESTE DU CODE (Lignes Théoriques, Temps Réel...) RESTE IDENTIQUE À AVANT] ...
+    # Copie-colle le reste de ta fonction afficher_live_content ici (à partir de "# 1. LIGNES THEORIQUES")
+    # ...
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
@@ -1353,36 +1362,13 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
 def afficher_tableau_live(stop_id, stop_name):
-    
     clean_name = stop_name.split('(')[0].strip()
-    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
     
     # 1. TITRE (PLEINE LARGEUR)
-    # Plus de colonnes ici, le titre respire !
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
-    
-    # 2. BARRE D'ACTION (Header Live + Bouton Favori)
-    # On crée deux colonnes : 
-    # - Col 1 (85%) : Pour le texte "Dernière mise à jour..." (géré par le fragment)
-    # - Col 2 (15%) : Pour le bouton Favori
-    col_header, col_fav = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
-    
-    # On prépare le conteneur vide pour le header (qui sera rempli par afficher_live_content)
-    # On le stocke dans le session_state ou on le passe en argument si besoin, 
-    # mais ici l'astuce est de passer ce container à la fonction suivante.
-    
-    with col_fav:
-        # On ajoute une div autour pour le ciblage CSS
-        st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
-        # Le bouton
-        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Gérer les favoris"):
-            toggle_favorite(stop_id, stop_name)
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
             
-    # Appel du fragment qui gère l'auto-refresh des données
-    # NOTE : On va modifier légèrement 'afficher_live_content' pour qu'il écrive dans 'col_header'
-    afficher_live_content(stop_id, clean_name, container_header=col_header)
+    # 2. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
+    afficher_live_content(stop_id, clean_name)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
