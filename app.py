@@ -342,13 +342,22 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES SVG --- */
+    /* --- CSS ICONES ADAPTATIVES --- */
     .mode-icon {
-        height: 1.4em;       /* Taille relative à la police (un peu plus grand que le texte) */
-        width: auto;         /* Garde les proportions */
-        vertical-align: sub; /* Aligne l'image avec la ligne de base du texte */
-        margin-right: 8px;   /* Espace entre l'icône et le texte */
-        filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.3)); /* Petite ombre portée pour le style */
+        height: 1.4em;
+        width: auto;
+        vertical-align: sub;
+        margin-right: 8px;
+        transition: filter 0.3s ease; /* Transition douce si on change de thème */
+    }
+
+    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
+    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
+    @media (prefers-color-scheme: dark) {
+        .mode-icon {
+            /* Transforme le Noir (0) en Blanc (1) */
+            filter: invert(1) brightness(2); 
+        }
     }
 </style>
 """, unsafe_allow_html=True)
