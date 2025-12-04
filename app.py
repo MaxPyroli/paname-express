@@ -601,6 +601,14 @@ def get_all_changelogs():
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
+# --- RECUPERATION DE L'ICONE DU TITRE ---
+img_app_b64 = get_img_as_base64("app_icon.png")
+if img_app_b64:
+    # On crée la balise image si le fichier existe
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
+else:
+    # Sinon on met l'émoji par défaut
+    icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
 st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
