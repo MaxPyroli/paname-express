@@ -526,6 +526,25 @@ def get_img_as_base64(file_path):
             data = f.read()
         return base64.b64encode(data).decode()
     except: return None
+# ==========================================
+#          EASTER EGG (POP-UP)
+# ==========================================
+@st.dialog("🚨 ALERTE GÉNÉRALE 🚨")
+def afficher_popup_feur(mot_declencheur):
+    # 1. Les Ballons (S'affichent sur toute l'app)
+    st.balloons()
+    
+    # 2. Le Titre dans la boite de dialogue
+    if mot_declencheur == "quoi":
+        st.markdown("<h1 style='text-align: center; font-size: 60px; margin-bottom: 20px;'>FEUR ! 💇‍♂️</h1>", unsafe_allow_html=True)
+    else:
+        st.markdown("<h1 style='text-align: center; font-size: 60px; margin-bottom: 20px;'>ROUGE ! 🚤</h1>", unsafe_allow_html=True)
+    
+    # 3. La Vidéo (Centrée)
+    # Tu peux remplacer l'URL par un fichier local "img/feur.mp4" si tu l'as
+    st.video("autre/feur.mp4", autoplay=True)
+    
+    st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
 #        GESTION DES LOGOS SVG
@@ -811,29 +830,19 @@ if submitted and search_query:
     st.session_state.last_query = search_query 
     st.session_state.search_error = None
 
-    # --- 🥚 DEBUT EASTER EGG : QUOI-FEUR 🥚 ---
-    # On nettoie le texte (minuscules, sans espaces autour, sans ponctuation)
+    # --- 🥚 DEBUT EASTER EGG : QUOI-FEUR (MODE DIALOGUE) 🥚 ---
     trigger_word = re.sub(r'[^\w\s]', '', search_query.lower().strip())
     
     if trigger_word in ["quoi", "feur", "coiffure"]:
-        # 1. Petite animation festive
-        st.balloons()
+        # On appelle la fonction décorée avec @st.dialog
+        afficher_popup_feur(trigger_word)
         
-        # 2. Titre drôle
-        if trigger_word == "quoi":
-            st.markdown("<h1 style='text-align: center; font-size: 80px;'>FEUR ! </h1>", unsafe_allow_html=True)
-        else:
-            st.markdown("<h1 style='text-align: center; font-size: 80px;'>FEUR ! </h1>", unsafe_allow_html=True)
-            
-        # 3. La Vidéo (Remplace l'URL par celle de ton choix, ici une vidéo YouTube classique)
-        # Tu peux mettre un lien YouTube, ou un fichier local "feur.mp4" si tu l'as uploadé
-        st.video("autre/feur.mp4", autoplay=True)
-        
-        # 4. On arrête tout ici pour ne pas chercher "Quoi" dans l'API Navitia
+        # On arrête le script ici pour ne pas lancer la recherche API derrière
         st.stop()
     # --- FIN EASTER EGG ---
 
     with st.spinner("Recherche des arrêts..."):
+        # ... (La suite de ton code habituel) ...
         # ... (La suite de ton code habituel reste ici) ...
         data = demander_api(f"places?q={search_query}")
         opts = {}
