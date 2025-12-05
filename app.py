@@ -32,29 +32,37 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
-# --- AJOUT : FERMETURE MENU (MÉTHODE "TRAQUEUR") ---
+# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (FORCE UNIQUE) ---
 if st.session_state.get('close_sidebar_flag', False):
-    # On rabaisse le drapeau pour ne pas le refaire au prochain clic
+    # On rabaisse le drapeau tout de suite
     st.session_state.close_sidebar_flag = False
     
-    components.html("""
+    # ASTUCE CRITIQUE : On injecte le temps actuel dans le script
+    # Cela force Streamlit à considérer ce bloc comme "nouveau" et à l'exécuter à chaque fois
+    timestamp = time.time()
+    
+    components.html(f"""
     <script>
-        // On crée une boucle qui vérifie toutes les 100ms
-        var checkExist = setInterval(function() {
-            // 1. On vérifie si on est sur mobile
+        // Timestamp unique pour forcer l'execution : {timestamp}
+        
+        var attempts = 0;
+        var checkExist = setInterval(function() {{
+            // 1. On vérifie si on est sur mobile (< 800px)
             var isMobile = window.parent.innerWidth < 800;
             
-            // 2. On cherche le bouton "Flèche/Fermer" (celui en haut de la sidebar)
+            // 2. On cherche le bouton "stSidebarExpandedControl" (La flèche > ou X)
             var btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
             
-            if (isMobile && btn) {
+            if (isMobile && btn) {{
                 btn.click();
-                clearInterval(checkExist); // C'est fait, on arrête de chercher !
-            }
-        }, 100); // Vérification toutes les 0.1 secondes
-
-        // Sécurité : On tue la recherche après 3 secondes si jamais ça bug
-        setTimeout(function() { clearInterval(checkExist); }, 3000);
+                clearInterval(checkExist); // Mission accomplie
+            }}
+            
+            // Sécurité : On arrête de chercher après 20 tentatives (2 secondes)
+            attempts++;
+            if (attempts > 20) clearInterval(checkExist);
+            
+        }}, 100); // Vérification toutes les 100ms
     </script>
     """, height=0)
 
