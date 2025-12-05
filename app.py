@@ -842,15 +842,17 @@ with st.sidebar:
     else:
         # --- LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On donne un peu plus de place à la poubelle (0.2) pour éviter le retour à la ligne
-            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
+            # Colonne 1 (Large) | Colonne 2 (Juste pour le bouton carré)
+            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
             
             with col_nav:
+                # Bouton Gare (Prend toute la largeur dispo)
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
+                # Bouton Poubelle (Taille gérée par le CSS ci-dessus)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -859,7 +861,6 @@ with st.sidebar:
                         key=f"del_sync_{time.time()}"
                     )
                     st.rerun()
-
         # --- ZONE DANGER (Collée à la liste, sans trait) ---
         # On ajoute juste un petit espace vide pour aérer
         st.write("") 
