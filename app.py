@@ -27,32 +27,6 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
-# ... (Tes imports et constantes API_KEY, BASE_URL, icon_image restent ici) ...
-
-# ==========================================
-#        LOGIQUE DE FERMETURE DU MENU
-# ==========================================
-
-# 1. On initialise le drapeau s'il n'existe pas
-if 'close_sidebar_flag' not in st.session_state:
-    st.session_state.close_sidebar_flag = False
-
-# 2. On décide de l'état du menu POUR CE CHARGEMENT
-# Si le drapeau est levé (on vient de cliquer), on force "collapsed" (fermé)
-# Sinon, on met "auto" (Streamlit décide, généralement fermé sur mobile, ouvert sur PC)
-sidebar_state = "collapsed" if st.session_state.close_sidebar_flag else "auto"
-
-# 3. CONFIGURATION DE LA PAGE (Avec l'état dynamique)
-st.set_page_config(
-    page_title="Grand Paname",
-    page_icon=icon_image,
-    layout="centered",
-    initial_sidebar_state=sidebar_state # <--- C'est ici la magie native
-)
-
-# 4. On remet le drapeau à False immédiatement après avoir configuré la page
-if st.session_state.close_sidebar_flag:
-    st.session_state.close_sidebar_flag = False
 # 1. CONFIGURATION
 st.set_page_config(
     page_title="Grand Paname",
@@ -761,10 +735,6 @@ if 'favorites' not in st.session_state:
     st.session_state.favorites = []
 if 'favs_loaded' not in st.session_state:
     st.session_state.favs_loaded = False
-    
-# --- AJOUT INDISPENSABLE : LE DRAPEAU ---
-if 'close_sidebar_flag' not in st.session_state:
-    st.session_state.close_sidebar_flag = False
 
 # 2. Lecture du navigateur (UNE SEULE FOIS au démarrage)
 if not st.session_state.favs_loaded:
@@ -821,9 +791,7 @@ with st.sidebar:
         st.session_state.search_results = {}
         st.session_state.last_query = ""
         st.session_state.search_key += 1
-        
-        # --- C'EST CETTE LIGNE QUI DÉCLENCHE TOUT ---
-        st.session_state.close_sidebar_flag = True
+        # La ligne 'close_sidebar_flag = True' a été supprimée ici
     
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
