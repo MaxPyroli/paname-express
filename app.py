@@ -467,63 +467,55 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* GESTION SIDEBAR : LE COEUR DU PROBLÈME (CORRIGÉ MOBILE)     */
+    /* GESTION SIDEBAR : VERSION MOBILE FINALISÉE                  */
     /* ============================================================ */
 
-    /* RÈGLE 1 : FORCER L'ALIGNEMENT HORIZONTAL (Même sur mobile) */
-    /* On cible les blocs horizontaux de la sidebar de manière plus large */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important; /* Force la ligne stricte */
-        flex-wrap: nowrap !important;   /* Interdit le passage à la ligne */
-        align-items: center !important; /* Aligne vertic. le bouton et le texte */
-        gap: 8px !important;            /* Espace propre entre les deux */
-    }
-
-    /* RÈGLE 2 : LA COLONNE "GARE" (Gauche) */
-    /* Elle doit prendre tout l'espace disponible mais savoir rétrécir */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-        flex: 1 1 auto !important;
-        width: auto !important;
-        min-width: 0px !important; /* INDISPENSABLE : permet au texte d'être coupé (...) */
-        overflow: hidden !important;
-    }
-
-    /* RÈGLE 3 : LA COLONNE "POUBELLE" (Droite) */
-    /* Elle doit avoir une taille fixe et ne jamais bouger */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 40px !important; /* Largeur fixe du bouton poubelle */
-        width: 40px !important;
-        min-width: 40px !important;
-    }
-
-    /* RÈGLE 4 : GESTION DES TEXTES TROP LONGS DANS LES BOUTONS */
-    /* On force le texte du bouton de gauche à faire "..." s'il dépasse */
-    section[data-testid="stSidebar"] [data-testid="column"]:first-child button {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        display: block !important;
+    /* 1. CIBLAGE PRÉCIS DES FAVORIS (Lignes Horizontales) */
+    /* On cible les blocks horizontaux MAIS on exclut ceux qui sont dans un container à bordure (la confirmation) */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 5px !important; /* On réduit l'espace pour éviter le débordement */
         width: 100% !important;
     }
-    
-    section[data-testid="stSidebar"] [data-testid="column"]:first-child button div,
-    section[data-testid="stSidebar"] [data-testid="column"]:first-child button p {
+
+    /* 2. LA COLONNE "NOM DE LA GARE" (Gauche) */
+    /* On force une largeur minime à 0 pour que l'ellipsis (...) fonctionne */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child {
+        flex: 1 !important;        /* Prend toute la place dispo */
+        width: 0 !important;       /* Astuce CSS vitale pour forcer le rétrécissement */
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* 3. LA COLONNE "POUBELLE" (Droite) */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child {
+        flex: 0 0 35px !important; /* Largeur fixe réduite (35px suffit pour l'icône) */
+        width: 35px !important;
+        min-width: 35px !important;
+    }
+
+    /* 4. STYLE DES BOUTONS DANS LA SIDEBAR */
+    /* Force le texte à être coupé proprement */
+    [data-testid="stSidebar"] button p {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
-
-    /* RÈGLE 5 : EXCEPTION POUR LA CONFIRMATION (OUI/NON) */
-    /* Si les colonnes sont dans une boîte avec bordure (st.container(border=True)), on rétablit l'équilibre */
-    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"] {
-        gap: 10px !important;
-    }
     
-    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:first-child,
-    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:last-child {
-        flex: 1 1 50% !important; /* Retour au 50/50 pour Oui/Non */
+    /* Ajustement bouton poubelle pour qu'il rentre bien */
+    button[key^="del_fav_"] {
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* 5. NETTOYAGE DU BLOC CONFIRMATION */
+    /* On s'assure que le bloc de confirmation (dans la bordure) reprenne un comportement normal */
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 auto !important;
         min-width: auto !important;
-        width: auto !important;
     }
 
     /* ============================================================ */
@@ -938,20 +930,24 @@ with st.sidebar:
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
-            # LE BLOC QUI ÉTAIT CONTAMINÉ (Maintenant protégé par le CSS)
+            # LE PANNEAU DE CONFIRMATION
+            # On utilise un container avec bordure
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button("Oui", use_container_width=True, type="primary", key="confirm_yes"):
-                        st.session_state.favorites = []
-                        st.session_state.confirm_reset = False
-                        streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
-                        st.rerun()
-                with c2:
-                    if st.button("Non", use_container_width=True, key="confirm_no"):
-                        st.session_state.confirm_reset = False
-                        st.rerun()
+                
+                # --- MODIFICATION ICI : On enlève st.columns pour empiler les boutons ---
+                
+                # Bouton OUI (Rouge)
+                if st.button("Oui, tout effacer", use_container_width=True, type="primary", key="confirm_yes"):
+                    st.session_state.favorites = []
+                    st.session_state.confirm_reset = False
+                    streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                    st.rerun()
+                
+                # Bouton NON (Gris, juste en dessous)
+                if st.button("Non, annuler", use_container_width=True, key="confirm_no"):
+                    st.session_state.confirm_reset = False
+                    st.rerun()
     st.markdown("---")
     
    # --- SECTION INFOS ---
