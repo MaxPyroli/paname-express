@@ -32,44 +32,36 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
-# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (METHODE BULLDOZER) ---
+# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (METHODE "CLIC DEHORS") ---
 if st.session_state.get('close_sidebar_flag', False):
     st.session_state.close_sidebar_flag = False
     
-    # On force un ID unique pour que le script s'exécute à chaque fois
+    # Timestamp pour forcer le script à chaque fois
     ts = int(time.time() * 1000)
     
     components.html(f"""
     <script>
-        // On définit la fonction de fermeture
-        function attemptClose() {{
-            // Sélecteur large : cible la croix OU la flèche
-            const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+        // On répète l'action plusieurs fois au cas où l'interface charge doucement
+        var count = 0;
+        var interval = setInterval(function() {{
             
-            // On vérifie si on est sur un écran type mobile/tablette (< 900px pour être large)
-            const isMobile = window.parent.innerWidth < 900;
-            
-            if (isMobile && btn) {{
-                // On vérifie si le menu est bien ouvert (sinon on ne clique pas)
-                const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-                const isOpen = sidebar && sidebar.getAttribute('aria-expanded') === 'true';
+            // 1. On vérifie qu'on est sur mobile
+            if (window.parent.innerWidth < 900) {{
                 
-                // Note: Parfois l'attribut n'est pas fiable, donc on clique quand même si le bouton est là
-                btn.click();
-                return true; // Succès
+                // STRATÉGIE A : Le bouton "Fermer" classique (La flèche ou croix)
+                const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+                if (btn) btn.click();
+                
+                // STRATÉGIE B (Ta suggestion) : Cliquer "Dehors" (sur le contenu principal)
+                // On cible la zone principale de l'appli
+                const main = window.parent.document.querySelector('.stApp');
+                if (main) main.click();
             }}
-            return false; // Pas encore prêt
-        }}
-
-        // On va tenter de fermer 10 fois, espacés de 50ms (pendant 0.5 seconde)
-        let count = 0;
-        const interval = setInterval(() => {{
-            const success = attemptClose();
+            
             count++;
-            if (success || count > 10) {{
-                clearInterval(interval);
-            }}
-        }}, 50);
+            if (count > 10) clearInterval(interval); // On arrête après 500ms
+            
+        }}, 50); // Toutes les 50ms
     </script>
     """, height=0)
 
