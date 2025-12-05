@@ -466,33 +466,47 @@ st.markdown("""
         height: 0 !important;
     }
 
-    /* --- 2. SIDEBAR : ALIGNEMENT MOBILE FORCÉ --- */
-    /* C'est ICI que la magie opère pour le mobile */
+    /* --- 2. SIDEBAR : ANTI-DÉBORDEMENT MOBILE --- */
+    
+    /* On force les colonnes à rester sur une ligne SANS élargir la page */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important; /* Force la ligne horizontale */
-        flex-wrap: nowrap !important;   /* INTERDIT le retour à la ligne */
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 5px !important;
+        gap: 0 !important; /* On gère l'espace via le padding */
+        width: 100% !important;
+        max-width: 100% !important; /* Sécurité ultime */
+        overflow-x: hidden !important; /* Coupe tout ce qui dépasse */
     }
     
-    [data-testid="stSidebar"] [data-testid="column"] {
-        min-width: 0 !important; /* Autorise les colonnes à rétrécir si besoin */
+    /* Colonne de Gauche (Nom de la gare) : Flexible */
+    [data-testid="stSidebar"] [data-testid="column"]:first-child {
+        flex: 1 !important; /* Prend toute la place restante */
+        width: auto !important;
+        min-width: 0 !important; /* Autorise le bouton à rétrécir (le texte passera à la ligne) */
+        padding-right: 5px !important;
     }
 
-    /* --- 3. BOUTON POUBELLE (CARRÉ INDÉFORMABLE) --- */
+    /* Colonne de Droite (Poubelle) : Fixe */
+    [data-testid="stSidebar"] [data-testid="column"]:last-child {
+        flex: 0 0 auto !important; /* Ne bouge pas d'un pouce */
+        width: auto !important;
+        min-width: auto !important;
+    }
+
+    /* --- 3. BOUTON POUBELLE (CARRÉ & FIXE) --- */
     button[key^="del_fav_"] {
         border: none !important;
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
         
-        /* TAILLE FIXE ET VERROUILLÉE */
+        /* GÉOMÉTRIE VERROUILLÉE */
         height: 42px !important;
         width: 42px !important;
-        min-width: 42px !important; /* Empêche le bouton d'être écrasé */
-        flex-shrink: 0 !important;  /* Empêche le bouton de rétrécir sur mobile */
+        min-width: 42px !important; /* Crucial pour ne pas être écrasé */
         padding: 0 !important;
+        margin: 0 !important; /* Pas de marge parasite */
         
-        /* CENTRAGE EMOJI */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -503,7 +517,6 @@ st.markdown("""
     
     button[key^="del_fav_"]:hover {
         background: rgba(231, 76, 60, 0.2) !important;
-        transform: scale(1.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -850,16 +863,18 @@ with st.sidebar:
     else:
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # Ratio ajusté pour coller la poubelle : [Texte flexible, Poubelle fixe]
-            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
+            # Utilisation de colonnes avec un ratio qui favorise le texte
+            # 0.82 pour le nom, 0.18 pour la poubelle (suffisant pour 42px)
+            col_nav, col_del = st.columns([0.82, 0.18], gap="small", vertical_alignment="center")
             
             with col_nav:
+                # Bouton de navigation (s'adapte à la largeur)
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
-                # Le bouton poubelle est géré par le CSS (taille fixe 42px)
+                # Bouton poubelle (Taille fixe gérée par CSS)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -873,15 +888,17 @@ with st.sidebar:
         st.write("")
         st.write("") 
         
-        # --- C. BOUTON UNIQUE "TOUT EFFACER" ---
+        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE) ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
+            # Bouton unique (Key specifique pour eviter les doublons)
             if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
+            # Panneau de confirmation
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
