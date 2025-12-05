@@ -32,27 +32,22 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
-
-# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (FORCE BRUTE) ---
+# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (CORRIGÉE & ROBUSTE) ---
 if st.session_state.get('close_sidebar_flag', False):
-    # On injecte un script invisible qui va chercher le bouton "Fermer" et cliquer dessus
-    # Uniquement si la largeur de l'écran est inférieure à 800px (Mobile)
-    components.html("""
-    <script>
-        const isMobile = window.parent.innerWidth < 800;
-        const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
-        
-        if (isMobile && btn) {
-            // Petit délai pour être sûr que l'interface est chargée
-            setTimeout(function() {
-                btn.click();
-            }, 50);
-        }
-    </script>
-    """, height=0)
-    
-    # On remet le drapeau à False immédiatement
+    # On rabaisse le drapeau tout de suite
     st.session_state.close_sidebar_flag = False
+    
+    # Script JS : Si largeur < 800px (Mobile), on cherche le bouton "Fermer" (X) et on clique
+    # On met un délai de 300ms pour être sûr que le menu est bien là
+    js_code = """
+    setTimeout(function() {
+        if (window.parent.innerWidth < 800) {
+            const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+            if (btn) { btn.click(); }
+        }
+    }, 300);
+    """
+    streamlit_js_eval(js_expressions=js_code, key=f"close_sidebar_{time.time()}")
 
 # 2. FONCTION POLICE (CORRIGÉE : PROTECTION DES LIGATURES)
 def charger_police_locale(file_path, font_name):
@@ -804,23 +799,6 @@ def toggle_favorite(stop_id, stop_name):
 with st.sidebar:
     st.caption("v1.0.2 - Abondance 🧀")
     
-    # --- AUTOMATISATION MOBILE : FERMETURE INTELLIGENTE ---
-    if st.session_state.get('close_sidebar_flag', False):
-        # Le Javascript : 
-        # 1. Vérifie si largeur écran < 800px (Mobile/Tablette)
-        # 2. Cherche le bouton "stSidebarExpandedControl" (La croix ou flèche)
-        # 3. Si trouvé, clique dessus.
-        js_code = """
-        (window.innerWidth < 800) && 
-        window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]') ? 
-        window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]').click() : null
-        """
-        
-        streamlit_js_eval(js_expressions=js_code, key=f"auto_close_{time.time()}")
-        
-        # On rabaisse le drapeau immédiatement
-        st.session_state.close_sidebar_flag = False
-
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
     # ... (Suite du code sidebar) ...
