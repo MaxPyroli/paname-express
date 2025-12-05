@@ -852,33 +852,34 @@ with st.sidebar:
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
-    # ... (Suite du code sidebar) ...
     
-    # Fonction pour charger un favori et NETTOYER la recherche
+    # Fonction pour charger un favori (inchangée)
     def load_fav(fav_id, fav_name):
         st.session_state.selected_stop = fav_id
         st.session_state.selected_name = fav_name
         st.session_state.search_results = {}
         st.session_state.last_query = ""
         st.session_state.search_key += 1
-        # La ligne 'close_sidebar_flag = True' a été supprimée ici
-    
+
+    # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
     if not st.session_state.favorites:
+        # CAS 1 : PAS DE FAVORIS
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
-    # --- A. LISTE DES FAVORIS ---
+        
+    else:
+        # CAS 2 : IL Y A DES FAVORIS (On affiche la liste ET le bouton supprimer)
+        
+        # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On utilise un ratio standard (total = 1) pour éviter la disparition
             col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
             
             with col_nav:
-                # On garde use_container_width=True
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer", use_container_width=True):
-                    # ... (ton code de suppression) ...
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
                     streamlit_js_eval(
@@ -891,7 +892,7 @@ with st.sidebar:
         st.write("")
         st.write("") 
         
-        # --- C. BOUTON TOUT EFFACER ---
+        # --- C. BOUTON TOUT EFFACER (Uniquement si favoris existants) ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
@@ -901,11 +902,8 @@ with st.sidebar:
                 st.rerun()
         else:
             # LE PANNEAU DE CONFIRMATION
-            # On utilise un container avec bordure
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
-                
-                # --- MODIFICATION ICI : On enlève st.columns pour empiler les boutons ---
                 
                 # Bouton OUI (Rouge)
                 if st.button("Oui, tout effacer", use_container_width=True, type="primary", key="confirm_yes"):
@@ -914,10 +912,11 @@ with st.sidebar:
                     streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
                     st.rerun()
                 
-                # Bouton NON (Gris, juste en dessous)
+                # Bouton NON (Gris)
                 if st.button("Non, annuler", use_container_width=True, key="confirm_no"):
                     st.session_state.confirm_reset = False
                     st.rerun()
+
     st.markdown("---")
     
    # --- SECTION INFOS ---
