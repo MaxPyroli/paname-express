@@ -468,30 +468,39 @@ st.markdown("""
 
     /* --- 2. SIDEBAR : ANTI-DÉBORDEMENT MOBILE --- */
     
-    /* On force les colonnes à rester sur une ligne SANS élargir la page */
+    /* Conteneur global de la ligne */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 0 !important; /* On gère l'espace via le padding */
         width: 100% !important;
-        max-width: 100% !important; /* Sécurité ultime */
-        overflow-x: hidden !important; /* Coupe tout ce qui dépasse */
+        max-width: 100% !important;
+        overflow: hidden !important; /* Coupe tout ce qui dépasse */
     }
     
-    /* Colonne de Gauche (Nom de la gare) : Flexible */
+    /* COLONNE GAUCHE (NOM GARE) - C'est ici le secret */
     [data-testid="stSidebar"] [data-testid="column"]:first-child {
-        flex: 1 !important; /* Prend toute la place restante */
-        width: auto !important;
-        min-width: 0 !important; /* Autorise le bouton à rétrécir (le texte passera à la ligne) */
+        flex: 1 1 0 !important; /* Force la colonne à rétrécir si besoin */
+        min-width: 0 !important; /* INDISPENSABLE pour que le text-overflow fonctionne */
         padding-right: 5px !important;
+        overflow: hidden !important;
     }
 
-    /* Colonne de Droite (Poubelle) : Fixe */
+    /* Force le texte du bouton à être coupé proprement (...) */
+    [data-testid="stSidebar"] [data-testid="column"]:first-child button div,
+    [data-testid="stSidebar"] [data-testid="column"]:first-child button p {
+        white-space: nowrap !important;       /* Interdit le retour à la ligne */
+        overflow: hidden !important;          /* Cache ce qui dépasse */
+        text-overflow: ellipsis !important;   /* Ajoute les "..." */
+        max-width: 100% !important;
+    }
+
+    /* COLONNE DROITE (POUBELLE) - Fixe */
     [data-testid="stSidebar"] [data-testid="column"]:last-child {
-        flex: 0 0 auto !important; /* Ne bouge pas d'un pouce */
-        width: auto !important;
-        min-width: auto !important;
+        flex: 0 0 42px !important; /* Fixe la largeur exacte du conteneur */
+        width: 42px !important;
+        min-width: 42px !important;
+        overflow: visible !important;
     }
 
     /* --- 3. BOUTON POUBELLE (CARRÉ & FIXE) --- */
