@@ -854,17 +854,17 @@ with st.sidebar:
                     )
                     st.rerun()
 
-        # --- B. ESPACE VIDE (Pas de trait) ---
+        # --- B. ESPACE VIDE ---
         st.write("")
         st.write("") 
         
-        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE & ROUGE) ---
+        # --- C. LE BOUTON "TOUT EFFACER" ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # C'est LE SEUL bouton qui doit rester (type="primary" pour le rouge)
-            if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
+            # CORRECTION ICI : Ajout de key="reset_all_favs" pour éviter l'erreur DuplicateElementId
+            if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
@@ -873,16 +873,15 @@ with st.sidebar:
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
                 with c1:
-                    if st.button("Oui", use_container_width=True, type="primary"):
+                    if st.button("Oui", use_container_width=True, type="primary", key="confirm_yes"):
                         st.session_state.favorites = []
                         st.session_state.confirm_reset = False
                         streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
                         st.rerun()
                 with c2:
-                    if st.button("Non", use_container_width=True):
+                    if st.button("Non", use_container_width=True, key="confirm_no"):
                         st.session_state.confirm_reset = False
                         st.rerun()
-
         # --- 2. ZONE DE DANGER (RÉINITIALISATION TOTALE) ---
         st.markdown("---")
         
