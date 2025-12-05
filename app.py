@@ -722,7 +722,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.1</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -734,7 +734,7 @@ if 'favorites' not in st.session_state:
 if 'favs_loaded' not in st.session_state:
     st.session_state.favs_loaded = False
     
-# --- AJOUT : INITIALISATION FLAG MENU ---
+# --- AJOUT INDISPENSABLE : LE DRAPEAU ---
 if 'close_sidebar_flag' not in st.session_state:
     st.session_state.close_sidebar_flag = False
 
@@ -780,21 +780,28 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.0 - Abondance 🧀")
+    st.caption("v1.0.2 - Abondance 🧀")
     
-    # --- AUTOMATISATION : FERMETURE DU MENU SUR MOBILE ---
+    # --- AUTOMATISATION MOBILE : FERMETURE INTELLIGENTE ---
     if st.session_state.get('close_sidebar_flag', False):
-        # On injecte le JS qui clique sur la petite croix (ou la flèche) pour replier le menu
-        streamlit_js_eval(
-            js_expressions="parent.document.querySelector('[data-testid=\"stSidebarExpandedControl\"]').click()", 
-            key=f"close_sidebar_{time.time()}"
-        )
-        # On remet le drapeau à False pour ne pas le fermer en boucle
-        st.session_state.close_sidebar_flag = False
+        # Le Javascript : 
+        # 1. Vérifie si largeur écran < 800px (Mobile/Tablette)
+        # 2. Cherche le bouton "stSidebarExpandedControl" (La croix ou flèche)
+        # 3. Si trouvé, clique dessus.
+        js_code = """
+        (window.innerWidth < 800) && 
+        window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]') ? 
+        window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]').click() : null
+        """
         
+        streamlit_js_eval(js_expressions=js_code, key=f"auto_close_{time.time()}")
+        
+        # On rabaisse le drapeau immédiatement
+        st.session_state.close_sidebar_flag = False
+
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
-    # ... (La suite reste identique)
+    # ... (Suite du code sidebar) ...
     
     # Fonction pour charger un favori et NETTOYER la recherche
     def load_fav(fav_id, fav_name):
@@ -804,7 +811,7 @@ with st.sidebar:
         st.session_state.last_query = ""
         st.session_state.search_key += 1
         
-        # --- AJOUT : ON DEMANDE LA FERMETURE DU MENU ---
+        # --- ON LEVE LE DRAPEAU ---
         st.session_state.close_sidebar_flag = True
     
     if not st.session_state.favorites:
