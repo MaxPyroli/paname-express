@@ -467,61 +467,64 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* SIDEBAR : VERSION STABLE ET COMPACTE                        */
+    /* SIDEBAR : VERSION ULTRA-COMPACTE (PC & MOBILE)              */
     /* ============================================================ */
 
-    /* 1. CIBLAGE PRÉCIS : On ne touche QUE les favoris (pas la confirmation) */
-    /* La règle :not(:has(...)) empêche de casser le bloc "Oui/Non" du bas */
+    /* 1. LE CONTENEUR (La ligne complète) */
+    /* On force l'alignement horizontal et on INTERDIT le passage à la ligne */
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) {
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: nowrap !important; /* C'est ça qui force la même ligne sur mobile */
         align-items: center !important;
         gap: 5px !important;
         width: 100% !important;
     }
 
-    /* 2. BOUTON GARE (Gauche) */
-    /* On lui donne toute la place disponible */
+    /* 2. COLONNE GAUCHE (Nom de la gare) - ÉLASTIQUE */
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child {
-        flex: 1 1 auto !important;
+        flex: 1 1 auto !important; /* Prend tout l'espace disponible */
         width: auto !important;
-        min-width: 0 !important; /* Vital pour gérer les noms longs */
+        min-width: 0px !important; /* INDISPENSABLE : permet au texte d'être coupé (...) sur mobile */
         overflow: hidden !important;
     }
 
-    /* 3. BOUTON POUBELLE (Droite) */
-    /* Largeur fixe et carrée */
+    /* 3. COLONNE DROITE (Poubelle) - VERROUILLÉE */
+    /* On fixe une taille rigide en pixels pour qu'il soit carré partout */
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child {
-        flex: 0 0 45px !important;
-        width: 45px !important;
-        min-width: 45px !important;
+        flex: 0 0 42px !important;    /* Ne grandit pas, ne rétrécit pas, fait 42px */
+        width: 42px !important;       /* Largeur forcée */
+        min-width: 42px !important;   /* Largeur min */
+        max-width: 42px !important;   /* Largeur max (Empêche l'étirement PC) */
     }
 
-    /* 4. DESIGN DES BOUTONS */
-    /* Bouton Gare */
+    /* 4. DESIGN DU BOUTON GARE (Gauche) */
     button[key^="btn_fav_"] {
         width: 100% !important;
-        height: 45px !important;
+        height: 42px !important;      /* Hauteur standardisée */
         text-align: left !important;
         padding-left: 10px !important;
     }
     
-    /* Bouton Poubelle */
-    button[key^="del_fav_"] {
-        width: 100% !important;
-        height: 45px !important;
-        padding: 0 !important;
-        border: 1px solid rgba(231, 76, 60, 0.3) !important;
-        background: rgba(231, 76, 60, 0.1) !important;
-    }
-    
-    /* Force l'affichage du texte (Gestion des points de suspension) */
+    /* Gestion du texte trop long (Trois petits points...) */
     button[key^="btn_fav_"] p, button[key^="btn_fav_"] div {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         display: block !important;
         width: 100% !important;
+    }
+
+    /* 5. DESIGN DU BOUTON POUBELLE (Droite) */
+    button[key^="del_fav_"] {
+        width: 100% !important;
+        height: 42px !important;      /* Carré parfait (42x42 avec la colonne) */
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 1px solid rgba(231, 76, 60, 0.3) !important;
+        background: rgba(231, 76, 60, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
