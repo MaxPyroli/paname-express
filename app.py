@@ -11,7 +11,6 @@ import json
 from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
-
 # ==========================================
 #              CONFIGURATION
 # ==========================================
@@ -309,10 +308,18 @@ st.markdown("""
 
     /* --- MEDIA QUERY MOBILE (MAX 480px) --- */
     @media (max-width: 480px) {
-        /* Ajustements de taille de police globaux */
+        
+        /* 1. SUPPRESSION DE LA MARGE HAUTE (ESPACE BLANC) */
+        .block-container {
+            padding-top: 1rem !important; /* On réduit drastiquement l'espace (par défaut c'est ~6rem) */
+        }
+
+        /* Ajustements de taille de police globaux (Déjà présents) */
         .station-title, .station-title-pole { font-size: 20px; }
-        h1 { font-size: 35px !important; gap: 10px !important; }
+        h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
         .version-badge { font-size: 0.45em !important; }
+
+        /* ... (Le reste de ton code mobile pour les Bus/RER reste en dessous) ... */
 
         /* === CAS 1 : BUS / TRAM / MÉTRO (Affichage "Aéré" sur 2 lignes) === */
         .bus-row {
