@@ -467,92 +467,52 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* GESTION SIDEBAR : VERSION MOBILE FINALISÉE                  */
+    /* SIDEBAR COMPACTE : FORCE L'ALIGNEMENT HORIZONTAL (MOBILE)   */
     /* ============================================================ */
 
-    /* 1. CIBLAGE PRÉCIS DES FAVORIS (Lignes Horizontales) */
-    /* On cible les blocks horizontaux MAIS on exclut ceux qui sont dans un container à bordure (la confirmation) */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 5px !important; /* On réduit l'espace pour éviter le débordement */
-        width: 100% !important;
+    /* 1. FORCE LA LIGNE (Même sur mobile) */
+    /* On cible les groupes horizontaux dans la sidebar */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        flex-direction: row !important; /* Interdit l'empilement vertical */
+        flex-wrap: nowrap !important;   /* Interdit le passage à la ligne */
+        align-items: center !important; /* Centre verticalement */
+        gap: 0px !important;            /* On gère l'espace manuellement */
     }
 
-    /* 2. LA COLONNE "NOM DE LA GARE" (Gauche) */
-    /* On force une largeur minime à 0 pour que l'ellipsis (...) fonctionne */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child {
-        flex: 1 !important;        /* Prend toute la place dispo */
-        width: 0 !important;       /* Astuce CSS vitale pour forcer le rétrécissement */
-        min-width: 0 !important;
+    /* 2. BOUTON GARE (Gauche) - Flexible */
+    /* Il prend toute la place dispo. "min-width: 0" est vital pour l'effet "..." */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] [data-testid="column"]:first-child {
+        flex: 1 !important;       
+        width: auto !important;
+        min-width: 0 !important;  
         overflow: hidden !important;
     }
 
-    /* 3. LA COLONNE "POUBELLE" (Droite) */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child {
-        flex: 0 0 35px !important; /* Largeur fixe réduite (35px suffit pour l'icône) */
-        width: 35px !important;
-        min-width: 35px !important;
+    /* 3. BOUTON POUBELLE (Droite) - Fixe */
+    /* On le fige à 40px pour qu'il soit carré et compact */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] [data-testid="column"]:last-child {
+        flex: 0 0 40px !important;
+        width: 40px !important;
+        min-width: 40px !important;
     }
 
-    /* 4. STYLE DES BOUTONS DANS LA SIDEBAR */
-    /* Force le texte à être coupé proprement */
-    [data-testid="stSidebar"] button p {
+    /* 4. DESIGN DU BOUTON POUBELLE */
+    /* On s'assure qu'il est centré et ne prend pas de marge inutile */
+    button[key^="del_fav_"] {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 42px !important; /* Même hauteur que le bouton de gauche */
+        border: none !important;
+    }
+
+    /* 5. DESIGN DU BOUTON GARE */
+    /* Coupe le texte proprement s'il est trop long */
+    button[key^="btn_fav_"] div, 
+    button[key^="btn_fav_"] p {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-    }
-    
-    /* Ajustement bouton poubelle pour qu'il rentre bien */
-    button[key^="del_fav_"] {
-        padding: 0 !important;
-        width: 100% !important;
-    }
-
-    /* 5. NETTOYAGE DU BLOC CONFIRMATION */
-    /* On s'assure que le bloc de confirmation (dans la bordure) reprenne un comportement normal */
-    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 auto !important;
-        min-width: auto !important;
-    }
-
-    /* ============================================================ */
-    /* DESIGN DES BOUTONS                                         */
-    /* ============================================================ */
-
-    /* Bouton Poubelle (Carré) */
-    button[key^="del_fav_"] {
-        border: none !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #e74c3c !important;
-        height: 40px !important;
-        width: 100% !important; 
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 18px !important;
-        border-radius: 8px !important;
-    }
-    button[key^="del_fav_"]:hover {
-        background: rgba(231, 76, 60, 0.2) !important;
-    }
-
-    /* Boutons de Navigation (Gare) */
-    button[key^="btn_fav_"] {
-        text-align: left !important;
-        justify-content: flex-start !important; /* Force le texte à gauche */
-        padding-left: 10px !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        width: 100% !important;
-    }
-
-    /* Boutons de confirmation (Oui/Non) */
-    button[key="confirm_yes"], button[key="confirm_no"] {
-        width: 100% !important;
-        justify-content: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
