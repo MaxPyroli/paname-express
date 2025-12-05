@@ -455,9 +455,9 @@ st.markdown("""
         justify-content: flex-end;
     }
     /* --- 1. NETTOYAGE VISUEL --- */
-    div[data-testid="InputInstructions"] { display: none !important; }
-    [data-testid="stHeaderAction"] { display: none !important; }
-    .stApp > header { visibility: hidden !important; }
+    div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { 
+        display: none !important; 
+    }
     
     /* Cache le bloc fantôme JS */
     iframe[title="streamlit_js_eval.streamlit_js_eval"],
@@ -467,61 +467,65 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* CORRECTION SIDEBAR (FAVORIS vs CONFIRMATION)       */
+    /* GESTION SIDEBAR : LE COEUR DU PROBLÈME                      */
     /* ============================================================ */
 
-    /* 1. RÈGLE GÉNÉRALE : Tout le monde sur une seule ligne (Mobile fix) */
-    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+    /* RÈGLE 1 : LES FAVORIS (Lignes SANS bordure) */
+    /* On cible les colonnes qui sont directement dans la racine de la sidebar */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] {
         flex-direction: row !important;
-        flex-wrap: nowrap !important; /* Interdit le retour à la ligne */
+        flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 5px !important;
+        width: 100% !important;
     }
 
-    /* 2. CAS SPÉCIFIQUE : LES FAVORIS (Gare + Poubelle) */
-    /* On cible les colonnes qui NE SONT PAS dans un bloc à bordure */
-    
-    /* Colonne GAUCHE (Nom Gare) -> Flexible */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] [data-testid="column"]:first-child {
-        flex: 1 1 auto !important; /* Prend tout l'espace libre */
+    /* Colonne GAUCHE (Nom Gare) -> Doit rétrécir si besoin */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 1 1 0 !important; /* Le '0' est CRITIQUE : il autorise le rétrécissement total */
         width: auto !important;
-        min-width: 0 !important;   /* Permet au texte d'être coupé */
+        min-width: 0 !important; /* Indispensable pour l'ellipsis */
         overflow: hidden !important;
     }
-    
-    /* Colonne DROITE (Poubelle) -> Fixe et Carrée */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] [data-testid="column"]:last-child {
-        flex: 0 0 42px !important; /* Largeur fixe verrouillée */
+
+    /* Force le texte du bouton à être coupé (...) */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child button div,
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child button p {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+    }
+
+    /* Colonne DROITE (Poubelle) -> Taille fixe */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 42px !important;
         width: 42px !important;
         min-width: 42px !important;
     }
 
-    /* Gestion du texte coupé (...) pour le nom de la gare */
-    [data-testid="stSidebar"] [data-testid="column"]:first-child button div {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+    /* RÈGLE 2 : LA CONFIRMATION (Lignes DANS un cadre) */
+    /* On annule les règles ci-dessus si on est dans un container à bordure */
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"] {
+        gap: 10px !important;
     }
-
-    /* 3. CAS SPÉCIFIQUE : LA CONFIRMATION (Oui / Non) */
-    /* On cible spécifiquement ce qui est DANS le cadre (border wrapper) */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        flex: 1 1 50% !important; /* Force le 50/50 */
-        width: 50% !important;
+    
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        flex: 1 1 auto !important; /* Rétablit le partage équitable 50/50 */
+        width: auto !important;
         min-width: auto !important;
     }
 
     /* ============================================================ */
-    /* STYLES DES BOUTONS                      */
+    /* DESIGN DES BOUTONS                                          */
     /* ============================================================ */
 
-    /* Style POUBELLE (Carré Parfait) */
+    /* Bouton Poubelle */
     button[key^="del_fav_"] {
         border: none !important;
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
-        height: 42px !important;
-        width: 100% !important;
+        height: 40px !important;
+        width: 100% !important; 
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
@@ -531,6 +535,19 @@ st.markdown("""
     }
     button[key^="del_fav_"]:hover {
         background: rgba(231, 76, 60, 0.2) !important;
+    }
+
+    /* Boutons de navigation (Gare) */
+    button[key^="btn_fav_"] {
+        text-align: left !important;
+        padding-left: 10px !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    /* Boutons de confirmation (Oui/Non) */
+    button[key="confirm_yes"], button[key="confirm_no"] {
+        width: 100% !important;
+        justify-content: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -877,7 +894,7 @@ with st.sidebar:
     else:
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On garde ce ratio, le CSS s'occupera de fixer la poubelle à 42px
+            # On utilise un ratio qui fonctionne avec le nouveau CSS
             col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
             with col_nav:
@@ -900,17 +917,17 @@ with st.sidebar:
         st.write("") 
         
         # --- C. BOUTON UNIQUE "TOUT EFFACER" ---
-        # (C'est ici que le doublon a été supprimé)
-        
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Note la clé unique "reset_all_favs_btn" pour éviter les bugs
+            # Clé unique pour éviter les conflits
             if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs_btn"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
+            # LE PANNEAU DE CONFIRMATION
+            # Le CSS détecte ce 'border=True' pour rétablir l'affichage 50/50 des colonnes
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
