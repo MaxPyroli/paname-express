@@ -460,22 +460,42 @@ st.markdown("""
         display: none !important;
         height: 0 !important;
     }
-    /* --- SIDEBAR : ALIGNEMENT BOUTONS --- */
-    /* On resserre l'espace entre le nom et la poubelle */
+    /* --- SIDEBAR : ALIGNEMENT & BOUTONS --- */
     [data-testid="stSidebar"] [data-testid="column"] {
         padding: 0 !important;
         gap: 0 !important;
+        align-items: center !important; /* Centrage vertical des colonnes */
     }
-    /* Style du bouton poubelle (Discret) */
+    
+    /* BOUTON POUBELLE CALIBRÉ */
     button[key^="del_fav_"] {
+        /* 1. Dimensions fixes (Carré parfait) */
+        height: 42px !important;
+        width: 42px !important;
+        min-width: 42px !important; /* Empêche le rétrécissement */
+        
+        /* 2. Reset du style Streamlit */
         border: none !important;
         background: transparent !important;
-        padding: 0px !important;
-        color: #e74c3c !important; /* Rouge discret */
+        padding: 0 !important; /* Enlève les marges internes */
+        
+        /* 3. Centrage parfait de l'émoji */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        /* 4. Style du texte */
+        color: #e74c3c !important;
         font-size: 1.2rem !important;
+        line-height: 1 !important;
+        border-radius: 8px !important; /* Coins arrondis */
     }
+    
+    /* Effet au survol */
     button[key^="del_fav_"]:hover {
-        background: rgba(231, 76, 60, 0.1) !important;
+        background: rgba(231, 76, 60, 0.15) !important;
+        transform: scale(1.1); /* Petit zoom sympa */
+        transition: all 0.2s ease;
     }
 </style>
 """, unsafe_allow_html=True)
