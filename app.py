@@ -466,41 +466,51 @@ st.markdown("""
         height: 0 !important;
     }
 
-    /* --- 2. SIDEBAR : LISTE DES FAVORIS (LIGNE PAR LIGNE) --- */
-    
-    /* On cible UNIQUEMENT les colonnes qui contiennent des boutons simples (pas le container de confirmation) */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] {
+    /* --- 2. SIDEBAR MOBILE : ALIGNEMENT FORCÉ --- */
+    /* C'est ICI la correction pour les poubelles */
+    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        flex-direction: row !important; /* Force la ligne horizontale */
+        flex-wrap: nowrap !important;   /* Interdit le retour à la ligne */
         align-items: center !important;
         gap: 5px !important;
     }
 
-    /* COLONNE GAUCHE (NOM GARE) */
+    /* Colonne GAUCHE (Nom Station) */
     [data-testid="stSidebar"] [data-testid="column"]:first-child {
         min-width: 0 !important; /* Permet au texte d'être coupé */
+        flex: 1 1 auto !important; /* Prend toute la place dispo */
+        width: auto !important;
         overflow: hidden !important;
     }
     
-    /* Force le texte du bouton à être coupé (...) */
+    /* Texte tronqué (...) */
     [data-testid="stSidebar"] [data-testid="column"]:first-child button div {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
 
-    /* COLONNE DROITE (POUBELLE) - On sécurise sa largeur */
+    /* Colonne DROITE (Poubelle) */
     [data-testid="stSidebar"] [data-testid="column"]:last-child {
-        flex: 0 0 auto !important; /* Ne s'étire pas, ne rétrécit pas */
+        flex: 0 0 auto !important; /* Ne bouge pas */
         width: auto !important;
     }
 
-    /* --- 3. BOUTON POUBELLE (STYLE) --- */
+    /* --- 3. EXCEPTION : BLOC CONFIRMATION (OUI/NON) --- */
+    /* On force le 50/50 pour les boutons de confirmation */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        flex: 1 1 0 !important;
+        width: 50% !important;
+    }
+
+    /* --- 4. STYLE BOUTON POUBELLE --- */
     button[key^="del_fav_"] {
         border: none !important;
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
         height: 40px !important;
         width: 40px !important;
-        min-width: 40px !important; /* Largeur garantie */
+        min-width: 40px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
@@ -510,14 +520,6 @@ st.markdown("""
     }
     button[key^="del_fav_"]:hover {
         background: rgba(231, 76, 60, 0.2) !important;
-    }
-
-    /* --- 4. EXCEPTION : PANNEAU CONFIRMATION (OUI/NON) --- */
-    /* On annule les règles strictes pour le conteneur avec bordure */
-    div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        width: auto !important;
-        flex: 1 !important; /* Rétablit le comportement normal 50/50 */
-        min-width: auto !important;
     }
 </style>
 """, unsafe_allow_html=True)
