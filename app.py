@@ -467,64 +467,61 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* SIDEBAR : STYLE "PLEINE LARGEUR" (ALIGNEMENT PARFAIT)       */
+    /* SIDEBAR : VERSION STABLE ET COMPACTE                        */
     /* ============================================================ */
 
-    /* 1. LE CONTENEUR DE LA LIGNE (Gare + Poubelle) */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+    /* 1. CIBLAGE PRÉCIS : On ne touche QUE les favoris (pas la confirmation) */
+    /* La règle :not(:has(...)) empêche de casser le bloc "Oui/Non" du bas */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) {
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 5px !important;    /* Un petit écart propre entre Gare et Poubelle */
-        width: 100% !important; /* FORCE LA LARGEUR TOTALE */
-        padding: 0 !important;
+        gap: 5px !important;
+        width: 100% !important;
     }
 
-    /* 2. COLONNE GAUCHE (Nom de la gare) - EXTENSIBLE */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] [data-testid="column"]:first-child {
-        flex: 1 1 auto !important; /* Prend tout l'espace restant */
+    /* 2. BOUTON GARE (Gauche) */
+    /* On lui donne toute la place disponible */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
         width: auto !important;
-        min-width: 0 !important;   /* Permet au texte d'être coupé (...) */
+        min-width: 0 !important; /* Vital pour gérer les noms longs */
         overflow: hidden !important;
     }
 
-    /* 3. COLONNE DROITE (Poubelle) - FIXE */
-    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] [data-testid="column"]:last-child {
-        flex: 0 0 45px !important; /* Largeur fixe (45px = largeur d'un doigt) */
+    /* 3. BOUTON POUBELLE (Droite) */
+    /* Largeur fixe et carrée */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child {
+        flex: 0 0 45px !important;
         width: 45px !important;
         min-width: 45px !important;
     }
 
-    /* 4. STYLE DU BOUTON "GARE" (Gauche) */
+    /* 4. DESIGN DES BOUTONS */
+    /* Bouton Gare */
     button[key^="btn_fav_"] {
-        width: 100% !important; /* Remplit toute sa colonne */
+        width: 100% !important;
+        height: 45px !important;
         text-align: left !important;
         padding-left: 10px !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        height: 45px !important; /* Hauteur confortable */
     }
     
-    /* Gestion du texte trop long dans le bouton Gare */
-    button[key^="btn_fav_"] div, 
-    button[key^="btn_fav_"] p {
+    /* Bouton Poubelle */
+    button[key^="del_fav_"] {
+        width: 100% !important;
+        height: 45px !important;
+        padding: 0 !important;
+        border: 1px solid rgba(231, 76, 60, 0.3) !important;
+        background: rgba(231, 76, 60, 0.1) !important;
+    }
+    
+    /* Force l'affichage du texte (Gestion des points de suspension) */
+    button[key^="btn_fav_"] p, button[key^="btn_fav_"] div {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         display: block !important;
         width: 100% !important;
-    }
-
-    /* 5. STYLE DU BOUTON "POUBELLE" (Droite) */
-    button[key^="del_fav_"] {
-        width: 100% !important; /* Remplit toute sa colonne de 45px */
-        padding: 0 !important;
-        margin: 0 !important;
-        height: 45px !important; /* Même hauteur que le voisin */
-        border: 1px solid rgba(231, 76, 60, 0.3) !important; /* Légère bordure rouge */
-        background: rgba(231, 76, 60, 0.1) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -870,20 +867,18 @@ with st.sidebar:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On change les ratios pour maximiser l'espace
-            # "small" gap est important pour qu'ils soient collés mais distinguables
-            col_nav, col_del = st.columns([1, 0.15], gap="small", vertical_alignment="center") 
+            # On utilise un ratio standard (total = 1) pour éviter la disparition
+            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
             
             with col_nav:
-                # use_container_width=True est CRUCIAL ici
+                # On garde use_container_width=True
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
-                # use_container_width=True ici aussi
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer", use_container_width=True):
-                    # ... (ton code de suppression reste identique) ...
+                    # ... (ton code de suppression) ...
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
                     streamlit_js_eval(
