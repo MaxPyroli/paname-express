@@ -296,20 +296,49 @@ st.markdown("""
         line-height: 1.1 !important;
     }
 
-    /* Média Query pour ajuster sur très petits écrans */
-    @media (max-width: 400px) {
+    /* Média Query pour ajuster sur les écrans Mobiles (élargi à 480px pour couvrir tous les téléphones) */
+    @media (max-width: 480px) {
         .station-title, .station-title-pole { font-size: 20px; }
         
         /* Ajustements du titre sur mobile */
         h1 { 
-            font-size: 40px !important; /* Un peu plus petit */
-            gap: 10px !important;       /* On resserre l'espace */
+            font-size: 40px !important; 
+            gap: 10px !important;
         }
         
-        /* Le badge garde sa taille lisible */
         .version-badge {
             font-size: 0.45em !important;
         }
+
+        /* --- NOUVEAU : TEMPS D'ATTENTE À LA LIGNE --- */
+        
+        /* 1. On transforme la ligne horizontale en colonne verticale */
+        .bus-row, .rail-row {
+            flex-direction: column !important; /* Empile les éléments */
+            align-items: flex-start !important; /* Aligne tout à gauche */
+            padding-top: 12px !important;      /* Un peu plus d'espace */
+            padding-bottom: 12px !important;
+        }
+
+        /* 2. La destination peut maintenant prendre toute la largeur */
+        .bus-dest, .rail-dest { 
+            width: 100% !important;
+            white-space: normal !important; /* Autorise le texte à passer à la ligne si VRAIMENT trop long */
+            margin-bottom: 5px !important;  /* Petit espace sous le nom */
+            margin-right: 0 !important;
+            font-size: 16px !important;     /* Un peu plus gros pour la lisibilité */
+        }
+
+        /* 3. L'heure passe en dessous */
+        .bus-row > span:last-child, .rail-row > span:last-child {
+            width: 100% !important;
+            text-align: right !important; /* On garde l'heure à droite pour le style, ou 'left' si tu préfères */
+            font-size: 0.95em !important;
+            color: #ccc !important;       /* Couleur légèrement atténuée */
+        }
+        
+        /* Petit ajustement pour les pointillés de séparation s'il y en a */
+        .time-sep { display: none !important; } 
     }
     
     /* Alignement vertical du bouton favori */
