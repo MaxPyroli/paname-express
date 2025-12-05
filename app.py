@@ -466,66 +466,58 @@ st.markdown("""
         height: 0 !important;
     }
 
-    /* --- 2. SIDEBAR : ANTI-DÉBORDEMENT MOBILE --- */
+    /* --- 2. SIDEBAR : LISTE DES FAVORIS (LIGNE PAR LIGNE) --- */
     
-    /* Conteneur global de la ligne */
-    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+    /* On cible UNIQUEMENT les colonnes qui contiennent des boutons simples (pas le container de confirmation) */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] {
         align-items: center !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow: hidden !important; /* Coupe tout ce qui dépasse */
+        gap: 5px !important;
     }
-    
-    /* COLONNE GAUCHE (NOM GARE) - C'est ici le secret */
+
+    /* COLONNE GAUCHE (NOM GARE) */
     [data-testid="stSidebar"] [data-testid="column"]:first-child {
-        flex: 1 1 0 !important; /* Force la colonne à rétrécir si besoin */
-        min-width: 0 !important; /* INDISPENSABLE pour que le text-overflow fonctionne */
-        padding-right: 5px !important;
+        min-width: 0 !important; /* Permet au texte d'être coupé */
         overflow: hidden !important;
     }
-
-    /* Force le texte du bouton à être coupé proprement (...) */
-    [data-testid="stSidebar"] [data-testid="column"]:first-child button div,
-    [data-testid="stSidebar"] [data-testid="column"]:first-child button p {
-        white-space: nowrap !important;       /* Interdit le retour à la ligne */
-        overflow: hidden !important;          /* Cache ce qui dépasse */
-        text-overflow: ellipsis !important;   /* Ajoute les "..." */
-        max-width: 100% !important;
+    
+    /* Force le texte du bouton à être coupé (...) */
+    [data-testid="stSidebar"] [data-testid="column"]:first-child button div {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
-    /* COLONNE DROITE (POUBELLE) - Fixe */
+    /* COLONNE DROITE (POUBELLE) - On sécurise sa largeur */
     [data-testid="stSidebar"] [data-testid="column"]:last-child {
-        flex: 0 0 42px !important; /* Fixe la largeur exacte du conteneur */
-        width: 42px !important;
-        min-width: 42px !important;
-        overflow: visible !important;
+        flex: 0 0 auto !important; /* Ne s'étire pas, ne rétrécit pas */
+        width: auto !important;
     }
 
-    /* --- 3. BOUTON POUBELLE (CARRÉ & FIXE) --- */
+    /* --- 3. BOUTON POUBELLE (STYLE) --- */
     button[key^="del_fav_"] {
         border: none !important;
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
-        
-        /* GÉOMÉTRIE VERROUILLÉE */
-        height: 42px !important;
-        width: 42px !important;
-        min-width: 42px !important; /* Crucial pour ne pas être écrasé */
+        height: 40px !important;
+        width: 40px !important;
+        min-width: 40px !important; /* Largeur garantie */
         padding: 0 !important;
-        margin: 0 !important; /* Pas de marge parasite */
-        
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         font-size: 18px !important;
-        line-height: 1 !important;
         border-radius: 8px !important;
     }
-    
     button[key^="del_fav_"]:hover {
         background: rgba(231, 76, 60, 0.2) !important;
+    }
+
+    /* --- 4. EXCEPTION : PANNEAU CONFIRMATION (OUI/NON) --- */
+    /* On annule les règles strictes pour le conteneur avec bordure */
+    div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        width: auto !important;
+        flex: 1 !important; /* Rétablit le comportement normal 50/50 */
+        min-width: auto !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -872,18 +864,15 @@ with st.sidebar:
     else:
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # Utilisation de colonnes avec un ratio qui favorise le texte
-            # 0.82 pour le nom, 0.18 pour la poubelle (suffisant pour 42px)
-            col_nav, col_del = st.columns([0.82, 0.18], gap="small", vertical_alignment="center")
+            # On passe à 0.75 / 0.25 pour garantir la place de la poubelle sur mobile
+            col_nav, col_del = st.columns([0.75, 0.25], gap="small", vertical_alignment="center")
             
             with col_nav:
-                # Bouton de navigation (s'adapte à la largeur)
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
-                # Bouton poubelle (Taille fixe gérée par CSS)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -897,17 +886,17 @@ with st.sidebar:
         st.write("")
         st.write("") 
         
-        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE) ---
+        # --- C. BOUTON UNIQUE "TOUT EFFACER" ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Bouton unique (Key specifique pour eviter les doublons)
-            if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs"):
+            # Bouton avec clé unique pour éviter le bug DuplicateId
+            if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs_btn"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
-            # Panneau de confirmation
+            # LE PANNEAU DE CONFIRMATION (Réparé par le CSS point 4)
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
@@ -921,7 +910,6 @@ with st.sidebar:
                     if st.button("Non", use_container_width=True, key="confirm_no"):
                         st.session_state.confirm_reset = False
                         st.rerun()
-
     st.markdown("---")
     
    # --- SECTION INFOS ---
