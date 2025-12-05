@@ -467,62 +467,63 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* SIDEBAR : LA GESTION MOBILE ULTIME                         */
+    /* GESTION SIDEBAR : LE COEUR DU PROBLÈME (CORRIGÉ MOBILE)     */
     /* ============================================================ */
 
-    /* --- CAS A : LES FAVORIS (LIGNE GARE + POUBELLE) --- */
-    
-    /* 1. On force l'alignement horizontal (même sur mobile) */
-    /* On exclut le wrapper de bordure pour ne pas casser la confirmation */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important; 
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        width: 100% !important;
-        gap: 8px !important; /* Petit espace entre Gare et Poubelle */
+    /* RÈGLE 1 : FORCER L'ALIGNEMENT HORIZONTAL (Même sur mobile) */
+    /* On cible les blocs horizontaux de la sidebar de manière plus large */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        flex-direction: row !important; /* Force la ligne stricte */
+        flex-wrap: nowrap !important;   /* Interdit le passage à la ligne */
+        align-items: center !important; /* Aligne vertic. le bouton et le texte */
+        gap: 8px !important;            /* Espace propre entre les deux */
     }
 
-    /* 2. Colonne GAUCHE (Nom de la gare) */
-    /* Elle doit être flexible mais accepter de rétrécir */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-        flex: 1 1 auto !important; /* Prend l'espace, peut rétrécir */
+    /* RÈGLE 2 : LA COLONNE "GARE" (Gauche) */
+    /* Elle doit prendre tout l'espace disponible mais savoir rétrécir */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
         width: auto !important;
-        min-width: 0 !important;   /* CRUCIAL : Permet au texte d'être coupé */
+        min-width: 0px !important; /* INDISPENSABLE : permet au texte d'être coupé (...) */
         overflow: hidden !important;
     }
 
-    /* 3. Le texte du bouton Gare (Troncature avec ...) */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child button div,
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child button p {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        display: block !important;
-        max-width: 100% !important;
-    }
-
-    /* 4. Colonne DROITE (Poubelle) */
-    /* Taille fixe et indéformable */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 40px !important; /* Largeur fixe 40px */
+    /* RÈGLE 3 : LA COLONNE "POUBELLE" (Droite) */
+    /* Elle doit avoir une taille fixe et ne jamais bouger */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 40px !important; /* Largeur fixe du bouton poubelle */
         width: 40px !important;
         min-width: 40px !important;
     }
 
-    /* --- CAS B : LA CONFIRMATION (OUI / NON) --- */
-    /* On cible spécifiquement ce qui est DANS le cadre à bordure */
+    /* RÈGLE 4 : GESTION DES TEXTES TROP LONGS DANS LES BOUTONS */
+    /* On force le texte du bouton de gauche à faire "..." s'il dépasse */
+    section[data-testid="stSidebar"] [data-testid="column"]:first-child button {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+        width: 100% !important;
+    }
     
-    /* On rétablit un comportement sain pour les boutons de confirmation */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important; /* Toujours côte à côte */
+    section[data-testid="stSidebar"] [data-testid="column"]:first-child button div,
+    section[data-testid="stSidebar"] [data-testid="column"]:first-child button p {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* RÈGLE 5 : EXCEPTION POUR LA CONFIRMATION (OUI/NON) */
+    /* Si les colonnes sont dans une boîte avec bordure (st.container(border=True)), on rétablit l'équilibre */
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"] {
         gap: 10px !important;
     }
     
-    /* Les colonnes Oui/Non doivent faire 50% chacune exactement */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        flex: 1 1 50% !important;
-        width: 50% !important;
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:first-child,
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:last-child {
+        flex: 1 1 50% !important; /* Retour au 50/50 pour Oui/Non */
         min-width: auto !important;
+        width: auto !important;
     }
 
     /* ============================================================ */
