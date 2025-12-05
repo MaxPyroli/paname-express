@@ -454,46 +454,51 @@ st.markdown("""
         align-items: center;
         justify-content: flex-end;
     }
-    /* --- 1. NETTOYAGE VISUEL GLOBAL --- */
+    /* --- 1. NETTOYAGE VISUEL --- */
     div[data-testid="InputInstructions"] { display: none !important; }
     [data-testid="stHeaderAction"] { display: none !important; }
     .stApp > header { visibility: hidden !important; }
     
-    /* --- 2. CACHER LE BLOC FANTÔME (JS EVAL) --- */
-    /* On cible l'iframe ET son conteneur parent pour supprimer l'espace vide */
+    /* Cache le bloc fantôme JS */
     iframe[title="streamlit_js_eval.streamlit_js_eval"],
     div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
         display: none !important;
         height: 0 !important;
-        visibility: hidden !important;
     }
 
-    /* --- 3. BOUTONS POUBELLES (CARRÉS PARFAITS) --- */
-    /* On force l'alignement vertical dans la sidebar */
-    [data-testid="stSidebar"] [data-testid="column"] {
+    /* --- 2. SIDEBAR : ALIGNEMENT MOBILE FORCÉ --- */
+    /* C'est ICI que la magie opère pour le mobile */
+    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        flex-direction: row !important; /* Force la ligne horizontale */
+        flex-wrap: nowrap !important;   /* INTERDIT le retour à la ligne */
         align-items: center !important;
-        gap: 5px !important; /* Petit espace entre nom et poubelle */
+        gap: 5px !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="column"] {
+        min-width: 0 !important; /* Autorise les colonnes à rétrécir si besoin */
     }
 
-    /* Le style du bouton poubelle */
+    /* --- 3. BOUTON POUBELLE (CARRÉ INDÉFORMABLE) --- */
     button[key^="del_fav_"] {
         border: none !important;
-        background: rgba(255, 255, 255, 0.05) !important; /* Fond très léger pour délimiter */
+        background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
         
-        /* GÉOMÉTRIE CARRÉE INDÉFORMABLE */
-        height: 2.5rem !important; /* Hauteur standard d'un bouton */
-        width: 2.5rem !important;   /* Largeur identique */
-        min-width: 2.5rem !important;
+        /* TAILLE FIXE ET VERROUILLÉE */
+        height: 42px !important;
+        width: 42px !important;
+        min-width: 42px !important; /* Empêche le bouton d'être écrasé */
+        flex-shrink: 0 !important;  /* Empêche le bouton de rétrécir sur mobile */
         padding: 0 !important;
         
-        /* CENTRAGE */
+        /* CENTRAGE EMOJI */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        
-        border-radius: 8px !important;
+        font-size: 18px !important;
         line-height: 1 !important;
+        border-radius: 8px !important;
     }
     
     button[key^="del_fav_"]:hover {
@@ -845,18 +850,16 @@ with st.sidebar:
     else:
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On ajuste le ratio pour caler le bouton carré
-            # 0.8 pour le texte, 0.2 pour la poubelle (suffisant pour le bouton de 2.5rem)
+            # Ratio ajusté pour coller la poubelle : [Texte flexible, Poubelle fixe]
             col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
             with col_nav:
-                # Bouton de navigation
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
-                # Bouton Poubelle Carré (Le CSS s'occupe de la forme)
+                # Le bouton poubelle est géré par le CSS (taille fixe 42px)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -870,7 +873,7 @@ with st.sidebar:
         st.write("")
         st.write("") 
         
-        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE) ---
+        # --- C. BOUTON UNIQUE "TOUT EFFACER" ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
