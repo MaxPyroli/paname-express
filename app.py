@@ -9,6 +9,7 @@ from PIL import Image
 import base64
 import json
 from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
 # ==========================================
 #              CONFIGURATION
@@ -31,6 +32,27 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
+
+# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (FORCE BRUTE) ---
+if st.session_state.get('close_sidebar_flag', False):
+    # On injecte un script invisible qui va chercher le bouton "Fermer" et cliquer dessus
+    # Uniquement si la largeur de l'écran est inférieure à 800px (Mobile)
+    components.html("""
+    <script>
+        const isMobile = window.parent.innerWidth < 800;
+        const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+        
+        if (isMobile && btn) {
+            // Petit délai pour être sûr que l'interface est chargée
+            setTimeout(function() {
+                btn.click();
+            }, 50);
+        }
+    </script>
+    """, height=0)
+    
+    # On remet le drapeau à False immédiatement
+    st.session_state.close_sidebar_flag = False
 
 # 2. FONCTION POLICE (CORRIGÉE : PROTECTION DES LIGATURES)
 def charger_police_locale(file_path, font_name):
@@ -811,7 +833,7 @@ with st.sidebar:
         st.session_state.last_query = ""
         st.session_state.search_key += 1
         
-        # --- ON LEVE LE DRAPEAU ---
+        # --- C'EST CETTE LIGNE QUI DÉCLENCHE TOUT ---
         st.session_state.close_sidebar_flag = True
     
     if not st.session_state.favorites:
