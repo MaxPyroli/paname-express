@@ -11,6 +11,7 @@ import json
 from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
+
 # ==========================================
 #              CONFIGURATION
 # ==========================================
@@ -26,44 +27,38 @@ try:
 except FileNotFoundError:
     icon_image = "🚆"
 
+# ... (Tes imports et constantes API_KEY, BASE_URL, icon_image restent ici) ...
+
+# ==========================================
+#        LOGIQUE DE FERMETURE DU MENU
+# ==========================================
+
+# 1. On initialise le drapeau s'il n'existe pas
+if 'close_sidebar_flag' not in st.session_state:
+    st.session_state.close_sidebar_flag = False
+
+# 2. On décide de l'état du menu POUR CE CHARGEMENT
+# Si le drapeau est levé (on vient de cliquer), on force "collapsed" (fermé)
+# Sinon, on met "auto" (Streamlit décide, généralement fermé sur mobile, ouvert sur PC)
+sidebar_state = "collapsed" if st.session_state.close_sidebar_flag else "auto"
+
+# 3. CONFIGURATION DE LA PAGE (Avec l'état dynamique)
+st.set_page_config(
+    page_title="Grand Paname",
+    page_icon=icon_image,
+    layout="centered",
+    initial_sidebar_state=sidebar_state # <--- C'est ici la magie native
+)
+
+# 4. On remet le drapeau à False immédiatement après avoir configuré la page
+if st.session_state.close_sidebar_flag:
+    st.session_state.close_sidebar_flag = False
 # 1. CONFIGURATION
 st.set_page_config(
     page_title="Grand Paname",
     page_icon=icon_image,
     layout="centered"
 )
-# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (METHODE "CLIC DEHORS") ---
-if st.session_state.get('close_sidebar_flag', False):
-    st.session_state.close_sidebar_flag = False
-    
-    # Timestamp pour forcer le script à chaque fois
-    ts = int(time.time() * 1000)
-    
-    components.html(f"""
-    <script>
-        // On répète l'action plusieurs fois au cas où l'interface charge doucement
-        var count = 0;
-        var interval = setInterval(function() {{
-            
-            // 1. On vérifie qu'on est sur mobile
-            if (window.parent.innerWidth < 900) {{
-                
-                // STRATÉGIE A : Le bouton "Fermer" classique (La flèche ou croix)
-                const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
-                if (btn) btn.click();
-                
-                // STRATÉGIE B (Ta suggestion) : Cliquer "Dehors" (sur le contenu principal)
-                // On cible la zone principale de l'appli
-                const main = window.parent.document.querySelector('.stApp');
-                if (main) main.click();
-            }}
-            
-            count++;
-            if (count > 10) clearInterval(interval); // On arrête après 500ms
-            
-        }}, 50); // Toutes les 50ms
-    </script>
-    """, height=0)
 
 # 2. FONCTION POLICE (CORRIGÉE : PROTECTION DES LIGATURES)
 def charger_police_locale(file_path, font_name):
