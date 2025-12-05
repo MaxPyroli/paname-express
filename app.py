@@ -460,6 +460,23 @@ st.markdown("""
         display: none !important;
         height: 0 !important;
     }
+    /* --- SIDEBAR : ALIGNEMENT BOUTONS --- */
+    /* On resserre l'espace entre le nom et la poubelle */
+    [data-testid="stSidebar"] [data-testid="column"] {
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+    /* Style du bouton poubelle (Discret) */
+    button[key^="del_fav_"] {
+        border: none !important;
+        background: transparent !important;
+        padding: 0px !important;
+        color: #e74c3c !important; /* Rouge discret */
+        font-size: 1.2rem !important;
+    }
+    button[key^="del_fav_"]:hover {
+        background: rgba(231, 76, 60, 0.1) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -803,36 +820,52 @@ with st.sidebar:
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     else:
-        # --- 1. LISTE DES FAVORIS (LIGNE PAR LIGNE) ---
-        # On itère sur une COPIE de la liste ([:]) pour éviter les erreurs lors de la suppression
+        # --- LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
+            # On donne un peu plus de place à la poubelle (0.2) pour éviter le retour à la ligne
+            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
-            # Création de deux colonnes : 85% pour le nom, 15% pour la poubelle
-            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
-            
-            # A. Colonne de Gauche : Le bouton pour charger la gare
             with col_nav:
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
-            # B. Colonne de Droite : La petite poubelle
             with col_del:
-                if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer ce favori"):
-                    # 1. On supprime de la mémoire Python
+                if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                    
-                    # 2. On met à jour la sauvegarde navigateur immédiatement
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
                     streamlit_js_eval(
                         js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", 
                         key=f"del_sync_{time.time()}"
                     )
-                    
-                    # 3. On recharge pour voir le résultat
-                    st.toast("Favori supprimé", icon="🗑️")
-                    time.sleep(0.1)
                     st.rerun()
+
+        # --- ZONE DANGER (Collée à la liste, sans trait) ---
+        # On ajoute juste un petit espace vide pour aérer
+        st.write("") 
+        
+        if 'confirm_reset' not in st.session_state:
+            st.session_state.confirm_reset = False
+
+        if not st.session_state.confirm_reset:
+            # Bouton "Tout effacer" un peu plus discret (secondary) ou rouge (primary) selon ton goût
+            if st.button("💥 Tout effacer", use_container_width=True):
+                st.session_state.confirm_reset = True
+                st.rerun()
+        else:
+            with st.container(border=True):
+                st.warning("Tout supprimer ?")
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("Oui", use_container_width=True, type="primary"):
+                        st.session_state.favorites = []
+                        st.session_state.confirm_reset = False
+                        streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                        st.rerun()
+                with c2:
+                    if st.button("Non", use_container_width=True):
+                        st.session_state.confirm_reset = False
+                        st.rerun()
 
         # --- 2. ZONE DE DANGER (RÉINITIALISATION TOTALE) ---
         st.markdown("---")
