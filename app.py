@@ -466,51 +466,62 @@ st.markdown("""
         height: 0 !important;
     }
 
-    /* --- 2. SIDEBAR MOBILE : ALIGNEMENT FORCÉ --- */
-    /* C'est ICI la correction pour les poubelles */
+    /* ============================================================ */
+    /* CORRECTION SIDEBAR (FAVORIS vs CONFIRMATION)       */
+    /* ============================================================ */
+
+    /* 1. RÈGLE GÉNÉRALE : Tout le monde sur une seule ligne (Mobile fix) */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        flex-direction: row !important; /* Force la ligne horizontale */
-        flex-wrap: nowrap !important;   /* Interdit le retour à la ligne */
+        flex-direction: row !important;
+        flex-wrap: nowrap !important; /* Interdit le retour à la ligne */
         align-items: center !important;
         gap: 5px !important;
     }
 
-    /* Colonne GAUCHE (Nom Station) */
-    [data-testid="stSidebar"] [data-testid="column"]:first-child {
-        min-width: 0 !important; /* Permet au texte d'être coupé */
-        flex: 1 1 auto !important; /* Prend toute la place dispo */
+    /* 2. CAS SPÉCIFIQUE : LES FAVORIS (Gare + Poubelle) */
+    /* On cible les colonnes qui NE SONT PAS dans un bloc à bordure */
+    
+    /* Colonne GAUCHE (Nom Gare) -> Flexible */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] [data-testid="column"]:first-child {
+        flex: 1 1 auto !important; /* Prend tout l'espace libre */
         width: auto !important;
+        min-width: 0 !important;   /* Permet au texte d'être coupé */
         overflow: hidden !important;
     }
     
-    /* Texte tronqué (...) */
+    /* Colonne DROITE (Poubelle) -> Fixe et Carrée */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] [data-testid="column"]:last-child {
+        flex: 0 0 42px !important; /* Largeur fixe verrouillée */
+        width: 42px !important;
+        min-width: 42px !important;
+    }
+
+    /* Gestion du texte coupé (...) pour le nom de la gare */
     [data-testid="stSidebar"] [data-testid="column"]:first-child button div {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
 
-    /* Colonne DROITE (Poubelle) */
-    [data-testid="stSidebar"] [data-testid="column"]:last-child {
-        flex: 0 0 auto !important; /* Ne bouge pas */
-        width: auto !important;
-    }
-
-    /* --- 3. EXCEPTION : BLOC CONFIRMATION (OUI/NON) --- */
-    /* On force le 50/50 pour les boutons de confirmation */
+    /* 3. CAS SPÉCIFIQUE : LA CONFIRMATION (Oui / Non) */
+    /* On cible spécifiquement ce qui est DANS le cadre (border wrapper) */
     [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        flex: 1 1 0 !important;
+        flex: 1 1 50% !important; /* Force le 50/50 */
         width: 50% !important;
+        min-width: auto !important;
     }
 
-    /* --- 4. STYLE BOUTON POUBELLE --- */
+    /* ============================================================ */
+    /* STYLES DES BOUTONS                      */
+    /* ============================================================ */
+
+    /* Style POUBELLE (Carré Parfait) */
     button[key^="del_fav_"] {
         border: none !important;
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
-        height: 40px !important;
-        width: 40px !important;
-        min-width: 40px !important;
+        height: 42px !important;
+        width: 100% !important; /* Remplit sa colonne de 42px */
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
