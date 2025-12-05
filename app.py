@@ -521,7 +521,7 @@ st.markdown("""
         background: rgba(255, 255, 255, 0.05) !important;
         color: #e74c3c !important;
         height: 42px !important;
-        width: 100% !important; /* Remplit sa colonne de 42px */
+        width: 100% !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
@@ -877,8 +877,8 @@ with st.sidebar:
     else:
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # On passe à 0.75 / 0.25 pour garantir la place de la poubelle sur mobile
-            col_nav, col_del = st.columns([0.75, 0.25], gap="small", vertical_alignment="center")
+            # On garde ce ratio, le CSS s'occupera de fixer la poubelle à 42px
+            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
             with col_nav:
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
@@ -900,16 +900,17 @@ with st.sidebar:
         st.write("") 
         
         # --- C. BOUTON UNIQUE "TOUT EFFACER" ---
+        # (C'est ici que le doublon a été supprimé)
+        
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Bouton avec clé unique pour éviter le bug DuplicateId
+            # Note la clé unique "reset_all_favs_btn" pour éviter les bugs
             if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs_btn"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
-            # LE PANNEAU DE CONFIRMATION (Réparé par le CSS point 4)
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
