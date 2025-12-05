@@ -32,22 +32,31 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
-# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (CORRIGÉE & ROBUSTE) ---
+# --- AJOUT : FERMETURE MENU (MÉTHODE "TRAQUEUR") ---
 if st.session_state.get('close_sidebar_flag', False):
-    # On rabaisse le drapeau tout de suite
+    # On rabaisse le drapeau pour ne pas le refaire au prochain clic
     st.session_state.close_sidebar_flag = False
     
-    # Script JS : Si largeur < 800px (Mobile), on cherche le bouton "Fermer" (X) et on clique
-    # On met un délai de 300ms pour être sûr que le menu est bien là
-    js_code = """
-    setTimeout(function() {
-        if (window.parent.innerWidth < 800) {
-            const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
-            if (btn) { btn.click(); }
-        }
-    }, 300);
-    """
-    streamlit_js_eval(js_expressions=js_code, key=f"close_sidebar_{time.time()}")
+    components.html("""
+    <script>
+        // On crée une boucle qui vérifie toutes les 100ms
+        var checkExist = setInterval(function() {
+            // 1. On vérifie si on est sur mobile
+            var isMobile = window.parent.innerWidth < 800;
+            
+            // 2. On cherche le bouton "Flèche/Fermer" (celui en haut de la sidebar)
+            var btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+            
+            if (isMobile && btn) {
+                btn.click();
+                clearInterval(checkExist); // C'est fait, on arrête de chercher !
+            }
+        }, 100); // Vérification toutes les 0.1 secondes
+
+        // Sécurité : On tue la recherche après 3 secondes si jamais ça bug
+        setTimeout(function() { clearInterval(checkExist); }, 3000);
+    </script>
+    """, height=0)
 
 # 2. FONCTION POLICE (CORRIGÉE : PROTECTION DES LIGATURES)
 def charger_police_locale(file_path, font_name):
