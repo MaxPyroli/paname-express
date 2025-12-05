@@ -803,16 +803,38 @@ with st.sidebar:
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     else:
-        for fav in st.session_state.favorites:
-            # On utilise on_click pour appeler la fonction proprement
-            st.button(
-                f"📍 {fav['name']}", 
-                key=f"btn_fav_{fav['id']}", 
-                use_container_width=True,
-                on_click=load_fav,
-                args=(fav['id'], fav['full_name'])
-            )
-        # --- BOUTON DE RÉINITIALISATION (NOUVEAU) ---
+        # --- 1. LISTE DES FAVORIS (LIGNE PAR LIGNE) ---
+        # On itère sur une COPIE de la liste ([:]) pour éviter les erreurs lors de la suppression
+        for fav in st.session_state.favorites[:]:
+            
+            # Création de deux colonnes : 85% pour le nom, 15% pour la poubelle
+            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+            
+            # A. Colonne de Gauche : Le bouton pour charger la gare
+            with col_nav:
+                if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
+                    load_fav(fav['id'], fav['full_name'])
+                    st.rerun()
+
+            # B. Colonne de Droite : La petite poubelle
+            with col_del:
+                if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer ce favori"):
+                    # 1. On supprime de la mémoire Python
+                    st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+                    
+                    # 2. On met à jour la sauvegarde navigateur immédiatement
+                    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
+                    streamlit_js_eval(
+                        js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", 
+                        key=f"del_sync_{time.time()}"
+                    )
+                    
+                    # 3. On recharge pour voir le résultat
+                    st.toast("Favori supprimé", icon="🗑️")
+                    time.sleep(0.1)
+                    st.rerun()
+
+        # --- 2. ZONE DE DANGER (RÉINITIALISATION TOTALE) ---
         st.markdown("---")
         
         # Initialisation de l'état de confirmation si inexistant
@@ -820,25 +842,21 @@ with st.sidebar:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Étape 1 : Le bouton poubelle simple
-            if st.button("🗑️ Réinitialiser les favoris", use_container_width=True, type="primary"):
+            # Étape 1 : Le bouton poubelle global
+            if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
             # Étape 2 : Le panneau de confirmation
             with st.container(border=True):
-                st.warning("⚠️ Tout effacer ?")
+                st.warning("⚠️ Tout supprimer ?")
                 col_yes, col_no = st.columns(2)
                 
                 with col_yes:
                     if st.button("✅ Oui", use_container_width=True, type="primary"):
-                        # 1. Vider la session
                         st.session_state.favorites = []
                         st.session_state.confirm_reset = False
-                        # 2. Vider le LocalStorage du navigateur
                         streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
-                        st.toast("Favoris supprimés !", icon="🗑️")
-                        time.sleep(0.5)
                         st.rerun()
                 
                 with col_no:
