@@ -32,37 +32,44 @@ st.set_page_config(
     page_icon=icon_image,
     layout="centered"
 )
-# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (FORCE UNIQUE) ---
+# --- AJOUT : LOGIQUE DE FERMETURE DU MENU (METHODE BULLDOZER) ---
 if st.session_state.get('close_sidebar_flag', False):
-    # On rabaisse le drapeau tout de suite
     st.session_state.close_sidebar_flag = False
     
-    # ASTUCE CRITIQUE : On injecte le temps actuel dans le script
-    # Cela force Streamlit à considérer ce bloc comme "nouveau" et à l'exécuter à chaque fois
-    timestamp = time.time()
+    # On force un ID unique pour que le script s'exécute à chaque fois
+    ts = int(time.time() * 1000)
     
     components.html(f"""
     <script>
-        // Timestamp unique pour forcer l'execution : {timestamp}
-        
-        var attempts = 0;
-        var checkExist = setInterval(function() {{
-            // 1. On vérifie si on est sur mobile (< 800px)
-            var isMobile = window.parent.innerWidth < 800;
+        // On définit la fonction de fermeture
+        function attemptClose() {{
+            // Sélecteur large : cible la croix OU la flèche
+            const btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
             
-            // 2. On cherche le bouton "stSidebarExpandedControl" (La flèche > ou X)
-            var btn = window.parent.document.querySelector('[data-testid="stSidebarExpandedControl"]');
+            // On vérifie si on est sur un écran type mobile/tablette (< 900px pour être large)
+            const isMobile = window.parent.innerWidth < 900;
             
             if (isMobile && btn) {{
+                // On vérifie si le menu est bien ouvert (sinon on ne clique pas)
+                const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+                const isOpen = sidebar && sidebar.getAttribute('aria-expanded') === 'true';
+                
+                // Note: Parfois l'attribut n'est pas fiable, donc on clique quand même si le bouton est là
                 btn.click();
-                clearInterval(checkExist); // Mission accomplie
+                return true; // Succès
             }}
-            
-            // Sécurité : On arrête de chercher après 20 tentatives (2 secondes)
-            attempts++;
-            if (attempts > 20) clearInterval(checkExist);
-            
-        }}, 100); // Vérification toutes les 100ms
+            return false; // Pas encore prêt
+        }}
+
+        // On va tenter de fermer 10 fois, espacés de 50ms (pendant 0.5 seconde)
+        let count = 0;
+        const interval = setInterval(() => {{
+            const success = attemptClose();
+            count++;
+            if (success || count > 10) {{
+                clearInterval(interval);
+            }}
+        }}, 50);
     </script>
     """, height=0)
 
