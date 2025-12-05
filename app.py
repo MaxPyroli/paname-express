@@ -9,6 +9,7 @@ from PIL import Image
 import base64
 import json
 from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
 # ==========================================
 #              CONFIGURATION
@@ -174,7 +175,16 @@ st.markdown("""
     }
     
     .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
-    .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
+    .footer-icon { 
+        display: inline-flex !important; /* Force l'icône et le texte à rester côte à côte */
+        align-items: center !important;  /* Aligne verticalement l'icône et le texte */
+        flex-shrink: 0 !important;       /* Interdit au bloc de rétrécir ou de se casser */
+        margin-right: 10px; 
+        font-size: 14px; 
+        color: var(--text-color); 
+        opacity: 0.7; 
+        white-space: nowrap !important;  /* Sécurité supplémentaire anti-retour à la ligne */
+    }
     .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
 
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
@@ -296,19 +306,66 @@ st.markdown("""
         line-height: 1.1 !important;
     }
 
-    /* Média Query pour ajuster sur très petits écrans */
-    @media (max-width: 400px) {
-        .station-title, .station-title-pole { font-size: 20px; }
+    /* --- MEDIA QUERY MOBILE (MAX 480px) --- */
+    @media (max-width: 480px) {
         
-        /* Ajustements du titre sur mobile */
-        h1 { 
-            font-size: 40px !important; /* Un peu plus petit */
-            gap: 10px !important;       /* On resserre l'espace */
+        /* 1. SUPPRESSION DE LA MARGE HAUTE (ESPACE BLANC) */
+        .block-container {
+            padding-top: 1rem !important; /* On réduit drastiquement l'espace (par défaut c'est ~6rem) */
+        }
+
+        /* Ajustements de taille de police globaux (Déjà présents) */
+        .station-title, .station-title-pole { font-size: 20px; }
+        h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
+        .version-badge { font-size: 0.45em !important; }
+
+        /* ... (Le reste de ton code mobile pour les Bus/RER reste en dessous) ... */
+
+        /* === CAS 1 : BUS / TRAM / MÉTRO (Affichage "Aéré" sur 2 lignes) === */
+        .bus-row {
+            flex-direction: column !important; /* Empile Destination et Heure */
+            align-items: flex-start !important; /* Aligne tout à gauche */
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
         }
         
-        /* Le badge garde sa taille lisible */
-        .version-badge {
-            font-size: 0.45em !important;
+        .bus-dest {
+            width: 100% !important;
+            white-space: normal !important; /* Autorise le texte à passer à la ligne */
+            margin-bottom: 6px !important;  /* Espace entre Nom et Heure */
+            font-size: 16px !important;
+            margin-right: 0 !important;
+        }
+
+        /* Le conteneur des heures pour les Bus passe en dessous */
+        .bus-row > span:last-child {
+            width: 100% !important;
+            text-align: left !important; /* On aligne les heures à gauche pour la lecture */
+            font-size: 0.9em !important;
+            color: #ccc !important;
+        }
+
+        /* === CAS 2 : RER / TRAIN (On garde l'affichage "Compact" sur 1 ligne) === */
+        /* On ne touche PAS à .rail-row ici pour qu'il garde le comportement par défaut (Row) */
+        .rail-row {
+            padding-top: 8px !important; 
+            padding-bottom: 8px !important;
+        }
+        
+        .rail-dest {
+            max-width: 65% !important; /* Sécurité pour ne pas écraser l'heure */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* === RESTAURATION DES SÉPARATEURS === */
+        /* On s'assure qu'ils sont bien visibles */
+        .time-sep { 
+            display: inline-block !important; 
+            margin: 0 5px !important;
+            color: #666 !important;
+            font-weight: lighter !important;
         }
     }
     
@@ -397,11 +454,77 @@ st.markdown("""
         align-items: center;
         justify-content: flex-end;
     }
-    /* --- HACK : CACHER LE COMPOSANT JS_EVAL --- */
-    /* On cache l'iframe générée par streamlit_js_eval pour ne pas avoir de bloc vide */
-    iframe[title="streamlit_js_eval.streamlit_js_eval"] {
+    /* --- 1. NETTOYAGE VISUEL --- */
+    div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { 
+        display: none !important; 
+    }
+    
+    /* Cache le bloc fantôme JS */
+    iframe[title="streamlit_js_eval.streamlit_js_eval"],
+    div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
         display: none !important;
         height: 0 !important;
+    }
+
+    /* ============================================================ */
+    /* SIDEBAR : VERSION ULTRA-COMPACTE (PC & MOBILE)              */
+    /* ============================================================ */
+
+    /* 1. LE CONTENEUR (La ligne complète) */
+    /* On force l'alignement horizontal et on INTERDIT le passage à la ligne */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important; /* C'est ça qui force la même ligne sur mobile */
+        align-items: center !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    /* 2. COLONNE GAUCHE (Nom de la gare) - ÉLASTIQUE */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important; /* Prend tout l'espace disponible */
+        width: auto !important;
+        min-width: 0px !important; /* INDISPENSABLE : permet au texte d'être coupé (...) sur mobile */
+        overflow: hidden !important;
+    }
+
+    /* 3. COLONNE DROITE (Poubelle) - VERROUILLÉE */
+    /* On fixe une taille rigide en pixels pour qu'il soit carré partout */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child {
+        flex: 0 0 42px !important;    /* Ne grandit pas, ne rétrécit pas, fait 42px */
+        width: 42px !important;       /* Largeur forcée */
+        min-width: 42px !important;   /* Largeur min */
+        max-width: 42px !important;   /* Largeur max (Empêche l'étirement PC) */
+    }
+
+    /* 4. DESIGN DU BOUTON GARE (Gauche) */
+    button[key^="btn_fav_"] {
+        width: 100% !important;
+        height: 42px !important;      /* Hauteur standardisée */
+        text-align: left !important;
+        padding-left: 10px !important;
+    }
+    
+    /* Gestion du texte trop long (Trois petits points...) */
+    button[key^="btn_fav_"] p, button[key^="btn_fav_"] div {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+        width: 100% !important;
+    }
+
+    /* 5. DESIGN DU BOUTON POUBELLE (Droite) */
+    button[key^="del_fav_"] {
+        width: 100% !important;
+        height: 42px !important;      /* Carré parfait (42x42 avec la colonne) */
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 1px solid rgba(231, 76, 60, 0.3) !important;
+        background: rgba(231, 76, 60, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -414,7 +537,7 @@ GEOGRAPHIE_RER = {
     "A": {
         "labels": ("⇦ OUEST (Cergy / Poissy / St-Germain)", "⇨ EST (Marne-la-Vallée / Boissy)"),
         "mots_1": ["CERGY", "POISSY", "GERMAIN", "RUEIL", "DEFENSE", "DÉFENSE", "NANTERRE", "VESINET", "MAISONS", "LAFFITTE", "PECQ", "ACHERES", "GRANDE ARCHE", "SARTROUVILLE"],
-        "term_1": ["CERGY", "POISSY", "GERMAIN"],
+        "term_1": ["HAUT", "POISSY", "GERMAIN"],
         "mots_2": ["MARNE", "BOISSY", "TORCY", "NATION", "VINCENNES", "FONTENAY", "NOISY", "JOINVILLE", "VALLEE", "CHESSY", "DISNEY"],
         "term_2": ["CHESSY", "BOISSY"]
     },
@@ -471,7 +594,7 @@ GEOGRAPHIE_RER = {
     "L": {
         "labels": ("⇦ OUEST (Versailles / St-Nom / Cergy)", "⇨ PARIS ST-LAZARE"),
         "mots_1": ["VERSAILLES", "NOM", "BRETÈCHE", "CERGY", "NANTERRE", "MAISONS", "CLOUD", "SARTROUVILLE"],
-        "term_1": ["VERSAILLES", "NOM", "CERGY"],
+        "term_1": ["VERSAILLES", "NOM", "HAUT"],       
         "mots_2": ["PARIS", "LAZARE"],
         "term_2": ["PARIS", "LAZARE"]
     },
@@ -674,7 +797,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.1</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -728,65 +851,74 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.1 - Abondance 🧀")
+    st.caption("v1.0.2 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
     
-    # Fonction pour charger un favori et NETTOYER la recherche (pour éviter les conflits)
+    # Fonction pour charger un favori (inchangée)
     def load_fav(fav_id, fav_name):
         st.session_state.selected_stop = fav_id
         st.session_state.selected_name = fav_name
-        # On vide la recherche pour que l'affichage bascule bien
         st.session_state.search_results = {}
         st.session_state.last_query = ""
         st.session_state.search_key += 1
-    
+
+    # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
     if not st.session_state.favorites:
+        # CAS 1 : PAS DE FAVORIS
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
-    else:
-        for fav in st.session_state.favorites:
-            # On utilise on_click pour appeler la fonction proprement
-            st.button(
-                f"📍 {fav['name']}", 
-                key=f"btn_fav_{fav['id']}", 
-                use_container_width=True,
-                on_click=load_fav,
-                args=(fav['id'], fav['full_name'])
-            )
-        # --- BOUTON DE RÉINITIALISATION (NOUVEAU) ---
-        st.markdown("---")
         
-        # Initialisation de l'état de confirmation si inexistant
+    else:
+        # CAS 2 : IL Y A DES FAVORIS (On affiche la liste ET le bouton supprimer)
+        
+        # --- A. LISTE DES FAVORIS ---
+        for fav in st.session_state.favorites[:]:
+            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+            
+            with col_nav:
+                if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
+                    load_fav(fav['id'], fav['full_name'])
+                    st.rerun()
+
+            with col_del:
+                if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer", use_container_width=True):
+                    st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+                    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
+                    streamlit_js_eval(
+                        js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", 
+                        key=f"del_sync_{time.time()}"
+                    )
+                    st.rerun()
+
+        # --- B. ESPACE ---
+        st.write("")
+        st.write("") 
+        
+        # --- C. BOUTON TOUT EFFACER (Uniquement si favoris existants) ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Étape 1 : Le bouton poubelle simple
-            if st.button("🗑️ Réinitialiser les favoris", use_container_width=True, type="primary"):
+            if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs_btn"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
-            # Étape 2 : Le panneau de confirmation
+            # LE PANNEAU DE CONFIRMATION
             with st.container(border=True):
-                st.warning("⚠️ Tout effacer ?")
-                col_yes, col_no = st.columns(2)
+                st.warning("Tout supprimer ?")
                 
-                with col_yes:
-                    if st.button("✅ Oui", use_container_width=True, type="primary"):
-                        # 1. Vider la session
-                        st.session_state.favorites = []
-                        st.session_state.confirm_reset = False
-                        # 2. Vider le LocalStorage du navigateur
-                        streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
-                        st.toast("Favoris supprimés !", icon="🗑️")
-                        time.sleep(0.5)
-                        st.rerun()
+                # Bouton OUI (Rouge)
+                if st.button("Oui, tout effacer", use_container_width=True, type="primary", key="confirm_yes"):
+                    st.session_state.favorites = []
+                    st.session_state.confirm_reset = False
+                    streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                    st.rerun()
                 
-                with col_no:
-                    if st.button("❌ Non", use_container_width=True):
-                        st.session_state.confirm_reset = False
-                        st.rerun()
+                # Bouton NON (Gris)
+                if st.button("Non, annuler", use_container_width=True, key="confirm_no"):
+                    st.session_state.confirm_reset = False
+                    st.rerun()
 
     st.markdown("---")
     
