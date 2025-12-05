@@ -454,42 +454,51 @@ st.markdown("""
         align-items: center;
         justify-content: flex-end;
     }
-    /* --- HACK : CACHER LE COMPOSANT JS_EVAL --- */
-    /* On cache l'iframe générée par streamlit_js_eval pour ne pas avoir de bloc vide */
-    iframe[title="streamlit_js_eval.streamlit_js_eval"] {
+    /* --- 1. NETTOYAGE VISUEL GLOBAL --- */
+    div[data-testid="InputInstructions"] { display: none !important; }
+    [data-testid="stHeaderAction"] { display: none !important; }
+    .stApp > header { visibility: hidden !important; }
+    
+    /* --- 2. CACHER LE BLOC FANTÔME (JS EVAL) --- */
+    /* On cible l'iframe ET son conteneur parent pour supprimer l'espace vide */
+    iframe[title="streamlit_js_eval.streamlit_js_eval"],
+    div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
         display: none !important;
         height: 0 !important;
-    }
-    /* --- SIDEBAR : BOUTONS POUBELLES CARRÉS --- */
-    /* On aligne verticalement les colonnes */
-    [data-testid="stSidebar"] [data-testid="column"] {
-        align-items: center !important;
+        visibility: hidden !important;
     }
 
-    /* Le bouton poubelle spécifique */
+    /* --- 3. BOUTONS POUBELLES (CARRÉS PARFAITS) --- */
+    /* On force l'alignement vertical dans la sidebar */
+    [data-testid="stSidebar"] [data-testid="column"] {
+        align-items: center !important;
+        gap: 5px !important; /* Petit espace entre nom et poubelle */
+    }
+
+    /* Le style du bouton poubelle */
     button[key^="del_fav_"] {
         border: none !important;
-        background: transparent !important;
-        color: #e74c3c !important; /* Rouge */
+        background: rgba(255, 255, 255, 0.05) !important; /* Fond très léger pour délimiter */
+        color: #e74c3c !important;
         
-        /* FORCE LA GÉOMÉTRIE CARRÉE */
-        height: 40px !important;
-        min-height: 40px !important;
-        width: 40px !important;
-        min-width: 40px !important;
+        /* GÉOMÉTRIE CARRÉE INDÉFORMABLE */
+        height: 2.5rem !important; /* Hauteur standard d'un bouton */
+        width: 2.5rem !important;   /* Largeur identique */
+        min-width: 2.5rem !important;
         padding: 0 !important;
         
-        /* CENTRE L'EMOJI */
+        /* CENTRAGE */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 18px !important;
+        
+        border-radius: 8px !important;
         line-height: 1 !important;
     }
     
     button[key^="del_fav_"]:hover {
-        background: rgba(231, 76, 60, 0.15) !important;
-        border-radius: 8px !important;
+        background: rgba(231, 76, 60, 0.2) !important;
+        transform: scale(1.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -834,17 +843,20 @@ with st.sidebar:
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     else:
-        # --- A. LISTE DES FAVORIS (LIGNE PAR LIGNE) ---
+        # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            # Colonne 1 (Large) | Colonne 2 (Carrée pour la poubelle)
-            col_nav, col_del = st.columns([0.82, 0.18], gap="small", vertical_alignment="center")
+            # On ajuste le ratio pour caler le bouton carré
+            # 0.8 pour le texte, 0.2 pour la poubelle (suffisant pour le bouton de 2.5rem)
+            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
             with col_nav:
+                # Bouton de navigation
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
+                # Bouton Poubelle Carré (Le CSS s'occupe de la forme)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -858,17 +870,15 @@ with st.sidebar:
         st.write("")
         st.write("") 
         
-        # --- C. LE BOUTON "TOUT EFFACER" ---
+        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE) ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # CORRECTION ICI : Ajout de key="reset_all_favs" pour éviter l'erreur DuplicateElementId
             if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
-            # Panneau de confirmation
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
@@ -880,35 +890,6 @@ with st.sidebar:
                         st.rerun()
                 with c2:
                     if st.button("Non", use_container_width=True, key="confirm_no"):
-                        st.session_state.confirm_reset = False
-                        st.rerun()
-        # --- 2. ZONE DE DANGER (RÉINITIALISATION TOTALE) ---
-        st.markdown("---")
-        
-        # Initialisation de l'état de confirmation si inexistant
-        if 'confirm_reset' not in st.session_state:
-            st.session_state.confirm_reset = False
-
-        if not st.session_state.confirm_reset:
-            # Étape 1 : Le bouton poubelle global
-            if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
-                st.session_state.confirm_reset = True
-                st.rerun()
-        else:
-            # Étape 2 : Le panneau de confirmation
-            with st.container(border=True):
-                st.warning("⚠️ Tout supprimer ?")
-                col_yes, col_no = st.columns(2)
-                
-                with col_yes:
-                    if st.button("✅ Oui", use_container_width=True, type="primary"):
-                        st.session_state.favorites = []
-                        st.session_state.confirm_reset = False
-                        streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
-                        st.rerun()
-                
-                with col_no:
-                    if st.button("❌ Non", use_container_width=True):
                         st.session_state.confirm_reset = False
                         st.rerun()
 
