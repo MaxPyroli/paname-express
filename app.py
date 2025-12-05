@@ -174,7 +174,16 @@ st.markdown("""
     }
     
     .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
-    .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
+    .footer-icon { 
+        display: inline-flex !important; /* Force l'icône et le texte à rester côte à côte */
+        align-items: center !important;  /* Aligne verticalement l'icône et le texte */
+        flex-shrink: 0 !important;       /* Interdit au bloc de rétrécir ou de se casser */
+        margin-right: 10px; 
+        font-size: 14px; 
+        color: var(--text-color); 
+        opacity: 0.7; 
+        white-space: nowrap !important;  /* Sécurité supplémentaire anti-retour à la ligne */
+    }
     .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
 
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
