@@ -496,12 +496,11 @@ st.markdown("""
         width: auto !important;
     }
 
-    /* --- 4. EXCEPTION : PANNEAU CONFIRMATION (OUI/NON) --- */
-    /* On annule les règles strictes pour le conteneur avec bordure */
-    div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
-        width: auto !important;
-        flex: 1 !important; /* Rétablit le comportement normal 50/50 */
-        min-width: auto !important;
+    /* --- 3. EXCEPTION : BLOC CONFIRMATION (OUI/NON) --- */
+    /* On force le 50/50 pour les boutons de confirmation */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        flex: 1 1 0 !important;
+        width: 50% !important;
     }
 
     /* --- 4. STYLE BOUTON POUBELLE --- */
