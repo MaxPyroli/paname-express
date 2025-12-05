@@ -594,7 +594,7 @@ GEOGRAPHIE_RER = {
     "L": {
         "labels": ("⇦ OUEST (Versailles / St-Nom / Cergy)", "⇨ PARIS ST-LAZARE"),
         "mots_1": ["VERSAILLES", "NOM", "BRETÈCHE", "CERGY", "NANTERRE", "MAISONS", "CLOUD", "SARTROUVILLE"],
-        "term_1": ["VERSAILLES", "NOM", "CERGY"],
+        "term_1": ["VERSAILLES", "NOM", "HAUT"],       
         "mots_2": ["PARIS", "LAZARE"],
         "term_2": ["PARIS", "LAZARE"]
     },
