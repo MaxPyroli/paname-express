@@ -460,42 +460,36 @@ st.markdown("""
         display: none !important;
         height: 0 !important;
     }
-    /* --- SIDEBAR : ALIGNEMENT & BOUTONS --- */
+    /* --- SIDEBAR : BOUTONS POUBELLES CARRÉS --- */
+    /* On aligne verticalement les colonnes */
     [data-testid="stSidebar"] [data-testid="column"] {
-        padding: 0 !important;
-        gap: 0 !important;
-        align-items: center !important; /* Centrage vertical des colonnes */
+        align-items: center !important;
     }
-    
-    /* BOUTON POUBELLE CALIBRÉ */
+
+    /* Le bouton poubelle spécifique */
     button[key^="del_fav_"] {
-        /* 1. Dimensions fixes (Carré parfait) */
-        height: 42px !important;
-        width: 42px !important;
-        min-width: 42px !important; /* Empêche le rétrécissement */
-        
-        /* 2. Reset du style Streamlit */
         border: none !important;
         background: transparent !important;
-        padding: 0 !important; /* Enlève les marges internes */
+        color: #e74c3c !important; /* Rouge */
         
-        /* 3. Centrage parfait de l'émoji */
+        /* FORCE LA GÉOMÉTRIE CARRÉE */
+        height: 40px !important;
+        min-height: 40px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        padding: 0 !important;
+        
+        /* CENTRE L'EMOJI */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        
-        /* 4. Style du texte */
-        color: #e74c3c !important;
-        font-size: 1.2rem !important;
+        font-size: 18px !important;
         line-height: 1 !important;
-        border-radius: 8px !important; /* Coins arrondis */
     }
     
-    /* Effet au survol */
     button[key^="del_fav_"]:hover {
         background: rgba(231, 76, 60, 0.15) !important;
-        transform: scale(1.1); /* Petit zoom sympa */
-        transition: all 0.2s ease;
+        border-radius: 8px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -840,19 +834,17 @@ with st.sidebar:
     if not st.session_state.favorites:
         st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
     else:
-        # --- LISTE DES FAVORIS ---
+        # --- A. LISTE DES FAVORIS (LIGNE PAR LIGNE) ---
         for fav in st.session_state.favorites[:]:
-            # Colonne 1 (Large) | Colonne 2 (Juste pour le bouton carré)
-            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+            # Colonne 1 (Large) | Colonne 2 (Carrée pour la poubelle)
+            col_nav, col_del = st.columns([0.82, 0.18], gap="small", vertical_alignment="center")
             
             with col_nav:
-                # Bouton Gare (Prend toute la largeur dispo)
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
                     st.rerun()
 
             with col_del:
-                # Bouton Poubelle (Taille gérée par le CSS ci-dessus)
                 if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer"):
                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                     json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
@@ -861,19 +853,22 @@ with st.sidebar:
                         key=f"del_sync_{time.time()}"
                     )
                     st.rerun()
-        # --- ZONE DANGER (Collée à la liste, sans trait) ---
-        # On ajoute juste un petit espace vide pour aérer
+
+        # --- B. ESPACE VIDE (Pas de trait) ---
+        st.write("")
         st.write("") 
         
+        # --- C. LE BOUTON "TOUT EFFACER" (UNIQUE & ROUGE) ---
         if 'confirm_reset' not in st.session_state:
             st.session_state.confirm_reset = False
 
         if not st.session_state.confirm_reset:
-            # Bouton "Tout effacer" un peu plus discret (secondary) ou rouge (primary) selon ton goût
-            if st.button("💥 Tout effacer", use_container_width=True):
+            # C'est LE SEUL bouton qui doit rester (type="primary" pour le rouge)
+            if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
                 st.session_state.confirm_reset = True
                 st.rerun()
         else:
+            # Panneau de confirmation
             with st.container(border=True):
                 st.warning("Tout supprimer ?")
                 c1, c2 = st.columns(2)
