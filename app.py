@@ -733,6 +733,10 @@ if 'favorites' not in st.session_state:
     st.session_state.favorites = []
 if 'favs_loaded' not in st.session_state:
     st.session_state.favs_loaded = False
+    
+# --- AJOUT : INITIALISATION FLAG MENU ---
+if 'close_sidebar_flag' not in st.session_state:
+    st.session_state.close_sidebar_flag = False
 
 # 2. Lecture du navigateur (UNE SEULE FOIS au démarrage)
 if not st.session_state.favs_loaded:
