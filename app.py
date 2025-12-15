@@ -447,39 +447,42 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES : MÉTHODE NUCLÉAIRE --- */
+    /* --- GESTION DES ICÔNES SVG --- */
     
     img.mode-icon {
         height: 1.5em !important;
         width: auto !important;
         margin-right: 10px !important;
         vertical-align: middle !important;
-        transition: filter 0.2s ease;
+        transition: filter 0.3s ease;
     }
 
-    /* 1. CAS PAR DÉFAUT (PC en mode CLAIR) */
-    /* On force l'icône à devenir 100% NOIRE, quelle que soit sa couleur d'origine */
+    /* --- CAS 1 : MODE CLAIR (LIGHT) --- */
+    /* Cible : Le réglage Streamlit "Light" OU le système en mode Light */
+    
+    /* Par défaut (Système Light) : On inverse le blanc pour qu'il devienne NOIR */
     img.mode-icon {
-        filter: brightness(0) !important;
+        filter: invert(1) !important; 
+    }
+    
+    /* Si l'utilisateur force "Light" dans Streamlit : On force l'inversion */
+    html[data-theme="light"] img.mode-icon {
+        filter: invert(1) !important;
     }
 
-    /* 2. CAS SYSTÈME SOMBRE (Mac/Windows en mode Dark) */
+    /* --- CAS 2 : MODE SOMBRE (DARK) --- */
+    /* Cible : Le réglage Streamlit "Dark" OU le système en mode Dark */
+    
+    /* Système Dark : On remet l'image normale (BLANCHE) */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            /* On force l'icône à devenir NOIRE (brightness 0), PUIS on l'inverse en BLANC (invert 1) */
-            filter: brightness(0) invert(1) !important;
+            filter: invert(0) !important;
         }
     }
 
-    /* 3. FORÇAGE STREAMLIT : MODE DARK (Réglage manuel dans l'app) */
-    /* Le sélecteur [data-theme="dark"] est posé par Streamlit sur la balise racine */
-    [data-theme="dark"] img.mode-icon {
-        filter: brightness(0) invert(1) !important;
-    }
-
-    /* 4. FORÇAGE STREAMLIT : MODE LIGHT (Réglage manuel dans l'app) */
-    [data-theme="light"] img.mode-icon {
-        filter: brightness(0) !important;
+    /* Si l'utilisateur force "Dark" dans Streamlit : On annule l'inversion */
+    html[data-theme="dark"] img.mode-icon {
+        filter: invert(0) !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
