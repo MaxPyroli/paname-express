@@ -180,9 +180,19 @@ st.markdown("""
     .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
     
     .section-header {
-        margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px;
+        /* AJOUTS FLEXBOX POUR CENTRAGE */
+        display: flex !important;
+        align-items: center !important; /* Centre verticalement */
+        
+        /* Tes styles existants conservés */
+        margin-top: 25px; 
+        margin-bottom: 15px; 
+        padding-bottom: 8px;
         border-bottom: 2px solid rgba(128, 128, 128, 0.5); 
-        font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px;
+        font-size: 20px; 
+        font-weight: bold; 
+        color: var(--text-color); 
+        letter-spacing: 1px;
     }
     
     .station-title {
@@ -342,32 +352,56 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- STYLING DU BOUTON FAVORI (GHOST) --- */
-    /* On cible le bouton qui sera dans la colonne de droite */
+    /* --- CSS ICONES ADAPTATIVES --- */
+    .mode-icon {
+        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
+        width: auto;
+        
+        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
+        /* Flexbox gère l'alignement maintenant */
+        
+        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+        transition: filter 0.3s ease;
+    }
+
+    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
+    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
+    @media (prefers-color-scheme: dark) {
+        .mode-icon {
+            /* Transforme le Noir (0) en Blanc (1) */
+            filter: invert(1) brightness(2); 
+        }
+    }
+    /* --- BOUTON FAVORI LARGE ET PROPRE --- */
+    .fav-btn-container { width: 100%; }
     .fav-btn-container button {
-        background-color: transparent !important;
-        border: 2px solid rgba(255, 255, 255, 0.1) !important;
-        color: #f1c40f !important; /* Couleur Or */
-        font-size: 24px !important; /* Gros emoji */
-        padding: 0px !important;
-        line-height: 1 !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #f1c40f !important;
+        font-size: 16px !important; /* Texte un peu plus fin */
+        font-weight: 600 !important;
         height: 45px !important;
-        width: 100% !important;
         border-radius: 8px !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: background-color 0.2s, transform 0.1s !important;
     }
-    
     .fav-btn-container button:hover {
-        background-color: rgba(241, 196, 15, 0.1) !important; /* Petit fond jaune au survol */
+        background-color: rgba(241, 196, 15, 0.15) !important;
         border-color: #f1c40f !important;
-        transform: scale(1.05); /* Petit effet de zoom */
     }
+    /* Force l'alignement vertical */
+    div[data-testid="column"] { align-items: center; }
 
     /* On force l'alignement à droite */
     div[data-testid="column"]:has(.fav-btn-container) {
         display: flex;
         align-items: center;
         justify-content: flex-end;
+    }
+    /* --- HACK : CACHER LE COMPOSANT JS_EVAL --- */
+    /* On cache l'iframe générée par streamlit_js_eval pour ne pas avoir de bloc vide */
+    iframe[title="streamlit_js_eval.streamlit_js_eval"] {
+        display: none !important;
+        height: 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -478,10 +512,89 @@ GEOGRAPHIE_RER = {
     }
 }
 
-ICONES_TITRE = {
-    "RER": "🚆 RER", "TRAIN": "🚆 TRAIN", "METRO": "🚇 MÉTRO", 
-    "TRAM": "🚋 TRAMWAY", "CABLE": "🚠 CÂBLE", "BUS": "🚌 BUS", "AUTRE": "🌙 AUTRE"
-}
+# ==========================================
+#          FONCTIONS UTILITAIRES
+# ==========================================
+
+# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
+def get_img_as_base64(file_path):
+    # Sécurité : si le fichier n'existe pas, on renvoie None
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except: return None
+# ==========================================
+#          EASTER EGG (POP-UP)
+# ==========================================
+@st.dialog("🚨 ALERTE GÉNÉRALE 🚨")
+def afficher_popup_feur(mot_declencheur):
+    # 1. Les Ballons (S'affichent sur toute l'app)
+    st.balloons()
+    
+    # 2. Le Titre dans la boite de dialogue
+    if mot_declencheur == "quoi":
+        st.markdown("<h1 style='text-align: center; font-size: 60px; margin-bottom: 20px;'>FEUR ! 💇‍♂️</h1>", unsafe_allow_html=True)
+    else:
+        st.markdown("<h1 style='text-align: center; font-size: 60px; margin-bottom: 20px;'>ROUGE ! 🚤</h1>", unsafe_allow_html=True)
+    
+    # 3. La Vidéo (Centrée)
+    # Tu peux remplacer l'URL par un fichier local "img/feur.mp4" si tu l'as
+    st.video("autre/feur.mp4", autoplay=True)
+    
+    st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
+
+# ==========================================
+#        GESTION DES LOGOS SVG
+# ==========================================
+
+# 2. ENSUITE : La fonction qui utilise la précédente
+def generer_icones_html():
+    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
+    mapping_files = {
+        "RER":   "img/rer.svg",
+        "TRAIN": "img/train.svg",
+        "METRO": "img/metro.svg",
+        "TRAM":  "img/tram.svg",
+        "CABLE": "img/cable.svg",
+        "BUS":   "img/bus.svg",
+        "AUTRE": "img/autre.svg"
+    }
+    
+    labels = {
+        "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
+        "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
+    }
+    
+    fallbacks = {
+        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
+        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
+    }
+    
+    resultat = {}
+    
+    for mode, label in labels.items():
+        filepath = mapping_files.get(mode)
+        b64_data = None
+        
+        if filepath:
+            # C'est ici que ça plantait avant : maintenant la fonction est connue !
+            b64_data = get_img_as_base64(filepath)
+            
+        if b64_data:
+            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
+            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
+            resultat[mode] = html
+        else:
+            emoji = fallbacks.get(mode, "❓")
+            resultat[mode] = f"{emoji} {label}"
+            
+    return resultat
+
+# 3. ENFIN : On lance la génération
+ICONES_TITRE = generer_icones_html()
 
 HIERARCHIE = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
 
@@ -551,27 +664,17 @@ def get_all_changelogs():
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
-
-# Fonction pour convertir l'image en Base64 (pour l'afficher dans le HTML)
-def get_img_as_base64(file_path):
-    try:
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
-    except: return None
-
-# Préparation de l'icône
-img_b64 = get_img_as_base64("app_icon.png")
-
-# Si l'image existe, on crée une balise <img>, sinon on garde l'émoji par défaut
-if img_b64:
-    # On ajuste la hauteur pour correspondre au texte (approx 1.2em) et on aligne verticalement
-    icone_html = f'<img src="data:image/png;base64,{img_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
+# --- RECUPERATION DE L'ICONE DU TITRE ---
+img_app_b64 = get_img_as_base64("app_icon.png")
+if img_app_b64:
+    # On crée la balise image si le fichier existe
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
 else:
+    # Sinon on met l'émoji par défaut
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.1</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -604,7 +707,7 @@ def toggle_favorite(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     exists = False
     
-    # 1. MISE À JOUR DE LA SESSION (C'est ce qui compte pour l'affichage)
+    # 1. MISE À JOUR DE LA SESSION
     for i, fav in enumerate(st.session_state.favorites):
         if fav['id'] == stop_id:
             st.session_state.favorites.pop(i)
@@ -615,16 +718,17 @@ def toggle_favorite(stop_id, stop_name):
         st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
         st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
     
-    # 2. SAUVEGARDE EN ARRIÈRE-PLAN (Pour la prochaine fois)
-    # On force le verrouillage pour être sûr que le script ne recharge pas les vieilles données
+    # 2. SAUVEGARDE
+    # CORRECTION CRITIQUE : On a retiré 'with st.sidebar' qui faisait planter le Fragment.
+    # Le CSS ajouté plus haut se charge de rendre ce composant invisible.
     st.session_state.favs_loaded = True 
+    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
     
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'") 
     streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
     
-    time.sleep(0.3)
+    time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.0 - Abondance 🧀")
+    st.caption("v1.0.1 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
@@ -723,9 +827,29 @@ if st.session_state.search_error:
     st.warning(st.session_state.search_error)
 
 if submitted and search_query:
+    # --- 1. FERMETURE DU CLAVIER MOBILE (Le retour !) ---
+    # Cette commande JS enlève le focus du champ texte, ce qui ferme le clavier Android/iOS
+    streamlit_js_eval(js_expressions="document.activeElement.blur()", key=f"blur_{time.time()}")
+
+    # --- SUITE DU CODE EXISTANT ---
     st.session_state.last_query = search_query 
     st.session_state.search_error = None
+
+    # --- 🥚 DEBUT EASTER EGG : QUOI-FEUR (MODE DIALOGUE) 🥚 ---
+    trigger_word = re.sub(r'[^\w\s]', '', search_query.lower().strip())
+    # ...
+    
+    if trigger_word in ["quoi", "feur", "coiffure"]:
+        # On appelle la fonction décorée avec @st.dialog
+        afficher_popup_feur(trigger_word)
+        
+        # On arrête le script ici pour ne pas lancer la recherche API derrière
+        st.stop()
+    # --- FIN EASTER EGG ---
+
     with st.spinner("Recherche des arrêts..."):
+        # ... (La suite de ton code habituel) ...
+        # ... (La suite de ton code habituel reste ici) ...
         data = demander_api(f"places?q={search_query}")
         opts = {}
         if data and 'places' in data:
@@ -758,14 +882,29 @@ if st.session_state.search_results:
 # ==========================================
 # Ajoute l'argument 'container_header=None'
 @st.fragment(run_every=15)
-def afficher_live_content(stop_id, clean_name, container_header=None):
+def afficher_live_content(stop_id, clean_name):
+    # 1. CRÉATION DE LA BARRE D'ACTIONS (Interne au fragment pour éviter les bugs d'accumulation)
+    # On donne plus de place au bouton (20%) pour qu'il soit plus large
+    col_header, col_fav = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
     
-    # Si on a fourni un conteneur externe (la colonne de gauche), on l'utilise
-    # Sinon (fallback), on utilise st.empty() standard
-    target_header = container_header.empty() if container_header else st.empty()
+    # A. Le Header (à gauche)
+    header_placeholder = col_header.empty()
+    
+    # B. Le Bouton Favori (à droite)
+    # On recalcule l'état favori ici car le fragment est isolé
+    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
+    with col_fav:
+        st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
+        # On ajoute un label au bouton pour qu'il soit plus large et explicite
+        label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
+        if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
+            toggle_favorite(stop_id, clean_name) # On passe clean_name, c'est suffisant
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    # C. Préparation des conteneurs pour les résultats
     containers = {
-        "Header": target_header, # <--- C'est ici que ça change
+        "Header": header_placeholder, # On pointe vers le placeholder créé juste au-dessus
         "RER": st.container(),
         "TRAIN": st.container(),
         "METRO": st.container(),
@@ -778,15 +917,19 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
     # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
     
     def sort_key(k): 
-        try: return (0, int(k[1])) 
-        except: return (1, k[1])
+        code = str(k[1]).strip().upper()
+        if code.isalpha(): return (0, code)
+        match = re.match(r"^([a-zA-Z]+)(\d+)", code)
+        if match: return (1, match.group(1), int(match.group(2)))
+        if code.isdigit(): return (2, int(code))
+        return (3, code)
 
     def update_header(text, is_loading=False):
         loader_html = '<span class="custom-loader"></span>' if is_loading else ''
         html_content = f"""
         <div style='
-            display: flex; align-items: center; color: #888; font-size: 0.8rem; margin-bottom: 10px;
-            height: 30px; line-height: 30px; overflow: hidden; font-weight: 500;
+            display: flex; align-items: center; color: #888; font-size: 0.8rem;
+            height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;
         '>
             {loader_html} <span style='margin-left: 8px;'>{text}</span>
         </div>
@@ -794,6 +937,10 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
     update_header("Actualisation en cours...", is_loading=True)
+
+    # ... [LE RESTE DU CODE (Lignes Théoriques, Temps Réel...) RESTE IDENTIQUE À AVANT] ...
+    # Copie-colle le reste de ta fonction afficher_live_content ici (à partir de "# 1. LIGNES THEORIQUES")
+    # ...
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
@@ -1253,36 +1400,13 @@ def afficher_live_content(stop_id, clean_name, container_header=None):
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
 def afficher_tableau_live(stop_id, stop_name):
-    
     clean_name = stop_name.split('(')[0].strip()
-    is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
     
     # 1. TITRE (PLEINE LARGEUR)
-    # Plus de colonnes ici, le titre respire !
     st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
-    
-    # 2. BARRE D'ACTION (Header Live + Bouton Favori)
-    # On crée deux colonnes : 
-    # - Col 1 (85%) : Pour le texte "Dernière mise à jour..." (géré par le fragment)
-    # - Col 2 (15%) : Pour le bouton Favori
-    col_header, col_fav = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
-    
-    # On prépare le conteneur vide pour le header (qui sera rempli par afficher_live_content)
-    # On le stocke dans le session_state ou on le passe en argument si besoin, 
-    # mais ici l'astuce est de passer ce container à la fonction suivante.
-    
-    with col_fav:
-        # On ajoute une div autour pour le ciblage CSS
-        st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
-        # Le bouton
-        if st.button("⭐" if is_fav else "☆", key=f"toggle_{stop_id}", help="Gérer les favoris"):
-            toggle_favorite(stop_id, stop_name)
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
             
-    # Appel du fragment qui gère l'auto-refresh des données
-    # NOTE : On va modifier légèrement 'afficher_live_content' pour qu'il écrive dans 'col_header'
-    afficher_live_content(stop_id, clean_name, container_header=col_header)
+    # 2. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
+    afficher_live_content(stop_id, clean_name)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
