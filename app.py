@@ -1454,7 +1454,7 @@ def afficher_live_content(stop_id, clean_name):
 <div class="bus-card" style="border-left-color: #{color}; position: relative;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
 <div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span><span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span></div>
-<span style="font-size:1.5em;" title="Téléphérique">🚡</span>
+<span style="font-size:1.5em;" title="Téléphérique"></span>
 </div>
 {alert_html}
 {rows_html}
