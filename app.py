@@ -272,11 +272,22 @@ st.markdown("""
         color: #888 !important; background: rgba(255, 255, 255, 0.05) !important; border-left: 3px solid #444 !important; 
     }
     
-    /* Icones : Blanches par défaut (Filtre inverseur) */
+    /* --- CSS ICONES ADAPTATIVES (CORRECTION) --- */
     .mode-icon {
-        height: 1.5em; width: auto; margin-right: 10px;
+        height: 1.5em;
+        width: auto;
+        margin-right: 10px;
         transition: filter 0.3s ease;
-        filter: brightness(0) invert(1) !important; 
+        
+        /* PAR DÉFAUT (Mode Sombre) : */
+        /* On force l'icône en BLANC PUR pour qu'elle se voit sur le fond bleu/noir */
+        filter: brightness(0) invert(1);
+    }
+
+    /* FIX MODE CLAIR : */
+    /* Si Streamlit est en Light Mode, on enlève le filtre pour voir l'icône en NOIR/COULEUR */
+    [data-theme="light"] .mode-icon {
+        filter: none !important;
     }
 
     /* --- 3. SURCHARGE : MODE CLAIR (Blanc) --- */
