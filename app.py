@@ -218,50 +218,77 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : ADAPTATION CLAIR / SOMBRE                */
+    /* DESIGN DES CARTES : SYSTÈME DE VARIABLES (ROBUSTE)           */
     /* ============================================================ */
 
-    /* 1. STYLE PAR DÉFAUT (MODE SOMBRE) */
+    /* 1. DÉFINITION DES COULEURS (Variables) */
+    :root {
+        /* Valeurs par défaut (Mode SOMBRE) */
+        --card-bg: #1a1a1a;
+        --card-text: #dddddd;
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text-strong: #ffffff;
+        --text-dim: #cccccc;
+        --row-border: #333333;
+        --shadow: rgba(0,0,0,0.3);
+    }
+
+    /* Valeurs si Mode CLAIR détecté (Streamlit) */
+    [data-theme="light"] {
+        --card-bg: #ffffff;
+        --card-text: #333333;
+        --card-border: #e0e0e0;
+        --text-strong: #000000;
+        --text-dim: #2c3e50; /* Bleu foncé pour être lisible */
+        --row-border: #f0f0f0;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    /* 2. APPLICATION DES VARIABLES SUR LES CARTES */
     .bus-card, .rail-card {
-        background-color: #1a1a1a; 
-        padding: 12px; 
-        margin-bottom: 15px; 
-        border-radius: 8px; 
+        background-color: var(--card-bg) !important;
+        color: var(--card-text) !important;
+        border: 1px solid var(--card-border) !important;
+        box-shadow: 0 4px 6px var(--shadow) !important;
         
-        /* La bordure gauche est gérée par le Python (couleur ligne) */
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        
+        /* La bande gauche garde sa couleur dynamique Python */
         border-left-width: 5px !important;
         border-left-style: solid !important;
         
-        color: #ddd;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
     }
 
-    /* 2. SURCHARGE POUR LE MODE CLAIR */
-    /* S'active uniquement si l'utilisateur est en Light Mode */
-    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
-        background-color: #ffffff !important;   /* Fond Blanc */
-        color: #333333 !important;              /* Texte Noir */
-        border: 1px solid #e0e0e0;              /* Petit contour gris */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    .bus-dest, .rail-dest { 
+        color: var(--text-dim) !important; 
+        font-size: 15px; 
+        font-weight: 700 !important; /* Gras pour lisibilité en blanc */
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        margin-right: 10px; 
+        flex: 1;
     }
 
-    /* CORRECTION DES TEXTES INTERNES EN MODE CLAIR */
-    /* On force les destinations en foncé pour qu'elles soient lisibles sur le blanc */
-    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
-        color: #2c3e50 !important; /* Bleu encre */
-        font-weight: 700 !important;
+    .bus-row, .rail-row {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding-top: 8px; 
+        padding-bottom: 2px; 
+        border-top: 1px solid var(--row-border) !important; 
     }
     
-    /* On éclaircit les lignes de séparation en mode clair */
-    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
-        border-top: 1px solid #f0f0f0 !important;
-    }
-
-    /* On force l'heure en noir en mode clair */
-    [data-theme="light"] .rail-row > span:last-child, 
-    [data-theme="light"] .bus-row > span:last-child {
-        color: #333333 !important;
+    /* Heure à droite */
+    .bus-row > span:last-child, .rail-row > span:last-child {
+        color: var(--text-strong) !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+        text-align: right;
+        font-weight: bold;
     }
 
     /* --- CORRECTION MOBILE --- */
@@ -840,7 +867,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -894,7 +921,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.2 - Abondance 🧀")
+    st.caption("v1.1 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
