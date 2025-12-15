@@ -218,77 +218,86 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : NOUVELLE MÉTHODE (VARIABLES CSS)         */
+    /* DESIGN DES CARTES : MÉTHODE "OVERRIDE" (INFALLIBLE)          */
     /* ============================================================ */
 
-    /* 1. DÉFINITION DES VARIABLES DE COULEURS */
-    
-    /* A. Valeurs par DÉFAUT (Mode Sombre / Dark) */
-    :root {
-        --card-bg: #021939;           /* Bleu Nuit */
-        --card-text: #ffffff;         /* Texte Blanc */
-        --card-subtext: #cccccc;      /* Texte Gris clair */
-        --card-border-color: rgba(255, 255, 255, 0.15);
-        --time-color: #ffffff;
-    }
-
-    /* B. Valeurs si STREAMLIT est en mode CLAIR (Light) */
-    /* Streamlit ajoute l'attribut data-theme="light" à la racine quand on change le thème */
-    [data-theme="light"] {
-        --card-bg: #ffffff;           /* Blanc pur */
-        --card-text: #333333;         /* Gris foncé */
-        --card-subtext: #2c3e50;      /* Bleu encre (lisible) */
-        --card-border-color: #e0e0e0; /* Gris très clair */
-        --time-color: #333333;
-    }
-
-    /* 2. APPLICATION DES VARIABLES SUR LES CARTES */
+    /* ------------------------------------------------------------ */
+    /* 1. CONFIGURATION PAR DÉFAUT (MODE SOMBRE / DARK)             */
+    /* ------------------------------------------------------------ */
     .bus-card, .rail-card {
-        /* On utilise les variables ici. Elles changent toutes seules ! */
-        background-color: var(--card-bg) !important;
-        color: var(--card-text) !important;
+        /* Fond et Texte de base (Bleu Nuit) */
+        background-color: #021939; 
+        color: white;
         
+        /* Layout */
         padding: 12px;
         margin-bottom: 15px;
         border-radius: 10px;
-        transition: background-color 0.3s ease, color 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
-        /* GESTION DES BORDURES */
-        /* 1. La bande de couleur à GAUCHE (Indispensable) */
+        /* GESTION BORDURES : On sépare la gauche des autres */
         border-left-width: 6px !important;
         border-left-style: solid !important;
-        /* La couleur (border-left-color) est gérée par le Python, on n'y touche pas */
+        /* Note : border-left-color est gérée par le Python (inline) */
 
-        /* 2. Les autres bordures (Haut, Droite, Bas) suivent le thème */
-        border-top: 1px solid var(--card-border-color) !important;
-        border-right: 1px solid var(--card-border-color) !important;
-        border-bottom: 1px solid var(--card-border-color) !important;
+        /* Bordures subtiles pour le mode sombre */
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    /* 3. STYLES INTERNES (Destination, Séparateurs, Heures) */
-    
-    /* Nom de la destination */
+    /* Styles internes par défaut (Sombre) */
     .bus-dest, .rail-dest { 
-        color: var(--card-subtext) !important; 
-        font-weight: 700 !important; /* Gras pour bien lire */
+        color: #cccccc; 
+        font-weight: 500;
         font-size: 16px; 
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1;
     }
-
-    /* Lignes de séparation */
+    
     .rail-row, .bus-row { 
-        display: flex; 
-        justify-content: space-between; 
-        padding: 10px 0; 
-        align-items: center; 
-        border-top: 1px solid var(--card-border-color) !important; 
+        display: flex; justify-content: space-between; padding: 10px 0; align-items: center;
+        border-top: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* L'heure d'arrivée (à droite) */
     .rail-row > span:last-child, .bus-row > span:last-child {
-        color: var(--time-color) !important;
-        white-space: nowrap;
+        color: white;
+    }
+
+
+    /* ------------------------------------------------------------ */
+    /* 2. SURCHARGE MODE CLAIR (ACTIVE SI STREAMLIT EST LIGHT)      */
+    /* ------------------------------------------------------------ */
+    /* Le sélecteur [data-theme="light"] détecte le réglage Streamlit */
+    
+    [data-theme="light"] .bus-card, 
+    [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* BLANC PUR FORCE */
+        color: #333333 !important;            /* TEXTE GRIS FORCE */
+        
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        
+        /* On remplace les bordures grises sombres par du gris clair */
+        border-top: 1px solid #e0e0e0 !important;
+        border-right: 1px solid #e0e0e0 !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+    }
+
+    /* On force les textes en sombre pour qu'ils soient lisibles sur le blanc */
+    [data-theme="light"] .bus-dest, 
+    [data-theme="light"] .rail-dest { 
+        color: #2c3e50 !important; /* Bleu Foncé */
+        font-weight: 700 !important; 
+    }
+
+    [data-theme="light"] .rail-row, 
+    [data-theme="light"] .bus-row { 
+        border-top: 1px solid #f0f0f0 !important; /* Séparateur très clair */
+    }
+
+    [data-theme="light"] .rail-row > span:last-child, 
+    [data-theme="light"] .bus-row > span:last-child {
+        color: #333333 !important; /* Heure en noir */
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
