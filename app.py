@@ -217,38 +217,50 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-    /* --- CARTES LIGNES (DESIGN ANTHRACITE IDFM) --- */
+   /* --- CARTES LIGNES (DESIGN ADAPTATIF INTELLIGENT) --- */
     .bus-card, .rail-card { 
-        background-color: #2c3236 !important; /* Anthracite plus profond (au lieu de #383E42) */
+        /* Par défaut (Mode Sombre) : Un gris "Material Design" qui se détache du fond noir */
+        background-color: #343a40 !important; 
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 8px; 
         border-left: 5px solid #666; 
-        color: #ffffff !important; /* Blanc PUR (au lieu de blanc cassé) */
-        box-shadow: 0 4px 8px rgba(0,0,0,0.25); /* Ombre plus marquée pour détacher du fond */
+        color: #ffffff !important; /* Texte blanc pur */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        transition: background-color 0.3s ease; /* Transition douce si on change de mode */
     }
 
-    /* Ajustement des lignes de séparation */
+    /* RÈGLE SPÉCIALE : Si l'utilisateur est en Mode CLAIR (Fond blanc) */
+    @media (prefers-color-scheme: light) {
+        .bus-card, .rail-card {
+            /* Un Anthracite Bleuté plus profond pour bien contraster avec le blanc */
+            background-color: #2c3e50 !important; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15); /* Ombre plus forte pour l'effet "carte posée" */
+        }
+    }
+
+    /* Ajustement des lignes */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
         padding: 10px 0; 
-        border-top: 1px solid rgba(255,255,255,0.1); /* Séparateur plus fin et discret */
+        border-top: 1px solid rgba(255,255,255,0.15); /* Trait fin subtil */
         align-items: center; 
     }
-    
-    .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
-    
+
+    /* Texte destination : RETOUR À LA NORMALE (Pas de gras) */
     .bus-dest, .rail-dest { 
         color: #ffffff !important; 
         font-size: 16px; 
-        font-weight: 700 !important; /* Le gras aide énormément à la lecture sur fond sombre */
+        font-weight: 500 !important; /* Poids moyen (Medium), plus lisible que le gras */
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         margin-right: 10px;
         flex: 1;
     }
+    
+    .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
 
     /* Le bloc des horaires ne doit JAMAIS passer à la ligne */
     .bus-row > span:last-child, .rail-row > span:last-child {
