@@ -218,28 +218,11 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES & THEMES (CORRIGÉ & COMPLET)               */
+    /* DESIGN DES CARTES & THEMES (VERSION ULTIME)                  */
     /* ============================================================ */
 
-    /* --- 1. GESTION DES ICONES (RER, Metro...) --- */
-    .mode-icon {
-        height: 1.5em;
-        width: auto;
-        margin-right: 10px;
-        transition: filter 0.3s ease;
-    }
-    
-    /* MODE SOMBRE (Défaut) : On force le blanc pur */
-    :not([data-theme="light"]) .mode-icon {
-        filter: brightness(0) invert(1) !important;
-    }
-    
-    /* MODE CLAIR : On garde les couleurs d'origine */
-    [data-theme="light"] .mode-icon {
-        filter: none !important;
-    }
-
-    /* --- 2. STRUCTURE GÉNÉRALE DES CARTES --- */
+    /* --- 1. STRUCTURE (Taille, Marges, Forme) --- */
+    /* Ceci s'applique tout le temps, peu importe le thème */
     .bus-card, .rail-card {
         padding: 12px;
         margin-bottom: 15px;
@@ -247,52 +230,13 @@ st.markdown("""
         transition: all 0.3s ease;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         
-        /* La bordure gauche de couleur est gérée par le Python */
+        /* La bordure gauche de couleur (Ligne) est gérée par le Python */
         border-left-width: 6px !important;
         border-left-style: solid !important;
         
         display: flex; flex-direction: column;
     }
 
-    /* --- 3. COULEURS : MODE SOMBRE (Défaut) --- */
-    :not([data-theme="light"]) .bus-card,
-    :not([data-theme="light"]) .rail-card {
-        background-color: #021939 !important; /* Bleu Nuit */
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    :not([data-theme="light"]) .bus-dest, 
-    :not([data-theme="light"]) .rail-dest { 
-        color: #cccccc !important; 
-    }
-    :not([data-theme="light"]) .rail-row, 
-    :not([data-theme="light"]) .bus-row { 
-        border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    /* --- 4. COULEURS : MODE CLAIR (Light) --- */
-    [data-theme="light"] .bus-card, 
-    [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* Blanc Pur */
-        color: #333333 !important;            /* Gris Foncé */
-        border: 1px solid #e0e0e0 !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-    }
-    [data-theme="light"] .bus-dest, 
-    [data-theme="light"] .rail-dest { 
-        color: #2c3e50 !important; /* Bleu Foncé lisible */
-        font-weight: 700 !important; 
-    }
-    [data-theme="light"] .rail-row, 
-    [data-theme="light"] .bus-row { 
-        border-top: 1px solid #f0f0f0 !important;
-    }
-    [data-theme="light"] .rail-row > span:last-child, 
-    [data-theme="light"] .bus-row > span:last-child {
-        color: #333333 !important;
-    }
-
-    /* --- 5. ELEMENTS INTERNES (TEXTES & LIGNES) --- */
     .bus-dest, .rail-dest { 
         font-weight: 500; font-size: 16px; 
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
@@ -301,26 +245,95 @@ st.markdown("""
     .rail-row, .bus-row { 
         display: flex; justify-content: space-between; padding: 10px 0; align-items: center;
     }
-    /* Empêche les heures de passer à la ligne */
     .bus-row > span:last-child, .rail-row > span:last-child {
         white-space: nowrap; flex-shrink: 0; text-align: right;
     }
+    /* Correction espacement RER */
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
-
-    /* --- 6. BOX "SERVICE TERMINÉ" --- */
+    
+    /* Box Service Terminé (Structure) */
     .service-box { 
         text-align: left; padding: 10px 12px; font-style: italic; font-size: 0.95em;
         border-radius: 6px; margin-top: 5px; margin-bottom: 5px; 
     }
-    :not([data-theme="light"]) .service-box {
-        color: #888; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #444;
+
+    /* --- 2. STYLE "SOMBRE" (C'est le style par DÉFAUT) --- */
+    /* On applique ça en premier. Si rien ne dit le contraire, ce sera bleu. */
+    
+    .bus-card, .rail-card {
+        background-color: #021939; /* Bleu Nuit */
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .bus-dest, .rail-dest { color: #cccccc; }
+    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1); }
+    .rail-row > span:last-child, .bus-row > span:last-child { color: white; }
+    .service-box { color: #888; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #444; }
+    
+    /* Icones : Blanches par défaut (pour aller sur le fond bleu) */
+    .mode-icon {
+        height: 1.5em; width: auto; margin-right: 10px;
+        transition: filter 0.3s ease;
+        filter: brightness(0) invert(1); 
+    }
+
+    /* --- 3. STYLE "CLAIR" (L'Override) --- */
+    /* On force ce style SI Streamlit est en mode Light OU si le système est Light (Auto) */
+    
+    /* A. Cas où l'utilisateur a choisi "Light" dans Streamlit */
+    [data-theme="light"] .bus-card, 
+    [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* FORCE BLANC */
+        color: #333333 !important;            /* FORCE GRIS */
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    }
+    /* Textes en mode clair */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest { 
+        color: #2c3e50 !important; font-weight: 700 !important; 
+    }
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row { 
+        border-top: 1px solid #f0f0f0 !important; 
+    }
+    [data-theme="light"] .rail-row > span:last-child, [data-theme="light"] .bus-row > span:last-child {
+        color: #333333 !important;
     }
     [data-theme="light"] .service-box {
-        color: #666; background: #f9f9f9; border-left: 3px solid #ccc;
+        color: #666 !important; background: #f9f9f9 !important; border-left: 3px solid #ccc !important;
     }
+    /* On remet les icones normales (noires/colorées) en mode clair */
+    [data-theme="light"] .mode-icon {
+        filter: none !important;
+    }
+
+    /* B. Cas où l'utilisateur est en "Auto" et son Système est Light */
+    @media (prefers-color-scheme: light) {
+        /* On applique le mode clair SEULEMENT si l'utilisateur n'a pas FORCÉ le mode Dark */
+        :root:not([data-theme="dark"]) .bus-card,
+        :root:not([data-theme="dark"]) .rail-card {
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        }
+        :root:not([data-theme="dark"]) .bus-dest, 
+        :root:not([data-theme="dark"]) .rail-dest { color: #2c3e50 !important; font-weight: 700 !important; }
+        
+        :root:not([data-theme="dark"]) .rail-row, 
+        :root:not([data-theme="dark"]) .bus-row { border-top: 1px solid #f0f0f0 !important; }
+        
+        :root:not([data-theme="dark"]) .rail-row > span:last-child, 
+        :root:not([data-theme="dark"]) .bus-row > span:last-child { color: #333333 !important; }
+        
+        :root:not([data-theme="dark"]) .service-box { color: #666 !important; background: #f9f9f9 !important; border-left: 3px solid #ccc !important; }
+        
+        :root:not([data-theme="dark"]) .mode-icon { filter: none !important; }
+    }
+
+    /* --- 4. AUTRES ÉLÉMENTS RESTAURÉS --- */
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 
-    /* --- 7. BOX "DERNIER DÉPART" (JAUNE) --- */
+    /* BOX "DERNIER DÉPART" (JAUNE) */
     .last-dep-box {
         border: 2px solid #f1c40f; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
         background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite;
@@ -330,7 +343,7 @@ st.markdown("""
     .last-dep-small-frame { border: 1px solid #f1c40f; border-radius: 4px; padding: 1px 5px; color: #f1c40f; font-weight: bold; }
     .last-dep-text-only { color: #f1c40f; font-weight: bold; }
 
-    /* --- 8. BADGES & TITRES (Ce qui avait disparu !) --- */
+    /* BADGES & TITRES */
     .version-badge {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white; padding: 4px 12px; border-radius: 20px;
@@ -344,30 +357,25 @@ st.markdown("""
         flex-wrap: wrap !important; gap: 15px !important; line-height: 1.1 !important;
     }
 
-    /* --- 9. MOBILE (MEDIA QUERY) --- */
+    /* MOBILE */
     @media (max-width: 480px) {
         .block-container { padding-top: 1rem !important; }
         .station-title, .station-title-pole { font-size: 20px; }
         h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
         .version-badge { font-size: 0.45em !important; }
-
-        /* Mobile : Bus sur 2 lignes */
         .bus-row { flex-direction: column !important; align-items: flex-start !important; padding-top: 10px !important; padding-bottom: 10px !important; }
         .bus-dest { width: 100% !important; white-space: normal !important; margin-bottom: 6px !important; font-size: 16px !important; margin-right: 0 !important; }
         .bus-row > span:last-child { width: 100% !important; text-align: left !important; font-size: 0.9em !important; color: #ccc !important; }
-        
-        /* Mobile : RER sur 1 ligne */
         .rail-row { padding-top: 8px !important; padding-bottom: 8px !important; }
         .rail-dest { max-width: 65% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
         .time-sep { display: inline-block !important; margin: 0 5px !important; color: #666 !important; font-weight: lighter !important; }
     }
     
-    /* Alignement vertical du bouton favori */
     div[data-testid="column"] { display: flex; align-items: center; }
     div[data-testid="column"] button { border: none; background: transparent; font-size: 1.5rem; padding: 0; }
     div[data-testid="column"] button:hover { color: #f1c40f; border: none; background: transparent; }
 
-    /* --- 10. BOX BUS REMPLACEMENT (ROUGE) --- */
+    /* BOX BUS REMPLACEMENT (ROUGE) */
     .replacement-box {
         border: 2px dashed #e74c3c; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
         background-color: rgba(231, 76, 60, 0.1); 
