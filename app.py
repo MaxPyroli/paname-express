@@ -217,8 +217,15 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-    .bus-card, .rail-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
+    /* --- CARTES LIGNES (DESIGN ANTHRACITE IDFM) --- */
+    .bus-card, .rail-card { 
+        background-color: #383E42 !important; /* Anthracite plus doux */
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        border-left: 5px solid #666; 
+        color: #f5f5f5 !important; /* Texte blanc cassé pour la douceur */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* Ombre légère pour le relief */
     }
 
     /* --- CORRECTION MOBILE --- */
