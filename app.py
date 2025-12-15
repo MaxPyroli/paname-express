@@ -95,17 +95,24 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
+    /* --- MISE A JOUR : COULEUR ANTHRACITE IDFM --- */
     .bus-card, .rail-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
+        background-color: #383E42 !important; /* Anthracite plus doux */
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        border-left: 5px solid #666; 
+        color: #f5f5f5 !important; /* Texte blanc cassé pour la douceur */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* Ombre légère pour le relief */
     }
 
     .bus-row, .rail-row {
-        display: flex; justify-content: space-between; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid #333; 
+        display: flex; justify-content: space-between; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255,255,255,0.1); 
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
     
-    .bus-dest, .rail-dest { color: #ccc; font-size: 15px; font-weight: 500; }
+    .bus-dest, .rail-dest { color: #eee; font-size: 15px; font-weight: 500; }
     
     .service-box { 
         text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
@@ -126,14 +133,14 @@ st.markdown("""
         animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge & Pointillés) --- */
+    
     .replacement-box {
-        border: 2px dashed #e74c3c; /* <--- CHANGEMENT : dashed */
+        border: 2px dashed #e74c3c;
         border-radius: 6px; 
         padding: 8px 10px; 
         margin-top: 8px; 
         margin-bottom: 8px;
-        background-color: rgba(231, 76, 60, 0.1); /* Fond rouge très léger */
+        background-color: rgba(231, 76, 60, 0.1);
     }
     .replacement-label { 
         display: block; 
@@ -144,7 +151,6 @@ st.markdown("""
         margin-bottom: 4px; 
         letter-spacing: 1px; 
     }
-    /* Annule les bordures de la ligne interne car c'est la box qui cadre */
     .replacement-box .rail-row, .replacement-box .bus-row { 
         border-top: none !important; 
         padding-top: 0 !important; 
@@ -189,20 +195,15 @@ def get_demo_data():
     # Scénario ULTIME : Tout en un
     data = {'lines': [], 'departures': []}
     
-    # 1. CABLE C1 (Simulé comme actif)
+    # 1. CABLE C1 (Normal)
     data['lines'].append({'physical_mode': 'CABLE', 'code': 'C1', 'color': '56CCF2'})
-    # Départ imminent
-    data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Pointe du Lac', 'min': 2, 'color': '56CCF2'})
-    data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Pointe du Lac', 'min': 8, 'color': '56CCF2'})
-    # Autre direction
-    data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Villa Nova', 'min': 4, 'color': '56CCF2'})
+    data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Pointe du Lac', 'min': 0, 'color': '56CCF2'})
+    data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Villa Nova', 'min': 0, 'color': '56CCF2'})
 
     # 2. RER A (Smart Geo + "À l'approche")
     data['lines'].append({'physical_mode': 'RER', 'code': 'A', 'color': 'E3051C'})
-    # Ouest
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'St-Germain-en-Laye', 'min': 1, 'color': 'E3051C'})
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Cergy-le-Haut', 'min': 8, 'color': 'E3051C'})
-    # Est (Dernier départ)
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Marne-la-Vallée Chessy', 'min': 15, 'color': 'E3051C', 'is_last': True})
 
     # 3. TRAIN H (Branches)
@@ -224,13 +225,10 @@ def get_demo_data():
     data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 15, 'color': '000000'})
     data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 75, 'color': '000000'})
 
-    # 7. BUS DE REMPLACEMENT RER A (Branche Poissy fermée par ex)
-    # Note : Le code est 'A' mais le mode est 'BUS' dans l'API
-    data['lines'].append({'physical_mode': 'BUS', 'code': 'A', 'color': 'E3051C'}) # Ligne fantôme pour la couleur
+    # 7. SUBSTITUTIONS
+    data['lines'].append({'physical_mode': 'BUS', 'code': 'A', 'color': 'E3051C'})
     data['departures'].append({'mode': 'BUS', 'code': 'A', 'dest': 'Poissy (Bus de remplacement)', 'min': 5, 'color': 'E3051C'})
     
-    # 8. BUS DE REMPLACEMENT MÉTRO 6 (Travaux)
-    # Code 'M6' pour simuler le format RATP
     data['lines'].append({'physical_mode': 'METRO', 'code': '6', 'color': '75C695'})
     data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Nation', 'min': 2, 'color': '75C695'})
     data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Charles de Gaulle - Étoile', 'min': 6, 'color': '75C695'})
@@ -242,7 +240,7 @@ def get_demo_data():
 # ==========================================
 def afficher_demo():
     st.title("💎 Grand Paname - SHOWCASE")
-    st.caption("Vitrine de toutes les fonctionnalités")
+    st.caption("Vitrine des fonctionnalités & Design")
     
     # Zone Statut Fixe
     st.markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Démonstration temps réel...</div>""", unsafe_allow_html=True)
@@ -256,7 +254,6 @@ def afficher_demo():
     # 1. Calcul des max
     last_departures_map = {}
     for d in mock_data['departures']:
-        # On normalise la clé pour le calcul du dernier départ
         key = (d['mode'], d['code'], d['dest'])
         current_max = last_departures_map.get(key, -999)
         if d['min'] > current_max: last_departures_map[key] = d['min']
@@ -273,20 +270,16 @@ def afficher_demo():
         is_replacement = False
         
         if mode == "BUS":
-            # Cas RER / TRAIN (Ex: Bus A)
             if code in ["A", "B", "C", "D", "E", "H", "J", "K", "L", "N", "P", "R", "U", "V"]:
                 is_replacement = True
                 mode = "RER" if code in ["A", "B", "C", "D", "E"] else "TRAIN"
-            
-            # Cas MÉTRO (Ex: Bus M6)
             elif code.startswith('M') and code[1:].isdigit():
                 is_replacement = True
                 mode = "METRO"
-                code = code[1:] # On enlève le M pour fusionner avec la ligne
+                code = code[1:] 
         # -----------------------------------------
 
         is_last = False
-        # Logique simplifiée pour la démo
         if d.get('is_last'): is_last = True
             
         _, html = format_html_time(minutes)
@@ -327,27 +320,14 @@ def afficher_demo():
                 p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
                 p2 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_2'])]
                 
-                # Fonction de rendu (Box Rouge Substitution)
                 def render_grp(t, l):
                     h = f"<div class='rer-direction'>{t}</div>"
                     for it in l:
                         dest_txt = f"{it['dest']}"
-                        
-                        # LOGIQUE D'ENCADREMENT
                         if it.get('is_replacement'):
-                            # Box Rouge avec titre + temps aligné à droite
-                            h += f"""
-                            <div class='replacement-box'>
-                                <span class='replacement-label'>🚍 Bus de substitution</span>
-                                <div class='rail-row'>
-                                    <span class='rail-dest'>{dest_txt}</span>
-                                    <span>{it['html']}</span>
-                                </div>
-                            </div>"""
-                        
+                            h += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
                         elif it.get('is_last'):
                              h += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span><div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div></div>"""
-                        
                         else:
                              h += f"""<div class='rail-row'><span class='rail-dest'>{dest_txt}</span><span>{it['html']}</span></div>"""
                     return h
@@ -357,22 +337,49 @@ def afficher_demo():
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # --- CAS 3 : AUTRES (Bus / Métro / Câble) ---
+            # --- CAS SPÉCIAL DÉMO : CÂBLE C1 (SHOWROOM) ---
+            # On force l'affichage de 2 cartes pour montrer les 2 états (Normal et Perturbé)
+            elif code == "C1":
+                # --- CARTE 1 : FONCTIONNEMENT NORMAL (Rotation) ---
+                st.caption("Scénario 1 : Fonctionnement Normal")
+                rows_normal = ""
+                dests_demo = ["Pointe du Lac", "Villa Nova"]
+                for dn in dests_demo:
+                    freq_text = "Départ toutes les ~30s"
+                    rows_normal += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
+                
+                st.markdown(f"""
+                <div class="bus-card" style="border-left-color: #{color}; position: relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span><span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span></div>
+                <span style="font-size:1.5em;" title="Téléphérique">🚡</span>
+                </div>
+                {rows_normal}
+                </div>
+                """, unsafe_allow_html=True)
+
+                # --- CARTE 2 : PERTURBATION (Alerte) ---
+                st.caption("Scénario 2 : Perturbation Majeure")
+                alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>Arrêt temporaire : Vent violent (> 90km/h)</span></div>"
+                
+                st.markdown(f"""
+                <div class="bus-card" style="border-left-color: #{color}; position: relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span><span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span></div>
+                <span style="font-size:1.5em;" title="Téléphérique">🚡</span>
+                </div>
+                {alert_html}
+                <div class="service-box">😴 Service suspendu</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # --- CAS 3 : AUTRES (Bus / Métro Standard) ---
             else:
                 rows_html = ""
-                
-                # Bandeau C1
-                if code == "C1":
-                    st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
-                    st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px;"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-12</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
-
                 # Tri
-                if mode_actuel in ["METRO", "CABLE"]:
-                    departs.sort(key=lambda x: x['dest'])
-                else:
-                    departs.sort(key=lambda x: x['tri'])
+                if mode_actuel in ["METRO", "CABLE"]: departs.sort(key=lambda x: x['dest'])
+                else: departs.sort(key=lambda x: x['tri'])
                 
-                # Regroupement par destination
                 grouped = {}
                 for d in departs:
                     if d['dest'] not in grouped: grouped[d['dest']] = []
@@ -382,46 +389,29 @@ def afficher_demo():
                     html_list = []
                     contains_last = False
                     last_val_tri = 999
-                    is_noctilien = code.startswith('N')
-                    
-                    # Est-ce que ce groupe est une substitution ? (On regarde le 1er item)
                     is_group_replacement = items[0].get('is_replacement') if items else False
 
                     for idx, d in enumerate(items):
-                         if idx > 0 and d['tri'] > 62 and not is_noctilien: continue
-                         
+                         if idx > 0 and d['tri'] > 62 and not str(code).startswith('N'): continue
                          txt = d['html']
                          if d.get('is_last'):
                              contains_last = True
                              last_val_tri = d['tri']
                              if d['tri'] < 60:
-                                 if d['tri'] < 30:
-                                     txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
-                                 else:
-                                     txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
+                                 if d['tri'] < 30: txt = f"<span style='border: 1px solid #f1c40f; border-radius: 4px; padding: 0 4px; color: #f1c40f;'>{txt} 🏁</span>"
+                                 else: txt += " <span style='opacity:0.7; font-size:0.9em'>🏁</span>"
                          html_list.append(txt)
                     
                     times_str = "<span class='time-sep'>|</span>".join(html_list)
-
-                    # Style spécial Bus de remplacement
-                    # Si c'est un remplacement, on garde 'bus-row' pour l'alignement, mais on l'encadre
-                    
-                    # Préparation de la ligne standard (pour l'alignement flex)
                     row_html_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
 
-                    # ENCADREMENT
                     if is_group_replacement:
-                        rows_html += f"""
-                        <div class='replacement-box'>
-                            <span class='replacement-label'>🚍 Bus de substitution</span>
-                            {row_html_content}
-                        </div>"""
-                        
+                        rows_html += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span>{row_html_content}</div>"""
                     elif contains_last and len(html_list) == 1 and last_val_tri < 10:
                          rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ (Imminent)</span>{row_html_content}</div>"""
-                    
                     else:
                         rows_html += row_html_content
+                
                 st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
 
     if count_visible_footer > 0:
@@ -435,23 +425,21 @@ def afficher_demo():
 #              FAUX PANNEAU LATÉRAL
 # ==========================================
 with st.sidebar:
-    st.caption("v0.12.2 - Milk • ⚠️ Pre-release") 
+    st.caption("v0.13.0 - Anthracite • 🧪 SHOWROOM") 
     st.header("🗄️ Informations")
-    st.warning("🚧 **Zone de travaux !**\n\nCe site est une pré-version (concept). Si vous croisez un bug, soyez sympa, le code est sensible et il fait de son mieux ! 🥺")
+    st.info("Ce mode **SHOWROOM** permet de visualiser tous les styles graphiques et scénarios possibles (perturbations, derniers départs, travaux, téléphérique...) sans dépendre de l'API réelle.")
     st.markdown("---")
-    with st.expander("📜 Historique des versions"):
+    with st.expander("🎨 Nouveautés Design"):
         st.markdown("""
-        ✨ **v0.12.2 — Milk**
-        *Date : 30 Novembre 2025*
+        **Update Anthracite**
+        * Cartes plus douces (`#383E42`)
+        * Ombres portées pour le relief
+        * Textes blanc cassé (`#F5F5F5`)
         
-        **Nouveautés**
-        * 🏁 Mise en évidence graphique des ultimes passages.
-        * 🆔 Intégration de la police Grand Paris.
-        * 🚠 Bandeau spécial pour le Câble C1.
+        **Câble C1**
+        * Affichage "Rotation continue"
+        * Gestion des alertes météo
         """)
-        st.divider()
-        st.markdown("*... (Anciennes versions)*")
-    
     st.markdown("---")
     st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 
