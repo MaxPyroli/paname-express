@@ -447,34 +447,34 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES (VERSION ROBUSTE) --- */
+    /* --- CSS ICONES ADAPTATIVES (CORRECTION TOTALE) --- */
     
-    /* 1. Style de base (pour le mode CLAIR par défaut) */
+    /* 1. Configuration de base de l'image (Taille & Alignement) */
     img.mode-icon {
         height: 1.5em !important;
         width: auto !important;
         margin-right: 10px !important;
         vertical-align: middle !important;
         transition: filter 0.3s ease;
-        filter: none; /* Pas de filtre = Noir d'origine */
+        /* Par défaut (si rien n'est détecté), on ne touche pas à la couleur (Noir) */
+        filter: none;
     }
 
-    /* 2. DÉTECTION SYSTÈME (Si l'ordinateur est en mode sombre) */
+    /* 2. DÉTECTION SYSTÈME (Si ton PC/Mac est en mode sombre) */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            /* Inversion : Noir devient Blanc + Luminosité boostée */
-            filter: invert(1) brightness(2) !important; 
+            filter: invert(1) brightness(2); 
         }
     }
 
-    /* 3. DÉTECTION STREAMLIT : MODE DARK FORCÉ */
-    /* Cela s'active si tu choisis "Dark" dans les settings, peu importe ton ordi */
+    /* 3. PRIORITÉ STREAMLIT : MODE DARK (Force le Blanc) */
+    /* Cible spécifiquement quand tu mets "Dark" dans les réglages Streamlit */
     [data-theme="dark"] img.mode-icon {
         filter: invert(1) brightness(2) !important;
     }
 
-    /* 4. DÉTECTION STREAMLIT : MODE LIGHT FORCÉ */
-    /* Cela s'active si tu choisis "Light" dans les settings */
+    /* 4. PRIORITÉ STREAMLIT : MODE LIGHT (Force le Noir) */
+    /* Cible spécifiquement quand tu mets "Light" dans les réglages Streamlit */
     [data-theme="light"] img.mode-icon {
         filter: none !important;
     }
