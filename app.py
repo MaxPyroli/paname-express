@@ -447,36 +447,36 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES (CORRECTION TOTALE) --- */
+    /* --- CSS ICONES ADAPTATIVES (CORRECTION ROBUSTE) --- */
     
-    /* 1. Configuration de base de l'image (Taille & Alignement) */
+    /* 1. Configuration de base (S'applique par défaut) */
     img.mode-icon {
         height: 1.5em !important;
         width: auto !important;
         margin-right: 10px !important;
         vertical-align: middle !important;
         transition: filter 0.3s ease;
-        /* Par défaut (si rien n'est détecté), on ne touche pas à la couleur (Noir) */
-        filter: none;
+        /* Par défaut : on force le NOIR PUR (comme ça, même si le SVG est gris ou coloré, il devient noir) */
+        filter: brightness(0) !important;
     }
 
-    /* 2. DÉTECTION SYSTÈME (Si ton PC/Mac est en mode sombre) */
+    /* 2. DÉTECTION SYSTÈME : Si l'ordi est en mode sombre, on inverse en BLANC */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            filter: invert(1) brightness(2); 
+            filter: invert(1) brightness(2) !important; 
         }
     }
 
-    /* 3. PRIORITÉ STREAMLIT : MODE DARK (Force le Blanc) */
-    /* Cible spécifiquement quand tu mets "Dark" dans les réglages Streamlit */
-    [data-theme="dark"] img.mode-icon {
+    /* 3. FORCAGE STREAMLIT : MODE DARK (L'utilisateur choisit Dark dans les réglages) */
+    /* On cible 'html' ou 'section' pour être sûr de passer au-dessus du réglage système */
+    html[data-theme="dark"] img.mode-icon, [data-theme="dark"] img.mode-icon {
         filter: invert(1) brightness(2) !important;
     }
 
-    /* 4. PRIORITÉ STREAMLIT : MODE LIGHT (Force le Noir) */
-    /* Cible spécifiquement quand tu mets "Light" dans les réglages Streamlit */
-    [data-theme="light"] img.mode-icon {
-        filter: none !important;
+    /* 4. FORCAGE STREAMLIT : MODE LIGHT (L'utilisateur choisit Light dans les réglages) */
+    /* C'est ici le fix : on force le noir via brightness(0) pour annuler l'inversion du système */
+    html[data-theme="light"] img.mode-icon, [data-theme="light"] img.mode-icon {
+        filter: invert(0) brightness(0) !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
