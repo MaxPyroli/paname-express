@@ -804,7 +804,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1bêta</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -858,7 +858,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.2 - Abondance 🧀")
+    st.caption("v1.1bêta - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
@@ -1415,75 +1415,75 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
-                # CAS 3: BUS/METRO/TRAM
+                # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard)
                 else:
                     dest_data = {}
+                    # 1. Regroupement par destination
                     for d in proches:
                         dn = d['dest']
                         if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
+                        # On garde les 3 prochains départs max par destination
                         if len(dest_data[dn]['items']) < 3:
                             dest_data[dn]['items'].append(d)
                             if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
                     
-                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
-                    else: sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                    # 2. Tri des destinations
+                    # Pour Métro/Tram/Câble : Tri alphabétique des destinations (souvent plus clair)
+                    # Pour Bus : Tri par temps d'attente (le plus proche en premier)
+                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                    else: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                     
                     is_noctilien = str(code).strip().upper().startswith('N')
                     rows_html = ""
                     
-                    if code == "C1":
-                        target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                        now = datetime.now(pytz.timezone('Europe/Paris'))
-                        if target_date > now:
-                            delta = target_date - now
-                            days = delta.days; hours = delta.seconds // 3600; mins = (delta.seconds % 3600) // 60
-                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {mins}min</span></div>'
-                        else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
-                    else:
-                        for dest_name, info in sorted_dests:
-                            if "Service terminé" in dest_name: 
-                                rows_html += f'<div class="service-box">😴 Service terminé</div>'
-                            else:
-                                html_list = []
-                                contains_last = False; last_val_tri = 9999
-                                is_group_replacement = False
-                                if info['items'] and info['items'][0].get('is_replacement'):
-                                    is_group_replacement = True
+                    # 3. Génération des lignes (C1 est traité ICI maintenant)
+                    for dest_name, info in sorted_dests:
+                        if "Service terminé" in dest_name: 
+                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        else:
+                            html_list = []
+                            contains_last = False; last_val_tri = 9999
+                            is_group_replacement = False
+                            
+                            # Vérifie si c'est un bus de remplacement
+                            if info['items'] and info['items'][0].get('is_replacement'):
+                                is_group_replacement = True
     
-                                for idx, d_item in enumerate(info['items']):
-                                    val_tri = d_item['tri']
-                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                    txt = d_item['html']
-                                    if d_item.get('is_last'):
-                                        contains_last = True
-                                        last_val_tri = val_tri
-                                        if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                        elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                        else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    html_list.append(txt)
+                            # Formatage des horaires
+                            for idx, d_item in enumerate(info['items']):
+                                val_tri = d_item['tri']
+                                # Filtre les horaires trop lointains (>1h) sauf Noctilien
+                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
                                 
-                                if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                                times_str = "<span class='time-sep'>|</span>".join(html_list)
-                                row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                html_list.append(txt)
+                            
+                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                            times_str = "<span class='time-sep'>|</span>".join(html_list)
+                            
+                            # Création de la ligne HTML
+                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
     
-                                if is_group_replacement:
-                                    rows_html += f"""
-                                    <div class='replacement-box'>
-                                        <span class='replacement-label'>🚍 Bus de substitution</span>
-                                        {row_content}
-                                    </div>"""
-                                elif contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                    rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
-                                else:
-                                    rows_html += row_content                    
-                    if code == "C1":
-                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                         now = datetime.now(pytz.timezone('Europe/Paris'))
-                         if target_date > now:
-                             delta = target_date - now
-                             st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
-                             st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
+                            if is_group_replacement:
+                                rows_html += f"""
+                                <div class='replacement-box'>
+                                    <span class='replacement-label'>🚍 Bus de substitution</span>
+                                    {row_content}
+                                </div>"""
+                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                            else:
+                                rows_html += row_content                    
 
+                    # 4. Affichage de la Carte (Anthracite grâce au CSS précédent)
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
     with containers["AUTRE"]:
