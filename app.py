@@ -1415,6 +1415,71 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Affichage Statique ~30s)
+                elif code == "C1":
+                    rows_html = ""
+                    destinations_vues = []
+                    
+                    # --- A. GESTION DES PERTURBATIONS ---
+                    # Idéalement, on récupère le message d'API. Ici, logique de sécurité :
+                    perturbation_msg = None 
+                    
+                    # Logique de secours : Si on est en journée et liste vide
+                    import datetime
+                    now_hour = datetime.datetime.now().hour
+                    if not proches and (6 <= now_hour < 23):
+                         perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
+
+                    # Construction du bandeau d'alerte (s'affiche seulement si perturbation)
+                    alert_html = ""
+                    if perturbation_msg:
+                        alert_html = f"""
+                        <div style="background: rgba(231, 76, 60, 0.15); border-left: 4px solid #e74c3c; color: #ffadad; padding: 10px; margin-bottom: 12px; border-radius: 4px; display: flex; align-items: start; gap: 10px;">
+                            <span style="font-size: 1.2em;">⚠️</span>
+                            <span style="font-size: 0.9em; line-height: 1.4;">{perturbation_msg}</span>
+                        </div>
+                        """
+
+                    # --- B. AFFICHAGE DES DESTINATIONS ---
+                    # On ne calcule plus, on affiche juste les destinations disponibles
+                    for d in proches:
+                        dn = d['dest']
+                        if dn not in destinations_vues:
+                            destinations_vues.append(dn)
+                            
+                            # Texte FORCÉ comme demandé
+                            freq_text = "Départ toutes les ~30s"
+
+                            rows_html += f"""
+                            <div class="bus-row" style="align-items: center;">
+                                <span class="bus-dest">➜ {dn}</span>
+                                <span style="background-color: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 12px; font-size: 0.85em; color: #a9cce3; white-space: nowrap;">
+                                    ⏱ {freq_text}
+                                </span>
+                            </div>
+                            """
+                    
+                    # Si c'est la nuit (pas de perturbation mais pas d'horaires)
+                    if not rows_html and not perturbation_msg:
+                         rows_html = '<div class="service-box">😴 Service terminé</div>'
+
+                    # --- C. RENDU DE LA CARTE ---
+                    st.markdown(f"""
+                    <div class="bus-card" style="border-left-color: #{color}; position: relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <div style="display:flex; align-items:center;">
+                                <span class="line-badge" style="background-color:#{color};">{code}</span>
+                                <span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span>
+                            </div>
+                            <span style="font-size:1.5em;" title="Téléphérique">🚡</span>
+                        </div>
+                        
+                        {alert_html}
+                        
+                        {rows_html}
+                    </div>
+                    """, unsafe_allow_html=True)
+
                 # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard)
                 else:
                     dest_data = {}
