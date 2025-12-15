@@ -218,234 +218,111 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : MÉTHODE "OVERRIDE" (INFALLIBLE)          */
+    /* GESTION ROBUSTE DES THEMES & CARTES (V2)                     */
     /* ============================================================ */
 
-    /* ------------------------------------------------------------ */
-    /* 1. CONFIGURATION PAR DÉFAUT (MODE SOMBRE / DARK)             */
-    /* ------------------------------------------------------------ */
+    /* --- 1. LES ICONES (SVG) --- */
+    .mode-icon {
+        height: 1.5em;
+        width: auto;
+        margin-right: 10px;
+        transition: filter 0.3s ease;
+    }
+
+    /* CAS A : MODE SOMBRE (Par défaut OU Forcé) */
+    /* On cible tout ce qui N'EST PAS explicitement "Light" */
+    :not([data-theme="light"]) .mode-icon {
+        /* Transforme n'importe quelle couleur en Blanc Pur */
+        filter: brightness(0) invert(1) !important; 
+    }
+
+    /* CAS B : MODE CLAIR (Explicite) */
+    [data-theme="light"] .mode-icon {
+        /* On garde les couleurs d'origine du SVG */
+        filter: none !important;
+    }
+
+    /* --- 2. STRUCTURE COMMUNE DES CARTES (Indépendant du thème) --- */
     .bus-card, .rail-card {
-        /* Fond et Texte de base (Bleu Nuit) */
-        background-color: #021939; 
-        color: white;
-        
-        /* Layout */
         padding: 12px;
         margin-bottom: 15px;
-        border-radius: 10px;
+        border-radius: 12px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-
-        /* GESTION BORDURES : On sépare la gauche des autres */
+        
+        /* La bordure gauche de couleur (Ligne) est gérée par le Python inline */
         border-left-width: 6px !important;
         border-left-style: solid !important;
-        /* Note : border-left-color est gérée par le Python (inline) */
-
-        /* Bordures subtiles pour le mode sombre */
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        border-right: 1px solid rgba(255, 255, 255, 0.15);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        
+        display: flex; 
+        flex-direction: column;
     }
 
-    /* Styles internes par défaut (Sombre) */
-    .bus-dest, .rail-dest { 
-        color: #cccccc; 
+    /* --- 3. THEME SOMBRE (DESIGN PAR DÉFAUT) --- */
+    :not([data-theme="light"]) .bus-card,
+    :not([data-theme="light"]) .rail-card {
+        background-color: #021939 !important; /* Bleu Nuit */
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Textes spécifiques au mode sombre */
+    :not([data-theme="light"]) .bus-dest, 
+    :not([data-theme="light"]) .rail-dest {
+        color: #e0e0e0 !important; /* Gris très clair */
         font-weight: 500;
-        font-size: 16px; 
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1;
     }
-    
-    .rail-row, .bus-row { 
-        display: flex; justify-content: space-between; padding: 10px 0; align-items: center;
+    :not([data-theme="light"]) .rail-row, 
+    :not([data-theme="light"]) .bus-row {
         border-top: 1px solid rgba(255,255,255,0.1);
     }
 
-    .rail-row > span:last-child, .bus-row > span:last-child {
-        color: white;
-    }
-
-
-    /* ------------------------------------------------------------ */
-    /* 2. SURCHARGE MODE CLAIR (ACTIVE SI STREAMLIT EST LIGHT)      */
-    /* ------------------------------------------------------------ */
-    /* Le sélecteur [data-theme="light"] détecte le réglage Streamlit */
-    
+    /* --- 4. THEME CLAIR (SURCHARGE) --- */
     [data-theme="light"] .bus-card, 
     [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* BLANC PUR FORCE */
-        color: #333333 !important;            /* TEXTE GRIS FORCE */
-        
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-        
-        /* On remplace les bordures grises sombres par du gris clair */
-        border-top: 1px solid #e0e0e0 !important;
-        border-right: 1px solid #e0e0e0 !important;
-        border-bottom: 1px solid #e0e0e0 !important;
+        background-color: #ffffff !important; /* Blanc Pur */
+        color: #333333 !important;            /* Gris Foncé */
+        border: 1px solid #e0e0e0 !important; /* Contour gris clair */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; /* Ombre douce */
     }
 
-    /* On force les textes en sombre pour qu'ils soient lisibles sur le blanc */
+    /* Textes spécifiques au mode clair */
     [data-theme="light"] .bus-dest, 
     [data-theme="light"] .rail-dest { 
-        color: #2c3e50 !important; /* Bleu Foncé */
+        color: #2c3e50 !important; /* Bleu nuit lisible */
         font-weight: 700 !important; 
     }
-
     [data-theme="light"] .rail-row, 
     [data-theme="light"] .bus-row { 
-        border-top: 1px solid #f0f0f0 !important; /* Séparateur très clair */
+        border-top: 1px solid #f0f0f0 !important; /* Séparateur très pâle */
     }
-
     [data-theme="light"] .rail-row > span:last-child, 
     [data-theme="light"] .bus-row > span:last-child {
         color: #333333 !important; /* Heure en noir */
     }
     
-    .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
-
-    /* Le bloc des horaires ne doit JAMAIS passer à la ligne */
-    .bus-row > span:last-child, .rail-row > span:last-child {
-        white-space: nowrap;
-        flex-shrink: 0; /* Empêche d'être écrasé */
-        text-align: right;
+    /* --- 5. AJUSTEMENTS GENERAUX --- */
+    .rail-dest, .bus-dest {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
+        margin-right: 10px; flex: 1; font-size: 16px;
+    }
+    .rail-row, .bus-row { 
+        display: flex; justify-content: space-between; padding: 10px 0; align-items: center;
     }
     
-    .service-box { 
-        text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
-        background: rgba(255, 255, 255, 0.05); border-radius: 6px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444;
+    /* Le bloc "Service Terminé" */
+    .service-box {
+        text-align: left; padding: 10px 12px; font-style: italic; font-size: 0.95em;
+        border-radius: 6px; margin-top: 5px; margin-bottom: 5px; 
     }
-    .service-end { color: #999; font-style: italic; font-size: 0.9em; }
-
-    /* --- GESTION DERNIER DÉPART --- */
-    .last-dep-box {
-        border: 2px solid #f1c40f; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
-        background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite;
+    :not([data-theme="light"]) .service-box {
+        color: #888; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #444;
     }
-    .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
-    .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
-
-    /* Petit encadré pour départ entre 10 et 30 min */
-    .last-dep-small-frame {
-        border: 1px solid #f1c40f;
-        border-radius: 4px;
-        padding: 1px 5px;
-        color: #f1c40f;
-        font-weight: bold;
-    }
-    
-    /* Juste le texte pour départ > 30 min */
-    .last-dep-text-only {
-        color: #f1c40f;
-        font-weight: bold;
+    [data-theme="light"] .service-box {
+        color: #666; background: #f9f9f9; border-left: 3px solid #ccc;
     }
 
-    .version-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Nouveau dégradé plus moderne */
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.4em;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        margin-left: 0 !important; /* Le Flexbox gère l'espace */
-    }
-    
-    .verified-badge {
-        color: #3498db;
-        font-size: 0.8em;
-        margin-left: 5px;
-    }
-    /* CONFIGURATION TITRE (Taille & Alignement) */
-    h1 {
-        font-size: 3.5rem !important; /* Taille PC augmentée */
-        display: flex !important;     /* Active l'alignement flexible */
-        align-items: center !important;
-        flex-wrap: wrap !important;   /* Permet au badge de passer à la ligne proprement */
-        gap: 15px !important;         /* Espace entre le logo, le titre et le badge */
-        line-height: 1.1 !important;
-    }
-
-    /* --- MEDIA QUERY MOBILE (MAX 480px) --- */
-    @media (max-width: 480px) {
-        
-        /* 1. SUPPRESSION DE LA MARGE HAUTE (ESPACE BLANC) */
-        .block-container {
-            padding-top: 1rem !important; /* On réduit drastiquement l'espace (par défaut c'est ~6rem) */
-        }
-
-        /* Ajustements de taille de police globaux (Déjà présents) */
-        .station-title, .station-title-pole { font-size: 20px; }
-        h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
-        .version-badge { font-size: 0.45em !important; }
-
-        /* ... (Le reste de ton code mobile pour les Bus/RER reste en dessous) ... */
-
-        /* === CAS 1 : BUS / TRAM / MÉTRO (Affichage "Aéré" sur 2 lignes) === */
-        .bus-row {
-            flex-direction: column !important; /* Empile Destination et Heure */
-            align-items: flex-start !important; /* Aligne tout à gauche */
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-        }
-        
-        .bus-dest {
-            width: 100% !important;
-            white-space: normal !important; /* Autorise le texte à passer à la ligne */
-            margin-bottom: 6px !important;  /* Espace entre Nom et Heure */
-            font-size: 16px !important;
-            margin-right: 0 !important;
-        }
-
-        /* Le conteneur des heures pour les Bus passe en dessous */
-        .bus-row > span:last-child {
-            width: 100% !important;
-            text-align: left !important; /* On aligne les heures à gauche pour la lecture */
-            font-size: 0.9em !important;
-            color: #ccc !important;
-        }
-
-        /* === CAS 2 : RER / TRAIN (On garde l'affichage "Compact" sur 1 ligne) === */
-        /* On ne touche PAS à .rail-row ici pour qu'il garde le comportement par défaut (Row) */
-        .rail-row {
-            padding-top: 8px !important; 
-            padding-bottom: 8px !important;
-        }
-        
-        .rail-dest {
-            max-width: 65% !important; /* Sécurité pour ne pas écraser l'heure */
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        /* === RESTAURATION DES SÉPARATEURS === */
-        /* On s'assure qu'ils sont bien visibles */
-        .time-sep { 
-            display: inline-block !important; 
-            margin: 0 5px !important;
-            color: #666 !important;
-            font-weight: lighter !important;
-        }
-    }
-    
-    /* Alignement vertical du bouton favori */
-    div[data-testid="column"] {
-        display: flex;
-        align-items: center; 
-    }
-    div[data-testid="column"] button {
-        border: none;
-        background: transparent;
-        font-size: 1.5rem;
-        padding: 0;
-    }
-    div[data-testid="column"] button:hover {
-        color: #f1c40f; 
-        border: none;
-        background: transparent;
-    }
-    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge & Pointillés) --- */
+    /* --- 6. BOX BUS REMPLACEMENT (Réintégrée) --- */
     .replacement-box {
         border: 2px dashed #e74c3c; 
         border-radius: 6px; 
@@ -455,82 +332,12 @@ st.markdown("""
         background-color: rgba(231, 76, 60, 0.1); 
     }
     .replacement-label { 
-        display: block; 
-        font-size: 0.75em; 
-        text-transform: uppercase; 
-        font-weight: bold; 
-        color: #e74c3c; 
-        margin-bottom: 4px; 
-        letter-spacing: 1px; 
+        display: block; font-size: 0.75em; text-transform: uppercase; 
+        font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; 
     }
     /* Annule les bordures internes */
     .replacement-box .rail-row, .replacement-box .bus-row { 
-        border-top: none !important; 
-        padding-top: 0 !important; 
-        margin-top: 0 !important; 
-    }
-    /* ============================================================ */
-    /* GESTION DES COULEURS (FIX)                   */
-    /* ============================================================ */
-
-    /* --- 1. ICONES DES MODES (RER, BUS, ETC.) --- */
-    .mode-icon {
-        height: 1.5em;
-        width: auto;
-        margin-right: 10px;
-        transition: filter 0.3s ease;
-        
-        /* PAR DÉFAUT (MODE SOMBRE) : */
-        /* brightness(0) rend l'image toute noire, invert(1) la rend toute blanche. */
-        /* C'est la méthode la plus fiable pour avoir du blanc pur. */
-        filter: brightness(0) invert(1);
-    }
-
-    /* SI MODE CLAIR DÉTECTÉ (via Streamlit ou Système) */
-    @media (prefers-color-scheme: light) {
-        .mode-icon { filter: none; }
-    }
-    [data-theme="light"] .mode-icon {
-        filter: none; /* On affiche l'original (souvent coloré ou noir) */
-    }
-
-    /* --- 2. CARTES (CARDS) EN MODE CLAIR --- */
-    /* Le sélecteur [data-theme="light"] détecte le réglage Streamlit "Light" */
-    
-    [data-theme="light"] .bus-card, 
-    [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* FOND BLANC PUR */
-        color: #333333 !important;            /* TEXTE GRIS FONCÉ */
-        
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-        border: 1px solid #e0e0e0 !important; /* Contour gris clair */
-        
-        /* On garde la couleur de la ligne à gauche (géré par le style inline Python) */
-    }
-
-    /* Ajustement des textes à l'intérieur des cartes en mode clair */
-    [data-theme="light"] .bus-dest, 
-    [data-theme="light"] .rail-dest { 
-        color: #2c3e50 !important; /* Bleu nuit lisible sur blanc */
-        font-weight: 700 !important; 
-    }
-
-    [data-theme="light"] .rail-row, 
-    [data-theme="light"] .bus-row { 
-        border-top: 1px solid #f0f0f0 !important; /* Séparateur très discret */
-    }
-
-    /* Les heures en mode clair */
-    [data-theme="light"] .rail-row > span:last-child, 
-    [data-theme="light"] .bus-row > span:last-child {
-        color: #333333 !important; 
-    }
-    
-    /* Le petit badge "Service terminé" ou infos en mode clair */
-    [data-theme="light"] .service-box {
-        background: #f9f9f9 !important;
-        color: #666 !important;
-        border-left: 3px solid #ccc !important;
+        border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; 
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
