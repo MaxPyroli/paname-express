@@ -447,28 +447,45 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES : MÉTHODE INLINE (COULEUR DU TEXTE) --- */
+    /* --- CSS ICONES : VERSION BINAIRE FORCÉE --- */
     
-    .icon-container {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.5em;
-        height: 1.5em;
-        margin-right: 10px;
-        vertical-align: middle;
+    img.mode-icon {
+        height: 1.5em !important;
+        width: auto !important;
+        margin-right: 10px !important;
+        vertical-align: middle !important;
+        transition: filter 0.3s ease;
+    }
+
+    /* ---------------------------------------------------------
+       1. FORÇAGE MODE CLAIR (On veut du NOIR)
+       --------------------------------------------------------- */
+    /* Cas A : L'utilisateur force "Light" dans Streamlit */
+    [data-theme="light"] img.mode-icon {
+        filter: brightness(0) !important; 
     }
     
-    .mode-svg {
-        width: 100% !important;
-        height: 100% !important;
-        /* currentColor = La couleur du texte définie par Streamlit */
-        fill: currentColor !important; 
+    /* Cas B : Le système est Light (et l'utilisateur n'a rien forcé) */
+    @media (prefers-color-scheme: light) {
+        img.mode-icon {
+            filter: brightness(0) !important;
+        }
     }
-    
-    /* Sécurité : on force les chemins internes du SVG à suivre le mouvement */
-    .mode-svg path, .mode-svg rect, .mode-svg circle {
-        fill: currentColor !important;
+
+    /* ---------------------------------------------------------
+       2. FORÇAGE MODE SOMBRE (On veut du BLANC)
+       --------------------------------------------------------- */
+    /* Cas A : L'utilisateur force "Dark" dans Streamlit */
+    [data-theme="dark"] img.mode-icon {
+        /* On écrase le noir pour faire : Noir -> Inversé -> BLANC PUR */
+        filter: brightness(0) invert(1) !important; 
+    }
+
+    /* Cas B : Le système est Dark (et l'utilisateur n'a rien forcé) */
+    @media (prefers-color-scheme: dark) {
+        img.mode-icon {
+            filter: brightness(0) invert(1) !important;
+        }
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
