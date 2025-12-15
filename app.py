@@ -217,78 +217,8 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-    /* ============================================================ */
-    /* DESIGN DES CARTES : SYSTÈME DE VARIABLES (ROBUSTE)           */
-    /* ============================================================ */
-
-    /* 1. DÉFINITION DES COULEURS (Variables) */
-    :root {
-        /* Valeurs par défaut (Mode SOMBRE) */
-        --card-bg: #1a1a1a;
-        --card-text: #dddddd;
-        --card-border: rgba(255, 255, 255, 0.1);
-        --text-strong: #ffffff;
-        --text-dim: #cccccc;
-        --row-border: #333333;
-        --shadow: rgba(0,0,0,0.3);
-    }
-
-    /* Valeurs si Mode CLAIR détecté (Streamlit) */
-    [data-theme="light"] {
-        --card-bg: #ffffff;
-        --card-text: #333333;
-        --card-border: #e0e0e0;
-        --text-strong: #000000;
-        --text-dim: #2c3e50; /* Bleu foncé pour être lisible */
-        --row-border: #f0f0f0;
-        --shadow: rgba(0,0,0,0.1);
-    }
-
-    /* 2. APPLICATION DES VARIABLES SUR LES CARTES */
     .bus-card, .rail-card {
-        background-color: var(--card-bg) !important;
-        color: var(--card-text) !important;
-        border: 1px solid var(--card-border) !important;
-        box-shadow: 0 4px 6px var(--shadow) !important;
-        
-        padding: 12px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        
-        /* La bande gauche garde sa couleur dynamique Python */
-        border-left-width: 5px !important;
-        border-left-style: solid !important;
-        
-        transition: all 0.3s ease;
-    }
-
-    .bus-dest, .rail-dest { 
-        color: var(--text-dim) !important; 
-        font-size: 15px; 
-        font-weight: 700 !important; /* Gras pour lisibilité en blanc */
-        overflow: hidden;
-        text-overflow: ellipsis; 
-        white-space: nowrap; 
-        margin-right: 10px; 
-        flex: 1;
-    }
-
-    .bus-row, .rail-row {
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding-top: 8px; 
-        padding-bottom: 2px; 
-        border-top: 1px solid var(--row-border) !important; 
-    }
-    
-    /* Heure à droite */
-    .bus-row > span:last-child, .rail-row > span:last-child {
-        color: var(--text-strong) !important;
-        white-space: nowrap;
-        flex-shrink: 0;
-        text-align: right;
-        font-weight: bold;
+        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
     }
 
     /* --- CORRECTION MOBILE --- */
@@ -867,7 +797,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -921,7 +851,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.1 - Abondance 🧀")
+    st.caption("v1.0.2 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
