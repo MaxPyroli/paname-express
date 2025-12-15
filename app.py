@@ -447,36 +447,39 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES (CORRECTION ROBUSTE) --- */
+    /* --- CSS ICONES : MÉTHODE NUCLÉAIRE --- */
     
-    /* 1. Configuration de base (S'applique par défaut) */
     img.mode-icon {
         height: 1.5em !important;
         width: auto !important;
         margin-right: 10px !important;
         vertical-align: middle !important;
-        transition: filter 0.3s ease;
-        /* Par défaut : on force le NOIR PUR (comme ça, même si le SVG est gris ou coloré, il devient noir) */
+        transition: filter 0.2s ease;
+    }
+
+    /* 1. CAS PAR DÉFAUT (PC en mode CLAIR) */
+    /* On force l'icône à devenir 100% NOIRE, quelle que soit sa couleur d'origine */
+    img.mode-icon {
         filter: brightness(0) !important;
     }
 
-    /* 2. DÉTECTION SYSTÈME : Si l'ordi est en mode sombre, on inverse en BLANC */
+    /* 2. CAS SYSTÈME SOMBRE (Mac/Windows en mode Dark) */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            filter: invert(1) brightness(2) !important; 
+            /* On force l'icône à devenir NOIRE (brightness 0), PUIS on l'inverse en BLANC (invert 1) */
+            filter: brightness(0) invert(1) !important;
         }
     }
 
-    /* 3. FORCAGE STREAMLIT : MODE DARK (L'utilisateur choisit Dark dans les réglages) */
-    /* On cible 'html' ou 'section' pour être sûr de passer au-dessus du réglage système */
-    html[data-theme="dark"] img.mode-icon, [data-theme="dark"] img.mode-icon {
-        filter: invert(1) brightness(2) !important;
+    /* 3. FORÇAGE STREAMLIT : MODE DARK (Réglage manuel dans l'app) */
+    /* Le sélecteur [data-theme="dark"] est posé par Streamlit sur la balise racine */
+    [data-theme="dark"] img.mode-icon {
+        filter: brightness(0) invert(1) !important;
     }
 
-    /* 4. FORCAGE STREAMLIT : MODE LIGHT (L'utilisateur choisit Light dans les réglages) */
-    /* C'est ici le fix : on force le noir via brightness(0) pour annuler l'inversion du système */
-    html[data-theme="light"] img.mode-icon, [data-theme="light"] img.mode-icon {
-        filter: invert(0) brightness(0) !important;
+    /* 4. FORÇAGE STREAMLIT : MODE LIGHT (Réglage manuel dans l'app) */
+    [data-theme="light"] img.mode-icon {
+        filter: brightness(0) !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
