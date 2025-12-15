@@ -447,48 +447,39 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES : MÉTHODE SILHOUETTE (INFAILLIBLE) --- */
+    /* --- ULTIME TENTATIVE : LOGIQUE INVERSÉE --- */
     
+    /* 1. STYLE DE BASE (S'applique au Mode CLAIR par défaut) */
+    /* Tes icônes sont BLANCHES de base. */
+    /* Ici, on les INVERSE pour qu'elles deviennent NOIRES sur fond blanc. */
     img.mode-icon {
         height: 1.5em !important;
         width: auto !important;
         margin-right: 10px !important;
         vertical-align: middle !important;
         transition: filter 0.3s ease;
+        
+        filter: invert(1) !important; /* Blanc -> Noir */
     }
 
-    /* =========================================================
-       CAS 1 : MODE CLAIR (LIGHT) -> ON VEUT DU NOIR
-       ========================================================= */
-       
-    /* A. Si le SYSTÈME est en Light (Défaut) */
-    @media (prefers-color-scheme: light) {
-        img.mode-icon {
-            filter: brightness(0) !important; 
-        }
-    }
-    
-    /* B. Si l'utilisateur force "Light" dans le menu Streamlit */
-    html[data-theme="light"] img.mode-icon, [data-theme="light"] img.mode-icon {
-        filter: brightness(0) !important;
-    }
-
-
-    /* =========================================================
-       CAS 2 : MODE SOMBRE (DARK) -> ON VEUT DU BLANC
-       ========================================================= */
-
-    /* A. Si le SYSTÈME est en Dark */
+    /* 2. EXCEPTION : MODE SOMBRE SYSTÈME (Mac/Windows en Dark Mode) */
+    /* On annule l'inversion pour qu'elles redeviennent BLANCHES. */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            /* Noir (0) + Inversion Totale = BLANC PUR */
-            filter: brightness(0) invert(1) !important; 
+            filter: none !important;
         }
     }
 
-    /* B. Si l'utilisateur force "Dark" dans le menu Streamlit */
-    html[data-theme="dark"] img.mode-icon, [data-theme="dark"] img.mode-icon {
-        filter: brightness(0) invert(1) !important;
+    /* 3. PRIORITÉ : FORÇAGE VIA LE MENU STREAMLIT */
+    
+    /* Si l'utilisateur choisit "Dark" dans le menu : ON ANNULE L'INVERSION (Blanc) */
+    [data-theme="dark"] img.mode-icon {
+        filter: none !important;
+    }
+
+    /* Si l'utilisateur choisit "Light" dans le menu : ON FORCE L'INVERSION (Noir) */
+    [data-theme="light"] img.mode-icon {
+        filter: invert(1) !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
