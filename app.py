@@ -218,63 +218,75 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : CORRIGÉ LIGHT/DARK & BANDE COULEUR       */
+    /* DESIGN DES CARTES : CORRECTION DÉFINITIVE LIGHT/DARK         */
     /* ============================================================ */
     
-    /* 1. STRUCTURE DE BASE (Commune aux deux modes) */
-    .bus-card, .rail-card { 
-        padding: 12px; 
-        margin-bottom: 15px; 
+    /* 1. CONFIGURATION DE BASE (STRUCTURE) */
+    .bus-card, .rail-card {
+        padding: 12px;
+        margin-bottom: 15px;
         border-radius: 10px;
-        
-        /* C'est ICI qu'on gère la bande de couleur */
-        border-left-width: 6px !important;  /* Largeur fixe pour la bande */
-        border-left-style: solid !important; /* Style solide obligatoire */
-        /* Note : La couleur (border-left-color) est injectée par Python via style="..." */
-        
         transition: all 0.3s ease;
+        
+        /* GESTION DE LA BANDE DE COULEUR (GAUCHE) */
+        /* On force l'épaisseur et le style, mais PAS la couleur (gérée par Python) */
+        border-left-width: 6px !important;
+        border-left-style: solid !important;
     }
 
-    /* 2. MODE SOMBRE (Par défaut ou détecté) */
-    /* On utilise :not([data-theme="light"]) pour cibler le défaut + le dark mode */
+    /* 2. MODE SOMBRE (DÉFAUT) */
     .bus-card, .rail-card {
-        background-color: #021939; /* Bleu Nuit */
+        background-color: #021939; /* Bleu nuit */
         color: white;
-        /* On définit les 3 autres bordures discrètes sans toucher à celle de gauche */
+        
+        /* Bordures subtiles pour le mode sombre (SANS toucher à gauche) */
         border-top: 1px solid rgba(255, 255, 255, 0.15);
         border-right: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
     
-    /* Textes en mode sombre */
-    .bus-dest, .rail-dest { color: #cccccc; }
+    /* Texte destination en mode sombre */
+    .bus-dest, .rail-dest { color: #cccccc; font-weight: 500; }
     .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1); }
 
-    /* 3. MODE CLAIR (Spécifique) */
+
+    /* 3. MODE CLAIR (FORÇAGE) */
+    /* On cible via data-theme (Streamlit) ET media query (Système) */
+    @media (prefers-color-scheme: light) {
+        .bus-card, .rail-card {
+            background-color: #ffffff !important; /* BLANC FORCE */
+            color: #333333 !important;
+            
+            border-top: 1px solid #e0e0e0 !important;
+            border-right: 1px solid #e0e0e0 !important;
+            border-bottom: 1px solid #e0e0e0 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        }
+        .bus-dest, .rail-dest { color: #2c3e50 !important; font-weight: 700 !important; }
+        .rail-row, .bus-row { border-top: 1px solid #f0f0f0 !important; }
+        .rail-row > span:last-child, .bus-row > span:last-child { color: #333 !important; }
+    }
+
     [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* Fond Blanc FORCE */
-        color: #333333 !important;            /* Texte Sombre FORCE */
+        background-color: #ffffff !important;
+        color: #333333 !important;
         
-        /* Bordures grises légères (sauf gauche) */
         border-top: 1px solid #e0e0e0 !important;
         border-right: 1px solid #e0e0e0 !important;
         border-bottom: 1px solid #e0e0e0 !important;
-        
         box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
     }
-
-    /* Textes en mode clair (pour qu'ils soient lisibles sur fond blanc) */
-    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
-        color: #2c3e50 !important; /* Gris foncé bleuté */
-        font-weight: 600 !important;
-    }
     
-    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
-        border-top: 1px solid #f0f0f0 !important; /* Séparateur très clair */
+    /* Override texte spécifique si le sélecteur [data-theme="light"] est actif */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest { 
+        color: #2c3e50 !important; 
+        font-weight: 700 !important; 
     }
-    
-    /* Correction de l'heure en mode clair (sinon elle reste blanche/invisible) */
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row { 
+        border-top: 1px solid #f0f0f0 !important; 
+    }
     [data-theme="light"] .rail-row > span:last-child, 
     [data-theme="light"] .bus-row > span:last-child {
         color: #333 !important;
