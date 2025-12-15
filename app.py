@@ -447,34 +447,33 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES : STRATÉGIE MASQUE (CLARTE TOTALE) --- */
+    /* --- CSS ICONES : MÉTHODE CLASSIQUE ROBUSTE --- */
     
-    .mode-icon-mask {
-        display: inline-block !important;
-        
-        /* 1. TAILLE DE L'ICÔNE */
-        width: 1.5em !important;
+    img.mode-icon {
         height: 1.5em !important;
-        
-        /* 2. COULEUR MAGIQUE */
-        /* var(--text-color) est fourni par Streamlit. 
-           Il vaut #31333F (Noir) en mode clair et #FAFAFA (Blanc) en mode sombre.
-           L'icône prendra donc EXACTEMENT cette couleur. */
-        background-color: var(--text-color) !important;
-        
-        /* 3. CONFIGURATION DU MASQUE (Le SVG découpe le carré de couleur) */
-        -webkit-mask-size: contain !important;
-        mask-size: contain !important;
-        
-        -webkit-mask-repeat: no-repeat !important;
-        mask-repeat: no-repeat !important;
-        
-        -webkit-mask-position: center !important;
-        mask-position: center !important;
-        
-        /* 4. ALIGNEMENT */
-        vertical-align: middle !important;
+        width: auto !important;
         margin-right: 10px !important;
+        vertical-align: middle !important;
+        
+        /* PAR DÉFAUT (Mode Clair) : */
+        /* Tes icônes sont blanches. Sur fond blanc, on ne les voit pas. */
+        /* On force la luminosité à 0 (Noir Total) pour qu'elles apparaissent en noir. */
+        filter: brightness(0) !important;
+        transition: filter 0.3s ease;
+    }
+
+    /* EXCEPTION : MODE SOMBRE (Dark Mode) */
+    /* Si le système OU Streamlit est en mode sombre, on retire le filtre */
+    /* L'icône redevient donc Blanche (sa couleur native) */
+    
+    @media (prefers-color-scheme: dark) {
+        img.mode-icon {
+            filter: none !important;
+        }
+    }
+    
+    [data-theme="dark"] img.mode-icon {
+        filter: none !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
@@ -717,7 +716,7 @@ def afficher_popup_feur(mot_declencheur):
     st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
-#        GESTION DES LOGOS (METHODE MASQUE)
+#        GESTION DES LOGOS (RETOUR IMG)
 # ==========================================
 def generer_icones_html():
     mapping_files = {
@@ -735,6 +734,7 @@ def generer_icones_html():
         "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
     }
     
+    # Emoji de secours si le fichier n'est pas trouvé
     fallbacks = {
         "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
@@ -746,18 +746,14 @@ def generer_icones_html():
         filepath = mapping_files.get(mode)
         b64_data = None
         
+        # On tente de lire le fichier
         if filepath:
             b64_data = get_img_as_base64(filepath)
             
         if b64_data:
-            # NOUVELLE STRATÉGIE : On injecte le SVG comme un "Masque" dans le style
-            # On utilise un <span> qui servira de bloc couleur
-            src_url = f"data:image/svg+xml;base64,{b64_data}"
-            html = (
-                f'<span class="mode-icon-mask" '
-                f'style="-webkit-mask-image: url({src_url}); mask-image: url({src_url});">'
-                f'</span>{label}'
-            )
+            # RETOUR À LA BALISE IMG CLASSIQUE
+            # C'est la seule méthode qui garantit l'affichage de l'image
+            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
             resultat[mode] = html
         else:
             emoji = fallbacks.get(mode, "❓")
