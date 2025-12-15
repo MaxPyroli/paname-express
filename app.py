@@ -447,39 +447,34 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- ULTIME TENTATIVE : LOGIQUE INVERSÉE --- */
+    /* --- CSS ICONES : STRATÉGIE MASQUE (CLARTE TOTALE) --- */
     
-    /* 1. STYLE DE BASE (S'applique au Mode CLAIR par défaut) */
-    /* Tes icônes sont BLANCHES de base. */
-    /* Ici, on les INVERSE pour qu'elles deviennent NOIRES sur fond blanc. */
-    img.mode-icon {
-        height: 1.5em !important;
-        width: auto !important;
-        margin-right: 10px !important;
-        vertical-align: middle !important;
-        transition: filter 0.3s ease;
+    .mode-icon-mask {
+        display: inline-block !important;
         
-        filter: invert(1) !important; /* Blanc -> Noir */
-    }
-
-    /* 2. EXCEPTION : MODE SOMBRE SYSTÈME (Mac/Windows en Dark Mode) */
-    /* On annule l'inversion pour qu'elles redeviennent BLANCHES. */
-    @media (prefers-color-scheme: dark) {
-        img.mode-icon {
-            filter: none !important;
-        }
-    }
-
-    /* 3. PRIORITÉ : FORÇAGE VIA LE MENU STREAMLIT */
-    
-    /* Si l'utilisateur choisit "Dark" dans le menu : ON ANNULE L'INVERSION (Blanc) */
-    [data-theme="dark"] img.mode-icon {
-        filter: none !important;
-    }
-
-    /* Si l'utilisateur choisit "Light" dans le menu : ON FORCE L'INVERSION (Noir) */
-    [data-theme="light"] img.mode-icon {
-        filter: invert(1) !important;
+        /* 1. TAILLE DE L'ICÔNE */
+        width: 1.5em !important;
+        height: 1.5em !important;
+        
+        /* 2. COULEUR MAGIQUE */
+        /* var(--text-color) est fourni par Streamlit. 
+           Il vaut #31333F (Noir) en mode clair et #FAFAFA (Blanc) en mode sombre.
+           L'icône prendra donc EXACTEMENT cette couleur. */
+        background-color: var(--text-color) !important;
+        
+        /* 3. CONFIGURATION DU MASQUE (Le SVG découpe le carré de couleur) */
+        -webkit-mask-size: contain !important;
+        mask-size: contain !important;
+        
+        -webkit-mask-repeat: no-repeat !important;
+        mask-repeat: no-repeat !important;
+        
+        -webkit-mask-position: center !important;
+        mask-position: center !important;
+        
+        /* 4. ALIGNEMENT */
+        vertical-align: middle !important;
+        margin-right: 10px !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
@@ -722,12 +717,9 @@ def afficher_popup_feur(mot_declencheur):
     st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
-#        GESTION DES LOGOS SVG
+#        GESTION DES LOGOS (METHODE MASQUE)
 # ==========================================
-
-# 2. ENSUITE : La fonction qui utilise la précédente
 def generer_icones_html():
-    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
     mapping_files = {
         "RER":   "img/rer.svg",
         "TRAIN": "img/train.svg",
@@ -755,12 +747,17 @@ def generer_icones_html():
         b64_data = None
         
         if filepath:
-            # C'est ici que ça plantait avant : maintenant la fonction est connue !
             b64_data = get_img_as_base64(filepath)
             
         if b64_data:
-            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
-            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
+            # NOUVELLE STRATÉGIE : On injecte le SVG comme un "Masque" dans le style
+            # On utilise un <span> qui servira de bloc couleur
+            src_url = f"data:image/svg+xml;base64,{b64_data}"
+            html = (
+                f'<span class="mode-icon-mask" '
+                f'style="-webkit-mask-image: url({src_url}); mask-image: url({src_url});">'
+                f'</span>{label}'
+            )
             resultat[mode] = html
         else:
             emoji = fallbacks.get(mode, "❓")
