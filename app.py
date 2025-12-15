@@ -1419,14 +1419,8 @@ def afficher_live_content(stop_id, clean_name):
                         dn = d['dest']
                         if dn not in destinations_vues:
                             destinations_vues.append(dn)
-                            rows_html += f"""
-                            <div class="bus-row">
-                                <span class="bus-dest">➜ {dn}</span>
-                                <span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">
-                                    Passage toutes les ~30s
-                                </span>
-                            </div>
-                            """
+                            # HTML compacté sur une ligne pour éviter le bug d'affichage
+                            rows_html += f"""<div class="bus-row"><span class="bus-dest">➜ {dn}</span><span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">Passage toutes les ~30s</span></div>"""
                     
                     if not rows_html:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
@@ -1441,27 +1435,71 @@ def afficher_live_content(stop_id, clean_name):
                                 messages = disp.get('messages', [])
                                 if messages:
                                     texte_info = messages[0].get('text', 'Perturbation en cours')
-                                    alert_html += f"""
-                                    <div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;">
-                                        <div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;">
-                                            <span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic
-                                        </div>
-                                        <div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">
-                                            {texte_info}
-                                        </div>
-                                    </div>
-                                    """
+                                    # HTML compacté
+                                    alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
 
                     # 3. Rendu Final
-                    st.markdown(f"""
-                    <div class="bus-card" style="border-left-color: #{color};">
-                        <div style="display:flex; align-items:center;">
-                            <span class="line-badge" style="background-color:#{color};">{code}</span>
-                        </div>
-                        {rows_html}
-                        {alert_html}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}{alert_html}</div>""", unsafe_allow_html=True)
+
+                # CAS 3: BUS/METRO/TRAM (Standard)
+                else:
+                    dest_data = {}
+                    # 1. Regroupement par destination
+                    for d in proches:
+                        dn = d['dest']
+                        if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
+                        # On garde les 3 prochains départs max par destination
+                        if len(dest_data[dn]['items']) < 3:
+                            dest_data[dn]['items'].append(d)
+                            if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
+                    
+                    # 2. Tri des destinations
+                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                    else: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                    
+                    is_noctilien = str(code).strip().upper().startswith('N')
+                    rows_html = ""
+                    
+                    # 3. Génération des lignes
+                    for dest_name, info in sorted_dests:
+                        if "Service terminé" in dest_name: 
+                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        else:
+                            html_list = []
+                            contains_last = False; last_val_tri = 9999
+                            is_group_replacement = False
+                            
+                            if info['items'] and info['items'][0].get('is_replacement'):
+                                is_group_replacement = True
+    
+                            for idx, d_item in enumerate(info['items']):
+                                val_tri = d_item['tri']
+                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                html_list.append(txt)
+                            
+                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                            times_str = "<span class='time-sep'>|</span>".join(html_list)
+                            
+                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+    
+                            if is_group_replacement:
+                                rows_html += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span>{row_content}</div>"""
+                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                            else:
+                                rows_html += row_content                    
+
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
                 else:
                     dest_data = {}
                     # 1. Regroupement par destination
