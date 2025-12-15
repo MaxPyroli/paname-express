@@ -470,22 +470,6 @@ st.markdown("""
     .mode-svg path, .mode-svg rect, .mode-svg circle {
         fill: currentColor !important;
     }
-
-    /* ---------------------------------------------------------
-       2. FORÇAGE MODE SOMBRE (On veut du BLANC)
-       --------------------------------------------------------- */
-    /* Cas A : L'utilisateur force "Dark" dans Streamlit */
-    [data-theme="dark"] img.mode-icon {
-        /* On écrase le noir pour faire : Noir -> Inversé -> BLANC PUR */
-        filter: brightness(0) invert(1) !important; 
-    }
-
-    /* Cas B : Le système est Dark (et l'utilisateur n'a rien forcé) */
-    @media (prefers-color-scheme: dark) {
-        img.mode-icon {
-            filter: brightness(0) invert(1) !important;
-        }
-    }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
     .fav-btn-container button {
