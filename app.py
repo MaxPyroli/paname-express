@@ -218,7 +218,7 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES (CORRIGÉ : TEXTE GRIS & MODE CLAIR)       */
+    /* DESIGN DES CARTES : CORRECTIF FINITIONS v1.1                */
     /* ============================================================ */
     
     /* --- 1. CONFIGURATION DE BASE (Mode Sombre / Bleu Nuit) --- */
@@ -235,11 +235,11 @@ st.markdown("""
         transition: all 0.3s ease;
     }
 
-    /* Texte des Destinations : GRIS et FIN (Demande utilisateur) */
+    /* Texte des Destinations : REVIENT AU GRIS ET FIN */
     .bus-dest, .rail-dest { 
-        color: #cccccc !important; /* Gris clair (pas blanc) */
+        color: #cccccc !important; /* Gris clair élégant */
         font-size: 16px; 
-        font-weight: 500 !important; /* Normal/Medium (Pas de gras) */
+        font-weight: 500 !important; /* Pas de gras */
         overflow: hidden; 
         text-overflow: ellipsis; 
         white-space: nowrap; 
@@ -256,19 +256,18 @@ st.markdown("""
         align-items: center; 
     }
 
-    /* --- 2. SURCHARGE MODE CLAIR (Double Sécurité) --- */
-    /* S'applique si Windows/Mac est clair OU si Streamlit est réglé sur Light */
+    /* --- 2. MODE CLAIR (SI WINDOWS CLAIR OU STREAMLIT LIGHT) --- */
     @media (prefers-color-scheme: light), [data-theme="light"] {
         
         .bus-card, .rail-card {
             background-color: #ffffff !important; /* Fond Blanc */
-            border: 1px solid #e5e5e5 !important; /* Bordure grise légère */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; /* Ombre douce */
+            border: 1px solid #e0e0e0 !important; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
         }
 
-        /* Le texte devient GRIS FONCÉ en mode clair */
+        /* Le texte destination devient GRIS FONCÉ en mode clair */
         .bus-dest, .rail-dest {
-            color: #333333 !important; /* Gris anthracite */
+            color: #555555 !important; /* Gris moyen lisible */
         }
         
         /* Les lignes de séparation deviennent grises */
@@ -276,11 +275,13 @@ st.markdown("""
             border-top: 1px solid #f0f0f0 !important;
         }
 
-        /* Adaptation des petits badges gris (temps/fréquence) */
-        .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
-            background-color: #f5f5f5 !important; /* Gris très pâle */
-            color: #555555 !important; /* Texte gris */
-            border: 1px solid #eeeeee;
+        /* --- CORRECTIF CÂBLE C1 (BADGE) --- */
+        /* On cible spécifiquement les badges de temps (style="background...") */
+        .bus-row span[style*="background-color"] {
+            background-color: #f0f4f8 !important; /* Fond gris-bleu très pâle */
+            color: #021939 !important; /* Texte BLEU FONCÉ pour le contraste */
+            border: 1px solid #dce4ec !important;
+            font-weight: 600 !important;
         }
     }
     
