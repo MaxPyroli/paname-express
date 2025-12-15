@@ -218,28 +218,28 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES (CORRIGÉ : TEXTE GRIS & MODE CLAIR)       */
+    /* DESIGN DES CARTES : BASÉ UNIQUEMENT SUR STREAMLIT           */
     /* ============================================================ */
     
-    /* --- 1. CONFIGURATION DE BASE (Mode Sombre / Bleu Nuit) --- */
+    /* --- 1. MODE SOMBRE (DÉFAUT) --- */
     .bus-card, .rail-card { 
-        background-color: #021939 !important; /* Bleu Institutionnel */
+        background-color: #021939 !important; /* Bleu Nuit Institutionnel */
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 10px;
         border-left: 5px solid #666; 
         
-        /* Bordure subtile pour détourer sur fond noir */
+        /* Contours subtils pour bien voir la carte sur fond noir */
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
         transition: all 0.3s ease;
     }
 
-    /* Texte des Destinations : GRIS et FIN (Demande utilisateur) */
+    /* Texte des Destinations : GRIS CLAIR & FIN (Comme demandé) */
     .bus-dest, .rail-dest { 
-        color: #cccccc !important; /* Gris clair (pas blanc) */
+        color: #cccccc !important; 
         font-size: 16px; 
-        font-weight: 500 !important; /* Normal/Medium (Pas de gras) */
+        font-weight: 500 !important; /* Pas de gras */
         overflow: hidden; 
         text-overflow: ellipsis; 
         white-space: nowrap; 
@@ -247,7 +247,7 @@ st.markdown("""
         flex: 1;
     }
 
-    /* Séparateurs (Lignes fines) */
+    /* Séparateurs sombres */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
@@ -256,32 +256,30 @@ st.markdown("""
         align-items: center; 
     }
 
-    /* --- 2. SURCHARGE MODE CLAIR (Double Sécurité) --- */
-    /* S'applique si Windows/Mac est clair OU si Streamlit est réglé sur Light */
-    @media (prefers-color-scheme: light), [data-theme="light"] {
-        
-        .bus-card, .rail-card {
-            background-color: #ffffff !important; /* Fond Blanc */
-            border: 1px solid #e5e5e5 !important; /* Bordure grise légère */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; /* Ombre douce */
-        }
+    /* --- 2. MODE CLAIR (UNIQUEMENT SI STREAMLIT EST LIGHT) --- */
+    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* Fond Blanc */
+        border: 1px solid #e0e0e0 !important; /* Bordure grise nette */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    }
 
-        /* Le texte devient GRIS FONCÉ en mode clair */
-        .bus-dest, .rail-dest {
-            color: #333333 !important; /* Gris anthracite */
-        }
-        
-        /* Les lignes de séparation deviennent grises */
-        .rail-row, .bus-row {
-            border-top: 1px solid #f0f0f0 !important;
-        }
+    /* Texte destination en gris foncé */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
+        color: #555555 !important;
+    }
+    
+    /* Lignes de séparation grises */
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
+        border-top: 1px solid #f0f0f0 !important;
+    }
 
-        /* Adaptation des petits badges gris (temps/fréquence) */
-        .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
-            background-color: #f5f5f5 !important; /* Gris très pâle */
-            color: #555555 !important; /* Texte gris */
-            border: 1px solid #eeeeee;
-        }
+    /* --- CORRECTIF CÂBLE C1 (BADGE) EN MODE CLAIR --- */
+    /* Force le texte en bleu foncé pour qu'on le lise bien sur fond clair */
+    [data-theme="light"] .bus-row span[style*="background-color"] {
+        background-color: #f0f4f8 !important;
+        color: #021939 !important; /* Texte Bleu Foncé */
+        border: 1px solid #dce4ec !important;
+        font-weight: 600 !important;
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
