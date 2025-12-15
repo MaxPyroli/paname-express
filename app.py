@@ -217,166 +217,218 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-    /* ============================================================ */
-    /* DESIGN DES CARTES & THEMES (VERSION STABLE SIMPLIFIÉE)       */
-    /* ============================================================ */
-
-    /* --- 1. STRUCTURE (Fixe, ne change jamais) --- */
     .bus-card, .rail-card {
-        padding: 12px;
-        margin-bottom: 15px;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        
-        /* La bordure gauche de couleur (Ligne) est gérée par le Python */
-        border-left-width: 6px !important;
-        border-left-style: solid !important;
-        
-        display: flex; flex-direction: column;
+        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
     }
 
-    .bus-dest, .rail-dest { 
-        font-weight: 500; font-size: 16px; 
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
-        margin-right: 10px; flex: 1;
+    /* --- CORRECTION MOBILE --- */
+    .bus-row, .rail-row {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; /* Aligne verticalement si les hauteurs diffèrent */
+        padding-top: 8px; padding-bottom: 2px; border-top: 1px solid #333; 
     }
-    .rail-row, .bus-row { 
-        display: flex; justify-content: space-between; padding: 10px 0; align-items: center;
-    }
-    .bus-row > span:last-child, .rail-row > span:last-child {
-        white-space: nowrap; flex-shrink: 0; text-align: right;
-    }
+    
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
     
+    .bus-dest, .rail-dest { 
+        color: #ccc; 
+        font-size: 15px; 
+        font-weight: 500; 
+        overflow: hidden;
+        text-overflow: ellipsis; /* Ajoute "..." si trop long */
+        white-space: nowrap; /* Empêche le retour à la ligne du nom */
+        margin-right: 10px; /* Espace min avec l'heure */
+        flex: 1; /* Prend toute la place dispo */
+    }
+
+    /* Le bloc des horaires ne doit JAMAIS passer à la ligne */
+    .bus-row > span:last-child, .rail-row > span:last-child {
+        white-space: nowrap;
+        flex-shrink: 0; /* Empêche d'être écrasé */
+        text-align: right;
+    }
+    
     .service-box { 
-        text-align: left; padding: 10px 12px; font-style: italic; font-size: 0.95em;
-        border-radius: 6px; margin-top: 5px; margin-bottom: 5px; 
+        text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em;
+        background: rgba(255, 255, 255, 0.05); border-radius: 6px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444;
     }
-
-    /* --- 2. STYLE PAR DÉFAUT : MODE SOMBRE (Bleu Nuit) --- */
-    /* Ce style s'applique TOUT LE TEMPS, sauf si on l'écrase après */
-    
-    .bus-card, .rail-card {
-        background-color: #021939 !important;
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    .bus-dest, .rail-dest { color: #cccccc !important; }
-    
-    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1) !important; }
-    
-    .rail-row > span:last-child, .bus-row > span:last-child { color: white !important; }
-    
-    .service-box { 
-        color: #888 !important; background: rgba(255, 255, 255, 0.05) !important; border-left: 3px solid #444 !important; 
-    }
-    
-    /* --- CSS ICONES ADAPTATIVES (CORRECTION) --- */
-    .mode-icon {
-        height: 1.5em;
-        width: auto;
-        margin-right: 10px;
-        transition: filter 0.3s ease;
-        
-        /* PAR DÉFAUT (Mode Sombre) : */
-        /* On force l'icône en BLANC PUR pour qu'elle se voit sur le fond bleu/noir */
-        filter: brightness(0) invert(1);
-    }
-
-    /* FIX MODE CLAIR : */
-    /* Si Streamlit est en Light Mode, on enlève le filtre pour voir l'icône en NOIR/COULEUR */
-    [data-theme="light"] .mode-icon {
-        filter: none !important;
-    }
-
-    /* --- 3. SURCHARGE : MODE CLAIR (Blanc) --- */
-    /* S'applique UNIQUEMENT si Streamlit ajoute l'attribut data-theme="light" */
-    
-    [data-theme="light"] .bus-card, 
-    [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; 
-        color: #333333 !important;            
-        border: 1px solid #e0e0e0 !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-    }
-
-    [data-theme="light"] .bus-dest, 
-    [data-theme="light"] .rail-dest { 
-        color: #2c3e50 !important; font-weight: 700 !important; 
-    }
-
-    [data-theme="light"] .rail-row, 
-    [data-theme="light"] .bus-row { 
-        border-top: 1px solid #f0f0f0 !important; 
-    }
-
-    [data-theme="light"] .rail-row > span:last-child, 
-    [data-theme="light"] .bus-row > span:last-child {
-        color: #333333 !important;
-    }
-
-    [data-theme="light"] .service-box {
-        color: #666 !important; background: #f9f9f9 !important; border-left: 3px solid #ccc !important;
-    }
-
-    /* Icones : On retire le filtre pour qu'elles reprennent leur couleur originale */
-    [data-theme="light"] .mode-icon {
-        filter: none !important;
-    }
-
-    /* --- 4. AUTRES ÉLÉMENTS (Inchangés) --- */
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 
-    /* BOX "DERNIER DÉPART" (JAUNE) */
+    /* --- GESTION DERNIER DÉPART --- */
     .last-dep-box {
         border: 2px solid #f1c40f; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
         background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite;
     }
     .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
     .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
-    .last-dep-small-frame { border: 1px solid #f1c40f; border-radius: 4px; padding: 1px 5px; color: #f1c40f; font-weight: bold; }
-    .last-dep-text-only { color: #f1c40f; font-weight: bold; }
 
-    /* BADGES & TITRES */
+    /* Petit encadré pour départ entre 10 et 30 min */
+    .last-dep-small-frame {
+        border: 1px solid #f1c40f;
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: #f1c40f;
+        font-weight: bold;
+    }
+    
+    /* Juste le texte pour départ > 30 min */
+    .last-dep-text-only {
+        color: #f1c40f;
+        font-weight: bold;
+    }
+
     .version-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; padding: 4px 12px; border-radius: 20px;
-        font-size: 0.4em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-left: 0 !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Nouveau dégradé plus moderne */
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.4em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        margin-left: 0 !important; /* Le Flexbox gère l'espace */
     }
-    .verified-badge { color: #3498db; font-size: 0.8em; margin-left: 5px; }
-
+    
+    .verified-badge {
+        color: #3498db;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
+    /* CONFIGURATION TITRE (Taille & Alignement) */
     h1 {
-        font-size: 3.5rem !important; display: flex !important; align-items: center !important;
-        flex-wrap: wrap !important; gap: 15px !important; line-height: 1.1 !important;
+        font-size: 3.5rem !important; /* Taille PC augmentée */
+        display: flex !important;     /* Active l'alignement flexible */
+        align-items: center !important;
+        flex-wrap: wrap !important;   /* Permet au badge de passer à la ligne proprement */
+        gap: 15px !important;         /* Espace entre le logo, le titre et le badge */
+        line-height: 1.1 !important;
     }
 
-    /* MOBILE */
+    /* --- MEDIA QUERY MOBILE (MAX 480px) --- */
     @media (max-width: 480px) {
-        .block-container { padding-top: 1rem !important; }
+        
+        /* 1. SUPPRESSION DE LA MARGE HAUTE (ESPACE BLANC) */
+        .block-container {
+            padding-top: 1rem !important; /* On réduit drastiquement l'espace (par défaut c'est ~6rem) */
+        }
+
+        /* Ajustements de taille de police globaux (Déjà présents) */
         .station-title, .station-title-pole { font-size: 20px; }
         h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
         .version-badge { font-size: 0.45em !important; }
-        .bus-row { flex-direction: column !important; align-items: flex-start !important; padding-top: 10px !important; padding-bottom: 10px !important; }
-        .bus-dest { width: 100% !important; white-space: normal !important; margin-bottom: 6px !important; font-size: 16px !important; margin-right: 0 !important; }
-        .bus-row > span:last-child { width: 100% !important; text-align: left !important; font-size: 0.9em !important; color: #ccc !important; }
-        .rail-row { padding-top: 8px !important; padding-bottom: 8px !important; }
-        .rail-dest { max-width: 65% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-        .time-sep { display: inline-block !important; margin: 0 5px !important; color: #666 !important; font-weight: lighter !important; }
+
+        /* ... (Le reste de ton code mobile pour les Bus/RER reste en dessous) ... */
+
+        /* === CAS 1 : BUS / TRAM / MÉTRO (Affichage "Aéré" sur 2 lignes) === */
+        .bus-row {
+            flex-direction: column !important; /* Empile Destination et Heure */
+            align-items: flex-start !important; /* Aligne tout à gauche */
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+        }
+        
+        .bus-dest {
+            width: 100% !important;
+            white-space: normal !important; /* Autorise le texte à passer à la ligne */
+            margin-bottom: 6px !important;  /* Espace entre Nom et Heure */
+            font-size: 16px !important;
+            margin-right: 0 !important;
+        }
+
+        /* Le conteneur des heures pour les Bus passe en dessous */
+        .bus-row > span:last-child {
+            width: 100% !important;
+            text-align: left !important; /* On aligne les heures à gauche pour la lecture */
+            font-size: 0.9em !important;
+            color: #ccc !important;
+        }
+
+        /* === CAS 2 : RER / TRAIN (On garde l'affichage "Compact" sur 1 ligne) === */
+        /* On ne touche PAS à .rail-row ici pour qu'il garde le comportement par défaut (Row) */
+        .rail-row {
+            padding-top: 8px !important; 
+            padding-bottom: 8px !important;
+        }
+        
+        .rail-dest {
+            max-width: 65% !important; /* Sécurité pour ne pas écraser l'heure */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* === RESTAURATION DES SÉPARATEURS === */
+        /* On s'assure qu'ils sont bien visibles */
+        .time-sep { 
+            display: inline-block !important; 
+            margin: 0 5px !important;
+            color: #666 !important;
+            font-weight: lighter !important;
+        }
     }
     
-    div[data-testid="column"] { display: flex; align-items: center; }
-    div[data-testid="column"] button { border: none; background: transparent; font-size: 1.5rem; padding: 0; }
-    div[data-testid="column"] button:hover { color: #f1c40f; border: none; background: transparent; }
-
-    /* BOX BUS REMPLACEMENT (ROUGE) */
+    /* Alignement vertical du bouton favori */
+    div[data-testid="column"] {
+        display: flex;
+        align-items: center; 
+    }
+    div[data-testid="column"] button {
+        border: none;
+        background: transparent;
+        font-size: 1.5rem;
+        padding: 0;
+    }
+    div[data-testid="column"] button:hover {
+        color: #f1c40f; 
+        border: none;
+        background: transparent;
+    }
+    /* --- AJOUT : BOX BUS REMPLACEMENT (Rouge & Pointillés) --- */
     .replacement-box {
-        border: 2px dashed #e74c3c; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
+        border: 2px dashed #e74c3c; 
+        border-radius: 6px; 
+        padding: 8px 10px; 
+        margin-top: 8px; 
+        margin-bottom: 8px;
         background-color: rgba(231, 76, 60, 0.1); 
     }
-    .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
-    .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+    .replacement-label { 
+        display: block; 
+        font-size: 0.75em; 
+        text-transform: uppercase; 
+        font-weight: bold; 
+        color: #e74c3c; 
+        margin-bottom: 4px; 
+        letter-spacing: 1px; 
+    }
+    /* Annule les bordures internes */
+    .replacement-box .rail-row, .replacement-box .bus-row { 
+        border-top: none !important; 
+        padding-top: 0 !important; 
+        margin-top: 0 !important; 
+    }
+    /* --- CSS ICONES ADAPTATIVES --- */
+    .mode-icon {
+        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
+        width: auto;
+        
+        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
+        /* Flexbox gère l'alignement maintenant */
+        
+        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+        transition: filter 0.3s ease;
+    }
+
+    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
+    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
+    @media (prefers-color-scheme: dark) {
+        .mode-icon {
+            /* Transforme le Noir (0) en Blanc (1) */
+            filter: invert(1) brightness(2); 
+        }
+    }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
     .fav-btn-container button {
@@ -745,7 +797,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1bêta</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -799,7 +851,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.1bêta - Abondance 🧀")
+    st.caption("v1.0.2 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
@@ -1356,118 +1408,75 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
-                # CAS SPÉCIFIQUE : CÂBLE C1 (Ultra-Minimaliste : Juste le badge)
-                elif code == "C1":
-                    rows_html = ""
-                    destinations_vues = []
-                    
-                    # --- A. GESTION DES PERTURBATIONS ---
-                    perturbation_msg = None 
-                    
-                    tz_paris = pytz.timezone('Europe/Paris')
-                    now_hour = datetime.now(tz_paris).hour
-                    
-                    if not proches and (6 <= now_hour < 23):
-                         perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
-
-                    # Alerte
-                    alert_html = ""
-                    if perturbation_msg:
-                        alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>{perturbation_msg}</span></div>"
-
-                    # --- B. AFFICHAGE DES DESTINATIONS ---
-                    for d in proches:
-                        dn = d['dest']
-                        if dn not in destinations_vues:
-                            destinations_vues.append(dn)
-                            freq_text = "Départ toutes les ~30s"
-
-                            # HTML compacté
-                            rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
-                    
-                    if not rows_html and not perturbation_msg:
-                         rows_html = '<div class="service-box">😴 Service terminé</div>'
-
-                    # --- C. RENDU DE LA CARTE ---
-                    # Suppression de l'émoji et simplification de l'en-tête
-                    st.markdown(f"""
-<div class="bus-card" style="border-left-color: #{color}; position: relative;">
-<div style="display:flex; align-items:center; margin-bottom:10px;">
-<span class="line-badge" style="background-color:#{color};">{code}</span>
-</div>
-{alert_html}
-{rows_html}
-</div>
-""", unsafe_allow_html=True)
-                # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard)
+                # CAS 3: BUS/METRO/TRAM
                 else:
                     dest_data = {}
-                    # 1. Regroupement par destination
                     for d in proches:
                         dn = d['dest']
                         if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
-                        # On garde les 3 prochains départs max par destination
                         if len(dest_data[dn]['items']) < 3:
                             dest_data[dn]['items'].append(d)
                             if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
                     
-                    # 2. Tri des destinations
-                    # Pour Métro/Tram/Câble : Tri alphabétique des destinations (souvent plus clair)
-                    # Pour Bus : Tri par temps d'attente (le plus proche en premier)
-                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: 
-                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
-                    else: 
-                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                    else: sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                     
                     is_noctilien = str(code).strip().upper().startswith('N')
                     rows_html = ""
                     
-                    # 3. Génération des lignes (C1 est traité ICI maintenant)
-                    for dest_name, info in sorted_dests:
-                        if "Service terminé" in dest_name: 
-                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
-                        else:
-                            html_list = []
-                            contains_last = False; last_val_tri = 9999
-                            is_group_replacement = False
-                            
-                            # Vérifie si c'est un bus de remplacement
-                            if info['items'] and info['items'][0].get('is_replacement'):
-                                is_group_replacement = True
-    
-                            # Formatage des horaires
-                            for idx, d_item in enumerate(info['items']):
-                                val_tri = d_item['tri']
-                                # Filtre les horaires trop lointains (>1h) sauf Noctilien
-                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                
-                                txt = d_item['html']
-                                if d_item.get('is_last'):
-                                    contains_last = True
-                                    last_val_tri = val_tri
-                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                html_list.append(txt)
-                            
-                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                            times_str = "<span class='time-sep'>|</span>".join(html_list)
-                            
-                            # Création de la ligne HTML
-                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
-    
-                            if is_group_replacement:
-                                rows_html += f"""
-                                <div class='replacement-box'>
-                                    <span class='replacement-label'>🚍 Bus de substitution</span>
-                                    {row_content}
-                                </div>"""
-                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                    if code == "C1":
+                        target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                        now = datetime.now(pytz.timezone('Europe/Paris'))
+                        if target_date > now:
+                            delta = target_date - now
+                            days = delta.days; hours = delta.seconds // 3600; mins = (delta.seconds % 3600) // 60
+                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {mins}min</span></div>'
+                        else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
+                    else:
+                        for dest_name, info in sorted_dests:
+                            if "Service terminé" in dest_name: 
+                                rows_html += f'<div class="service-box">😴 Service terminé</div>'
                             else:
-                                rows_html += row_content                    
+                                html_list = []
+                                contains_last = False; last_val_tri = 9999
+                                is_group_replacement = False
+                                if info['items'] and info['items'][0].get('is_replacement'):
+                                    is_group_replacement = True
+    
+                                for idx, d_item in enumerate(info['items']):
+                                    val_tri = d_item['tri']
+                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
+                                    txt = d_item['html']
+                                    if d_item.get('is_last'):
+                                        contains_last = True
+                                        last_val_tri = val_tri
+                                        if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                        elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                        else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    html_list.append(txt)
+                                
+                                if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                                times_str = "<span class='time-sep'>|</span>".join(html_list)
+                                row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+    
+                                if is_group_replacement:
+                                    rows_html += f"""
+                                    <div class='replacement-box'>
+                                        <span class='replacement-label'>🚍 Bus de substitution</span>
+                                        {row_content}
+                                    </div>"""
+                                elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                    rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                                else:
+                                    rows_html += row_content                    
+                    if code == "C1":
+                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
+                         now = datetime.now(pytz.timezone('Europe/Paris'))
+                         if target_date > now:
+                             delta = target_date - now
+                             st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
+                             st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
 
-                    # 4. Affichage de la Carte (Anthracite grâce au CSS précédent)
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
     with containers["AUTRE"]:
