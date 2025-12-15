@@ -447,7 +447,7 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- GESTION DES ICÔNES SVG --- */
+    /* --- CSS ICONES : MÉTHODE SILHOUETTE (INFAILLIBLE) --- */
     
     img.mode-icon {
         height: 1.5em !important;
@@ -457,32 +457,38 @@ st.markdown("""
         transition: filter 0.3s ease;
     }
 
-    /* --- CAS 1 : MODE CLAIR (LIGHT) --- */
-    /* Cible : Le réglage Streamlit "Light" OU le système en mode Light */
-    
-    /* Par défaut (Système Light) : On inverse le blanc pour qu'il devienne NOIR */
-    img.mode-icon {
-        filter: invert(1) !important; 
+    /* =========================================================
+       CAS 1 : MODE CLAIR (LIGHT) -> ON VEUT DU NOIR
+       ========================================================= */
+       
+    /* A. Si le SYSTÈME est en Light (Défaut) */
+    @media (prefers-color-scheme: light) {
+        img.mode-icon {
+            filter: brightness(0) !important; 
+        }
     }
     
-    /* Si l'utilisateur force "Light" dans Streamlit : On force l'inversion */
-    html[data-theme="light"] img.mode-icon {
-        filter: invert(1) !important;
+    /* B. Si l'utilisateur force "Light" dans le menu Streamlit */
+    html[data-theme="light"] img.mode-icon, [data-theme="light"] img.mode-icon {
+        filter: brightness(0) !important;
     }
 
-    /* --- CAS 2 : MODE SOMBRE (DARK) --- */
-    /* Cible : Le réglage Streamlit "Dark" OU le système en mode Dark */
-    
-    /* Système Dark : On remet l'image normale (BLANCHE) */
+
+    /* =========================================================
+       CAS 2 : MODE SOMBRE (DARK) -> ON VEUT DU BLANC
+       ========================================================= */
+
+    /* A. Si le SYSTÈME est en Dark */
     @media (prefers-color-scheme: dark) {
         img.mode-icon {
-            filter: invert(0) !important;
+            /* Noir (0) + Inversion Totale = BLANC PUR */
+            filter: brightness(0) invert(1) !important; 
         }
     }
 
-    /* Si l'utilisateur force "Dark" dans Streamlit : On annule l'inversion */
-    html[data-theme="dark"] img.mode-icon {
-        filter: invert(0) !important;
+    /* B. Si l'utilisateur force "Dark" dans le menu Streamlit */
+    html[data-theme="dark"] img.mode-icon, [data-theme="dark"] img.mode-icon {
+        filter: brightness(0) invert(1) !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
