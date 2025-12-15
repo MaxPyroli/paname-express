@@ -1415,7 +1415,7 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
-                # CAS SPÉCIFIQUE : CÂBLE C1 (Sans séparateur)
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Ultra-Minimaliste : Juste le badge)
                 elif code == "C1":
                     rows_html = ""
                     destinations_vues = []
@@ -1448,12 +1448,11 @@ def afficher_live_content(stop_id, clean_name):
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
                     # --- C. RENDU DE LA CARTE ---
-                    # J'ai supprimé 'border-bottom: 1px solid...' et réduit le margin-bottom
+                    # Suppression de l'émoji et simplification de l'en-tête
                     st.markdown(f"""
 <div class="bus-card" style="border-left-color: #{color}; position: relative;">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-<div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span><span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span></div>
-<span style="font-size:1.5em;" title="Téléphérique"></span>
+<div style="display:flex; align-items:center; margin-bottom:10px;">
+<span class="line-badge" style="background-color:#{color};">{code}</span>
 </div>
 {alert_html}
 {rows_html}
