@@ -217,64 +217,65 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-   /* ============================================================ */
-    /* DESIGN DES CARTES (THÈME BLEU INSTITUTIONNEL)               */
+    /* ============================================================ */
+    /* DESIGN DES CARTES : SYNC AVEC LE MODE STREAMLIT             */
     /* ============================================================ */
     
-    /* --- MODE SOMBRE (DÉFAUT) : Bleu Profond #021939 --- */
+    /* --- 1. BASE (MODE SOMBRE PAR DÉFAUT) --- */
     .bus-card, .rail-card { 
-        background-color: #021939 !important; /* Le bleu du logo */
+        background-color: #021939 !important; /* Bleu IDFM */
         padding: 12px; 
         margin-bottom: 15px; 
-        border-radius: 8px; 
+        border-radius: 10px;
         border-left: 5px solid #666; 
-        color: #ffffff !important; /* Texte Blanc sur fond bleu */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-        border: 1px solid rgba(255, 255, 255, 0.05); /* Liseré subtil */
+        
+        /* Texte et Bordures pour le sombre */
+        color: #ffffff !important; 
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        transition: all 0.3s ease; /* Transition fluide au changement de mode */
     }
 
-    /* Séparateurs en mode sombre (blanc transparent) */
+    /* Séparateurs (Lignes fines blanches) */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
         padding: 10px 0; 
-        border-top: 1px solid rgba(255,255,255,0.1); 
+        border-top: 1px solid rgba(255,255,255,0.15) !important; 
         align-items: center; 
     }
 
-    /* Texte destination en mode sombre */
+    /* Destinations (Blanc) */
     .bus-dest, .rail-dest { 
         color: #ffffff !important; 
         font-size: 16px; 
-        font-weight: 500 !important; 
+        font-weight: 600 !important; 
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1;
     }
 
-    /* --- MODE CLAIR : Fond Blanc, Texte Bleu --- */
-    @media (prefers-color-scheme: light) {
-        .bus-card, .rail-card {
-            background-color: #ffffff !important; /* Fond blanc pur */
-            color: #021939 !important; /* Le texte devient Bleu Profond */
-            border: 1px solid #e0e0e0; /* Bordure grise légère */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Ombre douce */
-        }
+    /* --- 2. SURCHARGE MODE CLAIR (SI STREAMLIT EST LIGHT) --- */
+    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* Fond Blanc */
+        color: #021939 !important; /* Texte Bleu */
+        border: 1px solid #e0e0e0 !important; /* Bordure grise */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; /* Ombre douce */
+    }
 
-        /* Les séparateurs deviennent gris foncé */
-        .rail-row, .bus-row { 
-            border-top: 1px solid rgba(2, 25, 57, 0.1) !important; 
-        }
+    /* En mode clair, les séparateurs deviennent gris foncé */
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
+        border-top: 1px solid rgba(2, 25, 57, 0.1) !important;
+    }
 
-        /* Le texte de destination devient Bleu Profond */
-        .bus-dest, .rail-dest {
-            color: #021939 !important;
-            font-weight: 600 !important; /* Un peu plus gras sur fond blanc pour la lisibilité */
-        }
-        
-        /* On adapte aussi le fond des petits badges de temps/fréquence (ex: C1) */
-        .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
-            background-color: rgba(2, 25, 57, 0.1) !important;
-            color: #021939 !important;
-        }
+    /* En mode clair, les destinations deviennent Bleues */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
+        color: #021939 !important;
+    }
+    
+    /* En mode clair, les badges "Temps/Fréquence" (gris clair) s'adaptent */
+    [data-theme="light"] .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
+        background-color: rgba(2, 25, 57, 0.08) !important; /* Fond bleu très pâle */
+        color: #021939 !important; /* Texte bleu */
+        border: none !important;
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
