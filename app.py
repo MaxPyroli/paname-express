@@ -217,8 +217,51 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
+    /* ============================================================ */
+    /* DESIGN DES CARTES : ADAPTATION CLAIR / SOMBRE                */
+    /* ============================================================ */
+
+    /* 1. STYLE PAR DÉFAUT (MODE SOMBRE) */
     .bus-card, .rail-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
+        background-color: #1a1a1a; 
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        
+        /* La bordure gauche est gérée par le Python (couleur ligne) */
+        border-left-width: 5px !important;
+        border-left-style: solid !important;
+        
+        color: #ddd;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    }
+
+    /* 2. SURCHARGE POUR LE MODE CLAIR */
+    /* S'active uniquement si l'utilisateur est en Light Mode */
+    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
+        background-color: #ffffff !important;   /* Fond Blanc */
+        color: #333333 !important;              /* Texte Noir */
+        border: 1px solid #e0e0e0;              /* Petit contour gris */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    }
+
+    /* CORRECTION DES TEXTES INTERNES EN MODE CLAIR */
+    /* On force les destinations en foncé pour qu'elles soient lisibles sur le blanc */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
+        color: #2c3e50 !important; /* Bleu encre */
+        font-weight: 700 !important;
+    }
+    
+    /* On éclaircit les lignes de séparation en mode clair */
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
+        border-top: 1px solid #f0f0f0 !important;
+    }
+
+    /* On force l'heure en noir en mode clair */
+    [data-theme="light"] .rail-row > span:last-child, 
+    [data-theme="light"] .bus-row > span:last-child {
+        color: #333333 !important;
     }
 
     /* --- CORRECTION MOBILE --- */
