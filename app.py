@@ -218,28 +218,72 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : BASÉ UNIQUEMENT SUR STREAMLIT           */
+    /* DESIGN DES CARTES : CORRIGÉ LIGHT/DARK & BANDE COULEUR       */
     /* ============================================================ */
     
-    /* --- 1. MODE SOMBRE (DÉFAUT) --- */
+    /* 1. STRUCTURE DE BASE (Commune aux deux modes) */
     .bus-card, .rail-card { 
-        background-color: #021939 !important; /* Bleu Nuit Institutionnel */
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 10px;
-        border-left: 5px solid #666; 
         
-        /* Contours subtils pour bien voir la carte sur fond noir */
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+        /* C'est ICI qu'on gère la bande de couleur */
+        border-left-width: 6px !important;  /* Largeur fixe pour la bande */
+        border-left-style: solid !important; /* Style solide obligatoire */
+        /* Note : La couleur (border-left-color) est injectée par Python via style="..." */
+        
         transition: all 0.3s ease;
     }
 
-    /* Texte des Destinations : GRIS CLAIR & FIN (Comme demandé) */
+    /* 2. MODE SOMBRE (Par défaut ou détecté) */
+    /* On utilise :not([data-theme="light"]) pour cibler le défaut + le dark mode */
+    .bus-card, .rail-card {
+        background-color: #021939; /* Bleu Nuit */
+        color: white;
+        /* On définit les 3 autres bordures discrètes sans toucher à celle de gauche */
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    /* Textes en mode sombre */
+    .bus-dest, .rail-dest { color: #cccccc; }
+    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1); }
+
+    /* 3. MODE CLAIR (Spécifique) */
+    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* Fond Blanc FORCE */
+        color: #333333 !important;            /* Texte Sombre FORCE */
+        
+        /* Bordures grises légères (sauf gauche) */
+        border-top: 1px solid #e0e0e0 !important;
+        border-right: 1px solid #e0e0e0 !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+        
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    }
+
+    /* Textes en mode clair (pour qu'ils soient lisibles sur fond blanc) */
+    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
+        color: #2c3e50 !important; /* Gris foncé bleuté */
+        font-weight: 600 !important;
+    }
+    
+    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
+        border-top: 1px solid #f0f0f0 !important; /* Séparateur très clair */
+    }
+    
+    /* Correction de l'heure en mode clair (sinon elle reste blanche/invisible) */
+    [data-theme="light"] .rail-row > span:last-child, 
+    [data-theme="light"] .bus-row > span:last-child {
+        color: #333 !important;
+    }
+
+    /* --- RESTE DES STYLES (Commun) --- */
     .bus-dest, .rail-dest { 
-        color: #cccccc !important; 
         font-size: 16px; 
-        font-weight: 500 !important; /* Pas de gras */
+        font-weight: 500; 
         overflow: hidden; 
         text-overflow: ellipsis; 
         white-space: nowrap; 
@@ -247,39 +291,11 @@ st.markdown("""
         flex: 1;
     }
 
-    /* Séparateurs sombres */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
         padding: 10px 0; 
-        border-top: 1px solid rgba(255,255,255,0.1) !important; 
         align-items: center; 
-    }
-
-    /* --- 2. MODE CLAIR (UNIQUEMENT SI STREAMLIT EST LIGHT) --- */
-    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* Fond Blanc */
-        border: 1px solid #e0e0e0 !important; /* Bordure grise nette */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-    }
-
-    /* Texte destination en gris foncé */
-    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
-        color: #555555 !important;
-    }
-    
-    /* Lignes de séparation grises */
-    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
-        border-top: 1px solid #f0f0f0 !important;
-    }
-
-    /* --- CORRECTIF CÂBLE C1 (BADGE) EN MODE CLAIR --- */
-    /* Force le texte en bleu foncé pour qu'on le lise bien sur fond clair */
-    [data-theme="light"] .bus-row span[style*="background-color"] {
-        background-color: #f0f4f8 !important;
-        color: #021939 !important; /* Texte Bleu Foncé */
-        border: 1px solid #dce4ec !important;
-        font-weight: 600 !important;
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
