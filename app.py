@@ -217,8 +217,46 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
+    /* DESIGN DES CARTES (COULEUR FIXE) */
     .bus-card, .rail-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
+        background-color: #041b3b !important; /* Le bleu demandé */
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        
+        /* La bordure gauche reste gérée par le code Python (couleur de la ligne) */
+        border-left-width: 5px !important; 
+        border-left-style: solid !important;
+        
+        color: #ffffff !important; /* Texte blanc forcé */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Destinations en gris très clair pour la lisibilité sur fond bleu */
+    .bus-dest, .rail-dest { 
+        color: #e0e0e0 !important; 
+        font-size: 15px; 
+        font-weight: 500; 
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        margin-right: 10px; 
+        flex: 1;
+    }
+    
+    /* Séparateurs discrets */
+    .bus-row, .rail-row {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding-top: 8px; 
+        padding-bottom: 2px; 
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important; 
+    }
+    
+    /* Les heures restent bien blanches */
+    .bus-row > span:last-child, .rail-row > span:last-child {
+        color: #ffffff !important;
     }
 
     /* --- CORRECTION MOBILE --- */
@@ -409,24 +447,44 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES --- */
-    .mode-icon {
-        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
-        width: auto;
-        
-        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
-        /* Flexbox gère l'alignement maintenant */
-        
-        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+    /* --- CSS ICONES : VERSION BINAIRE FORCÉE --- */
+    
+    img.mode-icon {
+        height: 1.5em !important;
+        width: auto !important;
+        margin-right: 10px !important;
+        vertical-align: middle !important;
         transition: filter 0.3s ease;
     }
 
-    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
-    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
+    /* ---------------------------------------------------------
+       1. FORÇAGE MODE CLAIR (On veut du NOIR)
+       --------------------------------------------------------- */
+    /* Cas A : L'utilisateur force "Light" dans Streamlit */
+    [data-theme="light"] img.mode-icon {
+        filter: brightness(0) !important; 
+    }
+    
+    /* Cas B : Le système est Light (et l'utilisateur n'a rien forcé) */
+    @media (prefers-color-scheme: light) {
+        img.mode-icon {
+            filter: brightness(0) !important;
+        }
+    }
+
+    /* ---------------------------------------------------------
+       2. FORÇAGE MODE SOMBRE (On veut du BLANC)
+       --------------------------------------------------------- */
+    /* Cas A : L'utilisateur force "Dark" dans Streamlit */
+    [data-theme="dark"] img.mode-icon {
+        /* On écrase le noir pour faire : Noir -> Inversé -> BLANC PUR */
+        filter: brightness(0) invert(1) !important; 
+    }
+
+    /* Cas B : Le système est Dark (et l'utilisateur n'a rien forcé) */
     @media (prefers-color-scheme: dark) {
-        .mode-icon {
-            /* Transforme le Noir (0) en Blanc (1) */
-            filter: invert(1) brightness(2); 
+        img.mode-icon {
+            filter: brightness(0) invert(1) !important;
         }
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
@@ -670,12 +728,9 @@ def afficher_popup_feur(mot_declencheur):
     st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
-#        GESTION DES LOGOS SVG
+#        GESTION DES LOGOS (RETOUR IMG)
 # ==========================================
-
-# 2. ENSUITE : La fonction qui utilise la précédente
 def generer_icones_html():
-    # Configuration des fichiers (Verifie que les noms correspondent à ton upload GitHub !)
     mapping_files = {
         "RER":   "img/rer.svg",
         "TRAIN": "img/train.svg",
@@ -691,6 +746,7 @@ def generer_icones_html():
         "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
     }
     
+    # Emoji de secours si le fichier n'est pas trouvé
     fallbacks = {
         "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
@@ -702,12 +758,13 @@ def generer_icones_html():
         filepath = mapping_files.get(mode)
         b64_data = None
         
+        # On tente de lire le fichier
         if filepath:
-            # C'est ici que ça plantait avant : maintenant la fonction est connue !
             b64_data = get_img_as_base64(filepath)
             
         if b64_data:
-            # HTML pour SVG avec la classe CSS pour l'inversion de couleur
+            # RETOUR À LA BALISE IMG CLASSIQUE
+            # C'est la seule méthode qui garantit l'affichage de l'image
             html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
             resultat[mode] = html
         else:
@@ -797,7 +854,7 @@ else:
     icone_html = "🚆"
 
 # Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.0.2</span></h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1</span></h1>", unsafe_allow_html=True)
 
 # Sous-titre
 st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
@@ -851,7 +908,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.0.2 - Abondance 🧀")
+    st.caption("v1.1 - Abondance 🧀")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
@@ -1408,74 +1465,114 @@ def afficher_live_content(stop_id, clean_name):
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
 
-                # CAS 3: BUS/METRO/TRAM
+                # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard Unifié)
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Filtrage Perturbations Strict)
+                elif code == "C1":
+                    rows_html = ""
+                    destinations_vues = []
+                    
+                    # 1. Gestion des destinations
+                    for d in proches:
+                        dn = d['dest']
+                        # Si l'élément est le marqueur "Service terminé", on l'ignore ici.
+                        if "Service terminé" in dn:
+                            continue
+                        
+                        if dn not in destinations_vues:
+                            destinations_vues.append(dn)
+                            rows_html += f"""<div class="bus-row"><span class="bus-dest">➜ {dn}</span><span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">Passage toutes les ~30s</span></div>"""
+                    
+                    # 2. Si aucun départ valide, on met le message par défaut
+                    if not rows_html:
+                         rows_html = '<div class="service-box">😴 Service terminé</div>'
+
+                    # 3. Gestion des Perturbations (FILTRÉE POUR C1 UNIQUEMENT)
+                    alert_html = ""
+                    if 'disruptions' in data_live:
+                        for disp in data_live['disruptions']:
+                            # A. On vérifie si la perturbation est active
+                            if disp.get('status', '') == 'active':
+                                
+                                # B. FILTRE : Est-ce que ça concerne la ligne C1 ?
+                                concerne_c1 = False
+                                impacted_objects = disp.get('impacted_objects', [])
+                                for impact in impacted_objects:
+                                    # On descend dans l'objet pour trouver le code ligne
+                                    ligne_info = impact.get('pt_object', {}).get('line', {})
+                                    code_ligne = ligne_info.get('code', '').upper()
+                                    
+                                    # Si le code est C1 ou si le nom contient C1
+                                    if code_ligne == "C1":
+                                        concerne_c1 = True
+                                        break
+                                
+                                # C. Si c'est bien pour le C1, on affiche le message
+                                if concerne_c1:
+                                    messages = disp.get('messages', [])
+                                    if messages:
+                                        texte_info = messages[0].get('text', 'Perturbation en cours')
+                                        alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic C1</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
+
+                    # 4. Rendu Final
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}{alert_html}</div>""", unsafe_allow_html=True)
+
+                # CAS 3: BUS/METRO/TRAM (Standard)
                 else:
                     dest_data = {}
+                    # 1. Regroupement par destination
                     for d in proches:
                         dn = d['dest']
                         if dn not in dest_data: dest_data[dn] = {'items': [], 'best_time': 9999}
+                        # On garde les 3 prochains départs max par destination
                         if len(dest_data[dn]['items']) < 3:
                             dest_data[dn]['items'].append(d)
                             if d['tri'] < dest_data[dn]['best_time']: dest_data[dn]['best_time'] = d['tri']
                     
-                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
-                    else: sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
+                    # 2. Tri des destinations
+                    if mode_actuel in ["METRO", "TRAM", "CABLE"]: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[0])
+                    else: 
+                        sorted_dests = sorted(dest_data.items(), key=lambda item: item[1]['best_time'])
                     
                     is_noctilien = str(code).strip().upper().startswith('N')
                     rows_html = ""
                     
-                    if code == "C1":
-                        target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                        now = datetime.now(pytz.timezone('Europe/Paris'))
-                        if target_date > now:
-                            delta = target_date - now
-                            days = delta.days; hours = delta.seconds // 3600; mins = (delta.seconds % 3600) // 60
-                            rows_html += f'<div class="bus-row"><span class="bus-dest">➜ Ouverture Public</span><span style="font-weight:bold; color:#56CCF2;">{days}j {hours}h {mins}min</span></div>'
-                        else: rows_html += f'<div class="bus-row"><span class="bus-dest">➜ En service</span><span class="text-green">Ouvert !</span></div>'
-                    else:
-                        for dest_name, info in sorted_dests:
-                            if "Service terminé" in dest_name: 
-                                rows_html += f'<div class="service-box">😴 Service terminé</div>'
-                            else:
-                                html_list = []
-                                contains_last = False; last_val_tri = 9999
-                                is_group_replacement = False
-                                if info['items'] and info['items'][0].get('is_replacement'):
-                                    is_group_replacement = True
+                    # 3. Génération des lignes
+                    for dest_name, info in sorted_dests:
+                        if "Service terminé" in dest_name: 
+                            rows_html += f'<div class="service-box">😴 Service terminé</div>'
+                        else:
+                            html_list = []
+                            contains_last = False; last_val_tri = 9999
+                            is_group_replacement = False
+                            
+                            if info['items'] and info['items'][0].get('is_replacement'):
+                                is_group_replacement = True
     
-                                for idx, d_item in enumerate(info['items']):
-                                    val_tri = d_item['tri']
-                                    if idx > 0 and val_tri > 62 and not is_noctilien: continue
-                                    txt = d_item['html']
-                                    if d_item.get('is_last'):
-                                        contains_last = True
-                                        last_val_tri = val_tri
-                                        if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                        elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
-                                        else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
-                                    html_list.append(txt)
+                            for idx, d_item in enumerate(info['items']):
+                                val_tri = d_item['tri']
+                                if idx > 0 and val_tri > 62 and not is_noctilien: continue
                                 
-                                if not html_list and info['items']: html_list.append(info['items'][0]['html'])
-                                times_str = "<span class='time-sep'>|</span>".join(html_list)
-                                row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
+                                txt = d_item['html']
+                                if d_item.get('is_last'):
+                                    contains_last = True
+                                    last_val_tri = val_tri
+                                    if val_tri < 10: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                    elif val_tri <= 30: txt = f"<span class='last-dep-small-frame'>{txt} 🏁</span>"
+                                    else: txt = f"<span class='last-dep-text-only'>{txt} 🏁</span>"
+                                html_list.append(txt)
+                            
+                            if not html_list and info['items']: html_list.append(info['items'][0]['html'])
+                            times_str = "<span class='time-sep'>|</span>".join(html_list)
+                            
+                            row_content = f'<div class="bus-row"><span class="bus-dest">➜ {dest_name}</span><span>{times_str}</span></div>'
     
-                                if is_group_replacement:
-                                    rows_html += f"""
-                                    <div class='replacement-box'>
-                                        <span class='replacement-label'>🚍 Bus de substitution</span>
-                                        {row_content}
-                                    </div>"""
-                                elif contains_last and len(html_list) == 1 and last_val_tri < 10:
-                                    rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
-                                else:
-                                    rows_html += row_content                    
-                    if code == "C1":
-                         target_date = datetime(2025, 12, 13, 11, 0, 0, tzinfo=pytz.timezone('Europe/Paris'))
-                         now = datetime.now(pytz.timezone('Europe/Paris'))
-                         if target_date > now:
-                             delta = target_date - now
-                             st.markdown("""<style>@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }</style>""", unsafe_allow_html=True)
-                             st.markdown(f"""<div style="background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(47, 128, 237, 0.3); border: 1px solid rgba(255,255,255,0.2);"><div style="font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"><span class='cable-icon'>🚠</span> Câble C1 • A l'approche...</div><div style="font-size: 2.5em; font-weight: 900; line-height: 1.1;">J-{delta.days}</div><div style="font-size: 0.9em; opacity: 0.9; font-style: italic; margin-top: 5px;">Inauguration le 13 décembre 2025 à 11h</div></div>""", unsafe_allow_html=True)
+                            if is_group_replacement:
+                                rows_html += f"""<div class='replacement-box'><span class='replacement-label'>🚍 Bus de substitution</span>{row_content}</div>"""
+                            elif contains_last and len(html_list) == 1 and last_val_tri < 10:
+                                rows_html += f"""<div class='last-dep-box'><span class='last-dep-label'>🏁 Dernier départ</span>{row_content}</div>"""
+                            else:
+                                rows_html += row_content                    
 
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
