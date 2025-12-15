@@ -1409,37 +1409,40 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
 
                 # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard Unifié)
-                # CAS SPÉCIFIQUE : CÂBLE C1 (Fréquence + Alerte)
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Ultra-Minimaliste : Juste le badge)
                 elif code == "C1":
                     rows_html = ""
                     destinations_vues = []
                     
-                    # 1. Gestion des destinations (Message statique)
+                    # --- A. GESTION DES PERTURBATIONS ---
+                    perturbation_msg = None 
+                    
+                    tz_paris = pytz.timezone('Europe/Paris')
+                    now_hour = datetime.now(tz_paris).hour
+                    
+                    if not proches and (6 <= now_hour < 23):
+                         perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
+
+                    # Alerte
+                    alert_html = ""
+                    if perturbation_msg:
+                        alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>{perturbation_msg}</span></div>"
+
+                    # --- B. AFFICHAGE DES DESTINATIONS ---
                     for d in proches:
                         dn = d['dest']
                         if dn not in destinations_vues:
                             destinations_vues.append(dn)
-                            # HTML compacté sur une ligne pour éviter le bug d'affichage
-                            rows_html += f"""<div class="bus-row"><span class="bus-dest">➜ {dn}</span><span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">Passage toutes les ~30s</span></div>"""
+                            freq_text = "Départ toutes les ~30s"
+
+                            # HTML compacté
+                            rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
                     
-                    if not rows_html:
+                    if not rows_html and not perturbation_msg:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
-                    # 2. Gestion des Perturbations (Récupération depuis data_live)
-                    alert_html = ""
-                    if 'disruptions' in data_live:
-                        for disp in data_live['disruptions']:
-                            # On vérifie si la perturbation est active
-                            if disp.get('status', '') == 'active':
-                                # On récupère le texte du message
-                                messages = disp.get('messages', [])
-                                if messages:
-                                    texte_info = messages[0].get('text', 'Perturbation en cours')
-                                    # HTML compacté
-                                    alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
-
-                    # 3. Rendu Final
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}{alert_html}</div>""", unsafe_allow_html=True)
+                    # --- C. RENDU DE LA CARTE ---
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color}; position: relative;"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{alert_html}{rows_html}</div>""", unsafe_allow_html=True)
 
                 # CAS SPÉCIFIQUE : CÂBLE C1 (Fréquence + Alerte)
                 elif code == "C1":
