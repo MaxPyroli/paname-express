@@ -219,34 +219,35 @@ st.markdown("""
     
     /* --- CARTES LIGNES (DESIGN ANTHRACITE IDFM) --- */
     .bus-card, .rail-card { 
-        background-color: #383E42 !important; /* Anthracite plus doux */
+        background-color: #2c3236 !important; /* Anthracite plus profond (au lieu de #383E42) */
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 8px; 
         border-left: 5px solid #666; 
-        color: #f5f5f5 !important; /* Texte blanc cassé pour la douceur */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* Ombre légère pour le relief */
+        color: #ffffff !important; /* Blanc PUR (au lieu de blanc cassé) */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.25); /* Ombre plus marquée pour détacher du fond */
     }
 
-    /* --- CORRECTION MOBILE --- */
-    .bus-row, .rail-row {
+    /* Ajustement des lignes de séparation */
+    .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
-        align-items: center; /* Aligne verticalement si les hauteurs diffèrent */
-        padding-top: 8px; padding-bottom: 2px; border-top: 1px solid #333; 
+        padding: 10px 0; 
+        border-top: 1px solid rgba(255,255,255,0.1); /* Séparateur plus fin et discret */
+        align-items: center; 
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
     
     .bus-dest, .rail-dest { 
-        color: #ccc; 
-        font-size: 15px; 
-        font-weight: 500; 
+        color: #ffffff !important; 
+        font-size: 16px; 
+        font-weight: 700 !important; /* Le gras aide énormément à la lecture sur fond sombre */
         overflow: hidden;
-        text-overflow: ellipsis; /* Ajoute "..." si trop long */
-        white-space: nowrap; /* Empêche le retour à la ligne du nom */
-        margin-right: 10px; /* Espace min avec l'heure */
-        flex: 1; /* Prend toute la place dispo */
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 10px;
+        flex: 1;
     }
 
     /* Le bloc des horaires ne doit JAMAIS passer à la ligne */
