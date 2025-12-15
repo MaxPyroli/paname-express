@@ -469,24 +469,68 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES (CORRECTION) --- */
+    /* ============================================================ */
+    /* GESTION DES COULEURS (FIX)                   */
+    /* ============================================================ */
+
+    /* --- 1. ICONES DES MODES (RER, BUS, ETC.) --- */
     .mode-icon {
         height: 1.5em;
         width: auto;
         margin-right: 10px;
         transition: filter 0.3s ease;
         
-        /* PAR DÉFAUT (Mode Sombre) : On inverse les couleurs pour que le noir devienne blanc */
-        filter: invert(1) brightness(2);
+        /* PAR DÉFAUT (MODE SOMBRE) : */
+        /* brightness(0) rend l'image toute noire, invert(1) la rend toute blanche. */
+        /* C'est la méthode la plus fiable pour avoir du blanc pur. */
+        filter: brightness(0) invert(1);
     }
 
-    /* SI MODE CLAIR DÉTECTÉ (via Streamlit ou Système) : On remet les couleurs normales */
+    /* SI MODE CLAIR DÉTECTÉ (via Streamlit ou Système) */
     @media (prefers-color-scheme: light) {
         .mode-icon { filter: none; }
     }
-    
     [data-theme="light"] .mode-icon {
-        filter: none;
+        filter: none; /* On affiche l'original (souvent coloré ou noir) */
+    }
+
+    /* --- 2. CARTES (CARDS) EN MODE CLAIR --- */
+    /* Le sélecteur [data-theme="light"] détecte le réglage Streamlit "Light" */
+    
+    [data-theme="light"] .bus-card, 
+    [data-theme="light"] .rail-card {
+        background-color: #ffffff !important; /* FOND BLANC PUR */
+        color: #333333 !important;            /* TEXTE GRIS FONCÉ */
+        
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        border: 1px solid #e0e0e0 !important; /* Contour gris clair */
+        
+        /* On garde la couleur de la ligne à gauche (géré par le style inline Python) */
+    }
+
+    /* Ajustement des textes à l'intérieur des cartes en mode clair */
+    [data-theme="light"] .bus-dest, 
+    [data-theme="light"] .rail-dest { 
+        color: #2c3e50 !important; /* Bleu nuit lisible sur blanc */
+        font-weight: 700 !important; 
+    }
+
+    [data-theme="light"] .rail-row, 
+    [data-theme="light"] .bus-row { 
+        border-top: 1px solid #f0f0f0 !important; /* Séparateur très discret */
+    }
+
+    /* Les heures en mode clair */
+    [data-theme="light"] .rail-row > span:last-child, 
+    [data-theme="light"] .bus-row > span:last-child {
+        color: #333333 !important; 
+    }
+    
+    /* Le petit badge "Service terminé" ou infos en mode clair */
+    [data-theme="light"] .service-box {
+        background: #f9f9f9 !important;
+        color: #666 !important;
+        border-left: 3px solid #ccc !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
