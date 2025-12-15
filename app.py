@@ -447,25 +447,31 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES --- */
+    /* --- CSS ICONES ADAPTATIVES (CORRIGÉ) --- */
     .mode-icon {
-        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
+        height: 1.5em; 
         width: auto;
-        
-        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
-        /* Flexbox gère l'alignement maintenant */
-        
-        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+        margin-right: 10px; 
         transition: filter 0.3s ease;
     }
 
-    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
-    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
+    /* 1. DÉTECTION SYSTÈME (Ordinateur en mode sombre) */
     @media (prefers-color-scheme: dark) {
         .mode-icon {
-            /* Transforme le Noir (0) en Blanc (1) */
             filter: invert(1) brightness(2); 
         }
+    }
+
+    /* 2. DÉTECTION STREAMLIT (Si l'utilisateur force le mode DARK dans les réglages) */
+    /* Le !important assure que ça prenne le dessus sur le réglage système */
+    [data-theme="dark"] .mode-icon {
+        filter: invert(1) brightness(2) !important;
+    }
+
+    /* 3. DÉTECTION STREAMLIT (Si l'utilisateur force le mode LIGHT dans les réglages) */
+    /* Annule l'inversion si l'ordi est en sombre mais que l'app est forcée en clair */
+    [data-theme="light"] .mode-icon {
+        filter: none !important;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
