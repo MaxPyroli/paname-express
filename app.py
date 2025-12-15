@@ -469,25 +469,24 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES ADAPTATIVES --- */
+    /* --- CSS ICONES ADAPTATIVES (CORRECTION) --- */
     .mode-icon {
-        height: 1.5em; /* J'ai légèrement augmenté (1.4 -> 1.5) pour l'équilibre */
+        height: 1.5em;
         width: auto;
-        
-        /* On enlève 'vertical-align: sub' qui tirait vers le bas */
-        /* Flexbox gère l'alignement maintenant */
-        
-        margin-right: 10px; /* Un peu plus d'espace avec le texte */
+        margin-right: 10px;
         transition: filter 0.3s ease;
+        
+        /* PAR DÉFAUT (Mode Sombre) : On inverse les couleurs pour que le noir devienne blanc */
+        filter: invert(1) brightness(2);
     }
 
-    /* 🌑 DÉTECTION MODE SOMBRE 🌑 */
-    /* Si l'utilisateur (ou le système) est en mode sombre, on inverse les couleurs de l'image */
-    @media (prefers-color-scheme: dark) {
-        .mode-icon {
-            /* Transforme le Noir (0) en Blanc (1) */
-            filter: invert(1) brightness(2); 
-        }
+    /* SI MODE CLAIR DÉTECTÉ (via Streamlit ou Système) : On remet les couleurs normales */
+    @media (prefers-color-scheme: light) {
+        .mode-icon { filter: none; }
+    }
+    
+    [data-theme="light"] .mode-icon {
+        filter: none;
     }
     /* --- BOUTON FAVORI LARGE ET PROPRE --- */
     .fav-btn-container { width: 100%; }
