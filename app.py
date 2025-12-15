@@ -218,64 +218,70 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : SYNC AVEC LE MODE STREAMLIT             */
+    /* DESIGN DES CARTES (CORRIGÉ : TEXTE GRIS & MODE CLAIR)       */
     /* ============================================================ */
     
-    /* --- 1. BASE (MODE SOMBRE PAR DÉFAUT) --- */
+    /* --- 1. CONFIGURATION DE BASE (Mode Sombre / Bleu Nuit) --- */
     .bus-card, .rail-card { 
-        background-color: #021939 !important; /* Bleu IDFM */
+        background-color: #021939 !important; /* Bleu Institutionnel */
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 10px;
         border-left: 5px solid #666; 
         
-        /* Texte et Bordures pour le sombre */
-        color: #ffffff !important; 
+        /* Bordure subtile pour détourer sur fond noir */
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-        transition: all 0.3s ease; /* Transition fluide au changement de mode */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+        transition: all 0.3s ease;
     }
 
-    /* Séparateurs (Lignes fines blanches) */
+    /* Texte des Destinations : GRIS et FIN (Demande utilisateur) */
+    .bus-dest, .rail-dest { 
+        color: #cccccc !important; /* Gris clair (pas blanc) */
+        font-size: 16px; 
+        font-weight: 500 !important; /* Normal/Medium (Pas de gras) */
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        margin-right: 10px; 
+        flex: 1;
+    }
+
+    /* Séparateurs (Lignes fines) */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
         padding: 10px 0; 
-        border-top: 1px solid rgba(255,255,255,0.15) !important; 
+        border-top: 1px solid rgba(255,255,255,0.1) !important; 
         align-items: center; 
     }
 
-    /* Destinations (Blanc) */
-    .bus-dest, .rail-dest { 
-        color: #ffffff !important; 
-        font-size: 16px; 
-        font-weight: 600 !important; 
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1;
-    }
+    /* --- 2. SURCHARGE MODE CLAIR (Double Sécurité) --- */
+    /* S'applique si Windows/Mac est clair OU si Streamlit est réglé sur Light */
+    @media (prefers-color-scheme: light), [data-theme="light"] {
+        
+        .bus-card, .rail-card {
+            background-color: #ffffff !important; /* Fond Blanc */
+            border: 1px solid #e5e5e5 !important; /* Bordure grise légère */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; /* Ombre douce */
+        }
 
-    /* --- 2. SURCHARGE MODE CLAIR (SI STREAMLIT EST LIGHT) --- */
-    [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* Fond Blanc */
-        color: #021939 !important; /* Texte Bleu */
-        border: 1px solid #e0e0e0 !important; /* Bordure grise */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; /* Ombre douce */
-    }
+        /* Le texte devient GRIS FONCÉ en mode clair */
+        .bus-dest, .rail-dest {
+            color: #333333 !important; /* Gris anthracite */
+        }
+        
+        /* Les lignes de séparation deviennent grises */
+        .rail-row, .bus-row {
+            border-top: 1px solid #f0f0f0 !important;
+        }
 
-    /* En mode clair, les séparateurs deviennent gris foncé */
-    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row {
-        border-top: 1px solid rgba(2, 25, 57, 0.1) !important;
-    }
-
-    /* En mode clair, les destinations deviennent Bleues */
-    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest {
-        color: #021939 !important;
-    }
-    
-    /* En mode clair, les badges "Temps/Fréquence" (gris clair) s'adaptent */
-    [data-theme="light"] .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
-        background-color: rgba(2, 25, 57, 0.08) !important; /* Fond bleu très pâle */
-        color: #021939 !important; /* Texte bleu */
-        border: none !important;
+        /* Adaptation des petits badges gris (temps/fréquence) */
+        .bus-row span[style*="background-color: rgba(255,255,255,0.1)"] {
+            background-color: #f5f5f5 !important; /* Gris très pâle */
+            color: #555555 !important; /* Texte gris */
+            border: 1px solid #eeeeee;
+        }
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
