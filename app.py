@@ -218,78 +218,69 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : CORRECTION DÉFINITIVE LIGHT/DARK         */
+    /* DESIGN DES CARTES : CORRECTION FINALE (SOMBRE PAR DÉFAUT)    */
     /* ============================================================ */
     
-    /* 1. CONFIGURATION DE BASE (STRUCTURE) */
+    /* 1. STRUCTURE (Taille, forme, bordure gauche) */
     .bus-card, .rail-card {
-        padding: 12px;
-        margin-bottom: 15px;
+        padding: 12px; 
+        margin-bottom: 15px; 
         border-radius: 10px;
         transition: all 0.3s ease;
         
-        /* GESTION DE LA BANDE DE COULEUR (GAUCHE) */
-        /* On force l'épaisseur et le style, mais PAS la couleur (gérée par Python) */
-        border-left-width: 6px !important;
+        /* BANDE DE COULEUR GAUCHE (Gérée par Python pour la couleur) */
+        border-left-width: 6px !important; 
         border-left-style: solid !important;
     }
 
-    /* 2. MODE SOMBRE (DÉFAUT) */
+    /* 2. MODE SOMBRE (C'est le style PAR DÉFAUT) */
+    /* On l'applique tout le temps, sauf si le mode light l'écrase */
     .bus-card, .rail-card {
-        background-color: #021939; /* Bleu nuit */
-        color: white;
+        background-color: #021939 !important; /* Bleu Nuit */
+        color: white !important;
         
-        /* Bordures subtiles pour le mode sombre (SANS toucher à gauche) */
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        border-right: 1px solid rgba(255, 255, 255, 0.15);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        /* Bordures (Haut/Droite/Bas uniquement) pour ne pas casser la gauche */
+        border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
         
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
     }
+
+    /* Textes internes (Mode Sombre) */
+    .bus-dest, .rail-dest { color: #cccccc !important; font-weight: 500 !important; }
+    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1) !important; }
     
-    /* Texte destination en mode sombre */
-    .bus-dest, .rail-dest { color: #cccccc; font-weight: 500; }
-    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1); }
+    /* Couleur des heures (droite) en mode sombre */
+    .rail-row > span:last-child, .bus-row > span:last-child { color: white !important; }
 
 
-    /* 3. MODE CLAIR (FORÇAGE) */
-    /* On cible via data-theme (Streamlit) ET media query (Système) */
-    @media (prefers-color-scheme: light) {
-        .bus-card, .rail-card {
-            background-color: #ffffff !important; /* BLANC FORCE */
-            color: #333333 !important;
-            
-            border-top: 1px solid #e0e0e0 !important;
-            border-right: 1px solid #e0e0e0 !important;
-            border-bottom: 1px solid #e0e0e0 !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-        }
-        .bus-dest, .rail-dest { color: #2c3e50 !important; font-weight: 700 !important; }
-        .rail-row, .bus-row { border-top: 1px solid #f0f0f0 !important; }
-        .rail-row > span:last-child, .bus-row > span:last-child { color: #333 !important; }
-    }
-
+    /* 3. MODE CLAIR (UNIQUEMENT si Streamlit envoie le signal "light") */
     [data-theme="light"] .bus-card, [data-theme="light"] .rail-card {
-        background-color: #ffffff !important;
-        color: #333333 !important;
+        background-color: #ffffff !important; /* Blanc */
+        color: #333333 !important;            /* Texte gris foncé */
         
         border-top: 1px solid #e0e0e0 !important;
         border-right: 1px solid #e0e0e0 !important;
         border-bottom: 1px solid #e0e0e0 !important;
+        
         box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
     }
-    
-    /* Override texte spécifique si le sélecteur [data-theme="light"] est actif */
+
+    /* Textes internes (Mode Clair - pour qu'ils soient lisibles sur fond blanc) */
     [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest { 
-        color: #2c3e50 !important; 
+        color: #2c3e50 !important; /* Bleu foncé très lisible */
         font-weight: 700 !important; 
     }
+    
     [data-theme="light"] .rail-row, [data-theme="light"] .bus-row { 
-        border-top: 1px solid #f0f0f0 !important; 
+        border-top: 1px solid #f0f0f0 !important; /* Ligne de séparation gris clair */
     }
+    
+    /* Couleur des heures en mode clair (Gris foncé au lieu de blanc) */
     [data-theme="light"] .rail-row > span:last-child, 
     [data-theme="light"] .bus-row > span:last-child {
-        color: #333 !important;
+        color: #333333 !important;
     }
 
     /* --- RESTE DES STYLES (Commun) --- */
