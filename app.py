@@ -218,11 +218,10 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES & THEMES (VERSION ULTIME)                  */
+    /* DESIGN DES CARTES & THEMES (VERSION STABLE SIMPLIFIÉE)       */
     /* ============================================================ */
 
-    /* --- 1. STRUCTURE (Taille, Marges, Forme) --- */
-    /* Ceci s'applique tout le temps, peu importe le thème */
+    /* --- 1. STRUCTURE (Fixe, ne change jamais) --- */
     .bus-card, .rail-card {
         padding: 12px;
         margin-bottom: 15px;
@@ -248,89 +247,74 @@ st.markdown("""
     .bus-row > span:last-child, .rail-row > span:last-child {
         white-space: nowrap; flex-shrink: 0; text-align: right;
     }
-    /* Correction espacement RER */
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
     
-    /* Box Service Terminé (Structure) */
     .service-box { 
         text-align: left; padding: 10px 12px; font-style: italic; font-size: 0.95em;
         border-radius: 6px; margin-top: 5px; margin-bottom: 5px; 
     }
 
-    /* --- 2. STYLE "SOMBRE" (C'est le style par DÉFAUT) --- */
-    /* On applique ça en premier. Si rien ne dit le contraire, ce sera bleu. */
+    /* --- 2. STYLE PAR DÉFAUT : MODE SOMBRE (Bleu Nuit) --- */
+    /* Ce style s'applique TOUT LE TEMPS, sauf si on l'écrase après */
     
     .bus-card, .rail-card {
-        background-color: #021939; /* Bleu Nuit */
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: #021939 !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
-    .bus-dest, .rail-dest { color: #cccccc; }
-    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1); }
-    .rail-row > span:last-child, .bus-row > span:last-child { color: white; }
-    .service-box { color: #888; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #444; }
+    .bus-dest, .rail-dest { color: #cccccc !important; }
     
-    /* Icones : Blanches par défaut (pour aller sur le fond bleu) */
+    .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1) !important; }
+    
+    .rail-row > span:last-child, .bus-row > span:last-child { color: white !important; }
+    
+    .service-box { 
+        color: #888 !important; background: rgba(255, 255, 255, 0.05) !important; border-left: 3px solid #444 !important; 
+    }
+    
+    /* Icones : Blanches par défaut (Filtre inverseur) */
     .mode-icon {
         height: 1.5em; width: auto; margin-right: 10px;
         transition: filter 0.3s ease;
-        filter: brightness(0) invert(1); 
+        filter: brightness(0) invert(1) !important; 
     }
 
-    /* --- 3. STYLE "CLAIR" (L'Override) --- */
-    /* On force ce style SI Streamlit est en mode Light OU si le système est Light (Auto) */
+    /* --- 3. SURCHARGE : MODE CLAIR (Blanc) --- */
+    /* S'applique UNIQUEMENT si Streamlit ajoute l'attribut data-theme="light" */
     
-    /* A. Cas où l'utilisateur a choisi "Light" dans Streamlit */
     [data-theme="light"] .bus-card, 
     [data-theme="light"] .rail-card {
-        background-color: #ffffff !important; /* FORCE BLANC */
-        color: #333333 !important;            /* FORCE GRIS */
+        background-color: #ffffff !important; 
+        color: #333333 !important;            
         border: 1px solid #e0e0e0 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
     }
-    /* Textes en mode clair */
-    [data-theme="light"] .bus-dest, [data-theme="light"] .rail-dest { 
+
+    [data-theme="light"] .bus-dest, 
+    [data-theme="light"] .rail-dest { 
         color: #2c3e50 !important; font-weight: 700 !important; 
     }
-    [data-theme="light"] .rail-row, [data-theme="light"] .bus-row { 
+
+    [data-theme="light"] .rail-row, 
+    [data-theme="light"] .bus-row { 
         border-top: 1px solid #f0f0f0 !important; 
     }
-    [data-theme="light"] .rail-row > span:last-child, [data-theme="light"] .bus-row > span:last-child {
+
+    [data-theme="light"] .rail-row > span:last-child, 
+    [data-theme="light"] .bus-row > span:last-child {
         color: #333333 !important;
     }
+
     [data-theme="light"] .service-box {
         color: #666 !important; background: #f9f9f9 !important; border-left: 3px solid #ccc !important;
     }
-    /* On remet les icones normales (noires/colorées) en mode clair */
+
+    /* Icones : On retire le filtre pour qu'elles reprennent leur couleur originale */
     [data-theme="light"] .mode-icon {
         filter: none !important;
     }
 
-    /* B. Cas où l'utilisateur est en "Auto" et son Système est Light */
-    @media (prefers-color-scheme: light) {
-        /* On applique le mode clair SEULEMENT si l'utilisateur n'a pas FORCÉ le mode Dark */
-        :root:not([data-theme="dark"]) .bus-card,
-        :root:not([data-theme="dark"]) .rail-card {
-            background-color: #ffffff !important;
-            color: #333333 !important;
-            border: 1px solid #e0e0e0 !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-        }
-        :root:not([data-theme="dark"]) .bus-dest, 
-        :root:not([data-theme="dark"]) .rail-dest { color: #2c3e50 !important; font-weight: 700 !important; }
-        
-        :root:not([data-theme="dark"]) .rail-row, 
-        :root:not([data-theme="dark"]) .bus-row { border-top: 1px solid #f0f0f0 !important; }
-        
-        :root:not([data-theme="dark"]) .rail-row > span:last-child, 
-        :root:not([data-theme="dark"]) .bus-row > span:last-child { color: #333333 !important; }
-        
-        :root:not([data-theme="dark"]) .service-box { color: #666 !important; background: #f9f9f9 !important; border-left: 3px solid #ccc !important; }
-        
-        :root:not([data-theme="dark"]) .mode-icon { filter: none !important; }
-    }
-
-    /* --- 4. AUTRES ÉLÉMENTS RESTAURÉS --- */
+    /* --- 4. AUTRES ÉLÉMENTS (Inchangés) --- */
     .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 
     /* BOX "DERNIER DÉPART" (JAUNE) */
