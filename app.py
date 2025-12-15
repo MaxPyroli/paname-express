@@ -217,8 +217,46 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
+    /* DESIGN DES CARTES (COULEUR FIXE) */
     .bus-card, .rail-card {
-        background-color: #1a1a1a; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #666; color: #ddd; 
+        background-color: #041b3b !important; /* Le bleu demandé */
+        padding: 12px; 
+        margin-bottom: 15px; 
+        border-radius: 8px; 
+        
+        /* La bordure gauche reste gérée par le code Python (couleur de la ligne) */
+        border-left-width: 5px !important; 
+        border-left-style: solid !important;
+        
+        color: #ffffff !important; /* Texte blanc forcé */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Destinations en gris très clair pour la lisibilité sur fond bleu */
+    .bus-dest, .rail-dest { 
+        color: #e0e0e0 !important; 
+        font-size: 15px; 
+        font-weight: 500; 
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        margin-right: 10px; 
+        flex: 1;
+    }
+    
+    /* Séparateurs discrets */
+    .bus-row, .rail-row {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding-top: 8px; 
+        padding-bottom: 2px; 
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important; 
+    }
+    
+    /* Les heures restent bien blanches */
+    .bus-row > span:last-child, .rail-row > span:last-child {
+        color: #ffffff !important;
     }
 
     /* --- CORRECTION MOBILE --- */
