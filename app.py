@@ -1409,6 +1409,59 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
 
                 # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard Unifié)
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Fréquence + Alerte)
+                elif code == "C1":
+                    rows_html = ""
+                    destinations_vues = []
+                    
+                    # 1. Gestion des destinations (Message statique)
+                    for d in proches:
+                        dn = d['dest']
+                        if dn not in destinations_vues:
+                            destinations_vues.append(dn)
+                            rows_html += f"""
+                            <div class="bus-row">
+                                <span class="bus-dest">➜ {dn}</span>
+                                <span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">
+                                    Passage toutes les ~30s
+                                </span>
+                            </div>
+                            """
+                    
+                    if not rows_html:
+                         rows_html = '<div class="service-box">😴 Service terminé</div>'
+
+                    # 2. Gestion des Perturbations (Récupération depuis data_live)
+                    alert_html = ""
+                    if 'disruptions' in data_live:
+                        for disp in data_live['disruptions']:
+                            # On vérifie si la perturbation est active
+                            if disp.get('status', '') == 'active':
+                                # On récupère le texte du message
+                                messages = disp.get('messages', [])
+                                if messages:
+                                    texte_info = messages[0].get('text', 'Perturbation en cours')
+                                    alert_html += f"""
+                                    <div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;">
+                                        <div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;">
+                                            <span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic
+                                        </div>
+                                        <div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">
+                                            {texte_info}
+                                        </div>
+                                    </div>
+                                    """
+
+                    # 3. Rendu Final
+                    st.markdown(f"""
+                    <div class="bus-card" style="border-left-color: #{color};">
+                        <div style="display:flex; align-items:center;">
+                            <span class="line-badge" style="background-color:#{color};">{code}</span>
+                        </div>
+                        {rows_html}
+                        {alert_html}
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
                     dest_data = {}
                     # 1. Regroupement par destination
