@@ -1466,7 +1466,7 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
 
                 # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard Unifié)
-                # CAS SPÉCIFIQUE : CÂBLE C1 (Correction "Service Terminé")
+                # CAS SPÉCIFIQUE : CÂBLE C1 (Filtrage Perturbations Strict)
                 elif code == "C1":
                     rows_html = ""
                     destinations_vues = []
@@ -1474,31 +1474,44 @@ def afficher_live_content(stop_id, clean_name):
                     # 1. Gestion des destinations
                     for d in proches:
                         dn = d['dest']
-                        
-                        # --- FIX ---
                         # Si l'élément est le marqueur "Service terminé", on l'ignore ici.
-                        # Cela laissera rows_html vide, ce qui déclenchera le message "Service terminé" plus bas.
                         if "Service terminé" in dn:
                             continue
-
+                        
                         if dn not in destinations_vues:
                             destinations_vues.append(dn)
-                            # HTML compacté
                             rows_html += f"""<div class="bus-row"><span class="bus-dest">➜ {dn}</span><span style="font-size: 0.9em; color: #888; font-style: italic; white-space: nowrap;">Passage toutes les ~30s</span></div>"""
                     
-                    # 2. Si aucun départ valide n'a été ajouté, on affiche le message de fin
+                    # 2. Si aucun départ valide, on met le message par défaut
                     if not rows_html:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
-                    # 3. Gestion des Perturbations
+                    # 3. Gestion des Perturbations (FILTRÉE POUR C1 UNIQUEMENT)
                     alert_html = ""
                     if 'disruptions' in data_live:
                         for disp in data_live['disruptions']:
+                            # A. On vérifie si la perturbation est active
                             if disp.get('status', '') == 'active':
-                                messages = disp.get('messages', [])
-                                if messages:
-                                    texte_info = messages[0].get('text', 'Perturbation en cours')
-                                    alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
+                                
+                                # B. FILTRE : Est-ce que ça concerne la ligne C1 ?
+                                concerne_c1 = False
+                                impacted_objects = disp.get('impacted_objects', [])
+                                for impact in impacted_objects:
+                                    # On descend dans l'objet pour trouver le code ligne
+                                    ligne_info = impact.get('pt_object', {}).get('line', {})
+                                    code_ligne = ligne_info.get('code', '').upper()
+                                    
+                                    # Si le code est C1 ou si le nom contient C1
+                                    if code_ligne == "C1":
+                                        concerne_c1 = True
+                                        break
+                                
+                                # C. Si c'est bien pour le C1, on affiche le message
+                                if concerne_c1:
+                                    messages = disp.get('messages', [])
+                                    if messages:
+                                        texte_info = messages[0].get('text', 'Perturbation en cours')
+                                        alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic C1</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
 
                     # 4. Rendu Final
                     st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}{alert_html}</div>""", unsafe_allow_html=True)
