@@ -218,94 +218,77 @@ st.markdown("""
     }
     
     /* ============================================================ */
-    /* DESIGN DES CARTES : STRATÉGIE "LIGHT FIRST" (SÉCURITÉ)       */
+    /* DESIGN DES CARTES : NOUVELLE MÉTHODE (VARIABLES CSS)         */
     /* ============================================================ */
+
+    /* 1. DÉFINITION DES VARIABLES DE COULEURS */
     
-    /* 1. CONFIGURATION DE BASE = MODE CLAIR (Blanc par défaut)     */
-    /* C'est ce qui s'affichera si aucune détection ne fonctionne.  */
+    /* A. Valeurs par DÉFAUT (Mode Sombre / Dark) */
+    :root {
+        --card-bg: #021939;           /* Bleu Nuit */
+        --card-text: #ffffff;         /* Texte Blanc */
+        --card-subtext: #cccccc;      /* Texte Gris clair */
+        --card-border-color: rgba(255, 255, 255, 0.15);
+        --time-color: #ffffff;
+    }
+
+    /* B. Valeurs si STREAMLIT est en mode CLAIR (Light) */
+    /* Streamlit ajoute l'attribut data-theme="light" à la racine quand on change le thème */
+    [data-theme="light"] {
+        --card-bg: #ffffff;           /* Blanc pur */
+        --card-text: #333333;         /* Gris foncé */
+        --card-subtext: #2c3e50;      /* Bleu encre (lisible) */
+        --card-border-color: #e0e0e0; /* Gris très clair */
+        --time-color: #333333;
+    }
+
+    /* 2. APPLICATION DES VARIABLES SUR LES CARTES */
     .bus-card, .rail-card {
+        /* On utilise les variables ici. Elles changent toutes seules ! */
+        background-color: var(--card-bg) !important;
+        color: var(--card-text) !important;
+        
         padding: 12px;
         margin-bottom: 15px;
         border-radius: 10px;
-        transition: all 0.3s ease;
-        
-        /* BANDE DE COULEUR GAUCHE (Indestructible) */
+        transition: background-color 0.3s ease, color 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+        /* GESTION DES BORDURES */
+        /* 1. La bande de couleur à GAUCHE (Indispensable) */
         border-left-width: 6px !important;
         border-left-style: solid !important;
-        /* La couleur vient du Python style="..." */
-        
-        /* COULEURS FORCEES BLANC/GRIS (Mode Clair) */
-        background-color: #ffffff !important;
-        color: #333333 !important;
-        border-top: 1px solid #e0e0e0 !important;
-        border-right: 1px solid #e0e0e0 !important;
-        border-bottom: 1px solid #e0e0e0 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        /* La couleur (border-left-color) est gérée par le Python, on n'y touche pas */
+
+        /* 2. Les autres bordures (Haut, Droite, Bas) suivent le thème */
+        border-top: 1px solid var(--card-border-color) !important;
+        border-right: 1px solid var(--card-border-color) !important;
+        border-bottom: 1px solid var(--card-border-color) !important;
     }
 
-    /* Textes en mode Clair par défaut */
+    /* 3. STYLES INTERNES (Destination, Séparateurs, Heures) */
+    
+    /* Nom de la destination */
     .bus-dest, .rail-dest { 
-        color: #2c3e50 !important; /* Bleu encre lisible */
-        font-weight: 700 !important; 
+        color: var(--card-subtext) !important; 
+        font-weight: 700 !important; /* Gras pour bien lire */
         font-size: 16px; 
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1;
     }
-    
-    .rail-row, .bus-row { 
-        display: flex; justify-content: space-between; padding: 10px 0; align-items: center; 
-        border-top: 1px solid #f0f0f0 !important; /* Séparateur gris clair */
-    }
-    
-    /* Couleur des heures à droite (Mode Clair) */
-    .rail-row > span:last-child, .bus-row > span:last-child {
-        color: #333333 !important;
-    }
 
-
-    /* 2. MODE SOMBRE (DETECTÉ VIA STREAMLIT OU SYSTÈME) */
-    /* On n'applique le bleu nuit que si on détecte explicitement le mode sombre */
-    
-    @media (prefers-color-scheme: dark) {
-        .bus-card, .rail-card {
-            background-color: #021939 !important; /* Bleu Nuit */
-            color: white !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
-        }
-        .bus-dest, .rail-dest { color: #cccccc !important; font-weight: 500 !important; }
-        .rail-row, .bus-row { border-top: 1px solid rgba(255,255,255,0.1) !important; }
-        .rail-row > span:last-child, .bus-row > span:last-child { color: white !important; }
-    }
-    
-    /* Support du bouton "Settings > Theme: Dark" de Streamlit */
-    [data-theme="dark"] .bus-card, [data-theme="dark"] .rail-card {
-        background-color: #021939 !important;
-        color: white !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-    }
-    [data-theme="dark"] .bus-dest, [data-theme="dark"] .rail-dest { color: #cccccc !important; }
-    [data-theme="dark"] .rail-row, [data-theme="dark"] .bus-row { border-top: 1px solid rgba(255,255,255,0.1) !important; }
-    [data-theme="dark"] .rail-row > span:last-child, [data-theme="dark"] .bus-row > span:last-child { color: white !important; }
-    /* --- RESTE DES STYLES (Commun) --- */
-    .bus-dest, .rail-dest { 
-        font-size: 16px; 
-        font-weight: 500; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        white-space: nowrap; 
-        margin-right: 10px; 
-        flex: 1;
-    }
-
+    /* Lignes de séparation */
     .rail-row, .bus-row { 
         display: flex; 
         justify-content: space-between; 
         padding: 10px 0; 
         align-items: center; 
+        border-top: 1px solid var(--card-border-color) !important; 
+    }
+
+    /* L'heure d'arrivée (à droite) */
+    .rail-row > span:last-child, .bus-row > span:last-child {
+        color: var(--time-color) !important;
+        white-space: nowrap;
     }
     
     .rer-direction + .rail-row { border-top: none; padding-top: 8px; }
