@@ -1421,16 +1421,17 @@ def afficher_live_content(stop_id, clean_name):
                     destinations_vues = []
                     
                     # --- A. GESTION DES PERTURBATIONS ---
-                    # Idéalement, on récupère le message d'API. Ici, logique de sécurité :
                     perturbation_msg = None 
                     
-                    # Logique de secours : Si on est en journée et liste vide
-                    import datetime
-                    now_hour = datetime.datetime.now().hour
+                    # On récupère l'heure proprement avec le fuseau horaire Paris
+                    tz_paris = pytz.timezone('Europe/Paris')
+                    now_hour = datetime.now(tz_paris).hour
+                    
+                    # Logique de secours : Si on est en journée (6h-23h) et liste vide
                     if not proches and (6 <= now_hour < 23):
                          perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
 
-                    # Construction du bandeau d'alerte (s'affiche seulement si perturbation)
+                    # Construction du bandeau d'alerte
                     alert_html = ""
                     if perturbation_msg:
                         alert_html = f"""
@@ -1441,13 +1442,12 @@ def afficher_live_content(stop_id, clean_name):
                         """
 
                     # --- B. AFFICHAGE DES DESTINATIONS ---
-                    # On ne calcule plus, on affiche juste les destinations disponibles
                     for d in proches:
                         dn = d['dest']
                         if dn not in destinations_vues:
                             destinations_vues.append(dn)
                             
-                            # Texte FORCÉ comme demandé
+                            # Texte FORCÉ
                             freq_text = "Départ toutes les ~30s"
 
                             rows_html += f"""
@@ -1459,7 +1459,7 @@ def afficher_live_content(stop_id, clean_name):
                             </div>
                             """
                     
-                    # Si c'est la nuit (pas de perturbation mais pas d'horaires)
+                    # Si c'est la nuit
                     if not rows_html and not perturbation_msg:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
@@ -1479,7 +1479,6 @@ def afficher_live_content(stop_id, clean_name):
                         {rows_html}
                     </div>
                     """, unsafe_allow_html=True)
-
                 # CAS 3: BUS/METRO/TRAM/CABLE (Traitement Standard)
                 else:
                     dest_data = {}
