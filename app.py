@@ -1514,7 +1514,10 @@ def afficher_live_content(stop_id, clean_name):
                                         alert_html += f"""<div style="margin-top: 12px; border: 1px solid #e74c3c; background-color: rgba(231, 76, 60, 0.1); border-radius: 6px; padding: 10px;"><div style="color: #e74c3c; font-weight: bold; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center;"><span style="font-size:1.2em; margin-right:5px;">⚠️</span> Info Trafic C1</div><div style="font-size: 0.85em; color: #e74c3c; line-height: 1.4;">{texte_info}</div></div>"""
 
                     # 4. Rendu Final
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}{alert_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""
+<div class="bus-card" style="border-left-color: #{color}; position: relative;">
+<div style="display:flex; align-items:center; margin-bottom:10px;">
+<span class="line-badge" style="background-color:#{color};">{code}</span>
 
                 # CAS 3: BUS/METRO/TRAM (Standard)
                 else:
