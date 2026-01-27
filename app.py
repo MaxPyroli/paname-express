@@ -8,7 +8,7 @@ import os
 from PIL import Image
 import base64
 import json
-from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+from streamlit_js_eval import streamlit_js_eval, get_geolocation # <--- On ajoute get_geolocation
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
 # ==========================================
@@ -785,6 +785,24 @@ def demander_api(suffixe):
         return r.json()
     except: return None
 
+def trouver_gare_proche(lat, lon):
+    """Interroge l'API avec des coordonnées GPS"""
+    # Navitia prend le format "lon;lat" (Attention à l'ordre !)
+    try:
+        data = demander_api(f"coord/{lon};{lat}/places?type[]=stop_area&distance=2000")
+        if data and 'places' in data and len(data['places']) > 0:
+            # On prend le premier résultat (le plus proche)
+            place = data['places'][0]
+            if 'stop_area' in place:
+                return {
+                    'id': place['stop_area']['id'],
+                    'name': place['name'],
+                    'city': place.get('administrative_regions', [{}])[0].get('name', '')
+                }
+    except:
+        return None
+    return None
+
 @st.cache_data(ttl=3600)
 def demander_lignes_arret(stop_id):
     headers = {'apiKey': API_KEY.strip()}
@@ -1003,14 +1021,86 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
-with st.form("search_form"):
-    search_query = st.text_input(
-        "🔍 Rechercher une station :", 
-        placeholder="Ex: Noisiel, Saint-Lazare...",
-        value=st.session_state.last_query, 
-        key=f"search_input_{st.session_state.search_key}"
-    )
-    submitted = st.form_submit_button("Rechercher")
+# --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
+col_search, col_gps = st.columns([0.85, 0.15], gap="small", vertical_alignment="bottom")
+
+with col_search:
+    with st.form("search_form"):
+        # On utilise columns à l'intérieur du form pour aligner input et bouton submit
+        c_in, c_sub = st.columns([0.7, 0.3], vertical_alignment="bottom")
+        with c_in:
+            search_query = st.text_input(
+                "🔍 Rechercher une station :", 
+                placeholder="Ex: Noisiel, Saint-Lazare...",
+                value=st.session_state.last_query, 
+                key=f"search_input_{st.session_state.search_key}",
+                label_visibility="collapsed" # On cache le label pour gagner de la place
+            )
+        with c_sub:
+            submitted = st.form_submit_button("Rechercher", use_container_width=True)
+
+with col_gps:
+    # Ce composant crée un bouton. Quand on clique, il renvoie les coordonnées.
+    loc = get_geolocation(component_key="get_gps_btn", label="📍")
+
+# --- LOGIQUE GÉOLOCALISATION ---
+if loc:
+    # Si on a reçu des coordonnées (utilisateur a cliqué et accepté)
+    lat = loc['coords']['latitude']
+    lon = loc['coords']['longitude']
+    
+    # On évite de boucler indéfiniment si on est déjà sur cet arrêt
+    if 'last_gps_coords' not in st.session_state or st.session_state.last_gps_coords != (lat, lon):
+        st.session_state.last_gps_coords = (lat, lon)
+        
+        with st.spinner("Localisation de la gare la plus proche..."):
+            gare = trouver_gare_proche(lat, lon)
+            
+            if gare:
+                st.session_state.selected_stop = gare['id']
+                full_name = f"{gare['name']} ({gare['city']})" if gare['city'] else gare['name']
+                st.session_state.selected_name = full_name
+                st.toast(f"📍 Gare trouvée : {gare['name']}", icon="✅")
+                time.sleep(1) # Petit temps pour voir le toast
+                st.rerun()
+            else:
+                st.error("Aucune gare trouvée à moins de 2km.")
+
+# --- LOGIQUE RECHERCHE CLASSIQUE (Ta logique existante) ---
+if st.session_state.search_error:
+    st.warning(st.session_state.search_error)
+
+if submitted and search_query:
+    # ... (Le reste de ton code pour la recherche textuelle reste identique en dessous) ...
+    # Copie ici la suite de ta logique "submitted" existante :
+    # 1. Blur du clavier
+    streamlit_js_eval(js_expressions="document.activeElement.blur()", key=f"blur_{time.time()}")
+    
+    st.session_state.last_query = search_query 
+    st.session_state.search_error = None
+    
+    # ... EASTER EGG ...
+    trigger_word = re.sub(r'[^\w\s]', '', search_query.lower().strip())
+    if trigger_word in ["quoi", "feur", "coiffure"]:
+        afficher_popup_feur(trigger_word)
+        st.stop()
+        
+    with st.spinner("Recherche des arrêts..."):
+        data = demander_api(f"places?q={search_query}")
+        opts = {}
+        if data and 'places' in data:
+            for p in data['places']:
+                if 'stop_area' in p:
+                    ville = p.get('administrative_regions', [{}])[0].get('name', '')
+                    label = f"{p['name']} ({ville})" if ville else p['name']
+                    opts[label] = p['stop_area']['id']
+        if len(opts) > 0:
+            st.session_state.search_results = opts
+        else:
+            st.session_state.search_results = {}
+            st.session_state.search_error = "⚠️ Aucun résultat trouvé."
+    st.session_state.search_key += 1
+    st.rerun()
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
