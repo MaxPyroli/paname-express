@@ -1041,7 +1041,7 @@ with col_search:
 
 with col_gps:
     # Ce composant crée un bouton. Quand on clique, il renvoie les coordonnées.
-    loc = get_geolocation(component_key="get_gps_btn", label="📍")
+    loc = get_geolocation(component_key="get_gps_btn")
 
 # --- LOGIQUE GÉOLOCALISATION ---
 if loc:
