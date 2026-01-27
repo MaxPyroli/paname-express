@@ -1054,39 +1054,49 @@ if st.session_state.get('req_geo'):
     comp_key = f"get_gps_btn_{int(st.session_state.gps_attempt_ts or time.time())}"
     loc = get_geolocation(component_key=comp_key)
 
-    # Si on a reçu une réponse (coordonnées ou erreur), on la traite
-    if loc:
-        # Si l'API renvoie une erreur (user denied, etc.)
-        if isinstance(loc, dict) and loc.get('error'):
-            err = loc['error']
-            code = err.get('code')
-            msg = err.get('message', '')
-            if code == 1:
-                st.error("Permission de localisation refusée par l'utilisateur.")
-            else:
-                st.warning(f"Erreur de géolocalisation ({code}) : {msg}")
-            # On annule la demande pour éviter boucle infinie
-            st.session_state.req_geo = False
-            st.rerun()
-        else:
-            # On a des coordonnées
+    # --- LOGIQUE GÉOLOCALISATION (VERSION ROBUSTE) ---
+if loc:
+    # Si on a reçu des coordonnées
+    lat = loc['coords']['latitude']
+    lon = loc['coords']['longitude']
+    
+    # 1. PETIT AFFICHAGE DEBUG (Pour vérifier que le clic marche)
+    # st.toast(f"📍 GPS : {lat:.3f}, {lon:.3f}", icon="🛰️")
+
+    # On évite de boucler indéfiniment
+    if 'last_gps_coords' not in st.session_state or st.session_state.last_gps_coords != (lat, lon):
+        st.session_state.last_gps_coords = (lat, lon)
+        
+        with st.spinner("Analyse de la zone..."):
+            # On cherche plus large (5000m = 5km)
+            # Note : on passe par 'coord/...' qui trie par distance par défaut
             try:
-                lat = loc['coords']['latitude']
-                lon = loc['coords']['longitude']
-                st.session_state.last_gps_coords = (lat, lon)
-                # Comportement identique à votre logique existante
-                with st.spinner("Localisation de la gare la plus proche..."):
-                    gare = trouver_gare_proche(lat, lon)
-                    if gare:
-                        st.session_state.selected_stop = gare['id']
-                        full_name = f"{gare['name']} ({gare['city']})" if gare['city'] else gare['name']
-                        st.session_state.selected_name = full_name
-                        st.toast(f"📍 Gare trouvée : {gare['name']}", icon="✅")
-                        time.sleep(1)
-                    else:
-                        st.error("Aucune gare trouvée à moins de 2km.")
+                # Appel manuel pour gérer le rayon plus finement si besoin
+                data = demander_api(f"coord/{lon};{lat}/places?type[]=stop_area&distance=5000")
+                
+                gare_trouvee = None
+                if data and 'places' in data and len(data['places']) > 0:
+                     place = data['places'][0]
+                     if 'stop_area' in place:
+                         gare_trouvee = {
+                            'id': place['stop_area']['id'],
+                            'name': place['name'],
+                            'city': place.get('administrative_regions', [{}])[0].get('name', '')
+                        }
+
+                if gare_trouvee:
+                    st.session_state.selected_stop = gare_trouvee['id']
+                    full_name = f"{gare_trouvee['name']} ({gare_trouvee['city']})" if gare_trouvee['city'] else gare_trouvee['name']
+                    st.session_state.selected_name = full_name
+                    st.toast(f"✅ Gare la plus proche : {gare_trouvee['name']}", icon="🚆")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error(f"❌ Aucune gare trouvée à moins de 5km de votre position ({lat:.4f}, {lon:.4f}).")
+                    st.info("💡 Vérifiez que vous êtes bien en Île-de-France. Sur PC, la localisation peut être imprécise (basée sur l'IP).")
+            
             except Exception as e:
-                st.error(f"Erreur lors du traitement des coordonnées : {e}")
+                st.error(f"Erreur API : {e}")
             finally:
                 # On remet le flag à False pour ne plus redemander
                 st.session_state.req_geo = False
