@@ -516,13 +516,6 @@ st.markdown("""
     div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { 
         display: none !important; 
     }
-    
-    /* Cache le bloc fantôme JS */
-    iframe[title="streamlit_js_eval.streamlit_js_eval"],
-    div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
-        display: none !important;
-        height: 0 !important;
-    }
 
     /* ============================================================ */
     /* SIDEBAR : VERSION ULTRA-COMPACTE (PC & MOBILE)              */
