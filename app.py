@@ -1035,8 +1035,62 @@ with col_search:
             submitted = st.form_submit_button("Chercher", use_container_width=True)
 
 with col_gps:
-    # Le bouton s'affichera avec le texte "Get Geolocation"
-    loc = get_geolocation(component_key="get_gps_btn")
+    # Initialisation des flags
+    if 'req_geo' not in st.session_state:
+        st.session_state.req_geo = False
+    if 'gps_attempt_ts' not in st.session_state:
+        st.session_state.gps_attempt_ts = None
+
+    # Bouton explicite pour déclencher la permission côté navigateur
+    if st.button("📍 Localiser", key="btn_get_gps", use_container_width=True):
+        st.session_state.req_geo = True
+        st.session_state.gps_attempt_ts = time.time()  # clef unique pour component_key
+        # On relance pour que le composant JS soit rendu juste après un événement utilisateur
+        st.rerun()
+
+# Si on a demandé la géoloc, on appelle le composant (il doit être appelé en dehors du seul clic)
+if st.session_state.get('req_geo'):
+    # clef unique : évite que Streamlit cache/réutilise l'ancien composant
+    comp_key = f"get_gps_btn_{int(st.session_state.gps_attempt_ts or time.time())}"
+    loc = get_geolocation(component_key=comp_key)
+
+    # Si on a reçu une réponse (coordonnées ou erreur), on la traite
+    if loc:
+        # Si l'API renvoie une erreur (user denied, etc.)
+        if isinstance(loc, dict) and loc.get('error'):
+            err = loc['error']
+            code = err.get('code')
+            msg = err.get('message', '')
+            if code == 1:
+                st.error("Permission de localisation refusée par l'utilisateur.")
+            else:
+                st.warning(f"Erreur de géolocalisation ({code}) : {msg}")
+            # On annule la demande pour éviter boucle infinie
+            st.session_state.req_geo = False
+            st.rerun()
+        else:
+            # On a des coordonnées
+            try:
+                lat = loc['coords']['latitude']
+                lon = loc['coords']['longitude']
+                st.session_state.last_gps_coords = (lat, lon)
+                # Comportement identique à votre logique existante
+                with st.spinner("Localisation de la gare la plus proche..."):
+                    gare = trouver_gare_proche(lat, lon)
+                    if gare:
+                        st.session_state.selected_stop = gare['id']
+                        full_name = f"{gare['name']} ({gare['city']})" if gare['city'] else gare['name']
+                        st.session_state.selected_name = full_name
+                        st.toast(f"📍 Gare trouvée : {gare['name']}", icon="✅")
+                        time.sleep(1)
+                    else:
+                        st.error("Aucune gare trouvée à moins de 2km.")
+            except Exception as e:
+                st.error(f"Erreur lors du traitement des coordonnées : {e}")
+            finally:
+                # On remet le flag à False pour ne plus redemander
+                st.session_state.req_geo = False
+                st.rerun()
 
 
 # --- LOGIQUE GÉOLOCALISATION ---
