@@ -1092,30 +1092,6 @@ if st.session_state.get('req_geo'):
                 st.session_state.req_geo = False
                 st.rerun()
 
-
-# --- LOGIQUE GÉOLOCALISATION ---
-if loc:
-    # Si on a reçu des coordonnées (utilisateur a cliqué et accepté)
-    lat = loc['coords']['latitude']
-    lon = loc['coords']['longitude']
-    
-    # On évite de boucler indéfiniment si on est déjà sur cet arrêt
-    if 'last_gps_coords' not in st.session_state or st.session_state.last_gps_coords != (lat, lon):
-        st.session_state.last_gps_coords = (lat, lon)
-        
-        with st.spinner("Localisation de la gare la plus proche..."):
-            gare = trouver_gare_proche(lat, lon)
-            
-            if gare:
-                st.session_state.selected_stop = gare['id']
-                full_name = f"{gare['name']} ({gare['city']})" if gare['city'] else gare['name']
-                st.session_state.selected_name = full_name
-                st.toast(f"📍 Gare trouvée : {gare['name']}", icon="✅")
-                time.sleep(1) # Petit temps pour voir le toast
-                st.rerun()
-            else:
-                st.error("Aucune gare trouvée à moins de 2km.")
-
 # --- LOGIQUE RECHERCHE CLASSIQUE (Ta logique existante) ---
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
