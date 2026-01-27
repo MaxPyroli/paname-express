@@ -1017,24 +1017,27 @@ if 'search_error' not in st.session_state:
 # --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
 col_search, col_gps = st.columns([0.85, 0.15], gap="small", vertical_alignment="bottom")
 
+# On passe de [0.85, 0.15] à [0.75, 0.25] pour laisser la place au texte "Get Geolocation"
+col_search, col_gps = st.columns([0.75, 0.25], gap="small", vertical_alignment="bottom")
+
 with col_search:
     with st.form("search_form"):
-        # On utilise columns à l'intérieur du form pour aligner input et bouton submit
         c_in, c_sub = st.columns([0.7, 0.3], vertical_alignment="bottom")
         with c_in:
             search_query = st.text_input(
-                "🔍 Rechercher une station :", 
-                placeholder="Ex: Noisiel, Saint-Lazare...",
+                "🔍 Rechercher :", # Titre raccourci
+                placeholder="Ex: Noisiel...",
                 value=st.session_state.last_query, 
                 key=f"search_input_{st.session_state.search_key}",
-                label_visibility="collapsed" # On cache le label pour gagner de la place
+                label_visibility="collapsed"
             )
         with c_sub:
-            submitted = st.form_submit_button("Rechercher", use_container_width=True)
+            submitted = st.form_submit_button("Chercher", use_container_width=True)
 
 with col_gps:
-    # Ce composant crée un bouton. Quand on clique, il renvoie les coordonnées.
+    # Le bouton s'affichera avec le texte "Get Geolocation"
     loc = get_geolocation(component_key="get_gps_btn")
+
 
 # --- LOGIQUE GÉOLOCALISATION ---
 if loc:
