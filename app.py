@@ -1048,21 +1048,21 @@ with col_gps:
         # On relance pour que le composant JS soit rendu juste après un événement utilisateur
         st.rerun()
 
-# Si on a demandé la géoloc, on appelle le composant (il doit être appelé en dehors du seul clic)
+# 1. INITIALISATION (CRUCIAL POUR ÉVITER LE CRASH)
+loc = None
+
+# 2. APPEL DU COMPOSANT (Seulement si demandé)
 if st.session_state.get('req_geo'):
-    # clef unique : évite que Streamlit cache/réutilise l'ancien composant
     comp_key = f"get_gps_btn_{int(st.session_state.gps_attempt_ts or time.time())}"
     loc = get_geolocation(component_key=comp_key)
 
-    # --- LOGIQUE GÉOLOCALISATION (VERSION ROBUSTE) ---
+# 3. LOGIQUE GÉOLOCALISATION (VERSION ROBUSTE)
 if loc:
     # Si on a reçu des coordonnées
     lat = loc['coords']['latitude']
     lon = loc['coords']['longitude']
     
-    # 1. PETIT AFFICHAGE DEBUG (Pour vérifier que le clic marche)
-    # st.toast(f"📍 GPS : {lat:.3f}, {lon:.3f}", icon="🛰️")
-
+    # ... (le reste de votre code reste identique en dessous)
     # On évite de boucler indéfiniment
     if 'last_gps_coords' not in st.session_state or st.session_state.last_gps_coords != (lat, lon):
         st.session_state.last_gps_coords = (lat, lon)
