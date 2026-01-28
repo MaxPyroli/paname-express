@@ -8,7 +8,7 @@ import os
 from PIL import Image
 import base64
 import json
-from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+from streamlit_js_eval import streamlit_js_eval, get_geolocation
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 
 # ==========================================
@@ -516,13 +516,6 @@ st.markdown("""
     div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { 
         display: none !important; 
     }
-    
-    /* Cache le bloc fantôme JS */
-    iframe[title="streamlit_js_eval.streamlit_js_eval"],
-    div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
-        display: none !important;
-        height: 0 !important;
-    }
 
     /* ============================================================ */
     /* SIDEBAR : VERSION ULTRA-COMPACTE (PC & MOBILE)              */
@@ -785,6 +778,23 @@ def demander_api(suffixe):
         return r.json()
     except: return None
 
+def trouver_gare_proche(lat, lon):
+    """Trouve la gare la plus proche via Navitia"""
+    try:
+        # Navitia attend "lon;lat"
+        data = demander_api(f"coord/{lon};{lat}/places?type[]=stop_area&distance=2000")
+        if data and 'places' in data and len(data['places']) > 0:
+            place = data['places'][0]
+            if 'stop_area' in place:
+                return {
+                    'id': place['stop_area']['id'],
+                    'name': place['name'],
+                    'city': place.get('administrative_regions', [{}])[0].get('name', '')
+                }
+    except:
+        return None
+    return None
+    
 @st.cache_data(ttl=3600)
 def demander_lignes_arret(stop_id):
     headers = {'apiKey': API_KEY.strip()}
@@ -1003,14 +1013,48 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
-with st.form("search_form"):
-    search_query = st.text_input(
-        "🔍 Rechercher une station :", 
-        placeholder="Ex: Noisiel, Saint-Lazare...",
-        value=st.session_state.last_query, 
-        key=f"search_input_{st.session_state.search_key}"
-    )
-    submitted = st.form_submit_button("Rechercher")
+# --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
+col_search, col_gps = st.columns([0.75, 0.25], gap="small", vertical_alignment="bottom")
+
+with col_search:
+    with st.form("search_form"):
+        c_in, c_sub = st.columns([0.7, 0.3], vertical_alignment="bottom")
+        with c_in:
+            search_query = st.text_input(
+                "🔍 Rechercher :", 
+                placeholder="Ex: Noisiel...",
+                value=st.session_state.last_query, 
+                key=f"search_input_{st.session_state.search_key}",
+                label_visibility="collapsed"
+            )
+        with c_sub:
+            submitted = st.form_submit_button("Chercher", use_container_width=True)
+
+with col_gps:
+    # Bouton direct de la librairie
+    loc = get_geolocation(component_key="gps_btn")
+
+# --- LOGIQUE GÉOLOCALISATION ---
+if loc and isinstance(loc, dict) and 'coords' in loc:
+    lat = loc['coords']['latitude']
+    lon = loc['coords']['longitude']
+    
+    # On vérifie si c'est une nouvelle demande pour éviter les boucles
+    if 'last_gps_coords' not in st.session_state or st.session_state.last_gps_coords != (lat, lon):
+        st.session_state.last_gps_coords = (lat, lon)
+        
+        with st.spinner("📍 Localisation..."):
+            gare = trouver_gare_proche(lat, lon)
+            
+            if gare:
+                st.session_state.selected_stop = gare['id']
+                full_name = f"{gare['name']} ({gare['city']})" if gare['city'] else gare['name']
+                st.session_state.selected_name = full_name
+                st.toast(f"Trouvé : {gare['name']}", icon="✅")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Aucune gare trouvée à moins de 2km.")
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
