@@ -207,24 +207,28 @@ def synthetiser_alerte(texte):
     return texte
 
 def nettoyer_texte_details(texte):
-    """Nettoie le code brut et met en valeur les arrêts."""
-    # 1. On vire les codes internes dégueulasses
+    """Nettoie le code brut et met en valeur les arrêts (Version Blindée)."""
+    # 1. Nettoyage de base (codes moches, répétitions)
     texte = re.sub(r'([A-Za-z0-9]+\s*\(\d+\)\s*)+-\s*', '', texte)
-    
-    # 2. On vire les codes de base de données à la fin type "Fi_2025_094"
     texte = re.sub(r'Fi_\d+_\d+', '', texte)
+    texte = re.sub(r'(.{30,})\1', r'\1', texte) 
     
-    # 3. L'anti-bégaiement magique
-    texte = re.sub(r'(.{20,})\1', r'\1', texte)
+    # 2. Séparer les mots collés de l'API (ex: Joliot-CurieL'arrêt -> Joliot-Curie L'arrêt)
+    texte = texte.replace("L'arrêt", " L'arrêt").replace("  ", " ")
     
-    # 4. Séparer les mots collés aux guillemets par l'API (ex: Curie’L'arrêt -> Curie’ L'arrêt)
-    texte = re.sub(r'([’”"»])([A-Za-z])', r'\1 \2', texte)
-    
-    # 5. ✨ MISE EN VALEUR DES GARES ✨
-    # On cherche tout ce qui est entre ‘...’ ou "..." ou «...» et on en fait un badge
+    # 3. Le style de nos beaux encadrés jaunes
     badge_style = "background:rgba(241,196,15,0.15); border: 1px solid rgba(241,196,15,0.3); padding:2px 6px; border-radius:4px; font-weight:bold; color:#f1c40f; white-space:nowrap; margin: 0 2px;"
-    texte = re.sub(r'[‘"«]\s*([^’"»]+)\s*[’”»]', fr"<span style='{badge_style}'>\1</span>", texte)
     
+    # 4. Badges pour les textes entre guillemets ou apostrophes simples
+    # (Le (?<![a-zA-Z]) empêche de confondre l'apostrophe de "L'arrêt" avec un guillemet)
+    texte = re.sub(r"(?<![a-zA-Z])['‘\"«]\s*(.*?)\s*['’”»](?![a-zA-Z])", fr"<span style='{badge_style}'>\1</span>", texte)
+    
+    # 5. Badges intelligents pour "entre X et Y" (même SANS guillemets !)
+    # Il va s'arrêter de surligner dès qu'il croise un mot-clé ("L'arrêt", "jusqu'à", etc.)
+    mots_stop = r"(?=\s+(?:L'arrêt|l'arrêt|ne|est|sera|jusqu|en raison|suite|à|pour|et ce)|[,.)]|$)"
+    texte = re.sub(fr"(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?){mots_stop}",
+                   fr'entre <span style="{badge_style}">\1</span> et <span style="{badge_style}">\2</span>', texte)
+                   
     return texte.strip()
 
 def determiner_type_perturbation(texte, header):
@@ -266,11 +270,11 @@ def afficher_bandeau_trafic(line_id):
         texte_brut = perturbation['text']
         header_brut = perturbation.get('header', '')
         
-        # 1. On génère le sous-titre AVEC DE VRAIS ESPACES (&nbsp;)
+        # 1. On génère le sous-titre avec un VRAI espacement CSS incassable
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        titre_affiche = f"Trafic perturbé &nbsp;•&nbsp; <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
-        # 2. On nettoie le pavé de texte (les badges sont créés ici !)
+        # 2. On nettoie le pavé de texte
         info_longue = nettoyer_texte_details(texte_brut)
         info_longue = re.sub(r'<[^>]+>', '', info_longue.replace('\n', '<br>'))
         
