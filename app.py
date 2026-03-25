@@ -695,7 +695,15 @@ GEOGRAPHIE_RER = {
 # ==========================================
 #          FONCTIONS UTILITAIRES
 # ==========================================
-
+def get_img_as_base64(file_path):
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except: 
+        return None
 # 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
 def get_svg_inline(file_path):
     # Lit le fichier SVG comme du texte pour l'injecter directement
