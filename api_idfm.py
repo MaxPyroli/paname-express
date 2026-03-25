@@ -48,7 +48,6 @@ def demander_info_trafic(line_id):
     alertes = []
     if data and 'disruptions' in data:
         for disruption in data['disruptions']:
-            # 1. RÉCUPÉRATION DU TEXTE COMPLET (Pour éviter les messages trop vagues)
             messages = disruption.get('messages', [])
             texte_complet = " ".join([m.get('text', '') for m in messages])
             if not texte_complet:
@@ -56,23 +55,21 @@ def demander_info_trafic(line_id):
 
             texte_lower = texte_complet.lower()
 
-            # 2. LE GRAND FILTRE (On dégage ce dont on se fout)
-            tags = [str(t).lower() for t in disruption.get('tags', [])]
-            if "travaux" in tags or "période :" in texte_lower or "dates :" in texte_lower:
-                continue
-            # Fini les alertes ascenseurs et escalators !
-            if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
+            # 🛑 LE FILTRE ANTI-TRAVAUX DE L'EXTRÊME 🛑
+            # Dès qu'un de ces mots est dans le texte, l'alerte part à la poubelle
+            bannis = ["période", "periode", "dates", "travaux", "week-end", "jusqu'au", "ascenseur", "escalator", "bagage"]
+            if any(mot in texte_lower for mot in bannis):
                 continue
 
-            # 3. ANALYSE DE LA GRAVITÉ
+            # ANALYSE DE LA GRAVITÉ
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
             score = 0
             if effect == "NO_SERVICE" or "interrompu" in texte_lower:
-                score = 50 # 🚨 Interruption
+                score = 50 # Interruption
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
-                score = 20 # ⚠️ Perturbation
+                score = 20 # Perturbation
 
             if score > 0 and texte_complet:
                 alertes.append({'text': texte_complet, 'severity': score})
