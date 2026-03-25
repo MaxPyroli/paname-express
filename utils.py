@@ -166,15 +166,11 @@ def get_alerte_style(severity):
     return None, None
 
 def synthetiser_alerte(texte):
-    """Garde uniquement l'essentiel et met en valeur les gares/heures."""
-    # 1. Nettoyage de base
+    """Garde uniquement l'essentiel d'une alerte IDFM sans HTML complexe."""
     texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
-    
-    # 2. On supprime le bégaiement 
     texte = re.sub(r'(?i)^(Le )?trafic est interrompu\s*(:)?\s*', '', texte)
     texte = re.sub(r'(?i)^trafic interrompu\s*(:)?\s*', '', texte)
 
-    # 3. ✂️ LE FAMEUX SÉCATEUR (On coupe à la première phrase ou si c'est trop long)
     reprise = re.search(r"(reprise estimée vers|reprise à|reprise prévue vers) \d+h\d*", texte, re.IGNORECASE)
     phrases = [p.strip() for p in texte.split('.') if len(p.strip()) > 10]
     
@@ -185,29 +181,13 @@ def synthetiser_alerte(texte):
     if reprise and reprise.group(0).lower() not in cause.lower():
         cause += f" | ⏳ {reprise.group(0)}"
         
-    texte = cause # On remplace le pavé par la version courte !
-
-    # 4. Le style CSS pour les petits encadrés (façon badge)
-    badge_style = "background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; color:#fff; font-weight:bold; letter-spacing:0.5px;"
-    
-    # 5. On détecte les HEURES et on les met en rouge/gras
-    texte = re.sub(r'(?i)(jusqu\'à|vers|à|reprise prévue vers|reprise estimée vers|jusqu\'en) (\d{1,2}h\d*|\w+ de service)', 
-                   r'\1 <span style="color:#ffadad; font-weight:bold;">\2</span>', texte)
-                   
-    # 6. On détecte les GARES et on met des badges
-    texte = re.sub(r'(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
-                   fr'entre <span style="{badge_style}">\1</span> et <span style="{badge_style}">\2</span>', texte)
-                   
-    texte = re.sub(r'(?i)\bde\b\s+(.*?)\s+(?:vers|à)\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
-                   fr'de <span style="{badge_style}">\1</span> vers <span style="{badge_style}">\2</span>', texte)
-
-    if len(texte) > 1:
-        texte = texte[0].upper() + texte[1:]
+    if len(cause) > 1:
+        cause = cause[0].upper() + cause[1:]
         
-    return texte
+    return cause
 
 def nettoyer_texte_details(texte):
-    """Nettoie le code brut et met en valeur les arrêts sans casser le HTML."""
+    """Nettoie le texte brut (Anti-bégaiement, codes internes) pour un affichage clair."""
     # 1. On tronque les redondances polluantes à la fin des messages
     texte = re.sub(r"(?i)\s*Raison\s*:.*", "", texte)
     
@@ -221,56 +201,6 @@ def nettoyer_texte_details(texte):
     texte = texte.replace("’", "'").replace("‘", "'").replace("«", '"').replace("»", '"')
     texte = re.sub(r"([a-z])(L'arrêt|Les arrêts|Arrêt)", r"\1 \2", texte)
     
-    # --- STRATÉGIE DES PLACEHOLDERS (Le coffre-fort anti-bugs CSS) ---
-    badges = []
-    
-    # A) "entre X et Y"
-    stop_entre = r"(?=\s+(?:L'arrêt|l'arrêt|ne|est|sera|jusqu|en|raison|suite|à|pour|et ce|de la ligne)|[,.)<]|$)"
-    def double_badge_replacer(match):
-        b1, b2 = match.group(1).strip(), match.group(2).strip()
-        if len(b1) < 2 or len(b2) < 2: return match.group(0) # Sécurité
-        badges.append(b1)
-        p1 = f"%%B{len(badges)-1}%%"
-        badges.append(b2)
-        p2 = f"%%B{len(badges)-1}%%"
-        return f"entre {p1} et {p2}"
-        
-    texte = re.sub(fr"(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?){stop_entre}", double_badge_replacer, texte)
-
-    # B) "L'arrêt X" / "Les arrêts X" / "Arrêt X"
-    stop_arret = r"(?=\s+(?:de la|de ligne|de cette|n'est|ne sont|ne sera|ne seront|non|sera|est|qui|au)|[,.)<]|$)"
-    def arret_replacer(match):
-        prefix, b_text = match.group(1), match.group(2).strip()
-        if len(b_text) < 2: return match.group(0)
-        badges.append(b_text)
-        return f"{prefix} %%B{len(badges)-1}%%"
-        
-    texte = re.sub(fr"(?i)\b(L'arrêt|Les arrêts|Arrêt)\s+(.*?){stop_arret}", arret_replacer, texte)
-
-    # C) "en direction de X" / "vers X"
-    stop_dir = r"(?=[.,;<]|Reprise|$)"
-    def dir_replacer(match):
-        prefix, b_text = match.group(1), match.group(2).strip()
-        if len(b_text) < 2: return match.group(0)
-        badges.append(b_text)
-        return f"{prefix} %%B{len(badges)-1}%%"
-        
-    texte = re.sub(fr"(?i)\b(en direction de|vers)\s+(.*?){stop_dir}", dir_replacer, texte)
-
-    # D) Textes restants entre vrais guillemets "X"
-    def quote_replacer(match):
-        b_text = match.group(1).strip()
-        if len(b_text) < 2: return match.group(0)
-        badges.append(b_text)
-        return f"%%B{len(badges)-1}%%"
-        
-    texte = re.sub(r'"([^"]+)"', quote_replacer, texte)
-
-    # --- RÉINJECTION FINALE DU HTML (100% Sécure) ---
-    badge_style = "background:rgba(241,196,15,0.15); border: 1px solid rgba(241,196,15,0.3); padding:2px 6px; border-radius:4px; font-weight:bold; color:#f1c40f; white-space:nowrap; margin: 0 2px;"
-    for i, b_text in enumerate(badges):
-        texte = texte.replace(f"%%B{i}%%", f"<span style='{badge_style}'>{b_text}</span>")
-        
     return texte.strip()
 
 def determiner_type_perturbation(texte, header):
@@ -315,10 +245,7 @@ def afficher_bandeau_trafic(line_id):
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
-        # 1. On purge TOUT le HTML natif
         texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
-        
-        # 2. Seulement ENSUITE on lance notre nettoyeur "Coffre-fort"
         info_longue = nettoyer_texte_details(texte_propre)
         
         return f"""
