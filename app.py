@@ -316,7 +316,7 @@ if st.session_state.geoloc_active:
                 st.session_state.geoloc_active = False 
                 st.rerun()
             else:
-                st.warning("⚠️ Aucune gare trouvée dans un rayon de 1km.")
+                st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
                 st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
