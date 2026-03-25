@@ -166,25 +166,36 @@ def get_alerte_style(severity):
     return None, None
 
 def synthetiser_alerte(texte):
-    """Garde uniquement l'essentiel d'une alerte IDFM sans HTML complexe."""
+    """Mode SNIPER : On extrait uniquement le OÙ et le QUAND, le reste va à la poubelle."""
+    # Nettoyage HTML de base
     texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
-    texte = re.sub(r'(?i)^(Le )?trafic est interrompu\s*(:)?\s*', '', texte)
-    texte = re.sub(r'(?i)^trafic interrompu\s*(:)?\s*', '', texte)
 
-    reprise = re.search(r"(reprise estimée vers|reprise à|reprise prévue vers) \d+h\d*", texte, re.IGNORECASE)
-    phrases = [p.strip() for p in texte.split('.') if len(p.strip()) > 10]
-    
-    cause = phrases[0] if phrases else texte
-    if len(cause) > 100:
-        cause = cause[:100] + "..."
+    # 1. On détruit la pollution administrative de l'IDFM au début des phrases
+    texte = re.sub(r"(?i)^(En raison de|Suite [aà]|Travaux( de [^:-]+)?)[^:-]*[-:]\s*", "", texte)
+    texte = re.sub(r"(?i)^(Le )?trafic (est )?interrompu\s*[-:]?\s*", "", texte)
+
+    # 2. On cherche les infos vitales (Où ? Quand ?) avec des Regex ciblées
+    lieux = re.search(r"(?i)(entre\s+[^,.]+\s+et\s+[^,.]+)(?=[,.]|\s+jusqu|\s+reprise|$)", texte)
+    temps = re.search(r"(?i)(jusqu'au\s+[^,.]+|jusqu'à\s+[^,.]+|reprise\s+[^,.]+)", texte)
+
+    # 3. On assemble l'essentiel
+    if lieux and temps:
+        res = f"{lieux.group(1)} {temps.group(1)}"
+    elif lieux:
+        res = lieux.group(1)
+    elif temps:
+        res = temps.group(1)
+    else:
+        # Plan B ultra-violent : on coupe à la première virgule, premier point, ou 55 caractères max
+        res = texte.split('.')[0].split(',')[0].strip()
+        if len(res) > 55:
+            res = res[:55] + "..."
+
+    # Majuscule propre pour commencer
+    if res:
+        res = res[0].upper() + res[1:]
         
-    if reprise and reprise.group(0).lower() not in cause.lower():
-        cause += f" | ⏳ {reprise.group(0)}"
-        
-    if len(cause) > 1:
-        cause = cause[0].upper() + cause[1:]
-        
-    return cause
+    return res.strip()
 
 def nettoyer_texte_details(texte):
     """Nettoie le texte brut (Anti-bégaiement, codes internes) pour un affichage clair."""
