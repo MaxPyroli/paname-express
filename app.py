@@ -7,7 +7,7 @@ import os
 from PIL import Image
 import base64
 import json
-from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+from streamlit_js_eval import streamlit_js_eval, get_geolocation # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from utils import (
@@ -15,9 +15,10 @@ from utils import (
     clean_code_line, format_html_time, get_all_changelogs
 ) # <-- CETTE PARENTHÈSE EST CRUCIALE !
 
-from api_idfm import demander_api, demander_lignes_arret
+from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+
 
 # ==========================================
 #              CONFIGURATION
@@ -247,14 +248,62 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
-with st.form("search_form"):
-    search_query = st.text_input(
-        "🔍 Rechercher une station :", 
-        placeholder="Ex: Noisiel, Saint-Lazare...",
-        value=st.session_state.last_query, 
-        key=f"search_input_{st.session_state.search_key}"
-    )
-    submitted = st.form_submit_button("Rechercher")
+# --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
+if 'geoloc_active' not in st.session_state:
+    st.session_state.geoloc_active = False
+
+# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC
+col_search, col_geo = st.columns([0.85, 0.15], gap="small", vertical_alignment="bottom")
+
+with col_search:
+    with st.form("search_form"):
+        search_query = st.text_input(
+            "🔍 Rechercher une station :", 
+            placeholder="Ex: Noisiel, Saint-Lazare...",
+            value=st.session_state.last_query, 
+            key=f"search_input_{st.session_state.search_key}"
+        )
+        submitted = st.form_submit_button("Rechercher")
+
+with col_geo:
+    # Le bouton bascule l'état de la géolocalisation
+    if st.button("📍", help="Gares autour de moi", use_container_width=True):
+        st.session_state.geoloc_active = not st.session_state.geoloc_active
+        st.rerun()
+
+# 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
+if st.session_state.geoloc_active:
+    st.info("📡 Recherche de votre position...")
+    # La magie opère ici : ça demande l'autorisation au navigateur
+    loc = get_geolocation() 
+    
+    if loc:
+        lat = loc['coords']['latitude']
+        lon = loc['coords']['longitude']
+        
+        with st.spinner("Recherche des gares à proximité..."):
+            data_proches = demander_arrets_proches(lat, lon)
+            
+            opts = {}
+            if data_proches and 'places_nearby' in data_proches:
+                for p in data_proches['places_nearby']:
+                    if 'stop_area' in p:
+                        nom = p['stop_area']['name']
+                        ville = p['stop_area'].get('administrative_regions', [{}])[0].get('name', '')
+                        distance = p.get('distance', 0)
+                        
+                        label = f"{nom} ({ville}) - à {distance}m" if ville else f"{nom} - à {distance}m"
+                        opts[label] = p['stop_area']['id']
+            
+            if opts:
+                # On réutilise le dictionnaire search_results pour l'affichage
+                st.session_state.search_results = opts
+                # On désactive la géoloc pour ne pas boucler à l'infini
+                st.session_state.geoloc_active = False 
+                st.rerun()
+            else:
+                st.warning("⚠️ Aucune gare trouvée dans un rayon de 1km.")
+                st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
@@ -299,6 +348,7 @@ if submitted and search_query:
     st.session_state.search_key += 1
     st.rerun()
 
+# 4. AFFICHAGE DES RÉSULTATS (Valable pour recherche ET géoloc)
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
