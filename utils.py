@@ -214,7 +214,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic."""
+    """Retourne le HTML du bandeau trafic (Défilant + Menu déroulant cliquable)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -222,19 +222,42 @@ def afficher_bandeau_trafic(line_id):
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
     if interruption:
-        info = synthetiser_alerte(interruption['text'])
+        # 1. Le texte court pour le bandeau défilant
+        info_courte = synthetiser_alerte(interruption['text'])
+        
+        # 2. Le texte complet nettoyé pour l'intérieur du menu
+        texte_propre = re.sub(r'<[^>]+>', '', interruption['text']).replace('\n', '<br>')
+        info_longue = nettoyer_texte_details(texte_propre)
+        
+        # 3. On englobe le bandeau défilant dans un menu déroulant <details>
         return f"""
-            <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
-                <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
-                    <span class="blink" style="font-size: 1.1em; text-shadow: 0 0 5px rgba(231,76,60,0.5);">❌</span>
-                </div>
-                <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
-                    <div style="display: inline-block; padding-left: 100%; animation: ticker 35s linear infinite; color: #ffb8b8; font-size: 0.85em;">
-                        <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-                        <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info}
+        <details style="margin-bottom:8px; border-radius: 4px; overflow: hidden;">
+            <summary style="cursor: pointer; list-style: none; display: block; outline: none;">
+                <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
+                    <div style="padding: 4px 10px; display: flex; align-items: center; background: #e74c3c; z-index: 10;">
+                        <span class="blink" style="font-size: 1.1em; color: white;">❌</span>
+                    </div>
+                    
+                    <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
+                        <div style="display: inline-block; padding-left: 100%; animation: ticker 18s linear infinite; color: #ffb8b8; font-size: 0.85em;">
+                            <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info_courte} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                            <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info_courte}
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); color: #e74c3c; font-size: 0.8em; z-index: 10;">
+                        ▼
                     </div>
                 </div>
+            </summary>
+            
+            <div style="color: #ddd; font-size: 0.8em; padding: 10px; border-left: 3px solid #e74c3c; background: rgba(231, 76, 60, 0.05); border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
+                {info_longue}
             </div>
+        </details>
+        <style>
+            details > summary::-webkit-details-marker {{ display: none; }}
+        </style>
         """
         
     elif perturbation:
@@ -249,7 +272,7 @@ def afficher_bandeau_trafic(line_id):
         
         return f"""
         <details style="margin-bottom:8px; border-left: 2px solid #f39c12; background: rgba(243, 156, 18, 0.05); border-radius: 4px; overflow: hidden;">
-            <summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none;">
+            <summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none; outline: none;">
                 ⚠️ {titre_affiche} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
             </summary>
             <div style="color: #ddd; font-size: 0.8em; padding: 10px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
