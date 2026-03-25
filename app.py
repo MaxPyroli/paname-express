@@ -10,10 +10,7 @@ import json
 from streamlit_js_eval import streamlit_js_eval, get_geolocation # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
-from utils import (
-    get_img_as_base64, generer_icones_html, normaliser_mode,
-    clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret
-) # <-- CETTE PARENTHÈSE EST CRUCIALE !
+from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
