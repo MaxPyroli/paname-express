@@ -122,18 +122,22 @@ def analyser_importance_arret(stop_area_node):
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "📍"
     }
     
-    # On recrée une hiérarchie locale pour éviter les bugs d'import
     hierarchie = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
     
+    modes_a_tester = []
+    
+    # On ratisse large : on cherche dans les modes commerciaux ET physiques
     if 'commercial_modes' in stop_area_node:
-        for mode_obj in stop_area_node['commercial_modes']:
-            nom_mode = mode_obj.get('name', '').upper()
-            mode_norm = normaliser_mode(nom_mode) # On utilise ta fonction existante !
-            rang = hierarchie.get(mode_norm, 99)
-            
-            # Si on trouve un mode plus noble (ex: RER(1) < BUS(6)), on le garde
-            if rang < meilleur_rang:
-                meilleur_rang = rang
-                meilleur_mode = mode_norm
+        modes_a_tester.extend([m.get('name', '') for m in stop_area_node['commercial_modes']])
+    if 'physical_modes' in stop_area_node:
+        modes_a_tester.extend([m.get('name', '') for m in stop_area_node['physical_modes']])
+        
+    for nom_mode in modes_a_tester:
+        mode_norm = normaliser_mode(nom_mode)
+        rang = hierarchie.get(mode_norm, 99)
+        
+        if rang < meilleur_rang:
+            meilleur_rang = rang
+            meilleur_mode = mode_norm
                 
     return meilleur_rang, emojis.get(meilleur_mode, "📍")
