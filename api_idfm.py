@@ -38,3 +38,24 @@ def demander_coordonnees_arret(stop_id):
                 "lon": [float(coord['lon'])]
             }
     return None
+
+@st.cache_data(ttl=300) # Cache de 5 minutes seulement pour rester "frais"
+def demander_info_trafic(line_id):
+    """Récupère les bulletins de trafic pour une ligne donnée."""
+    # On cible les bulletins actifs sur la ligne
+    suffixe = f"lines/{line_id}/line_reports"
+    data = demander_api(suffixe)
+    
+    alertes = []
+    if data and 'line_reports' in data:
+        for report in data['line_reports']:
+            # On récupère le texte du message et la sévérité
+            pt = report.get('pt_objects', [{}])[0]
+            # Sévérité : 0 = pas d'info, 10 = perturbé, 100 = bloqué
+            severity = report.get('severity', 0)
+            
+            for info in report.get('messages', []):
+                text = info.get('text', '')
+                if text:
+                    alertes.append({'text': text, 'severity': severity})
+    return alertes
