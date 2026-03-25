@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 from datetime import datetime, timedelta
 import re
 import time
@@ -12,10 +11,9 @@ from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
-from utils import (
-    get_img_as_base64, generer_icones_html, normaliser_mode,
-    clean_code_line, format_html_time, get_all_changelogs
-)
+from utils import (get_img_as_base64, generer_icones_html, normaliser_mode,
+    clean_code_line, format_html_time, get_all_changelogs)
+from api_idfm import demander_api, demander_lignes_arret
 
 # ==========================================
 #              CONFIGURATION
@@ -635,20 +633,7 @@ def afficher_popup_feur(mot_declencheur):
 # 3. ENFIN : On lance la génération
 ICONES_TITRE = generer_icones_html()
 
-def demander_api(suffixe):
-    headers = {'apiKey': API_KEY.strip()}
-    try:
-        r = requests.get(f"{BASE_URL}/{suffixe}", headers=headers)
-        return r.json()
-    except: return None
-
 @st.cache_data(ttl=3600)
-def demander_lignes_arret(stop_id):
-    headers = {'apiKey': API_KEY.strip()}
-    try:
-        r = requests.get(f"{BASE_URL}/stop_areas/{stop_id}/lines", headers=headers)
-        return r.json()
-    except: return None
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
