@@ -232,16 +232,34 @@ def afficher_bandeau_trafic(line_id):
 
     html_output = css
 
-    # 🌬️ LE NOUVEAU MOTEUR QUI GÈRE LES SAUTS DE LIGNE
+    # 🌬️ LE NOUVEAU MOTEUR AVEC ANTI-CLONAGE ABSOLU
     def preparer_texte_deroulant(texte_brut):
-        # 1. On protège les sauts de ligne de l'API (<br>, <p>, <li>) en les changeant en \n
+        # 1. On protège les sauts de ligne de l'API en les changeant en \n
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
-        # 2. On passe le grand coup de balai sur le reste du HTML
+        
+        # 2. On supprime le reste du HTML
         t = re.sub(r'<[^>]+>', '', t)
-        # 3. On nettoie les codes bizarres et les bégaiements (ta fonction existante)
+        
+        # 3. On nettoie les codes bizarres (ta fonction existante)
         t = nettoyer_texte_details(t)
-        # 4. On convertit les \n en doubles balises <br> pour créer de vrais paragraphes aérés
-        return re.sub(r'\n+', '<br><br>', t.strip())
+        
+        # 4. 🛑 L'ANTI-CLONAGE 🛑
+        # On découpe le texte par saut de ligne et on jette les lignes vides
+        paragraphes = [p.strip() for p in t.split('\n') if p.strip()]
+        
+        paragraphes_uniques = []
+        for p in paragraphes:
+            # On vérifie si ce paragraphe (ou une version presque identique) n'est pas déjà dans notre liste
+            if not any(p in deja_vu or deja_vu in p for deja_vu in paragraphes_uniques):
+                paragraphes_uniques.append(p)
+                
+        # 5. On rassemble les paragraphes uniques avec un DOUBLE saut de ligne propre (<br><br>)
+        texte_final = '<br><br>'.join(paragraphes_uniques)
+        
+        # 6. Ultime sécurité si l'API a collé les répétitions sur une seule ligne sans faire de saut
+        texte_final = re.sub(r'(.{30,})\1+', r'\1', texte_final)
+        
+        return texte_final
 
     if interruption:
         info_longue = preparer_texte_deroulant(interruption['text'])
