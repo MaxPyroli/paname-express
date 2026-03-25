@@ -214,7 +214,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Direct uniquement)."""
+    """Retourne le HTML du bandeau trafic (Avec paragraphes aérés)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -232,22 +232,26 @@ def afficher_bandeau_trafic(line_id):
 
     html_output = css
 
+    # 🌬️ LE NOUVEAU MOTEUR QUI GÈRE LES SAUTS DE LIGNE
+    def preparer_texte_deroulant(texte_brut):
+        # 1. On protège les sauts de ligne de l'API (<br>, <p>, <li>) en les changeant en \n
+        t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
+        # 2. On passe le grand coup de balai sur le reste du HTML
+        t = re.sub(r'<[^>]+>', '', t)
+        # 3. On nettoie les codes bizarres et les bégaiements (ta fonction existante)
+        t = nettoyer_texte_details(t)
+        # 4. On convertit les \n en doubles balises <br> pour créer de vrais paragraphes aérés
+        return re.sub(r'\n+', '<br><br>', t.strip())
+
     if interruption:
-        texte_brut = interruption['text']
-        texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
-        info_longue = nettoyer_texte_details(texte_propre)
-        
-        est_travaux = "travaux" in texte_brut.lower()
-        icone = "🚧" if est_travaux else "❌"
-        # On change juste le texte ici pour que ça colle au temps réel
-        titre = "TRAVAUX EN COURS" if est_travaux else "TRAFIC INTERROMPU"
+        info_longue = preparer_texte_deroulant(interruption['text'])
         
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
                 <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">{icone}</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">{titre}</div>
+                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">❌</div>
+                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TRAFIC INTERROMPU</div>
                     <div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;"><span class="chevron">▼</span></div>
                 </div>
             </summary>
@@ -264,8 +268,7 @@ def afficher_bandeau_trafic(line_id):
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
-        texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
-        info_longue = nettoyer_texte_details(texte_propre)
+        info_longue = preparer_texte_deroulant(texte_brut)
         
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
