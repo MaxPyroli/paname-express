@@ -166,18 +166,27 @@ def get_alerte_style(severity):
     return None, None
 
 def synthetiser_alerte(texte):
-    """Garde uniquement l'essentiel d'une alerte IDFM."""
-    texte = texte.replace('\n', ' ').strip()
-    # On cherche l'heure de reprise (souvent "reprise estimée à XXhXX")
-    reprise = re.search(r"(reprise estimée vers|reprise à) \d+h\d+", texte, re.IGNORECASE)
-    # On cherche la cause (souvent au début avant un point)
-    cause = texte.split('.')[0]
+    """Garde uniquement l'essentiel d'une alerte IDFM, proprement."""
+    # On enlève les sauts de lignes et les éventuelles balises HTML de l'API
+    texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
+
+    # On cherche l'heure de reprise
+    reprise = re.search(r"(reprise estimée vers|reprise à|reprise prévue vers) \d+h\d*", texte, re.IGNORECASE)
+
+    # On prend la première phrase qui a du sens (plus de 10 caractères)
+    phrases = [p.strip() for p in texte.split('.') if len(p.strip()) > 10]
+    cause = phrases[0] if phrases else texte
+    
+    # Sécurité anti-pavé : on coupe si c'est vraiment trop long
+    if len(cause) > 85:
+        cause = cause[:85] + "..."
     
     res = cause
-    if reprise:
+    # On ajoute la balise de reprise si elle n'est pas déjà dans la phrase
+    if reprise and reprise.group(0).lower() not in res.lower():
         res += f" | ⏳ {reprise.group(0)}"
+        
     return res
-
 def afficher_bandeau_trafic(line_id):
     """Retourne le HTML du bandeau trafic pour l'injecter dans les cartes."""
     if not line_id: return ""
