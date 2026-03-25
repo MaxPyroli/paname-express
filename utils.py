@@ -3,7 +3,7 @@ import base64
 import re
 from datetime import datetime
 import pytz
-from api_idfm import demander_lignes_arret
+from api_idfm import demander_lignes_arret, demander_info_trafic
 
 def get_img_as_base64(file_path):
     if not os.path.exists(file_path):
@@ -180,14 +180,16 @@ def synthetiser_alerte(texte):
 
 def afficher_bandeau_trafic(line_id):
     """Retourne le HTML du bandeau trafic pour l'injecter dans les cartes."""
-    if not line_id:
-        return ""
+    if not line_id: return ""
+    
     alertes = demander_info_trafic(line_id)
+    # On cherche l'interruption (rouge) ou la perturbation (orange)
     interruption = next((a for a in alertes if a['severity'] >= 40), None)
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
+        # On RETOURNE le texte HTML (pas de st.markdown ici)
         return f"""
             <div class="traffic-ticker">
                 <div class="ticker-text">🚨 TRAFIC INTERROMPU : {info} &nbsp;&nbsp;&nbsp;&nbsp; 🚨 {info}</div>
@@ -195,6 +197,7 @@ def afficher_bandeau_trafic(line_id):
         """
     elif perturbation:
         info = synthetiser_alerte(perturbation['text'])
+        # On RETOURNE le texte HTML
         return f'<div class="traffic-warning" style="margin-bottom:8px;">⚠️ {info}</div>'
     
-    return ""
+    return "" # On retourne du vide si tout va bien
