@@ -948,7 +948,7 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
     # 1. TITRE (PLEINE LARGEUR)
-    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
             
     # 2. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
