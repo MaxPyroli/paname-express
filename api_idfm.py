@@ -48,30 +48,36 @@ def demander_info_trafic(line_id):
     alertes = []
     if data and 'disruptions' in data:
         for disruption in data['disruptions']:
+            # 1. LE FILTRE MAGIQUE : Seulement ce qui est en cours !
+            if disruption.get('status', '') != 'active':
+                continue
+
+            # 2. RÉCUPÉRATION DU TEXTE
             messages = disruption.get('messages', [])
             texte_complet = " ".join([m.get('text', '') for m in messages])
+            header = disruption.get('header_text', '') # Le titre court (ex: "Arrêt non desservi")
+            
             if not texte_complet:
-                texte_complet = disruption.get('header_text', '')
+                texte_complet = header
 
             texte_lower = texte_complet.lower()
 
-            # 🛑 LE FILTRE ANTI-TRAVAUX DE L'EXTRÊME 🛑
-            # Dès qu'un de ces mots est dans le texte, l'alerte part à la poubelle
-            bannis = ["période", "periode", "dates", "travaux", "week-end", "jusqu'au", "ascenseur", "escalator", "bagage"]
-            if any(mot in texte_lower for mot in bannis):
+            # 3. ON DÉGAGE LA POLLUTION
+            if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
                 continue
 
-            # ANALYSE DE LA GRAVITÉ
+            # 4. ANALYSE DE LA GRAVITÉ
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
             score = 0
             if effect == "NO_SERVICE" or "interrompu" in texte_lower:
-                score = 50 # Interruption
+                score = 50 # 🚨 Interruption
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
-                score = 20 # Perturbation
+                score = 20 # ⚠️ Perturbation
 
             if score > 0 and texte_complet:
-                alertes.append({'text': texte_complet, 'severity': score})
+                # On sauvegarde aussi le titre court (header) pour le menu déroulant
+                alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
     return alertes
