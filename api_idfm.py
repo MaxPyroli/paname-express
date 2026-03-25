@@ -48,35 +48,33 @@ def demander_info_trafic(line_id):
     alertes = []
     if data and 'disruptions' in data:
         for disruption in data['disruptions']:
-            # 1. FILTRE ANTI-TRAVAUX RADICAL
+            # 1. RÉCUPÉRATION DU TEXTE COMPLET (Pour éviter les messages trop vagues)
+            messages = disruption.get('messages', [])
+            texte_complet = " ".join([m.get('text', '') for m in messages])
+            if not texte_complet:
+                texte_complet = disruption.get('header_text', '')
+
+            texte_lower = texte_complet.lower()
+
+            # 2. LE GRAND FILTRE (On dégage ce dont on se fout)
             tags = [str(t).lower() for t in disruption.get('tags', [])]
-            if "travaux" in tags:
+            if "travaux" in tags or "période :" in texte_lower or "dates :" in texte_lower:
                 continue
-                
-            # 2. EXTRACTION DU TEXTE
-            titre = disruption.get('header_text', '')
-            if not titre:
-                msgs = disruption.get('messages', [])
-                if msgs:
-                    titre = msgs[0].get('text', '')
-                    
-            # Double vérification : si ça parle de dates/périodes, c'est des travaux déguisés
-            if "période :" in titre.lower() or "travaux" in titre.lower() or "dates :" in titre.lower():
+            # Fini les alertes ascenseurs et escalators !
+            if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
                 continue
 
-            # 3. FORCER LA SÉVÉRITÉ
+            # 3. ANALYSE DE LA GRAVITÉ
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
             score = 0
-            # Si l'API dit "pas de service" OU si le texte contient "interrompu", on force le ROUGE 🚨
-            if effect == "NO_SERVICE" or "interrompu" in titre.lower():
-                score = 50 
-            # Sinon, si c'est perturbé, on met ORANGE ⚠️
-            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or "perturbé" in titre.lower():
-                score = 20 
+            if effect == "NO_SERVICE" or "interrompu" in texte_lower:
+                score = 50 # 🚨 Interruption
+            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
+                score = 20 # ⚠️ Perturbation
 
-            if score > 0 and titre:
-                alertes.append({'text': titre, 'severity': score})
+            if score > 0 and texte_complet:
+                alertes.append({'text': texte_complet, 'severity': score})
                 
     return alertes
