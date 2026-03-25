@@ -17,6 +17,7 @@ from utils import (
 
 from api_idfm import demander_api, demander_lignes_arret
 from style import appliquer_style_global
+from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
 
 # ==========================================
 #              CONFIGURATION
@@ -96,11 +97,11 @@ else:
     # Sinon on met l'émoji par défaut
     icone_html = "🚆"
 
-# Titre avec Logo personnalisé + Badge v1.0
-st.markdown(f"<h1>{icone_html} Grand Paname <span class='version-badge'>v1.1</span></h1>", unsafe_allow_html=True)
+# Titre avec Logo personnalisé + Badge dynamique
+st.markdown(f"<h1>{icone_html} {APP_NAME} <span class='version-badge'>{APP_VERSION}</span></h1>", unsafe_allow_html=True)
 
-# Sous-titre
-st.markdown("##### *Naviguez le Grand Paris, tout simplement.*", unsafe_allow_html=True)
+# Sous-titre dynamique
+st.markdown(f"##### *{APP_SUBTITLE}*", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
 # 1. On initialise la session si elle n'existe pas
@@ -151,7 +152,7 @@ def toggle_favorite(stop_id, stop_name):
     
     time.sleep(0.1)
 with st.sidebar:
-    st.caption("v1.1.1 - Abondance 🧀")
+    st.caption(f"{APP_VERSION} - {APP_CODENAME}")
     
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
