@@ -166,47 +166,62 @@ def get_alerte_style(severity):
     return None, None
 
 def synthetiser_alerte(texte):
-    """Garde uniquement l'essentiel d'une alerte IDFM, proprement."""
-    # On enlève les sauts de lignes et les éventuelles balises HTML de l'API
+    """Garde uniquement l'essentiel et met en valeur les gares/heures."""
+    # 1. Nettoyage de base
     texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
-
-    # On cherche l'heure de reprise
-    reprise = re.search(r"(reprise estimée vers|reprise à|reprise prévue vers) \d+h\d*", texte, re.IGNORECASE)
-
-    # On prend la première phrase qui a du sens (plus de 10 caractères)
-    phrases = [p.strip() for p in texte.split('.') if len(p.strip()) > 10]
-    cause = phrases[0] if phrases else texte
     
-    # Sécurité anti-pavé : on coupe si c'est vraiment trop long
-    if len(cause) > 85:
-        cause = cause[:85] + "..."
+    # 2. On supprime le bégaiement ("Trafic interrompu : le trafic est interrompu...")
+    texte = re.sub(r'(?i)^(Le )?trafic est interrompu\s*(:)?\s*', '', texte)
+    texte = re.sub(r'(?i)^trafic interrompu\s*(:)?\s*', '', texte)
+
+    # 3. Le style CSS pour les petits encadrés (façon badge)
+    badge_style = "background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; color:#fff; font-weight:bold; letter-spacing:0.5px;"
     
-    res = cause
-    # On ajoute la balise de reprise si elle n'est pas déjà dans la phrase
-    if reprise and reprise.group(0).lower() not in res.lower():
-        res += f" | ⏳ {reprise.group(0)}"
+    # 4. On détecte les HEURES (jusqu'à 23h) et on les met en rouge/gras
+    texte = re.sub(r'(?i)(jusqu\'à|vers|à|reprise prévue vers|reprise estimée vers|jusqu\'en) (\d{1,2}h\d*|\w+ de service)', 
+                   r'\1 <span style="color:#ffadad; font-weight:bold;">\2</span>', texte)
+                   
+    # 5. On détecte les GARES (entre X et Y) et on met des badges
+    texte = re.sub(r'(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
+                   fr'entre <span style="{badge_style}">\1</span> et <span style="{badge_style}">\2</span>', texte)
+                   
+    # 6. On détecte les GARES (de X vers Y) et on met des badges
+    texte = re.sub(r'(?i)\bde\b\s+(.*?)\s+(?:vers|à)\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
+                   fr'de <span style="{badge_style}">\1</span> vers <span style="{badge_style}">\2</span>', texte)
+
+    # On met une majuscule à la première lettre restante
+    if len(texte) > 1:
+        texte = texte[0].upper() + texte[1:]
         
-    return res
+    return texte
+
+
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic pour l'injecter dans les cartes."""
+    """Retourne le HTML du bandeau trafic avec icône fixe et texte défilant."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
-    # On cherche l'interruption (rouge) ou la perturbation (orange)
     interruption = next((a for a in alertes if a['severity'] >= 40), None)
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
-        # On RETOURNE le texte HTML (pas de st.markdown ici)
+        # 🚨 LA NOUVELLE STRUCTURE : Icône Fixe + Zone Défilante
         return f"""
-            <div class="traffic-ticker">
-                <div class="ticker-text">🚨 TRAFIC INTERROMPU : {info} &nbsp;&nbsp;&nbsp;&nbsp; 🚨 {info}</div>
+            <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
+                <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
+                    <span class="blink" style="font-size: 1.1em; text-shadow: 0 0 5px rgba(231,76,60,0.5);">❌</span>
+                </div>
+                <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
+                    <div style="display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #ffb8b8; font-size: 0.85em;">
+                        <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                        <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info}
+                    </div>
+                </div>
             </div>
         """
     elif perturbation:
         info = synthetiser_alerte(perturbation['text'])
-        # On RETOURNE le texte HTML
-        return f'<div class="traffic-warning" style="margin-bottom:8px;">⚠️ {info}</div>'
+        return f'<div class="traffic-warning" style="margin-bottom:8px; padding-left:4px; border-left: 2px solid #f39c12;">⚠️ {info}</div>'
     
-    return "" # On retourne du vide si tout va bien
+    return ""
