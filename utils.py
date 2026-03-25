@@ -156,3 +156,11 @@ def analyser_importance_arret(stop_area_node):
         "TRAM": "[ TRAM ]", "CABLE": "[ CÂBLE ]", "BUS": "", "AUTRE": ""
     }
     return meilleur_rang, tags.get(meilleur_mode, "")
+
+def get_alerte_style(severity):
+    """Renvoie la couleur et l'icône selon la gravité du problème."""
+    if severity >= 40: # Gros problèmes / Interruption
+        return "🔴", "#e74c3c"
+    if severity >= 10: # Travaux / Ralentissements
+        return "⚠️", "#f39c12"
+    return None, None
