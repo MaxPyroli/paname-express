@@ -111,27 +111,33 @@ def get_all_changelogs():
     return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
 
 def analyser_importance_arret(stop_area_node):
-    """
-    Analyse un arrêt de l'API IDFM et renvoie son rang d'importance et son émoji.
-    """
     meilleur_rang = 99
     meilleur_mode = "AUTRE"
-    
-    emojis = {
-        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
-        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "📍"
-    }
     
     hierarchie = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
     
     modes_a_tester = []
     
-    # On ratisse large : on cherche dans les modes commerciaux ET physiques
+    # 1. On cherche dans les données de l'API (si elles sont là)
     if 'commercial_modes' in stop_area_node:
         modes_a_tester.extend([m.get('name', '') for m in stop_area_node['commercial_modes']])
     if 'physical_modes' in stop_area_node:
         modes_a_tester.extend([m.get('name', '') for m in stop_area_node['physical_modes']])
         
+    nom_arret = stop_area_node.get('name', '').upper()
+    
+    # 2. PLAN B (Spécial Géolocalisation) : Si l'API ne dit rien, on devine avec le nom !
+    if not modes_a_tester:
+        if "GARE DE" in nom_arret or "GARE" in nom_arret or "RER" in nom_arret:
+            modes_a_tester.append("TRAIN")
+        elif "METRO" in nom_arret or "MÉTRO" in nom_arret:
+            modes_a_tester.append("METRO")
+        elif "TRAMWAY" in nom_arret or "TRAM" in nom_arret:
+            modes_a_tester.append("TRAM")
+        else:
+            modes_a_tester.append("BUS") # Par défaut, on assume que c'est un petit arrêt
+            
+    # 3. On évalue le mode le plus noble
     for nom_mode in modes_a_tester:
         mode_norm = normaliser_mode(nom_mode)
         rang = hierarchie.get(mode_norm, 99)
@@ -139,5 +145,11 @@ def analyser_importance_arret(stop_area_node):
         if rang < meilleur_rang:
             meilleur_rang = rang
             meilleur_mode = mode_norm
-                
-    return meilleur_rang, emojis.get(meilleur_mode, "📍")
+            
+    # 4. On renvoie un Tag texte au lieu d'un émoji
+    tags = {
+        "RER": "[ RER/TRAIN ]", "TRAIN": "[ TRAIN ]", "METRO": "[ MÉTRO ]", 
+        "TRAM": "[ TRAM ]", "CABLE": "[ CÂBLE ]", "BUS": "", "AUTRE": ""
+    }
+    
+    return meilleur_rang, tags.get(meilleur_mode, "")
