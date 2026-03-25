@@ -234,27 +234,55 @@ def afficher_bandeau_trafic(line_id):
 
     # 🌬️ LE NOUVEAU MOTEUR AVEC ANTI-CLONAGE ABSOLU
     def preparer_texte_deroulant(texte_brut):
-        # 1. On remplace les balises de structure par des sauts de ligne simples
+        # 1. On remplace les balises de structure par des sauts de ligne
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
-        
-        # 2. On nettoie le reste du HTML
         t = re.sub(r'<[^>]+>', '', t)
-        
-        # 3. Nettoyage des codes techniques (ta fonction existante)
         t = nettoyer_texte_details(t)
         
-        # 4. ANTI-DOUBLONS : On découpe, on nettoie chaque ligne, on dédoublonne
+        # 2. Liste des phrases "polluantes" à supprimer (l'administratif inutile)
+        phrases_inutiles = [
+            "les horaires du calculateur d'itinéraire tiennent compte des travaux",
+            "les horaires du calculateur d'itinéraires tiennent compte des travaux",
+            "motif : travaux sur le réseau ferroviaire",
+            "un service de bus de remplacement est mis en place", # Souvent répété et évident
+            "en raison de travaux",
+            "bus 399 : travaux", # Bégaiement de ligne
+            "arrêt(s) non desservi(s)" 
+        ]
+
         lignes = t.split('\n')
-        lignes_uniques = []
+        lignes_finales = []
+        
         for l in lignes:
             l_clean = l.strip()
-            # On n'ajoute la ligne que si elle n'est pas vide et pas déjà présente
-            if l_clean and l_clean not in lignes_uniques:
-                lignes_uniques.append(l_clean)
+            l_lower = l_clean.lower()
+            
+            # On ignore si c'est vide ou trop court
+            if not l_clean or len(l_clean) < 3:
+                continue
+                
+            # On ignore si c'est une phrase "polluante"
+            if any(p in l_lower for p in phrases_inutiles):
+                continue
+                
+            # 🛑 ANTI-DOUBLON INTELLIGENT 🛑
+            # On vérifie si la ligne n'est pas déjà présente, ou si elle n'est pas incluse dans une autre
+            est_doublon = False
+            for existante in lignes_finales:
+                # Si la nouvelle ligne est déjà dans une phrase existante (ou l'inverse)
+                if l_clean.lower() in existante.lower() or existante.lower() in l_clean.lower():
+                    # On garde la plus longue des deux
+                    if len(l_clean) > len(existante):
+                        lignes_finales.remove(existante)
+                    else:
+                        est_doublon = True
+                    break
+            
+            if not est_doublon:
+                lignes_finales.append(l_clean)
         
-        # 5. On remonte le tout avec UN SEUL saut de ligne <br>
-        # C'est ça qui va empêcher l'effet "texte géant"
-        return '<br>'.join(lignes_uniques)
+        # 3. On remonte avec un saut de ligne simple pour rester compact
+        return '<br>'.join(lignes_finales)
 
     if interruption:
         info_longue = preparer_texte_deroulant(interruption['text'])
