@@ -58,12 +58,11 @@ def appliquer_style_global():
         /* ------------------------------------------- */
         /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
         /* ------------------------------------------- */
-        /* On cible le conteneur exact de la carte Deck.gl de Streamlit */
-        [data-testid="stDeckGlJsonChart"], 
-        [data-testid="stDeckGlJsonChart"] > div,
-        [data-testid="stDeckGlJsonChart"] canvas {
+        /* On cible l'iframe générée par Streamlit components */
+        iframe[title="streamlit_components.v1.components.iframe"] {
             border-radius: 12px !important;
-            overflow: hidden !important;
+            border: 1px solid rgba(128, 128, 128, 0.2) !important; /* Petite bordure discrète */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         /* ------------------------------------------- */
 
