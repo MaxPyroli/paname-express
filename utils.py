@@ -3,6 +3,7 @@ import base64
 import re
 from datetime import datetime
 import pytz
+from api_idfm import demander_lignes_arret
 
 def get_img_as_base64(file_path):
     if not os.path.exists(file_path):
@@ -115,19 +116,37 @@ def analyser_importance_arret(stop_area_node):
     meilleur_mode = "AUTRE"
     
     hierarchie = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
-    
     modes_a_tester = []
     
-    # 1. On cherche dans les données de l'API (si elles sont là)
+    # 1. On cherche d'abord si l'API nous le donne du premier coup
     if 'commercial_modes' in stop_area_node:
-        modes_a_tester.extend([m.get('name', '') for m in stop_area_node['commercial_modes']])
+        modes_a_tester.extend([m.get('id', '') + " " + m.get('name', '') for m in stop_area_node['commercial_modes']])
     if 'physical_modes' in stop_area_node:
-        modes_a_tester.extend([m.get('name', '') for m in stop_area_node['physical_modes']])
+        modes_a_tester.extend([m.get('id', '') + " " + m.get('name', '') for m in stop_area_node['physical_modes']])
         
-    nom_arret = stop_area_node.get('name', '').upper()
-    
-    # 2. PLAN B (Spécial Géolocalisation) : Si l'API ne dit rien, on devine avec le nom !
+    # 2. LA CONTRE-ATTAQUE : Si l'API fait l'autruche, on va chercher les lignes !
     if not modes_a_tester:
+        stop_id = stop_area_node.get('id')
+        if stop_id:
+            # On utilise ta fonction déjà en cache, ça sera instantané après le 1er appel
+            data_lines = demander_lignes_arret(stop_id)
+            if data_lines and 'lines' in data_lines:
+                for line in data_lines['lines']:
+                    if 'commercial_mode' in line:
+                        m = line['commercial_mode']
+                        if isinstance(m, dict):
+                            modes_a_tester.append(m.get('id', '') + " " + m.get('name', ''))
+                    
+                    if 'physical_mode' in line:
+                        m = line['physical_mode']
+                        if isinstance(m, dict):
+                            modes_a_tester.append(m.get('id', '') + " " + m.get('name', ''))
+                        elif isinstance(m, str):
+                            modes_a_tester.append(m)
+
+    # 3. Plan C (Secours absolu via le nom)
+    if not modes_a_tester:
+        nom_arret = stop_area_node.get('name', '').upper()
         if "GARE DE" in nom_arret or "GARE" in nom_arret or "RER" in nom_arret:
             modes_a_tester.append("TRAIN")
         elif "METRO" in nom_arret or "MÉTRO" in nom_arret:
@@ -135,9 +154,9 @@ def analyser_importance_arret(stop_area_node):
         elif "TRAMWAY" in nom_arret or "TRAM" in nom_arret:
             modes_a_tester.append("TRAM")
         else:
-            modes_a_tester.append("BUS") # Par défaut, on assume que c'est un petit arrêt
+            modes_a_tester.append("BUS")
             
-    # 3. On évalue le mode le plus noble
+    # 4. On évalue le mode le plus lourd
     for nom_mode in modes_a_tester:
         mode_norm = normaliser_mode(nom_mode)
         rang = hierarchie.get(mode_norm, 99)
@@ -146,10 +165,13 @@ def analyser_importance_arret(stop_area_node):
             meilleur_rang = rang
             meilleur_mode = mode_norm
             
-    # 4. On renvoie un Tag texte au lieu d'un émoji
+    # 5. On renvoie le Tag texte
     tags = {
         "RER": "[ RER/TRAIN ]", "TRAIN": "[ TRAIN ]", "METRO": "[ MÉTRO ]", 
         "TRAM": "[ TRAM ]", "CABLE": "[ CÂBLE ]", "BUS": "", "AUTRE": ""
+    }
+    
+    return meilleur_rang, tags.get(meilleur_mode, "")
     }
     
     return meilleur_rang, tags.get(meilleur_mode, "")
