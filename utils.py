@@ -25,7 +25,7 @@ def get_svg_inline(file_path):
         if '<svg' in svg_content:
             svg_content = svg_content.replace('<svg', '<svg class="mode-icon-inline" fill="currentColor"', 1)
         return svg_content
-    except Exception as e: 
+    except Exception: 
         return None
 
 def generer_icones_html():
@@ -38,29 +38,24 @@ def generer_icones_html():
         "BUS":   "img/bus.svg",
         "AUTRE": "img/autre.svg"
     }
-    
     labels = {
         "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
         "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
     }
-    
     fallbacks = {
         "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
     }
-    
     resultat = {}
     for mode, label in labels.items():
         filepath = mapping_files.get(mode)
         svg_html = get_svg_inline(filepath) if filepath else None
-            
         if svg_html:
             html = f'<span style="display:inline-flex; align-items:center;">{svg_html}<span style="margin-left:8px;">{label}</span></span>'
             resultat[mode] = html
         else:
             emoji = fallbacks.get(mode, "❓")
             resultat[mode] = f"{emoji} {label}"
-            
     return resultat
 
 def normaliser_mode(mode_brut):
@@ -86,7 +81,6 @@ def format_html_time(heure_str, data_freshness):
     
     if data_freshness == 'base_schedule':
         return (2000, f"<span class='text-blue'>~{obj.strftime('%H:%M')}</span>")
-    
     if delta > 120: return (3000, "<span class='service-end'>Service terminé</span>")
     if delta <= 0: return (0, "<span class='text-red'>À quai</span>")
     if delta == 1: return (1, "<span class='blink text-orange'>À l'approche</span>")
@@ -114,21 +108,17 @@ def get_all_changelogs():
 def analyser_importance_arret(stop_area_node):
     meilleur_rang = 99
     meilleur_mode = "AUTRE"
-    
     hierarchie = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
     modes_a_tester = []
     
-    # 1. On cherche d'abord si l'API nous le donne du premier coup
     if 'commercial_modes' in stop_area_node:
         modes_a_tester.extend([m.get('id', '') + " " + m.get('name', '') for m in stop_area_node['commercial_modes']])
     if 'physical_modes' in stop_area_node:
         modes_a_tester.extend([m.get('id', '') + " " + m.get('name', '') for m in stop_area_node['physical_modes']])
         
-    # 2. LA CONTRE-ATTAQUE : Si l'API fait l'autruche, on va chercher les lignes !
     if not modes_a_tester:
         stop_id = stop_area_node.get('id')
         if stop_id:
-            # On utilise ta fonction déjà en cache, ça sera instantané après le 1er appel
             data_lines = demander_lignes_arret(stop_id)
             if data_lines and 'lines' in data_lines:
                 for line in data_lines['lines']:
@@ -136,7 +126,6 @@ def analyser_importance_arret(stop_area_node):
                         m = line['commercial_mode']
                         if isinstance(m, dict):
                             modes_a_tester.append(m.get('id', '') + " " + m.get('name', ''))
-                    
                     if 'physical_mode' in line:
                         m = line['physical_mode']
                         if isinstance(m, dict):
@@ -144,7 +133,6 @@ def analyser_importance_arret(stop_area_node):
                         elif isinstance(m, str):
                             modes_a_tester.append(m)
 
-    # 3. Plan C (Secours absolu via le nom)
     if not modes_a_tester:
         nom_arret = stop_area_node.get('name', '').upper()
         if "GARE DE" in nom_arret or "GARE" in nom_arret or "RER" in nom_arret:
@@ -156,22 +144,15 @@ def analyser_importance_arret(stop_area_node):
         else:
             modes_a_tester.append("BUS")
             
-    # 4. On évalue le mode le plus lourd
     for nom_mode in modes_a_tester:
         mode_norm = normaliser_mode(nom_mode)
         rang = hierarchie.get(mode_norm, 99)
-        
         if rang < meilleur_rang:
             meilleur_rang = rang
             meilleur_mode = mode_norm
             
-    # 5. On renvoie le Tag texte
     tags = {
         "RER": "[ RER/TRAIN ]", "TRAIN": "[ TRAIN ]", "METRO": "[ MÉTRO ]", 
         "TRAM": "[ TRAM ]", "CABLE": "[ CÂBLE ]", "BUS": "", "AUTRE": ""
     }
-    
-    return meilleur_rang, tags.get(meilleur_mode, "")
-    }
-    
     return meilleur_rang, tags.get(meilleur_mode, "")
