@@ -234,32 +234,27 @@ def afficher_bandeau_trafic(line_id):
 
     # 🌬️ LE NOUVEAU MOTEUR AVEC ANTI-CLONAGE ABSOLU
     def preparer_texte_deroulant(texte_brut):
-        # 1. On protège les sauts de ligne de l'API en les changeant en \n
+        # 1. On remplace les balises de structure par des sauts de ligne simples
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
         
-        # 2. On supprime le reste du HTML
+        # 2. On nettoie le reste du HTML
         t = re.sub(r'<[^>]+>', '', t)
         
-        # 3. On nettoie les codes bizarres (ta fonction existante)
+        # 3. Nettoyage des codes techniques (ta fonction existante)
         t = nettoyer_texte_details(t)
         
-        # 4. 🛑 L'ANTI-CLONAGE 🛑
-        # On découpe le texte par saut de ligne et on jette les lignes vides
-        paragraphes = [p.strip() for p in t.split('\n') if p.strip()]
+        # 4. ANTI-DOUBLONS : On découpe, on nettoie chaque ligne, on dédoublonne
+        lignes = t.split('\n')
+        lignes_uniques = []
+        for l in lignes:
+            l_clean = l.strip()
+            # On n'ajoute la ligne que si elle n'est pas vide et pas déjà présente
+            if l_clean and l_clean not in lignes_uniques:
+                lignes_uniques.append(l_clean)
         
-        paragraphes_uniques = []
-        for p in paragraphes:
-            # On vérifie si ce paragraphe (ou une version presque identique) n'est pas déjà dans notre liste
-            if not any(p in deja_vu or deja_vu in p for deja_vu in paragraphes_uniques):
-                paragraphes_uniques.append(p)
-                
-        # 5. On rassemble les paragraphes uniques avec un DOUBLE saut de ligne propre (<br><br>)
-        texte_final = '<br><br>'.join(paragraphes_uniques)
-        
-        # 6. Ultime sécurité si l'API a collé les répétitions sur une seule ligne sans faire de saut
-        texte_final = re.sub(r'(.{30,})\1+', r'\1', texte_final)
-        
-        return texte_final
+        # 5. On remonte le tout avec UN SEUL saut de ligne <br>
+        # C'est ça qui va empêcher l'effet "texte géant"
+        return '<br>'.join(lignes_uniques)
 
     if interruption:
         info_longue = preparer_texte_deroulant(interruption['text'])
