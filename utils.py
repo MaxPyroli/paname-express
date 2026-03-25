@@ -208,7 +208,7 @@ def synthetiser_alerte(texte):
 
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic avec icône fixe et texte défilant."""
+    """Retourne le HTML du bandeau trafic."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -217,11 +217,11 @@ def afficher_bandeau_trafic(line_id):
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
-        # Le fond de l'icône est maintenant rouge solide (#e74c3c) pour éviter le bug visuel
+        # 🚨 LA CROIX EST DE RETOUR (Et on lui a enlevé le fond rouge pétant)
         return f"""
             <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
-                <div style="padding: 4px 10px; display: flex; align-items: center; background: #e74c3c; z-index: 10;">
-                    <span class="blink" style="font-size: 1.1em; color: white;">🛑</span>
+                <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
+                    <span class="blink" style="font-size: 1.1em; text-shadow: 0 0 5px rgba(231,76,60,0.5);">❌</span>
                 </div>
                 <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
                     <div style="display: inline-block; padding-left: 100%; animation: ticker 35s linear infinite; color: #ffb8b8; font-size: 0.85em;">
@@ -231,8 +231,28 @@ def afficher_bandeau_trafic(line_id):
                 </div>
             </div>
         """
+        
     elif perturbation:
-        info = synthetiser_alerte(perturbation['text'])
-        return f'<div class="traffic-warning" style="margin-bottom:8px; padding-left:4px; border-left: 2px solid #f39c12;">⚠️ {info}</div>'
+        # ⚠️ LE MENU DÉROULANT POUR LES PERTURBATIONS
+        titre = perturbation.get('header', '')
+        if not titre: titre = "Trafic perturbé" # Sécurité si l'API ne donne pas de titre
+        
+        # On remplace les sauts de lignes par des balises <br> pour garder la mise en page
+        info_longue = re.sub(r'<[^>]+>', '', perturbation['text'].replace('\n', '<br>'))
+        
+        return f"""
+        <details style="margin-bottom:8px; border-left: 2px solid #f39c12; background: rgba(243, 156, 18, 0.05); border-radius: 4px; overflow: hidden;">
+            <summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none;">
+                ⚠️ {titre} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
+            </summary>
+            <div style="color: #ddd; font-size: 0.8em; padding: 8px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.4;">
+                {info_longue}
+            </div>
+        </details>
+        <style>
+            /* Masque la petite flèche native du navigateur pour faire plus propre */
+            details > summary::-webkit-details-marker {{ display: none; }}
+        </style>
+        """
     
     return ""
