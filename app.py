@@ -289,14 +289,13 @@ if st.session_state.geoloc_active:
                         ville = sa.get('administrative_regions', [{}])[0].get('name', '')
                         distance = p.get('distance', 0)
                         
-                        # ✨ L'analyse magique
-                        rang, tag = analyser_importance_arret(sa)
+                       # ✨ L'analyse magique (On ignore le tag avec "_")
+                        rang, _ = analyser_importance_arret(sa)
                         
                         # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
                         nom_affiche = nom.upper() if rang <= 3 else nom
-                        prefixe = f"{tag} " if tag else ""
                         
-                        label = f"{prefixe}{nom_affiche} ({ville}) - à {distance}m" if ville else f"{prefixe}{nom_affiche} - à {distance}m"
+                        label = f"{nom_affiche} ({ville}) - à {distance}m" if ville else f"{nom_affiche} - à {distance}m"
                         
                         resultats_bruts.append({
                             'label': label,
@@ -355,12 +354,11 @@ if submitted and search_query:
                     nom = sa['name']
                     
                     # ✨ L'analyse magique
-                    rang, tag = analyser_importance_arret(sa)
+                    rang, _ = analyser_importance_arret(sa)
                     
                     nom_affiche = nom.upper() if rang <= 3 else nom
-                    prefixe = f"{tag} " if tag else ""
                     
-                    label = f"{prefixe}{nom_affiche} ({ville})" if ville else f"{prefixe}{nom_affiche}"
+                    label = f"{nom_affiche} ({ville})" if ville else f"{nom_affiche}"
                     
                     resultats_bruts.append({
                         'label': label,
