@@ -12,7 +12,7 @@ import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from utils import (
     get_img_as_base64, generer_icones_html, normaliser_mode,
-    clean_code_line, format_html_time, get_all_changelogs
+    clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret
 ) # <-- CETTE PARENTHÈSE EST CRUCIALE !
 
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches
@@ -284,21 +284,35 @@ if st.session_state.geoloc_active:
         with st.spinner("Recherche des gares à proximité..."):
             data_proches = demander_arrets_proches(lat, lon)
             
-            opts = {}
+            resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
                 for p in data_proches['places_nearby']:
                     if 'stop_area' in p:
-                        nom = p['stop_area']['name']
-                        ville = p['stop_area'].get('administrative_regions', [{}])[0].get('name', '')
+                        sa = p['stop_area']
+                        nom = sa['name']
+                        ville = sa.get('administrative_regions', [{}])[0].get('name', '')
                         distance = p.get('distance', 0)
                         
-                        label = f"{nom} ({ville}) - à {distance}m" if ville else f"{nom} - à {distance}m"
-                        opts[label] = p['stop_area']['id']
+                        # ✨ L'analyse magique
+                        rang, emoji = analyser_importance_arret(sa)
+                        
+                        label = f"{emoji} {nom} ({ville}) - à {distance}m" if ville else f"{emoji} {nom} - à {distance}m"
+                        
+                        resultats_bruts.append({
+                            'label': label,
+                            'id': sa['id'],
+                            'rang': rang,
+                            'distance': distance
+                        })
             
-            if opts:
-                # On réutilise le dictionnaire search_results pour l'affichage
+            if resultats_bruts:
+                # ✨ TRI HYBRIDE : On trie d'abord par importance (rang), puis par distance !
+                resultats_bruts.sort(key=lambda x: (x['rang'], x['distance']))
+                
+                # On reformate pour le selectbox
+                opts = {r['label']: r['id'] for r in resultats_bruts}
+                
                 st.session_state.search_results = opts
-                # On désactive la géoloc pour ne pas boucler à l'infini
                 st.session_state.geoloc_active = False 
                 st.rerun()
             else:
@@ -330,17 +344,32 @@ if submitted and search_query:
     # --- FIN EASTER EGG ---
 
     with st.spinner("Recherche des arrêts..."):
-        # ... (La suite de ton code habituel) ...
-        # ... (La suite de ton code habituel reste ici) ...
         data = demander_api(f"places?q={search_query}")
-        opts = {}
+        resultats_bruts = []
+        
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
-                    ville = p.get('administrative_regions', [{}])[0].get('name', '')
-                    label = f"{p['name']} ({ville})" if ville else p['name']
-                    opts[label] = p['stop_area']['id']
-        if len(opts) > 0:
+                    sa = p['stop_area']
+                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+                    nom = sa['name']
+                    
+                    # ✨ L'analyse magique
+                    rang, emoji = analyser_importance_arret(sa)
+                    
+                    label = f"{emoji} {nom} ({ville})" if ville else f"{emoji} {nom}"
+                    
+                    resultats_bruts.append({
+                        'label': label,
+                        'id': sa['id'],
+                        'rang': rang
+                    })
+        
+        if resultats_bruts:
+            # ✨ TRI : Les gares les plus importantes (RER, Métro) remontent en haut
+            resultats_bruts.sort(key=lambda x: x['rang'])
+            
+            opts = {r['label']: r['id'] for r in resultats_bruts}
             st.session_state.search_results = opts
         else:
             st.session_state.search_results = {}
