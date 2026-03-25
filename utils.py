@@ -214,38 +214,60 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Harmonisé + Animation CSS)."""
+    """Retourne le HTML du bandeau trafic (Harmonisé + Animation fluide garantie)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
     interruption = next((a for a in alertes if a['severity'] >= 40), None)
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
-    html_output = ""
+    if not interruption and not perturbation:
+        return ""
+
+    # ✨ LE NOUVEAU MOTEUR CSS : Transition fluide à chaque ouverture
+    css = """<style>
+    details.traffic-box > summary::-webkit-details-marker { display: none; }
+    details.traffic-box .chevron { display: inline-block; transition: transform 0.3s ease; }
+    details.traffic-box[open] .chevron { transform: rotate(180deg); }
+    
+    /* On cache le texte en réduisant sa taille à 0 */
+    details.traffic-box .traffic-content { 
+        max-height: 0; opacity: 0; overflow: hidden; 
+        transition: all 0.4s ease-in-out; 
+        padding-top: 0; padding-bottom: 0; border-top: 1px solid transparent; 
+    }
+    
+    /* Quand on clique, on le déroule jusqu'à sa taille normale */
+    details.traffic-box[open] .traffic-content { 
+        max-height: 800px; opacity: 1; padding-top: 12px; padding-bottom: 12px; 
+    }
+    
+    /* Couleurs des bordures animées selon le niveau d'alerte */
+    details.traffic-box.red-box[open] .traffic-content { border-top-color: rgba(231, 76, 60, 0.2); }
+    details.traffic-box.orange-box[open] .traffic-content { border-top-color: rgba(243, 156, 18, 0.2); }
+    </style>"""
+
+    html_output = css
 
     if interruption:
         texte_propre = re.sub(r'<[^>]+>', '', interruption['text']).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # 🚨 BANDEAU ROUGE (Hiérarchie : Police plus grasse et plus espacée)
-        html_output = f"""<details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
-<summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-<div style="display: flex; align-items: stretch;">
-<div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">
-<span class="blink">❌</span>
-</div>
-<div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">
-TRAFIC INTERROMPU
-</div>
-<div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;">
-<span class="chevron" style="display:inline-block; transition: transform 0.3s ease;">▼</span>
-</div>
-</div>
-</summary>
-<div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
-{info_longue}
-</div>
-</details>"""
+        # 🚨 BANDEAU ROUGE (note l'ajout de la classe 'red-box')
+        html_output += f"""
+        <details class="traffic-box red-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
+            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
+                <div style="display: flex; align-items: stretch;">
+                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">❌</div>
+                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TRAFIC INTERROMPU</div>
+                    <div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;"><span class="chevron">▼</span></div>
+                </div>
+            </summary>
+            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding-left: 12px; padding-right: 12px; line-height: 1.6;">
+                {info_longue}
+            </div>
+        </details>
+        """
         
     elif perturbation:
         texte_brut = perturbation['text']
@@ -257,36 +279,21 @@ TRAFIC INTERROMPU
         texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # ⚠️ BANDEAU ORANGE (Même structure exacte que le rouge)
-        html_output = f"""<details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
-<summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-<div style="display: flex; align-items: stretch;">
-<div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">
-⚠️
-</div>
-<div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">
-{titre_affiche}
-</div>
-<div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;">
-<span class="chevron" style="display:inline-block; transition: transform 0.3s ease;">▼</span>
-</div>
-</div>
-</summary>
-<div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
-{info_longue}
-</div>
-</details>"""
+        # ⚠️ BANDEAU ORANGE (note l'ajout de la classe 'orange-box')
+        html_output += f"""
+        <details class="traffic-box orange-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
+            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
+                <div style="display: flex; align-items: stretch;">
+                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">⚠️</div>
+                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
+                    <div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;"><span class="chevron">▼</span></div>
+                </div>
+            </summary>
+            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding-left: 12px; padding-right: 12px; line-height: 1.6;">
+                {info_longue}
+            </div>
+        </details>
+        """
 
-    # ✨ LE MOTEUR D'ANIMATION CSS COMMUN AUX DEUX BANDEAUX ✨
-    if html_output:
-        html_output += """<style>
-details.traffic-box > summary::-webkit-details-marker { display: none; }
-details.traffic-box[open] .chevron { transform: rotate(180deg); }
-details.traffic-box[open] .traffic-content { animation: dropDown 0.3s ease-out forwards; }
-@keyframes dropDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>"""
-        
-    return html_output
+    # L'astuce magique : On supprime tous les sauts de ligne pour éviter les bugs Streamlit
+    return html_output.replace('\n', '')
