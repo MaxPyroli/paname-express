@@ -206,21 +206,26 @@ def synthetiser_alerte(texte):
         
     return texte
 
-
 def nettoyer_texte_details(texte):
-    """Nettoie le code brut et les répétitions de l'API IDFM."""
-    # 1. On vire les codes internes dégueulasses type "9 (4609) S9 (4659) - "
+    """Nettoie le code brut et met en valeur les arrêts."""
+    # 1. On vire les codes internes dégueulasses
     texte = re.sub(r'([A-Za-z0-9]+\s*\(\d+\)\s*)+-\s*', '', texte)
     
     # 2. On vire les codes de base de données à la fin type "Fi_2025_094"
     texte = re.sub(r'Fi_\d+_\d+', '', texte)
     
-    # 3. L'anti-bégaiement magique : supprime les grosses phrases collées 2 fois de suite
+    # 3. L'anti-bégaiement magique
     texte = re.sub(r'(.{20,})\1', r'\1', texte)
     
-    # 4. On vire les guillemets simples moches et on nettoie les espaces
-    texte = texte.replace("'", "").strip()
-    return texte
+    # 4. Séparer les mots collés aux guillemets par l'API (ex: Curie’L'arrêt -> Curie’ L'arrêt)
+    texte = re.sub(r'([’”"»])([A-Za-z])', r'\1 \2', texte)
+    
+    # 5. ✨ MISE EN VALEUR DES GARES ✨
+    # On cherche tout ce qui est entre ‘...’ ou "..." ou «...» et on en fait un badge
+    badge_style = "background:rgba(241,196,15,0.15); border: 1px solid rgba(241,196,15,0.3); padding:2px 6px; border-radius:4px; font-weight:bold; color:#f1c40f; white-space:nowrap; margin: 0 2px;"
+    texte = re.sub(r'[‘"«]\s*([^’"»]+)\s*[’”»]', fr"<span style='{badge_style}'>\1</span>", texte)
+    
+    return texte.strip()
 
 def determiner_type_perturbation(texte, header):
     """Déduit le type de problème pour faire un sous-titre propre."""
@@ -230,7 +235,6 @@ def determiner_type_perturbation(texte, header):
     if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
     if "supprim" in t_low: return "Suppressions"
     
-    # Si on ne trouve pas de mot-clé, on utilise le header de l'API s'il est court
     if header and len(header) < 30: return header
     return "En cours"
 
@@ -262,11 +266,11 @@ def afficher_bandeau_trafic(line_id):
         texte_brut = perturbation['text']
         header_brut = perturbation.get('header', '')
         
-        # 1. On génère le sous-titre
+        # 1. On génère le sous-titre AVEC DE VRAIS ESPACES (&nbsp;)
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        titre_affiche = f"Trafic perturbé • <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        titre_affiche = f"Trafic perturbé &nbsp;•&nbsp; <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
-        # 2. On nettoie le pavé de texte
+        # 2. On nettoie le pavé de texte (les badges sont créés ici !)
         info_longue = nettoyer_texte_details(texte_brut)
         info_longue = re.sub(r'<[^>]+>', '', info_longue.replace('\n', '<br>'))
         
@@ -275,7 +279,7 @@ def afficher_bandeau_trafic(line_id):
             <summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none;">
                 ⚠️ {titre_affiche} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
             </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 8px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.4;">
+            <div style="color: #ddd; font-size: 0.8em; padding: 10px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
                 {info_longue}
             </div>
         </details>
