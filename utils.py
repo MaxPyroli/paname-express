@@ -166,37 +166,25 @@ def get_alerte_style(severity):
     return None, None
 
 def synthetiser_alerte(texte):
-    """Mode SNIPER : On extrait uniquement le OÙ et le QUAND, le reste va à la poubelle."""
+    """Le juste milieu : une phrase complète, mais sans les bégaiements."""
     # Nettoyage HTML de base
     texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
-
-    # 1. On détruit la pollution administrative de l'IDFM au début des phrases
-    texte = re.sub(r"(?i)^(En raison de|Suite [aà]|Travaux( de [^:-]+)?)[^:-]*[-:]\s*", "", texte)
-    texte = re.sub(r"(?i)^(Le )?trafic (est )?interrompu\s*[-:]?\s*", "", texte)
-
-    # 2. On cherche les infos vitales (Où ? Quand ?) avec des Regex ciblées
-    lieux = re.search(r"(?i)(entre\s+[^,.]+\s+et\s+[^,.]+)(?=[,.]|\s+jusqu|\s+reprise|$)", texte)
-    temps = re.search(r"(?i)(jusqu'au\s+[^,.]+|jusqu'à\s+[^,.]+|reprise\s+[^,.]+)", texte)
-
-    # 3. On assemble l'essentiel
-    if lieux and temps:
-        res = f"{lieux.group(1)} {temps.group(1)}"
-    elif lieux:
-        res = lieux.group(1)
-    elif temps:
-        res = temps.group(1)
-    else:
-        # Plan B ultra-violent : on coupe à la première virgule, premier point, ou 55 caractères max
-        res = texte.split('.')[0].split(',')[0].strip()
-        if len(res) > 55:
-            res = res[:55] + "..."
-
-    # Majuscule propre pour commencer
-    if res:
-        res = res[0].upper() + res[1:]
+    
+    # On supprime le bégaiement "Trafic interrompu" vu qu'on l'écrit déjà en gros en rouge
+    texte = re.sub(r'(?i)\s*-\s*(Le )?trafic (est )?interrompu\s*', ' - ', texte)
+    texte = re.sub(r'(?i)^(Le )?trafic (est )?interrompu\s*[-:]?\s*', '', texte)
+    
+    # On coupe au premier VRAI point pour éviter le pavé
+    phrase = texte.split('.')[0].strip()
+    
+    # On limite à 120 caractères (assez long pour les dates/lieux, assez court pour lire)
+    if len(phrase) > 120:
+        phrase = phrase[:120] + "..."
         
-    return res.strip()
-
+    if phrase:
+        phrase = phrase[0].upper() + phrase[1:]
+        
+    return phrase
 def nettoyer_texte_details(texte):
     """Nettoie le texte brut (Anti-bégaiement, codes internes) pour un affichage clair."""
     # 1. On tronque les redondances polluantes à la fin des messages
