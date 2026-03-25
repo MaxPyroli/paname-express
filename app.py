@@ -447,14 +447,13 @@ st.markdown("""
         padding-top: 0 !important; 
         margin-top: 0 !important; 
     }
-    /* --- CSS ICONES : VERSION BINAIRE FORCÉE --- */
-    
-    img.mode-icon {
+    /* --- CSS ICONES INLINE --- */
+    svg.mode-icon-inline {
         height: 1.5em !important;
         width: auto !important;
-        margin-right: 10px !important;
         vertical-align: middle !important;
-        transition: filter 0.3s ease;
+        /* Streamlit gère var(--text-color) automatiquement selon le thème ! */
+        color: var(--text-color) !important; 
     }
 
     /* ---------------------------------------------------------
@@ -696,17 +695,35 @@ GEOGRAPHIE_RER = {
 # ==========================================
 #          FONCTIONS UTILITAIRES
 # ==========================================
-
-# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
 def get_img_as_base64(file_path):
-    # Sécurité : si le fichier n'existe pas, on renvoie None
     if not os.path.exists(file_path):
         return None
     try:
         with open(file_path, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
-    except: return None
+    except: 
+        return None
+# 1. D'ABORD : La fonction qui lit le fichier (Indispensable qu'elle soit ici)
+def get_svg_inline(file_path):
+    # Lit le fichier SVG comme du texte pour l'injecter directement
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            svg_content = f.read()
+        
+        # Nettoyage : On retire l'entête XML si elle existe pour éviter les bugs d'affichage
+        svg_content = re.sub(r'<\?xml.*?\?>', '', svg_content)
+        
+        # Astuce magique : On force le SVG à utiliser la couleur du texte courant
+        # On ajoute une classe pour pouvoir gérer sa taille en CSS
+        if '<svg' in svg_content:
+            svg_content = svg_content.replace('<svg', '<svg class="mode-icon-inline" fill="currentColor"', 1)
+            
+        return svg_content
+    except Exception as e: 
+        return None
 # ==========================================
 #          EASTER EGG (POP-UP)
 # ==========================================
@@ -732,40 +749,26 @@ def afficher_popup_feur(mot_declencheur):
 # ==========================================
 def generer_icones_html():
     mapping_files = {
-        "RER":   "img/rer.svg",
-        "TRAIN": "img/train.svg",
-        "METRO": "img/metro.svg",
-        "TRAM":  "img/tram.svg",
-        "CABLE": "img/cable.svg",
-        "BUS":   "img/bus.svg",
-        "AUTRE": "img/autre.svg"
+        "RER": "img/rer.svg", "TRAIN": "img/train.svg", "METRO": "img/metro.svg",
+        "TRAM": "img/tram.svg", "CABLE": "img/cable.svg", "BUS": "img/bus.svg", "AUTRE": "img/autre.svg"
     }
-    
     labels = {
         "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
         "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
     }
-    
-    # Emoji de secours si le fichier n'est pas trouvé
     fallbacks = {
         "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
         "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
     }
     
     resultat = {}
-    
     for mode, label in labels.items():
         filepath = mapping_files.get(mode)
-        b64_data = None
-        
-        # On tente de lire le fichier
-        if filepath:
-            b64_data = get_img_as_base64(filepath)
+        svg_html = get_svg_inline(filepath) if filepath else None
             
-        if b64_data:
-            # RETOUR À LA BALISE IMG CLASSIQUE
-            # C'est la seule méthode qui garantit l'affichage de l'image
-            html = f'<img src="data:image/svg+xml;base64,{b64_data}" class="mode-icon">{label}'
+        if svg_html:
+            # Plus besoin de base64 ou de balise <img>, on injecte le <svg> brut !
+            html = f'<span style="display:inline-flex; align-items:center;">{svg_html}<span style="margin-left:8px;">{label}</span></span>'
             resultat[mode] = html
         else:
             emoji = fallbacks.get(mode, "❓")
