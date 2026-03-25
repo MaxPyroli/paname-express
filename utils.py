@@ -177,3 +177,22 @@ def synthetiser_alerte(texte):
     if reprise:
         res += f" | ⏳ {reprise.group(0)}"
     return res
+
+def afficher_bandeau_trafic(line_id):
+    """Affiche discrètement l'info trafic si nécessaire."""
+    alertes = demander_info_trafic(line_id)
+    # On cherche l'interruption (rouge) ou la perturbation (orange)
+    interruption = next((a for a in alertes if a['severity'] >= 40), None)
+    perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
+
+    if interruption:
+        info = synthetiser_alerte(interruption['text'])
+        st.markdown(f"""
+            <div class="traffic-ticker">
+                <div class="ticker-text">🚨 TRAFIC INTERROMPU : {info} &nbsp;&nbsp;&nbsp;&nbsp; 🚨 {info}</div>
+            </div>
+        """, unsafe_allow_html=True)
+    elif perturbation:
+        info = synthetiser_alerte(perturbation['text'])
+        # On l'affiche en petit sous le badge
+        st.markdown(f'<div class="traffic-warning" style="margin-bottom:8px;">⚠️ {info}</div>', unsafe_allow_html=True)
