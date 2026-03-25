@@ -634,8 +634,6 @@ def afficher_popup_feur(mot_declencheur):
 # ==========================================
 # 3. ENFIN : On lance la génération
 ICONES_TITRE = generer_icones_html()
-
-@st.cache_data(ttl=3600)
 # ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
