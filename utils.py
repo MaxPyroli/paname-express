@@ -214,7 +214,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Défilant ultra-épuré + Menu cliquable)."""
+    """Retourne le HTML du bandeau trafic (Statique ultra-épuré + Menu cliquable)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -222,22 +222,18 @@ def afficher_bandeau_trafic(line_id):
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
     if interruption:
-        # On ne s'embête plus à résumer, on prend juste le texte complet nettoyé pour le menu
         texte_propre = re.sub(r'<[^>]+>', '', interruption['text']).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # ⚠️ Code tassé sans lignes vides !
-        # Le bandeau défile avec juste "TRAFIC INTERROMPU 🚨" qui se répète
+        # ⚠️ Fini le défilement ! Juste un beau bloc rouge statique, centré verticalement.
         return f"""<details style="margin-bottom:8px; border-radius: 4px; overflow: hidden;">
 <summary style="cursor: pointer; list-style: none; display: block; outline: none;">
 <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
 <div style="padding: 4px 10px; display: flex; align-items: center; background: #e74c3c; z-index: 10;">
 <span class="blink" style="font-size: 1.1em; color: white;">❌</span>
 </div>
-<div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
-<div style="display: inline-block; padding-left: 100%; animation: ticker 15s linear infinite; color: #e74c3c; font-size: 0.85em; font-weight: 800; letter-spacing: 1px;">
-TRAFIC INTERROMPU &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🚨&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TRAFIC INTERROMPU &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🚨&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TRAFIC INTERROMPU
-</div>
+<div style="flex: 1; display: flex; align-items: center; padding: 6px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 800; letter-spacing: 1px;">
+TRAFIC INTERROMPU
 </div>
 <div style="padding: 0 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); color: #e74c3c; font-size: 0.8em; z-index: 10;">▼</div>
 </div>
