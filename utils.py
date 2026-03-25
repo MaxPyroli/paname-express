@@ -214,7 +214,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Harmonisé + Animation fluide garantie)."""
+    """Retourne le HTML du bandeau trafic (Animation robuste)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -224,27 +224,24 @@ def afficher_bandeau_trafic(line_id):
     if not interruption and not perturbation:
         return ""
 
-    # ✨ LE NOUVEAU MOTEUR CSS : Transition fluide à chaque ouverture
+    # ✨ LE MOTEUR CSS : Rock-solid pour la balise <details>
     css = """<style>
     details.traffic-box > summary::-webkit-details-marker { display: none; }
+    
+    /* La flèche tourne de manière fluide (car le summary est toujours visible) */
     details.traffic-box .chevron { display: inline-block; transition: transform 0.3s ease; }
     details.traffic-box[open] .chevron { transform: rotate(180deg); }
     
-    /* On cache le texte en réduisant sa taille à 0 */
-    details.traffic-box .traffic-content { 
-        max-height: 0; opacity: 0; overflow: hidden; 
-        transition: all 0.4s ease-in-out; 
-        padding-top: 0; padding-bottom: 0; border-top: 1px solid transparent; 
+    /* L'animation qui se lance à chaque ouverture (état [open]) */
+    details.traffic-box[open] .traffic-content {
+        animation: slideDown 0.3s ease-out forwards;
+        transform-origin: top;
     }
     
-    /* Quand on clique, on le déroule jusqu'à sa taille normale */
-    details.traffic-box[open] .traffic-content { 
-        max-height: 800px; opacity: 1; padding-top: 12px; padding-bottom: 12px; 
+    @keyframes slideDown {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(0); }
     }
-    
-    /* Couleurs des bordures animées selon le niveau d'alerte */
-    details.traffic-box.red-box[open] .traffic-content { border-top-color: rgba(231, 76, 60, 0.2); }
-    details.traffic-box.orange-box[open] .traffic-content { border-top-color: rgba(243, 156, 18, 0.2); }
     </style>"""
 
     html_output = css
@@ -253,7 +250,6 @@ def afficher_bandeau_trafic(line_id):
         texte_propre = re.sub(r'<[^>]+>', '', interruption['text']).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # 🚨 BANDEAU ROUGE (note l'ajout de la classe 'red-box')
         html_output += f"""
         <details class="traffic-box red-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
@@ -263,7 +259,7 @@ def afficher_bandeau_trafic(line_id):
                     <div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;"><span class="chevron">▼</span></div>
                 </div>
             </summary>
-            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding-left: 12px; padding-right: 12px; line-height: 1.6;">
+            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
                 {info_longue}
             </div>
         </details>
@@ -279,7 +275,6 @@ def afficher_bandeau_trafic(line_id):
         texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # ⚠️ BANDEAU ORANGE (note l'ajout de la classe 'orange-box')
         html_output += f"""
         <details class="traffic-box orange-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
@@ -289,11 +284,10 @@ def afficher_bandeau_trafic(line_id):
                     <div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;"><span class="chevron">▼</span></div>
                 </div>
             </summary>
-            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding-left: 12px; padding-right: 12px; line-height: 1.6;">
+            <div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
                 {info_longue}
             </div>
         </details>
         """
 
-    # L'astuce magique : On supprime tous les sauts de ligne pour éviter les bugs Streamlit
     return html_output.replace('\n', '')
