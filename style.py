@@ -131,4 +131,17 @@ def appliquer_style_global():
 
         .fav-btn-container { width: 100%; }
         .fav-btn-container button { background-color: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; color: #f1c40f !important; font-size: 16px !important; font-weight: 600 !important; height: 45px !important; border-radius: 8px !important; transition: background-color 0.2s, transform 0.1s !important; }
-        .fav-btn-container button:hover { background-color: rgba(24
+        .fav-btn-container button:hover { background-color: rgba(241, 196, 15, 0.15) !important; border-color: #f1c40f !important; }
+        div[data-testid="column"]:has(.fav-btn-container) { display: flex; align-items: center; justify-content: flex-end; }
+        
+        div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { display: none !important; }
+        iframe[title="streamlit_js_eval.streamlit_js_eval"], div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) { display: none !important; height: 0 !important; }
+
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) { flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; gap: 5px !important; width: 100% !important; }
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child { flex: 1 1 auto !important; width: auto !important; min-width: 0px !important; overflow: hidden !important; }
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child { flex: 0 0 42px !important; width: 42px !important; min-width: 42px !important; max-width: 42px !important; }
+        button[key^="btn_fav_"] { width: 100% !important; height: 42px !important; text-align: left !important; padding-left: 10px !important; }
+        button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
+        button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+    </style>
+    """, unsafe_allow_html=True)
