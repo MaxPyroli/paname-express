@@ -44,7 +44,7 @@ def appliquer_style_global():
     # 1. On charge la police
     charger_police_locale("GrandParis.otf", "Grand Paris")
     
-    # 2. On injecte tout le CSS (colle ici TOUT ton bloc <style> actuel)
+    # 2. On injecte tout le CSS
     st.markdown("""
     <style>
         /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
@@ -55,6 +55,15 @@ def appliquer_style_global():
         div[data-testid="stSpinner"] { display: none !important; }
         .stApp > header { visibility: hidden !important; }
         
+        /* ------------------------------------------- */
+        /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
+        /* ------------------------------------------- */
+        div.stMap {
+            border-radius: 10px !important;
+            overflow: hidden !important; /* Crucial pour arrondir le contenu aussi */
+        }
+        /* ------------------------------------------- */
+
         /* Animation Clignotement (Blink) */
         @keyframes blink-live { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
         .live-icon { display: inline-block; animation: blink-live 1.5s infinite step-start; margin: 0 4px; vertical-align: middle; font-size: 0.6em; }
