@@ -294,9 +294,13 @@ if st.session_state.geoloc_active:
                         distance = p.get('distance', 0)
                         
                         # ✨ L'analyse magique
-                        rang, emoji = analyser_importance_arret(sa)
+                        rang, tag = analyser_importance_arret(sa)
                         
-                        label = f"{emoji} {nom} ({ville}) - à {distance}m" if ville else f"{emoji} {nom} - à {distance}m"
+                        # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
+                        nom_affiche = nom.upper() if rang <= 3 else nom
+                        prefixe = f"{tag} " if tag else ""
+                        
+                        label = f"{prefixe}{nom_affiche} ({ville}) - à {distance}m" if ville else f"{prefixe}{nom_affiche} - à {distance}m"
                         
                         resultats_bruts.append({
                             'label': label,
@@ -355,9 +359,12 @@ if submitted and search_query:
                     nom = sa['name']
                     
                     # ✨ L'analyse magique
-                    rang, emoji = analyser_importance_arret(sa)
+                    rang, tag = analyser_importance_arret(sa)
                     
-                    label = f"{emoji} {nom} ({ville})" if ville else f"{emoji} {nom}"
+                    nom_affiche = nom.upper() if rang <= 3 else nom
+                    prefixe = f"{tag} " if tag else ""
+                    
+                    label = f"{prefixe}{nom_affiche} ({ville})" if ville else f"{prefixe}{nom_affiche}"
                     
                     resultats_bruts.append({
                         'label': label,
