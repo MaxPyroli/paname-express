@@ -164,3 +164,16 @@ def get_alerte_style(severity):
     if severity >= 10: # Travaux / Ralentissements
         return "⚠️", "#f39c12"
     return None, None
+
+def synthetiser_alerte(texte):
+    """Garde uniquement l'essentiel d'une alerte IDFM."""
+    texte = texte.replace('\n', ' ').strip()
+    # On cherche l'heure de reprise (souvent "reprise estimée à XXhXX")
+    reprise = re.search(r"(reprise estimée vers|reprise à) \d+h\d+", texte, re.IGNORECASE)
+    # On cherche la cause (souvent au début avant un point)
+    cause = texte.split('.')[0]
+    
+    res = cause
+    if reprise:
+        res += f" | ⏳ {reprise.group(0)}"
+    return res
