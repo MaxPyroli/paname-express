@@ -207,28 +207,40 @@ def synthetiser_alerte(texte):
     return texte
 
 def nettoyer_texte_details(texte):
-    """Nettoie le code brut et met en valeur les arrêts (Version Blindée)."""
-    # 1. Nettoyage de base (codes moches, répétitions)
+    """Nettoie le code brut et met en valeur les arrêts (Version Ultime)."""
+    # 1. On tronque les redondances polluantes à la fin des messages
+    texte = re.sub(r"(?i)\s*Raison\s*:.*", "", texte)
+    
+    # 2. Nettoyage de base et Anti-bégaiement radical
     texte = re.sub(r'([A-Za-z0-9]+\s*\(\d+\)\s*)+-\s*', '', texte)
     texte = re.sub(r'Fi_\d+_\d+', '', texte)
-    texte = re.sub(r'(.{30,})\1', r'\1', texte) 
+    texte = re.sub(r'(.{20,})\1+', r'\1', texte) 
+    texte = texte.replace("Arrêt(s) non desservi(s) Arrêt(s) non desservi(s)", "Arrêt(s) non desservi(s)")
     
-    # 2. Séparer les mots collés de l'API (ex: Joliot-CurieL'arrêt -> Joliot-Curie L'arrêt)
-    texte = texte.replace("L'arrêt", " L'arrêt").replace("  ", " ")
+    # 3. Séparer les mots collés de l'API (ex: Joliot-CurieL'arrêt -> Joliot-Curie L'arrêt)
+    texte = re.sub(r"([a-z])(L'arrêt|Les arrêts|Arrêt)", r"\1 \2", texte)
     
-    # 3. Le style de nos beaux encadrés jaunes
+    # 4. Le style de nos beaux encadrés jaunes
     badge_style = "background:rgba(241,196,15,0.15); border: 1px solid rgba(241,196,15,0.3); padding:2px 6px; border-radius:4px; font-weight:bold; color:#f1c40f; white-space:nowrap; margin: 0 2px;"
     
-    # 4. Badges pour les textes entre guillemets ou apostrophes simples
-    # (Le (?<![a-zA-Z]) empêche de confondre l'apostrophe de "L'arrêt" avec un guillemet)
-    texte = re.sub(r"(?<![a-zA-Z])['‘\"«]\s*(.*?)\s*['’”»](?![a-zA-Z])", fr"<span style='{badge_style}'>\1</span>", texte)
+    # 5. Badges ciblés pour "L'arrêt X" ou "Les arrêts X"
+    stop_arret = r"(?=\s+(?:de la ligne|n'est|ne sont|ne sera|ne seront|non|sera|est|qui)|[,.)<]|$)"
+    texte = re.sub(fr"(?i)\b(L'arrêt|Les arrêts)\s+(.*?){stop_arret}",
+                   fr'\1 <span style="{badge_style}">\2</span>', texte)
+
+    # 6. Badges ciblés pour "en direction de X" ou "vers X"
+    stop_dir = r"(?=[.,;<]|Reprise|$)"
+    texte = re.sub(fr"(?i)\b(en direction de|vers)\s+(.*?){stop_dir}",
+                   fr'\1 <span style="{badge_style}">\2</span>', texte)
     
-    # 5. Badges intelligents pour "entre X et Y" (même SANS guillemets !)
-    # Il va s'arrêter de surligner dès qu'il croise un mot-clé ("L'arrêt", "jusqu'à", etc.)
-    mots_stop = r"(?=\s+(?:L'arrêt|l'arrêt|ne|est|sera|jusqu|en raison|suite|à|pour|et ce)|[,.)]|$)"
-    texte = re.sub(fr"(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?){mots_stop}",
+    # 7. Badges intelligents pour "entre X et Y"
+    stop_entre = r"(?=\s+(?:L'arrêt|l'arrêt|ne|est|sera|jusqu|en|raison|suite|à|pour|et ce|de la ligne)|[,.)<]|$)"
+    texte = re.sub(fr"(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?){stop_entre}",
                    fr'entre <span style="{badge_style}">\1</span> et <span style="{badge_style}">\2</span>', texte)
                    
+    # 8. Badges pour les textes entre guillemets restants
+    texte = re.sub(r"(?<![a-zA-Z])['‘\"«]\s*(.*?)\s*['’”»](?![a-zA-Z])", fr"<span style='{badge_style}'>\1</span>", texte)
+    
     return texte.strip()
 
 def determiner_type_perturbation(texte, header):
@@ -270,13 +282,15 @@ def afficher_bandeau_trafic(line_id):
         texte_brut = perturbation['text']
         header_brut = perturbation.get('header', '')
         
-        # 1. On génère le sous-titre avec un VRAI espacement CSS incassable
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
-        # 2. On nettoie le pavé de texte
-        info_longue = nettoyer_texte_details(texte_brut)
-        info_longue = re.sub(r'<[^>]+>', '', info_longue.replace('\n', '<br>'))
+        # --- L'ORDRE CRUCIAL EST CORRIGÉ ICI ---
+        # 1. On purge TOUT le HTML natif et on remplace les sauts de ligne d'abord
+        texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
+        
+        # 2. Seulement ENSUITE on injecte nos propres balises de badges
+        info_longue = nettoyer_texte_details(texte_propre)
         
         return f"""
         <details style="margin-bottom:8px; border-left: 2px solid #f39c12; background: rgba(243, 156, 18, 0.05); border-radius: 4px; overflow: hidden;">
