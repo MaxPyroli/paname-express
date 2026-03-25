@@ -39,33 +39,44 @@ def demander_coordonnees_arret(stop_id):
             }
     return None
 
-@st.cache_data(ttl=300) # Cache de 5 minutes
+@st.cache_data(ttl=300)
 def demander_info_trafic(line_id):
     """Récupère les bulletins de trafic pour une ligne donnée."""
     suffixe = f"lines/{line_id}/line_reports"
     data = demander_api(suffixe)
     
     alertes = []
-    # On tape dans 'disruptions' et pas dans 'line_reports' !
     if data and 'disruptions' in data:
         for disruption in data['disruptions']:
-            # La sévérité est un dictionnaire complexe dans Navitia
-            severity_obj = disruption.get('severity', {})
-            
-            # On regarde l'effet réel de la panne
-            effect = severity_obj.get('effect', '') if isinstance(severity_obj, dict) else ''
-            
-            # On le traduit en score pour notre application
-            if effect == "NO_SERVICE":
-                score = 50 # 🚨 Interruption totale (Rouge)
-            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"]:
-                score = 20 # ⚠️ Perturbation (Orange)
-            else:
-                score = 0  # Info mineure ou travaux (On ignore)
+            # 1. FILTRE ANTI-TRAVAUX RADICAL
+            tags = [str(t).lower() for t in disruption.get('tags', [])]
+            if "travaux" in tags:
+                continue
                 
-            for info in disruption.get('messages', []):
-                text = info.get('text', '')
-                if text and score > 0:
-                    alertes.append({'text': text, 'severity': score})
+            # 2. EXTRACTION DU TEXTE
+            titre = disruption.get('header_text', '')
+            if not titre:
+                msgs = disruption.get('messages', [])
+                if msgs:
+                    titre = msgs[0].get('text', '')
                     
+            # Double vérification : si ça parle de dates/périodes, c'est des travaux déguisés
+            if "période :" in titre.lower() or "travaux" in titre.lower() or "dates :" in titre.lower():
+                continue
+
+            # 3. FORCER LA SÉVÉRITÉ
+            severity_obj = disruption.get('severity', {})
+            effect = severity_obj.get('effect', '')
+            
+            score = 0
+            # Si l'API dit "pas de service" OU si le texte contient "interrompu", on force le ROUGE 🚨
+            if effect == "NO_SERVICE" or "interrompu" in titre.lower():
+                score = 50 
+            # Sinon, si c'est perturbé, on met ORANGE ⚠️
+            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or "perturbé" in titre.lower():
+                score = 20 
+
+            if score > 0 and titre:
+                alertes.append({'text': titre, 'severity': score})
+                
     return alertes
