@@ -207,6 +207,33 @@ def synthetiser_alerte(texte):
     return texte
 
 
+def nettoyer_texte_details(texte):
+    """Nettoie le code brut et les répétitions de l'API IDFM."""
+    # 1. On vire les codes internes dégueulasses type "9 (4609) S9 (4659) - "
+    texte = re.sub(r'([A-Za-z0-9]+\s*\(\d+\)\s*)+-\s*', '', texte)
+    
+    # 2. On vire les codes de base de données à la fin type "Fi_2025_094"
+    texte = re.sub(r'Fi_\d+_\d+', '', texte)
+    
+    # 3. L'anti-bégaiement magique : supprime les grosses phrases collées 2 fois de suite
+    texte = re.sub(r'(.{20,})\1', r'\1', texte)
+    
+    # 4. On vire les guillemets simples moches et on nettoie les espaces
+    texte = texte.replace("'", "").strip()
+    return texte
+
+def determiner_type_perturbation(texte, header):
+    """Déduit le type de problème pour faire un sous-titre propre."""
+    t_low = texte.lower()
+    if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt non desservi"
+    if "dévi" in t_low or "modifié" in t_low: return "Itinéraire dévié"
+    if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
+    if "supprim" in t_low: return "Suppressions"
+    
+    # Si on ne trouve pas de mot-clé, on utilise le header de l'API s'il est court
+    if header and len(header) < 30: return header
+    return "En cours"
+
 def afficher_bandeau_trafic(line_id):
     """Retourne le HTML du bandeau trafic."""
     if not line_id: return ""
@@ -217,7 +244,6 @@ def afficher_bandeau_trafic(line_id):
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
-        # 🚨 LA CROIX EST DE RETOUR (Et on lui a enlevé le fond rouge pétant)
         return f"""
             <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
                 <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
@@ -233,24 +259,27 @@ def afficher_bandeau_trafic(line_id):
         """
         
     elif perturbation:
-        # ⚠️ LE MENU DÉROULANT POUR LES PERTURBATIONS
-        titre = perturbation.get('header', '')
-        if not titre: titre = "Trafic perturbé" # Sécurité si l'API ne donne pas de titre
+        texte_brut = perturbation['text']
+        header_brut = perturbation.get('header', '')
         
-        # On remplace les sauts de lignes par des balises <br> pour garder la mise en page
-        info_longue = re.sub(r'<[^>]+>', '', perturbation['text'].replace('\n', '<br>'))
+        # 1. On génère le sous-titre
+        type_pert = determiner_type_perturbation(texte_brut, header_brut)
+        titre_affiche = f"Trafic perturbé • <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        
+        # 2. On nettoie le pavé de texte
+        info_longue = nettoyer_texte_details(texte_brut)
+        info_longue = re.sub(r'<[^>]+>', '', info_longue.replace('\n', '<br>'))
         
         return f"""
         <details style="margin-bottom:8px; border-left: 2px solid #f39c12; background: rgba(243, 156, 18, 0.05); border-radius: 4px; overflow: hidden;">
             <summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none;">
-                ⚠️ {titre} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
+                ⚠️ {titre_affiche} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
             </summary>
             <div style="color: #ddd; font-size: 0.8em; padding: 8px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.4;">
                 {info_longue}
             </div>
         </details>
         <style>
-            /* Masque la petite flèche native du navigateur pour faire plus propre */
             details > summary::-webkit-details-marker {{ display: none; }}
         </style>
         """
