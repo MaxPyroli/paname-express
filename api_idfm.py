@@ -19,3 +19,8 @@ def demander_lignes_arret(stop_id):
         return r.json()
     except: 
         return None
+
+def demander_arrets_proches(lat, lon, rayon=1000):
+    # ATTENTION AU PIÈGE NAVITIA : C'est {longitude};{latitude} !
+    suffixe = f"coords/{lon};{lat}/places_nearby?type[]=stop_area&distance={rayon}"
+    return demander_api(suffixe)
