@@ -58,9 +58,12 @@ def appliquer_style_global():
         /* ------------------------------------------- */
         /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
         /* ------------------------------------------- */
-        div.stMap {
-            border-radius: 10px !important;
-            overflow: hidden !important; /* Crucial pour arrondir le contenu aussi */
+        /* On cible le conteneur exact de la carte Deck.gl de Streamlit */
+        [data-testid="stDeckGlJsonChart"], 
+        [data-testid="stDeckGlJsonChart"] > div,
+        [data-testid="stDeckGlJsonChart"] canvas {
+            border-radius: 12px !important;
+            overflow: hidden !important;
         }
         /* ------------------------------------------- */
 
