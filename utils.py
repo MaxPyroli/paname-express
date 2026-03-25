@@ -217,11 +217,11 @@ def afficher_bandeau_trafic(line_id):
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
-        # 🚨 LA VITESSE EST CORRIGÉE ICI : animation passée de 20s à 35s
+        # Le fond de l'icône est maintenant rouge solide (#e74c3c) pour éviter le bug visuel
         return f"""
             <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
-                <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
-                    <span class="blink" style="font-size: 1.1em; text-shadow: 0 0 5px rgba(231,76,60,0.5);">❌</span>
+                <div style="padding: 4px 10px; display: flex; align-items: center; background: #e74c3c; z-index: 10;">
+                    <span class="blink" style="font-size: 1.1em; color: white;">🛑</span>
                 </div>
                 <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
                     <div style="display: inline-block; padding-left: 100%; animation: ticker 35s linear infinite; color: #ffb8b8; font-size: 0.85em;">
