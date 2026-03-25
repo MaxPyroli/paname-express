@@ -471,7 +471,7 @@ def afficher_live_content(stop_id, clean_name):
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
-            all_lines_at_stop[(mode, code)] = {'color': color}
+            all_lines_at_stop[(mode, code)] = {'color': color, 'id': line.get('id')}
             
             # DÉTECTION CÂBLE C1
             if mode == "CABLE" and code == "C1":
@@ -687,6 +687,12 @@ def afficher_live_content(stop_id, clean_name):
             # ... (Le reste de la boucle d'affichage reste identique) ...
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
+                
+                # --- INFO TRAFIC ---
+                line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
+                bandeau_html = afficher_bandeau_trafic(line_id) if line_id else ""
+                # -------------------
+
                 departs = lignes_du_mode[cle]
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches:
@@ -718,7 +724,7 @@ def afficher_live_content(stop_id, clean_name):
                     # Nettoyage de p3 pour ne garder que les vrais trajets (pas les "Service terminé" générés par Ghost Lines)
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
                     
                     # Fonction helper (inchangée)
                     def render_group(titre, items):
@@ -761,7 +767,7 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
                 # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
@@ -891,7 +897,7 @@ def afficher_live_content(stop_id, clean_name):
                             else:
                                 rows_html += row_content                    
 
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
