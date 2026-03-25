@@ -48,25 +48,22 @@ def demander_info_trafic(line_id):
     alertes = []
     if data and 'disruptions' in data:
         for disruption in data['disruptions']:
-            # 1. LE FILTRE MAGIQUE : Seulement ce qui est en cours !
-            if disruption.get('status', '') != 'active':
-                continue
-
-            # 2. RÉCUPÉRATION DU TEXTE
+            status = disruption.get('status', '')
+            
             messages = disruption.get('messages', [])
             texte_complet = " ".join([m.get('text', '') for m in messages])
-            header = disruption.get('header_text', '') # Le titre court (ex: "Arrêt non desservi")
+            header = disruption.get('header_text', '')
             
             if not texte_complet:
                 texte_complet = header
 
             texte_lower = texte_complet.lower()
 
-            # 3. ON DÉGAGE LA POLLUTION
+            # On dégage toujours la pollution des ascenseurs
             if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
                 continue
 
-            # 4. ANALYSE DE LA GRAVITÉ
+            # Analyse de la gravité
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
@@ -76,8 +73,8 @@ def demander_info_trafic(line_id):
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
                 score = 20 # ⚠️ Perturbation
 
-            if score > 0 and texte_complet:
-                # On sauvegarde aussi le titre court (header) pour le menu déroulant
+            # 🛑 LE RETOUR DU FILTRE STRICT : Uniquement le direct !
+            if score > 0 and status == 'active':
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
     return alertes
