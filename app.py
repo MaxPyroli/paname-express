@@ -11,7 +11,7 @@ from streamlit_js_eval import streamlit_js_eval, get_geolocation # <--- La libra
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret
-from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches
+from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
 
@@ -951,7 +951,15 @@ def afficher_tableau_live(stop_id, stop_name):
     # 1. TITRE (PLEINE LARGEUR)
     st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
             
-    # 2. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
+    # --- 🗺️ NOUVEAU : LE BANDEAU CARTE ---
+    coords_df = demander_coordonnees_arret(stop_id)
+    if coords_df is not None:
+        # height=150 -> format "bandeau"
+        # zoom=14 -> niveau de zoom idéal pour voir le quartier
+        st.map(coords_df, height=150, zoom=14, use_container_width=True)
+    # -------------------------------------
+    
+    # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
