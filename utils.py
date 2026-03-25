@@ -170,26 +170,37 @@ def synthetiser_alerte(texte):
     # 1. Nettoyage de base
     texte = re.sub(r'<[^>]+>', '', texte.replace('\n', ' ')).strip()
     
-    # 2. On supprime le bégaiement ("Trafic interrompu : le trafic est interrompu...")
+    # 2. On supprime le bégaiement 
     texte = re.sub(r'(?i)^(Le )?trafic est interrompu\s*(:)?\s*', '', texte)
     texte = re.sub(r'(?i)^trafic interrompu\s*(:)?\s*', '', texte)
 
-    # 3. Le style CSS pour les petits encadrés (façon badge)
+    # 3. ✂️ LE FAMEUX SÉCATEUR (On coupe à la première phrase ou si c'est trop long)
+    reprise = re.search(r"(reprise estimée vers|reprise à|reprise prévue vers) \d+h\d*", texte, re.IGNORECASE)
+    phrases = [p.strip() for p in texte.split('.') if len(p.strip()) > 10]
+    
+    cause = phrases[0] if phrases else texte
+    if len(cause) > 100:
+        cause = cause[:100] + "..."
+        
+    if reprise and reprise.group(0).lower() not in cause.lower():
+        cause += f" | ⏳ {reprise.group(0)}"
+        
+    texte = cause # On remplace le pavé par la version courte !
+
+    # 4. Le style CSS pour les petits encadrés (façon badge)
     badge_style = "background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; color:#fff; font-weight:bold; letter-spacing:0.5px;"
     
-    # 4. On détecte les HEURES (jusqu'à 23h) et on les met en rouge/gras
+    # 5. On détecte les HEURES et on les met en rouge/gras
     texte = re.sub(r'(?i)(jusqu\'à|vers|à|reprise prévue vers|reprise estimée vers|jusqu\'en) (\d{1,2}h\d*|\w+ de service)', 
                    r'\1 <span style="color:#ffadad; font-weight:bold;">\2</span>', texte)
                    
-    # 5. On détecte les GARES (entre X et Y) et on met des badges
+    # 6. On détecte les GARES et on met des badges
     texte = re.sub(r'(?i)\bentre\b\s+(.*?)\s+\bet\b\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
                    fr'entre <span style="{badge_style}">\1</span> et <span style="{badge_style}">\2</span>', texte)
                    
-    # 6. On détecte les GARES (de X vers Y) et on met des badges
     texte = re.sub(r'(?i)\bde\b\s+(.*?)\s+(?:vers|à)\s+(.*?)(?=\s+(?:jusqu|reprise|suite|en raison|à partir|le)|[,.]|$)',
                    fr'de <span style="{badge_style}">\1</span> vers <span style="{badge_style}">\2</span>', texte)
 
-    # On met une majuscule à la première lettre restante
     if len(texte) > 1:
         texte = texte[0].upper() + texte[1:]
         
@@ -206,14 +217,14 @@ def afficher_bandeau_trafic(line_id):
 
     if interruption:
         info = synthetiser_alerte(interruption['text'])
-        # 🚨 LA NOUVELLE STRUCTURE : Icône Fixe + Zone Défilante
+        # 🚨 LA VITESSE EST CORRIGÉE ICI : animation passée de 20s à 35s
         return f"""
             <div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-radius: 4px; margin: 4px 0 8px 0; border-left: 3px solid #e74c3c; overflow: hidden;">
                 <div style="padding: 4px 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); z-index: 10; border-right: 1px solid rgba(231,76,60,0.3);">
                     <span class="blink" style="font-size: 1.1em; text-shadow: 0 0 5px rgba(231,76,60,0.5);">❌</span>
                 </div>
                 <div style="flex: 1; overflow: hidden; white-space: nowrap; position: relative; padding: 6px 0;">
-                    <div style="display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #ffb8b8; font-size: 0.85em;">
+                    <div style="display: inline-block; padding-left: 100%; animation: ticker 35s linear infinite; color: #ffb8b8; font-size: 0.85em;">
                         <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
                         <span style="font-weight: 800; color: #e74c3c; margin-right: 4px;">TRAFIC INTERROMPU :</span> {info}
                     </div>
