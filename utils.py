@@ -109,3 +109,31 @@ def get_all_changelogs():
             with open(filepath, "r", encoding="utf-8") as f: all_notes.append(f.read())
         except Exception as e: all_notes.append(f"Erreur de lecture de {filename}: {e}")
     return all_notes if all_notes else ["*Aucune note de version trouvée.*"]
+
+def analyser_importance_arret(stop_area_node):
+    """
+    Analyse un arrêt de l'API IDFM et renvoie son rang d'importance et son émoji.
+    """
+    meilleur_rang = 99
+    meilleur_mode = "AUTRE"
+    
+    emojis = {
+        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
+        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "📍"
+    }
+    
+    # On recrée une hiérarchie locale pour éviter les bugs d'import
+    hierarchie = {"RER": 1, "TRAIN": 2, "METRO": 3, "CABLE": 4, "TRAM": 5, "BUS": 6, "AUTRE": 99}
+    
+    if 'commercial_modes' in stop_area_node:
+        for mode_obj in stop_area_node['commercial_modes']:
+            nom_mode = mode_obj.get('name', '').upper()
+            mode_norm = normaliser_mode(nom_mode) # On utilise ta fonction existante !
+            rang = hierarchie.get(mode_norm, 99)
+            
+            # Si on trouve un mode plus noble (ex: RER(1) < BUS(6)), on le garde
+            if rang < meilleur_rang:
+                meilleur_rang = rang
+                meilleur_mode = mode_norm
+                
+    return meilleur_rang, emojis.get(meilleur_mode, "📍")
