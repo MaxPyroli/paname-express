@@ -39,23 +39,33 @@ def demander_coordonnees_arret(stop_id):
             }
     return None
 
-@st.cache_data(ttl=300) # Cache de 5 minutes seulement pour rester "frais"
+@st.cache_data(ttl=300) # Cache de 5 minutes
 def demander_info_trafic(line_id):
     """Récupère les bulletins de trafic pour une ligne donnée."""
-    # On cible les bulletins actifs sur la ligne
     suffixe = f"lines/{line_id}/line_reports"
     data = demander_api(suffixe)
     
     alertes = []
-    if data and 'line_reports' in data:
-        for report in data['line_reports']:
-            # On récupère le texte du message et la sévérité
-            pt = report.get('pt_objects', [{}])[0]
-            # Sévérité : 0 = pas d'info, 10 = perturbé, 100 = bloqué
-            severity = report.get('severity', 0)
+    # On tape dans 'disruptions' et pas dans 'line_reports' !
+    if data and 'disruptions' in data:
+        for disruption in data['disruptions']:
+            # La sévérité est un dictionnaire complexe dans Navitia
+            severity_obj = disruption.get('severity', {})
             
-            for info in report.get('messages', []):
+            # On regarde l'effet réel de la panne
+            effect = severity_obj.get('effect', '') if isinstance(severity_obj, dict) else ''
+            
+            # On le traduit en score pour notre application
+            if effect == "NO_SERVICE":
+                score = 50 # 🚨 Interruption totale (Rouge)
+            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"]:
+                score = 20 # ⚠️ Perturbation (Orange)
+            else:
+                score = 0  # Info mineure ou travaux (On ignore)
+                
+            for info in disruption.get('messages', []):
                 text = info.get('text', '')
-                if text:
-                    alertes.append({'text': text, 'severity': severity})
+                if text and score > 0:
+                    alertes.append({'text': text, 'severity': score})
+                    
     return alertes
