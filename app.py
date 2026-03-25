@@ -951,12 +951,22 @@ def afficher_tableau_live(stop_id, stop_name):
     # 1. TITRE (PLEINE LARGEUR)
     st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
             
-    # --- 🗺️ NOUVEAU : LE BANDEAU CARTE ---
+    # --- 🗺️ NOUVEAU : LE BANDEAU CARTE "TRANSPORTS" ---
     coords_df = demander_coordonnees_arret(stop_id)
     if coords_df is not None:
-        # height=150 -> format "bandeau"
-        # zoom=14 -> niveau de zoom idéal pour voir le quartier
-        st.map(coords_df, height=150, zoom=14, use_container_width=True)
+        lat = coords_df["lat"][0]
+        lon = coords_df["lon"][0]
+        
+        # On calcule un rectangle (Bounding Box) autour de la gare
+        # On le fait plus large que haut car notre bandeau est rectangulaire
+        min_lon, max_lon = lon - 0.012, lon + 0.012
+        min_lat, max_lat = lat - 0.003, lat + 0.003
+        
+        # URL de la carte OpenStreetMap avec le filtre "TransportMap"
+        osm_url = f"https://www.openstreetmap.org/export/embed.html?bbox={min_lon}%2C{min_lat}%2C{max_lon}%2C{max_lat}&layer=transportmap&marker={lat}%2C{lon}"
+        
+        # On utilise le module components (déjà importé en haut de ton app)
+        components.iframe(osm_url, height=150)
     # -------------------------------------
     
     # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
