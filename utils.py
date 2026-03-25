@@ -214,35 +214,38 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Statique ultra-épuré + Menu cliquable)."""
+    """Retourne le HTML du bandeau trafic (Harmonisé + Animation CSS)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
     interruption = next((a for a in alertes if a['severity'] >= 40), None)
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
+    html_output = ""
+
     if interruption:
         texte_propre = re.sub(r'<[^>]+>', '', interruption['text']).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        # ⚠️ Fini le défilement ! Juste un beau bloc rouge statique, centré verticalement.
-        return f"""<details style="margin-bottom:8px; border-radius: 4px; overflow: hidden;">
-<summary style="cursor: pointer; list-style: none; display: block; outline: none;">
-<div style="display: flex; align-items: stretch; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
-<div style="padding: 4px 10px; display: flex; align-items: center; background: #e74c3c; z-index: 10;">
-<span class="blink" style="font-size: 1.1em; color: white;">❌</span>
+        # 🚨 BANDEAU ROUGE (Hiérarchie : Police plus grasse et plus espacée)
+        html_output = f"""<details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
+<summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
+<div style="display: flex; align-items: stretch;">
+<div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">
+<span class="blink">❌</span>
 </div>
-<div style="flex: 1; display: flex; align-items: center; padding: 6px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 800; letter-spacing: 1px;">
+<div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">
 TRAFIC INTERROMPU
 </div>
-<div style="padding: 0 10px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); color: #e74c3c; font-size: 0.8em; z-index: 10;">▼</div>
+<div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;">
+<span class="chevron" style="display:inline-block; transition: transform 0.3s ease;">▼</span>
+</div>
 </div>
 </summary>
-<div style="color: #ddd; font-size: 0.8em; padding: 10px; border-left: 3px solid #e74c3c; background: rgba(231, 76, 60, 0.05); border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
+<div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
 {info_longue}
 </div>
-</details>
-<style>details > summary::-webkit-details-marker {{ display: none; }}</style>"""
+</details>"""
         
     elif perturbation:
         texte_brut = perturbation['text']
@@ -254,14 +257,36 @@ TRAFIC INTERROMPU
         texte_propre = re.sub(r'<[^>]+>', '', texte_brut).replace('\n', '<br>')
         info_longue = nettoyer_texte_details(texte_propre)
         
-        return f"""<details style="margin-bottom:8px; border-left: 2px solid #f39c12; background: rgba(243, 156, 18, 0.05); border-radius: 4px; overflow: hidden;">
-<summary style="color: #f39c12; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; user-select: none; list-style: none; outline: none;">
-⚠️ {titre_affiche} <span style="margin-left:auto; font-size: 0.8em; opacity: 0.8;">▼ Détails</span>
+        # ⚠️ BANDEAU ORANGE (Même structure exacte que le rouge)
+        html_output = f"""<details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
+<summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
+<div style="display: flex; align-items: stretch;">
+<div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">
+⚠️
+</div>
+<div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">
+{titre_affiche}
+</div>
+<div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;">
+<span class="chevron" style="display:inline-block; transition: transform 0.3s ease;">▼</span>
+</div>
+</div>
 </summary>
-<div style="color: #ddd; font-size: 0.8em; padding: 10px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
+<div class="traffic-content" style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
 {info_longue}
 </div>
-</details>
-<style>details > summary::-webkit-details-marker {{ display: none; }}</style>"""
-    
-    return ""
+</details>"""
+
+    # ✨ LE MOTEUR D'ANIMATION CSS COMMUN AUX DEUX BANDEAUX ✨
+    if html_output:
+        html_output += """<style>
+details.traffic-box > summary::-webkit-details-marker { display: none; }
+details.traffic-box[open] .chevron { transform: rotate(180deg); }
+details.traffic-box[open] .traffic-content { animation: dropDown 0.3s ease-out forwards; }
+@keyframes dropDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>"""
+        
+    return html_output
