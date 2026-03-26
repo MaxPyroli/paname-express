@@ -87,7 +87,10 @@ def demander_info_trafic(line_id, nom_ligne=""):
                     
                     # Si les coeurs ne se ressemblent pas (ex: "19" vs "6"), on jette !
                     if coeur_nom not in coeur_mention and coeur_mention not in coeur_nom:
-                        continue 
+                        continue
+
+            if nom_ligne.lower() not in texte_alerte.lower():
+                continue # On ignore l'alerte
 
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
