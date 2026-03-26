@@ -73,12 +73,19 @@ def demander_info_trafic(line_id, nom_ligne=""):
             if any(mot in texte_lower for mot in mots_spam):
                 continue
 
-            # 🛑 ANTI-POLLUTION INTER-LIGNES 🛑
+            # 🛑 ANTI-POLLUTION INTER-LIGNES (Smarter Version) 🛑
             if nom_ligne:
                 match_autre = re.search(r"(?i)la ligne\s+([a-zA-Z0-9]+)\s+(?:est|sera|ne|circule)", texte_lower)
                 if match_autre:
                     ligne_mentionnee = match_autre.group(1).lower()
-                    if ligne_mentionnee != str(nom_ligne).lower():
+                    nom_propre = str(nom_ligne).lower()
+                    
+                    # On nettoie les préfixes "ex", "express", ou "bus" pour garder que le numéro
+                    coeur_mention = re.sub(r'^(ex|express|bus)\s*', '', ligne_mentionnee)
+                    coeur_nom = re.sub(r'^(ex|express|bus)\s*', '', nom_propre)
+                    
+                    # Si les coeurs ne se ressemblent pas (ex: "19" vs "6"), on jette !
+                    if coeur_nom not in coeur_mention and coeur_mention not in coeur_nom:
                         continue 
 
             severity_obj = disruption.get('severity', {})
