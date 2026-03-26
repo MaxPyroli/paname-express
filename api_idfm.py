@@ -91,27 +91,29 @@ def demander_info_trafic(line_id, nom_ligne=""):
 
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
-            category = disruption.get('category', '').lower()
             
-            # 🔥 LE NOUVEAU SCORING "FILET DE SÉCURITÉ" 🔥
+            # 🎯 LA VRAIE VARIABLE OFFICIELLE DE L'API 🎯
+            type_alerte = severity_obj.get('name', '').lower()
+            
+            # 🔥 LE SCORING BASÉ SUR LA DONNÉE 🔥
             score = 10 
             mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
             mots_pertu = ["perturbé", "non desservi", "dévié", "déviation", "ralenti", "retard"]
 
-            # 🥇 PRIORITÉ 1 : La catégorie officielle de l'API !
-            if category == "information":
-                score = 10 # Bleu / Information
-            elif category == "travaux":
-                score = 20 # Orange / Travaux
-                
-            # 🥈 PRIORITÉ 2 : Si l'API n'a pas mis de catégorie, on analyse le texte
+            # 🥇 PRIORITÉ ABSOLUE : On écoute ce que dit l'API !
+            if type_alerte == "information":
+                score = 10  # C'est classé comme Info : on force le bleu/gris
+            elif type_alerte == "travaux":
+                score = 20  # C'est classé comme Travaux : on force le jaune/orange
+            
+            # 🥈 SINON (si c'est une "perturbation" ou que c'est vide), on analyse le texte/l'effet
             else:
                 if any(mot in texte_lower for mot in ["dévié", "déviation"]):
                     score = 20
                 elif effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
-                    score = 50 # Rouge / Alerte Grave
+                    score = 50 
                 elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
-                    score = 20 # Orange / Perturbation
+                    score = 20
 
             # 🌙 L'ANTI-PANIQUE HORAIRE (Le réveil intelligent)
             mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
