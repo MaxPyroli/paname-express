@@ -66,27 +66,39 @@ def demander_info_trafic(line_id):
             if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
                 continue
 
+            # ... (juste en dessous de la suppression des ascenseurs)
+
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
-            score = 0
-            if effect == "NO_SERVICE" or "interrompu" in texte_lower:
+            # 🔥 LE NOUVEAU SCORING "FILET DE SÉCURITÉ" 🔥
+            # Si on arrive ici, c'est qu'il y a une alerte. On donne 10 par défaut.
+            # Comme ça, RIEN ne passe à la trappe !
+            score = 10 
+            
+            # On cherche les vraies coupures (Score 50 -> Bandeau Rouge)
+            mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
+            if effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
                 score = 50 
-            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
+                
+            # On identifie les grosses perturbations (Score 20 -> Bandeau Orange fort)
+            mots_pertu = ["perturbé", "non desservi", "dévié", "ralenti", "retard"]
+            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
                 score = 20 
 
             # 🌙 L'ANTI-PANIQUE HORAIRE (Le réveil intelligent)
             mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
             if re.search(mots_nuit, texte_lower):
                 if 5 <= heure_actuelle < 17:
-                    # Entre 5h et 17h : C'est beaucoup trop tôt, on met l'alerte à la poubelle !
+                    # Entre 5h et 17h : Trop tôt, on jette
                     continue 
                 elif 17 <= heure_actuelle < 21:
-                    # Entre 17h et 21h : Fin d'aprèm, on prévient en douceur (Orange)
-                    if score == 50:
+                    # Entre 17h et 21h : On rétrograde en Orange (score 20)
+                    if score >= 40:
                         score = 20
 
-            if score > 0 and status == 'active':
+            # On valide l'alerte si elle est active
+            if score >= 10 and status == 'active':
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
     return alertes
