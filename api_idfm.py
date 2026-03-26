@@ -41,12 +41,14 @@ def demander_coordonnees_arret(stop_id):
 
 @st.cache_data(ttl=300)
 def demander_info_trafic(line_id):
-    """Récupère les bulletins de trafic pour une ligne donnée."""
+    """Récupère les bulletins de trafic avec rétrogradation intelligente Jour/Nuit."""
     suffixe = f"lines/{line_id}/line_reports"
     data = demander_api(suffixe)
     
     alertes = []
     if data and 'disruptions' in data:
+        heure_actuelle = datetime.now().hour
+        
         for disruption in data['disruptions']:
             status = disruption.get('status', '')
             
@@ -59,21 +61,26 @@ def demander_info_trafic(line_id):
 
             texte_lower = texte_complet.lower()
 
-            # On dégage toujours la pollution des ascenseurs
             if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
                 continue
 
-            # Analyse de la gravité
+            # Analyse de la gravité initiale
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
             score = 0
             if effect == "NO_SERVICE" or "interrompu" in texte_lower:
-                score = 50 # 🚨 Interruption
+                score = 50 # 🚨 Interruption (Rouge)
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR"] or "perturbé" in texte_lower or "non desservi" in texte_lower:
-                score = 20 # ⚠️ Perturbation
+                score = 20 # ⚠️ Perturbation (Orange)
 
-            # 🛑 LE RETOUR DU FILTRE STRICT : Uniquement le direct !
+            # 🌙 L'ANTI-PANIQUE : On rétrograde les coupures du soir en simple alerte orange la journée !
+            mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
+            if re.search(mots_nuit, texte_lower):
+                if 5 <= heure_actuelle < 21: # Si on est entre 5h du matin et 21h
+                    if score == 50:
+                        score = 20 # On force le passage en ORANGE
+
             if score > 0 and status == 'active':
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
