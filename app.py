@@ -345,20 +345,34 @@ if st.session_state.geoloc_active:
                         })
             
             if resultats_bruts:
-                # ✨ TRI STRICT PAR DISTANCE : Le plus proche est toujours en premier !
+                # 1. Tri kilométrique strict
                 resultats_bruts.sort(key=lambda x: x['distance'])
                 
-                # ✂️ NOUVEAU : On ne garde que les 10 meilleurs résultats
-                resultats_finaux = resultats_bruts[:10]
+                # 2. Séparation en deux mondes
+                gares_lourdes = [r for r in resultats_bruts if r['rang'] <= 3] # RER, Train, Métro
+                arrets_legers = [r for r in resultats_bruts if r['rang'] > 3]  # Bus, Tram
                 
-                # On reformate pour le selectbox
-                opts = {r['label']: r['id'] for r in resultats_finaux}
+                # 3. On garde les 10 plus proches de CHAQUE catégorie
+                gares_lourdes = gares_lourdes[:10]
+                arrets_legers = arrets_legers[:10]
+                
+                # 4. On crée le menu déroulant avec des catégories visuelles
+                opts = {}
+                if gares_lourdes:
+                    opts["━━━ 🚇 GARES (RER / Métro / Train) ━━━"] = None
+                    for r in gares_lourdes:
+                        opts[f"🚇 {r['label']}"] = r['id']
+                        
+                if arrets_legers:
+                    opts["━━━ 🚌 ARRÊTS (Bus / Tram) ━━━"] = None
+                    for r in arrets_legers:
+                        opts[f"🚌 {r['label']}"] = r['id']
                 
                 st.session_state.search_results = opts
                 st.session_state.geoloc_active = False 
                 st.rerun()
             else:
-                st.warning("⚠️ Aucun arrêt trouvé dans un rayon de 1,5km.")
+                st.warning("⚠️ Aucune gare trouvée dans un rayon de 1,5km.")
                 st.session_state.geoloc_active = False
         else:
             # 🛑 Le navigateur a bloqué ou refusé la position !
