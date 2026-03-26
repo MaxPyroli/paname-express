@@ -348,8 +348,8 @@ if st.session_state.geoloc_active:
                 # ✨ TRI HYBRIDE : On trie d'abord par importance (rang), puis par distance !
                 resultats_bruts.sort(key=lambda x: (x['rang'], x['distance']))
                 
-                # ✂️ NOUVEAU : On ne garde que les 20 meilleurs résultats (les plus importants puis les plus proches)
-                resultats_finaux = resultats_bruts[:20]
+                # ✂️ NOUVEAU : On ne garde que les 10 meilleurs résultats
+                resultats_finaux = resultats_bruts[:10]
                 
                 # On reformate pour le selectbox
                 opts = {r['label']: r['id'] for r in resultats_finaux}
