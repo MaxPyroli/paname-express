@@ -308,16 +308,17 @@ if geo_clicked:
 # 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
 if st.session_state.geoloc_active:
     st.info("📡 Recherche de votre position...")
-    # ... (le reste de ton code avec get_geolocation() reste exactement pareil) ...
     # La magie opère ici : ça demande l'autorisation au navigateur
     loc = get_geolocation() 
     
     if loc:
-        lat = loc['coords']['latitude']
-        lon = loc['coords']['longitude']
-        
-        with st.spinner("Recherche des gares à proximité..."):
-            data_proches = demander_arrets_proches(lat, lon)
+        # 🛡️ LE BOUCLIER ANTI-CRASH (Vérification de l'autorisation)
+        if 'coords' in loc:
+            lat = loc['coords']['latitude']
+            lon = loc['coords']['longitude']
+            
+            with st.spinner("Recherche des gares à proximité..."):
+                data_proches = demander_arrets_proches(lat, lon)
             
             resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
@@ -355,6 +356,10 @@ if st.session_state.geoloc_active:
                 st.rerun()
             else:
                 st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
+                st.session_state.geoloc_active = False
+            else:
+            # Le navigateur a répondu, mais sans les coordonnées (accès refusé ou bloqué)
+                st.warning("⚠️ Accès à la position refusé. Veuillez l'autoriser dans les paramètres de votre navigateur.")
                 st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
