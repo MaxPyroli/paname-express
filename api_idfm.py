@@ -91,19 +91,27 @@ def demander_info_trafic(line_id, nom_ligne=""):
 
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
+            category = disruption.get('category', '').lower()
             
             # 🔥 LE NOUVEAU SCORING "FILET DE SÉCURITÉ" 🔥
             score = 10 
             mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
             mots_pertu = ["perturbé", "non desservi", "dévié", "déviation", "ralenti", "retard"]
 
-            # 🔥 CORRECTION : Si c'est dévié, c'est Orange (20), pas Rouge (50) !
-            if any(mot in texte_lower for mot in ["dévié", "déviation"]):
-                score = 20
-            elif effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
-                score = 50 
-            elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
-                score = 20 
+            # 🥇 PRIORITÉ 1 : La catégorie officielle de l'API !
+            if category == "information":
+                score = 10 # Bleu / Information
+            elif category == "travaux":
+                score = 20 # Orange / Travaux
+                
+            # 🥈 PRIORITÉ 2 : Si l'API n'a pas mis de catégorie, on analyse le texte
+            else:
+                if any(mot in texte_lower for mot in ["dévié", "déviation"]):
+                    score = 20
+                elif effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
+                    score = 50 # Rouge / Alerte Grave
+                elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
+                    score = 20 # Orange / Perturbation
 
             # 🌙 L'ANTI-PANIQUE HORAIRE (Le réveil intelligent)
             mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
