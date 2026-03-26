@@ -237,17 +237,24 @@ def afficher_bandeau_trafic(line_id):
         # 1. On remplace les balises de structure par des sauts de ligne
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
         t = re.sub(r'<[^>]+>', '', t)
-        t = nettoyer_texte_details(t)
         
-        # 2. Liste des phrases "polluantes" à supprimer (l'administratif inutile)
-        phrases_inutiles = [
-            "les horaires du calculateur d'itinéraire tiennent compte des travaux",
-            "les horaires du calculateur d'itinéraires tiennent compte des travaux",
-            "motif : travaux sur le réseau ferroviaire",
-            "un service de bus de remplacement est mis en place", # Souvent répété et évident
-            "en raison de travaux",
-            "bus 399 : travaux", # Bégaiement de ligne
-            "arrêt(s) non desservi(s)" 
+        # 2. GOMMAGE CHIRURGICAL : On efface juste les bégaiements, pas la phrase !
+        bouts_a_effacer = [
+            r"(?i)bus \d+\s*:\s*travaux\s*[-:]?\s*",
+            r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
+            r"(?i)en raison de travaux\s*[-:,]?\s*",
+            r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?"
+        ]
+        for bout in bouts_a_effacer:
+            t = re.sub(bout, '', t)
+            
+        # On passe le nettoyeur de base (pour recoller "Joliot-Curie" et "L'arrêt")
+        t = nettoyer_texte_details(t)
+
+        # 3. Phrases entières à zapper (qui n'apportent vraiment aucune info)
+        lignes_a_zapper = [
+            "les horaires du calculateur",
+            "un service de bus de remplacement"
         ]
 
         lignes = t.split('\n')
@@ -255,33 +262,36 @@ def afficher_bandeau_trafic(line_id):
         
         for l in lignes:
             l_clean = l.strip()
-            l_lower = l_clean.lower()
+            # On enlève les tirets ou points qui trainent au début de la ligne après le gommage
+            l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
             
-            # On ignore si c'est vide ou trop court
             if not l_clean or len(l_clean) < 3:
                 continue
                 
-            # On ignore si c'est une phrase "polluante"
-            if any(p in l_lower for p in phrases_inutiles):
+            if any(z in l_clean.lower() for z in lignes_a_zapper):
                 continue
                 
-            # 🛑 ANTI-DOUBLON INTELLIGENT 🛑
-            # On vérifie si la ligne n'est pas déjà présente, ou si elle n'est pas incluse dans une autre
+            # ANTI-DOUBLONS INTELLIGENT
             est_doublon = False
-            for existante in lignes_finales:
-                # Si la nouvelle ligne est déjà dans une phrase existante (ou l'inverse)
-                if l_clean.lower() in existante.lower() or existante.lower() in l_clean.lower():
-                    # On garde la plus longue des deux
-                    if len(l_clean) > len(existante):
-                        lignes_finales.remove(existante)
-                    else:
-                        est_doublon = True
+            for i, existante in enumerate(lignes_finales):
+                if l_clean.lower() in existante.lower():
+                    est_doublon = True
+                    break
+                elif existante.lower() in l_clean.lower():
+                    # Si la nouvelle ligne est plus complète, on écrase l'ancienne
+                    lignes_finales[i] = l_clean
+                    est_doublon = True
                     break
             
             if not est_doublon:
+                # On remet une belle majuscule au début
+                l_clean = l_clean[0].upper() + l_clean[1:]
                 lignes_finales.append(l_clean)
         
-        # 3. On remonte avec un saut de ligne simple pour rester compact
+        # 🛡️ SÉCURITÉ ANTI-VIDE : Si le filtre a tout mangé, on renvoie le texte brut !
+        if not lignes_finales:
+            return texte_brut.replace('\n', ' ').strip()
+            
         return '<br>'.join(lignes_finales)
 
     if interruption:
