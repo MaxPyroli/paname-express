@@ -345,8 +345,8 @@ if st.session_state.geoloc_active:
                         })
             
             if resultats_bruts:
-                # ✨ TRI HYBRIDE : On trie d'abord par importance (rang), puis par distance !
-                resultats_bruts.sort(key=lambda x: (x['rang'], x['distance']))
+                # ✨ TRI STRICT PAR DISTANCE : Le plus proche est toujours en premier !
+                resultats_bruts.sort(key=lambda x: x['distance'])
                 
                 # ✂️ NOUVEAU : On ne garde que les 10 meilleurs résultats
                 resultats_finaux = resultats_bruts[:10]
