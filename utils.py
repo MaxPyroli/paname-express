@@ -269,6 +269,26 @@ def afficher_bandeau_trafic(line_id):
     html_output = css
 
     # 🌬️ LE MOTEUR INTÉGRÉ (100% blindé)
+    def afficher_bandeau_trafic(line_id, nom_ligne=""): # <-- 1. AJOUTE ÇA
+    """Retourne le HTML du bandeau trafic (Propre, stable, avec tous les filtres)."""
+    if not line_id: return ""
+    
+    alertes = demander_info_trafic(line_id, nom_ligne) # <-- 2. AJOUTE ÇA
+    interruption = next((a for a in alertes if a['severity'] >= 40), None)
+    perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
+
+    if not interruption and not perturbation:
+        return ""
+
+    css = """<style>
+    details.traffic-box > summary::-webkit-details-marker { display: none; }
+    details.traffic-box .chevron { display: inline-block; transition: transform 0.3s ease; }
+    details.traffic-box[open] .chevron { transform: rotate(180deg); }
+    </style>"""
+
+    html_output = css
+
+    # 🌬️ LE MOTEUR INTÉGRÉ (100% blindé)
     def preparer_texte(texte_brut):
         if not texte_brut or str(texte_brut).strip().lower() == "none": 
             return "Information non disponible."
@@ -284,12 +304,13 @@ def afficher_bandeau_trafic(line_id):
         bouts_a_effacer = [
             r"(?i)bus \d+\s*:\s*travaux\s*[-:]?\s*",
             r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
-            r"(?i)en raison de travaux\s*[-:,]?\s*",
+            # ⚠️ J'AI EFFACÉ LA LIGNE "en raison de travaux" ICI !
             r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?",
             r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*",
             r"(?i)trafic perturbé\s*[-:]?\s*",
             r"(?i)trafic interrompu\s*[-:]?\s*"
         ]
+        # ... (le reste de ta fonction reste identique, ne le touche pas) ...
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
             
