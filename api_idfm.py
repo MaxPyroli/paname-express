@@ -72,17 +72,16 @@ def demander_info_trafic(line_id):
             effect = severity_obj.get('effect', '')
             
             # 🔥 LE NOUVEAU SCORING "FILET DE SÉCURITÉ" 🔥
-            # Si on arrive ici, c'est qu'il y a une alerte. On donne 10 par défaut.
-            # Comme ça, RIEN ne passe à la trappe !
             score = 10 
             
-            # On cherche les vraies coupures (Score 50 -> Bandeau Rouge)
+            # On prépare nos listes de mots-clés AVANT les conditions (la voilà la correction !)
             mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
+            mots_pertu = ["perturbé", "non desservi", "dévié", "ralenti", "retard"]
+
+            # On vérifie les coupures
             if effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
                 score = 50 
-                
-            # On identifie les grosses perturbations (Score 20 -> Bandeau Orange fort)
-            mots_pertu = ["perturbé", "non desservi", "dévié", "ralenti", "retard"]
+            # On vérifie les perturbations
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
                 score = 20 
 
