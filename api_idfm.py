@@ -73,7 +73,7 @@ def demander_info_trafic(line_id, nom_ligne=""):
                 "titre sur votre téléphone", "lutte contre la fraude"
             ]
             if any(mot in texte_lower for mot in mots_spam):
-                pass # NOUVEAU : On remplace le 'continue' par 'pass' pour voir si ça vient de là !
+                continue # NOUVEAU : On remplace le 'continue' par 'pass' pour voir si ça vient de là !
 
             # 🛑 ANTI-POLLUTION INTER-LIGNES (Smarter Version) 🛑
             if nom_ligne:
