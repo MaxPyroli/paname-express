@@ -839,6 +839,24 @@ def afficher_live_content(stop_id, clean_name):
 {rows_html}
 </div>
 """, unsafe_allow_html=True)
+
+                # N'oublie pas d'importer ta fonction de base tout en haut de app.py si ce n'est pas fait :
+                # from api_idfm import demander_api 
+                
+                # --- MODE DÉVELOPPEUR ---
+                st.markdown("---") # Petite ligne de séparation visuelle
+                if st.checkbox("🛠️ Activer le mode Développeur (Données brutes API)"):
+                    st.info(f"Requête API en cours pour la ligne : {line_id}...")
+                    
+                    # On appelle l'API directement, sans passer par notre filtre !
+                    donnees_brutes = demander_api(f"lines/{line_id}/line_reports")
+                    
+                    if donnees_brutes:
+                        st.success("Données récupérées avec succès !")
+                        # st.json affiche le dictionnaire Python de manière interactive
+                        st.json(donnees_brutes)
+                    else:
+                        st.warning("L'API n'a renvoyé aucune alerte ou est indisponible.")
                 # CAS 3: BUS/METRO/TRAM (Standard)
                 else:
                     dest_data = {}
