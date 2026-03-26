@@ -203,17 +203,41 @@ def nettoyer_texte_details(texte):
     return texte.strip()
 
 def determiner_type_perturbation(texte, header):
-    """Déduit le type de problème pour faire un sous-titre propre."""
+    """Déduit le type de problème et vérifie s'il est dans le futur."""
     t_low = texte.lower()
     
-    # On détecte si c'est une alerte de nuit pour mettre un titre rassurant
+    # 📅 DÉTECTION DES DATES FUTURES (Le détecteur temporel)
+    mois_fr = {
+        "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+        "juillet": 7, "août": 8, "aout": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12, "decembre": 12
+    }
+    jours = r"(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)"
+    mois = r"(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)"
+    
+    # On cherche un motif du type "du samedi 28 mars" ou "le 28 mars"
+    match_date = re.search(fr"(?i)(?:du|le|à partir du)\s+{jours}?\s*(\d{{1,2}})\s+{mois}", t_low)
+    
+    if match_date:
+        jour_cible = int(match_date.group(1))
+        mois_nom = match_date.group(2).lower()
+        mois_cible = mois_fr.get(mois_nom)
+        
+        maintenant = datetime.now()
+        
+        # Si la date est dans le futur (même mois mais jour supérieur, ou mois suivant)
+        if mois_cible:
+            if (mois_cible > maintenant.month) or (mois_cible == maintenant.month and jour_cible > maintenant.day):
+                return f"À venir (dès le {jour_cible} {mois_nom})"
+
+    # --- RESTE DES FILTRES CLASSIQUES ---
     if re.search(r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?", t_low): 
         return "Travaux ce soir"
         
-    if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt(s) non desservi(s)"
+    if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt non desservi"
     if "dévi" in t_low or "modifié" in t_low: return "Itinéraire dévié"
     if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
     if "supprim" in t_low: return "Suppressions"
+    if "brocante" in t_low or "manifestation" in t_low: return "Événement"
     
     if header and len(header) < 30: return header
     return "En cours"
@@ -344,18 +368,21 @@ def afficher_bandeau_trafic(line_id):
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         info_longue = preparer_texte(texte_brut)
         
-        # 🚧 LE FILTRE "MODE TRAVAUX" 🚧
+        # 🚧 LE FILTRE DES MODES VISUELS (Travaux & Futur) 📅
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
+        est_futur = "À venir" in type_pert
         
-        if est_travaux:
+        if est_futur:
+            icone = "📅"
+            titre_affiche = f"Information <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        elif est_travaux:
             icone = "🚧"
-            # On remplace totalement "Trafic perturbé" par "TRAVAUX"
             titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         else:
             icone = "⚠️"
-            # Affichage classique pour les vrais imprévus (colis, panne...)
             titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
+        # ... (la suite avec le html_output reste identique) ...
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
