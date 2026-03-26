@@ -357,10 +357,10 @@ if st.session_state.geoloc_active:
             else:
                 st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
                 st.session_state.geoloc_active = False
-            else:
-            # Le navigateur a répondu, mais sans les coordonnées (accès refusé ou bloqué)
-                st.warning("⚠️ Accès à la position refusé. Veuillez l'autoriser dans les paramètres de votre navigateur.")
-                st.session_state.geoloc_active = False
+        else:
+            # 🛑 Le navigateur a bloqué ou refusé la position !
+            st.warning("⚠️ Accès à la position refusé. Veuillez l'autoriser dans les paramètres de votre navigateur.")
+            st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
