@@ -342,10 +342,19 @@ def afficher_bandeau_trafic(line_id):
         header_brut = perturbation.get('header', '')
         
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        icone = "🚧" if "Travaux" in type_pert else "⚠️"
-        
-        titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         info_longue = preparer_texte(texte_brut)
+        
+        # 🚧 LE FILTRE "MODE TRAVAUX" 🚧
+        est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
+        
+        if est_travaux:
+            icone = "🚧"
+            # On remplace totalement "Trafic perturbé" par "TRAVAUX"
+            titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        else:
+            icone = "⚠️"
+            # Affichage classique pour les vrais imprévus (colis, panne...)
+            titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
         
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
