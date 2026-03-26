@@ -372,27 +372,35 @@ def afficher_bandeau_trafic(line_id):
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
         
+        # 🎨 GESTION DYNAMIQUE DES COULEURS
         if est_futur:
             icone = "📅"
-            titre_affiche = f"Information <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+            couleur_hex = "#3498db" # Bleu "Information"
+            couleur_rgb = "52, 152, 219"
+            titre_affiche = f"Information <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
+            
         elif est_travaux:
             icone = "🚧"
-            titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+            couleur_hex = "#f39c12" # Orange
+            couleur_rgb = "243, 156, 18"
+            titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
+            
         else:
             icone = "⚠️"
-            titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+            couleur_hex = "#f39c12" # Orange
+            couleur_rgb = "243, 156, 18"
+            titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
         
-        # ... (la suite avec le html_output reste identique) ...
         html_output += f"""
-        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
+        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba({couleur_rgb}, 0.1); border-left: 3px solid {couleur_hex};">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
                 <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">{icone}</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;"><span class="chevron">▼</span></div>
+                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba({couleur_rgb}, 0.2); font-size: 1.1em;">{icone}</div>
+                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: {couleur_hex}; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
+                    <div style="padding: 0 12px; display: flex; align-items: center; color: {couleur_hex}; font-size: 0.8em;"><span class="chevron">▼</span></div>
                 </div>
             </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
+            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba({couleur_rgb}, 0.2); line-height: 1.6;">
                 {info_longue}
             </div>
         </details>
