@@ -63,7 +63,18 @@ def demander_info_trafic(line_id):
 
             texte_lower = texte_complet.lower()
 
-            if "ascenseur" in texte_lower or "escalator" in texte_lower or "bagage" in texte_lower:
+            # 🗑️ LE BOUCLIER ANTI-SPAM & ANTI-PUB 🗑️
+            # Si le texte contient un de ces mots, on jette l'alerte à la poubelle
+            mots_spam = [
+                "ascenseur", "escalator", "bagage", 
+                "@idfmobilites", "ouvrez l'app", "app de mobilité",
+                "dos du téléphone", "titres-et-tarifs", "rechargez",
+                "files d'attente", "bonne nouvelle", "mode raccourci",
+                "titre sur votre téléphone", "lutte contre la fraude"
+            ]
+            
+            # On vérifie si un mot spam est dans le texte
+            if any(mot in texte_lower for mot in mots_spam):
                 continue
 
             # ... (juste en dessous de la suppression des ascenseurs)
