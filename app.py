@@ -358,17 +358,16 @@ if st.session_state.geoloc_active:
                 gares_lourdes = gares_lourdes[:10]
                 arrets_legers = arrets_legers[:10]
                 
-                # 4. On crée le menu déroulant avec des catégories visuelles
+               # 4. On crée le menu déroulant SANS les titres (mais on garde l'ordre intelligent)
                 opts = {}
-                if gares_lourdes:
-                    opts["━━━ 🚇 GARES (RER / Métro / Train) ━━━"] = None
-                    for r in gares_lourdes:
-                        opts[f"🚇 {r['label']}"] = r['id']
+                
+                # On met d'abord les gares lourdes (s'il y en a)
+                for r in gares_lourdes:
+                    opts[f"🚇 {r['label']}"] = r['id']
                         
-                if arrets_legers:
-                    opts["━━━ 🚌 ARRÊTS (Bus / Tram) ━━━"] = None
-                    for r in arrets_legers:
-                        opts[f"🚌 {r['label']}"] = r['id']
+                # Puis on met les arrêts de bus à la suite
+                for r in arrets_legers:
+                    opts[f"🚌 {r['label']}"] = r['id']
                 
                 st.session_state.search_results = opts
                 st.session_state.geoloc_active = False 
