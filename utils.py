@@ -205,6 +205,11 @@ def nettoyer_texte_details(texte):
 def determiner_type_perturbation(texte, header):
     """Déduit le type de problème pour faire un sous-titre propre."""
     t_low = texte.lower()
+    
+    # On détecte si c'est une alerte de nuit pour mettre un titre rassurant
+    if re.search(r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?", t_low): 
+        return "Travaux ce soir"
+        
     if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt non desservi"
     if "dévi" in t_low or "modifié" in t_low: return "Itinéraire dévié"
     if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
