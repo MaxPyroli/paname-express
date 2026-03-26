@@ -237,9 +237,11 @@ def afficher_bandeau_trafic(line_id):
 
     html_output = css
 
-    # 🌬️ LE NOUVEAU MOTEUR AVEC ANTI-CLONAGE ABSOLU
     def preparer_texte_deroulant(texte_brut):
-        # 1. On remplace les balises de structure
+        if not texte_brut: 
+            return ""
+            
+        # 1. On remplace les balises de structure par des sauts de ligne
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
         t = re.sub(r'<[^>]+>', '', t)
         
@@ -250,9 +252,8 @@ def afficher_bandeau_trafic(line_id):
             r"(?i)en raison de travaux\s*[-:,]?\s*",
             r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?",
             r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*",
-            # 🔥 NOUVEAU : On efface ces mots pour aider l'anti-doublon à faire son job
-            r"(?i)trafic perturbé\s*",
-            r"(?i)trafic interrompu\s*"
+            r"(?i)trafic perturbé\s*[-:]?\s*",
+            r"(?i)trafic interrompu\s*[-:]?\s*"
         ]
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
@@ -265,7 +266,6 @@ def afficher_bandeau_trafic(line_id):
             "un service de bus de remplacement",
             "détails et calendrier", 
             "autre autre",
-            # 🔥 NOUVEAU : Fini la pub pour Twitter/X
             "consultez le fil x",
             "consultez le compte x",
             "plus d'informations sur cette perturbation"
@@ -274,54 +274,40 @@ def afficher_bandeau_trafic(line_id):
         lignes = t.split('\n')
         lignes_finales = []
         
-        # ... (La suite de la fonction reste exactement la même avec la boucle for l in lignes) ...
-    if interruption:
-        info_longue = preparer_texte_deroulant(interruption['text'])
+        for l in lignes:
+            l_clean = l.strip()
+            # On nettoie la ponctuation qui traîne en début de phrase suite au gommage
+            l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
+            
+            if not l_clean or len(l_clean) < 3:
+                continue
+                
+            if any(z in l_clean.lower() for z in lignes_a_zapper):
+                continue
+                
+            # 4. ANTI-DOUBLONS INTELLIGENT
+            est_doublon = False
+            for i, existante in enumerate(lignes_finales):
+                if l_clean.lower() in existante.lower():
+                    est_doublon = True
+                    break
+                elif existante.lower() in l_clean.lower():
+                    # Si la nouvelle ligne est plus complète, on remplace l'ancienne
+                    lignes_finales[i] = l_clean
+                    est_doublon = True
+                    break
+            
+            if not est_doublon:
+                # On met une belle majuscule au début
+                l_clean = l_clean[0].upper() + l_clean[1:]
+                lignes_finales.append(l_clean)
         
-        html_output += f"""
-        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
-            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-                <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">❌</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TRAFIC INTERROMPU</div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;"><span class="chevron">▼</span></div>
-                </div>
-            </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
-                {info_longue}
-            </div>
-        </details>
-        """
-        
-    elif perturbation:
-        texte_brut = perturbation['text']
-        header_brut = perturbation.get('header', '')
-        
-        type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        
-        # 🚧 L'INTEGRATION SPECIALE TRAVAUX 🚧
-        icone = "🚧" if "Travaux" in type_pert else "⚠️"
-        
-        titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
-        
-        info_longue = preparer_texte_deroulant(texte_brut)
-        
-        html_output += f"""
-        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
-            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-                <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">{icone}</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;"><span class="chevron">▼</span></div>
-                </div>
-            </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(243, 156, 18, 0.2); line-height: 1.6;">
-                {info_longue}
-            </div>
-        </details>
-        """
-
-    return html_output.replace('\n', '')
+        # 🛡️ SÉCURITÉ ANTI-VIDE : Si le filtre a tout mangé, on affiche le texte de base
+        if not lignes_finales:
+            return texte_brut.replace('\n', ' ').strip()
+            
+        # 5. On rassemble le tout avec des sauts de ligne simples
+        return '<br>'.join(lignes_finales)
 
     if interruption:
         info_longue = preparer_texte_deroulant(interruption['text'])
