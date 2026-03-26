@@ -72,7 +72,7 @@ def demander_info_trafic(line_id, nom_ligne=""):
                 "titre sur votre téléphone", "lutte contre la fraude"
             ]
             if any(mot in texte_lower for mot in mots_spam):
-                continue
+                pass # NOUVEAU : On remplace le 'continue' par 'pass' pour voir si ça vient de là !
 
             # 🛑 ANTI-POLLUTION INTER-LIGNES (Smarter Version) 🛑
             if nom_ligne:
@@ -124,7 +124,9 @@ def demander_info_trafic(line_id, nom_ligne=""):
                     if score >= 40:
                         score = 20
 
-            if score >= 10 and status == 'active':
+            # Avant : if score >= 10 and status.lower() in ['active', '']:
+            # APRÈS : On ratisse plus large !
+            if score >= 10 and status.lower() in ['active', '', 'published', 'in_progress', 'planned']:
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
     return alertes
