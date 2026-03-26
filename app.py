@@ -693,7 +693,7 @@ def afficher_live_content(stop_id, clean_name):
                 
                 # --- INFO TRAFIC ---
                 line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
-                bandeau_html = afficher_bandeau_trafic(line_id) if line_id else ""
+                bandeau_html = afficher_bandeau_trafic(line_id, code) if line_id else ""
                 # -------------------
 
                 departs = lignes_du_mode[cle]
