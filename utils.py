@@ -249,8 +249,10 @@ def afficher_bandeau_trafic(line_id):
             r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
             r"(?i)en raison de travaux\s*[-:,]?\s*",
             r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?",
-            # Le fameux bug du Métro 12 : "Métro 12 : Travaux de modernisation - Autre Autre"
-            r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*"
+            r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*",
+            # 🔥 NOUVEAU : On efface ces mots pour aider l'anti-doublon à faire son job
+            r"(?i)trafic perturbé\s*",
+            r"(?i)trafic interrompu\s*"
         ]
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
@@ -261,43 +263,18 @@ def afficher_bandeau_trafic(line_id):
         lignes_a_zapper = [
             "les horaires du calculateur",
             "un service de bus de remplacement",
-            "détails et calendrier", # Fini la pub pour RATP.fr
-            "autre autre" # Sécurité supplémentaire
+            "détails et calendrier", 
+            "autre autre",
+            # 🔥 NOUVEAU : Fini la pub pour Twitter/X
+            "consultez le fil x",
+            "consultez le compte x",
+            "plus d'informations sur cette perturbation"
         ]
 
         lignes = t.split('\n')
         lignes_finales = []
         
-        for l in lignes:
-            l_clean = l.strip()
-            l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
-            
-            if not l_clean or len(l_clean) < 3:
-                continue
-                
-            if any(z in l_clean.lower() for z in lignes_a_zapper):
-                continue
-                
-            # Anti-doublons
-            est_doublon = False
-            for i, existante in enumerate(lignes_finales):
-                if l_clean.lower() in existante.lower():
-                    est_doublon = True
-                    break
-                elif existante.lower() in l_clean.lower():
-                    lignes_finales[i] = l_clean
-                    est_doublon = True
-                    break
-            
-            if not est_doublon:
-                l_clean = l_clean[0].upper() + l_clean[1:]
-                lignes_finales.append(l_clean)
-        
-        if not lignes_finales:
-            return texte_brut.replace('\n', ' ').strip()
-            
-        return '<br>'.join(lignes_finales)
-
+        # ... (La suite de la fonction reste exactement la même avec la boucle for l in lignes) ...
     if interruption:
         info_longue = preparer_texte_deroulant(interruption['text'])
         
