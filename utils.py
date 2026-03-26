@@ -240,7 +240,7 @@ def determiner_type_perturbation(texte, header):
 
     # --- RESTE DES FILTRES CLASSIQUES ---
     if re.search(r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?", t_low): return "Travaux ce soir"
-    if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt non desservi"
+    if "non desservi" in t_low or "plus desservi" in t_low or "pas desservi" in t_low: return "Arrêt(s) non desservi(s)"
     if "dévi" in t_low or "modifié" in t_low: return "Itinéraire dévié"
     if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
     if "supprim" in t_low: return "Suppressions"
