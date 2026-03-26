@@ -1,6 +1,7 @@
 import requests
 import streamlit as st
 from constants import API_KEY, BASE_URL
+from datetime import datetime
 
 def demander_api(suffixe):
     headers = {'apiKey': API_KEY.strip()}
