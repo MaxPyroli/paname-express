@@ -154,6 +154,14 @@ def toggle_favorite(stop_id, stop_name):
 with st.sidebar:
     st.caption(f"{APP_VERSION} - {APP_CODENAME}")
     
+    # 🏠 NOUVEAU : BOUTON ACCUEIL 
+    if st.button("🏠 Retour à l'accueil", use_container_width=True, type="secondary"):
+        st.session_state.selected_stop = None
+        st.session_state.selected_name = None
+        st.session_state.search_results = {}
+        st.query_params.clear() # 🔗 On efface l'URL !
+        st.rerun()
+        
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
     
@@ -164,7 +172,9 @@ with st.sidebar:
         st.session_state.search_results = {}
         st.session_state.last_query = ""
         st.session_state.search_key += 1
-
+        
+        # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+        st.query_params["gare"] = fav_id
     # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
     if not st.session_state.favorites:
         # CAS 1 : PAS DE FAVORIS
@@ -247,6 +257,26 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
+# 🔗 NOUVEAU : LECTURE DE L'URL AU DÉMARRAGE 🔗
+if "gare" in st.query_params and st.session_state.selected_stop is None:
+    stop_id_url = st.query_params["gare"]
+    
+    with st.spinner("Chargement de la gare partagée..."):
+        # On demande à l'API comment s'appelle cette gare mystère
+        data_gare = demander_api(f"stop_areas/{stop_id_url}")
+        
+        if data_gare and 'stop_areas' in data_gare and len(data_gare['stop_areas']) > 0:
+            sa = data_gare['stop_areas'][0]
+            nom = sa['name']
+            ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+            
+            # On recrée un joli nom avec la ville
+            nom_complet = f"{nom.upper()} ({ville})" if ville else nom.upper()
+            
+            # On force la sélection
+            st.session_state.selected_stop = stop_id_url
+            st.session_state.selected_name = nom_complet
+            # On n'a pas besoin de rerun, Streamlit va naturellement afficher la gare en descendant le code !
 # --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
 if 'geoloc_active' not in st.session_state:
     st.session_state.geoloc_active = False
@@ -388,8 +418,11 @@ if st.session_state.search_results:
         if st.session_state.selected_stop != stop_id:
             st.session_state.selected_stop = stop_id
             st.session_state.selected_name = choice
+            
+            # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+            st.query_params["gare"] = stop_id
+            
             st.rerun()
-
 
 # ==========================================
 #           FRAGMENT LIVE (AUTO-REFRESH)
