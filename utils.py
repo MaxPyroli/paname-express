@@ -203,36 +203,43 @@ def nettoyer_texte_details(texte):
     return texte.strip()
 
 def determiner_type_perturbation(texte, header):
-    """Déduit le type de problème et vérifie s'il est dans le futur."""
+    """Déduit le type et bloque les alertes de plus de 7 jours."""
     t_low = texte.lower()
     
-    # 📅 DÉTECTION DES DATES FUTURES (Le détecteur temporel)
+    # 📅 LE RADAR TEMPOREL 7 JOURS
     mois_fr = {
         "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
         "juillet": 7, "août": 8, "aout": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12, "decembre": 12
     }
     jours = r"(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)"
-    mois = r"(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)"
+    mois_regex = r"(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)"
     
-    # On cherche un motif du type "du samedi 28 mars" ou "le 28 mars"
-    match_date = re.search(fr"(?i)(?:du|le|à partir du)\s+{jours}?\s*(\d{{1,2}})\s+{mois}", t_low)
+    # On capture le jour, le mois, ET l'année (si elle est écrite)
+    match_date = re.search(fr"(?i)(?:du|le|à partir du)\s+{jours}?\s*(\d{{1,2}})\s+{mois_regex}(?:\s+(\d{{4}}))?", t_low)
     
     if match_date:
-        jour_cible = int(match_date.group(1))
+        jour = int(match_date.group(1))
         mois_nom = match_date.group(2).lower()
-        mois_cible = mois_fr.get(mois_nom)
+        mois = mois_fr.get(mois_nom)
+        annee_str = match_date.group(3)
         
         maintenant = datetime.now()
+        annee = int(annee_str) if annee_str else maintenant.year
         
-        # Si la date est dans le futur (même mois mais jour supérieur, ou mois suivant)
-        if mois_cible:
-            if (mois_cible > maintenant.month) or (mois_cible == maintenant.month and jour_cible > maintenant.day):
-                return f"À venir (dès le {jour_cible} {mois_nom})"
+        try:
+            date_alerte = datetime(annee, mois, jour)
+            if date_alerte > maintenant:
+                diff_jours = (date_alerte - maintenant).days
+                if diff_jours > 7:
+                    # C'est dans plus de 7 jours : On donne le code secret pour bloquer l'affichage
+                    return "TROP_LOIN"
+                else:
+                    return f"À venir (dès le {jour} {mois_nom})"
+        except ValueError:
+            pass # Si la date est invalide, on ignore l'erreur
 
     # --- RESTE DES FILTRES CLASSIQUES ---
-    if re.search(r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?", t_low): 
-        return "Travaux ce soir"
-        
+    if re.search(r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?", t_low): return "Travaux ce soir"
     if "non desservi" in t_low or "plus desservi" in t_low: return "Arrêt non desservi"
     if "dévi" in t_low or "modifié" in t_low: return "Itinéraire dévié"
     if "ralentissement" in t_low or "retard" in t_low: return "Ralentissements"
@@ -301,7 +308,9 @@ def afficher_bandeau_trafic(line_id):
             "autre autre",
             "consultez le fil x",
             "consultez le compte x",
-            "plus d'informations sur cette perturbation"
+            "plus d'informations sur cette perturbation",
+            "nous vous prions de bien vouloir",
+            "pour la gêne occasionnée"
         ]
 
         lignes = t.split('\n')
@@ -342,10 +351,23 @@ def afficher_bandeau_trafic(line_id):
             
         return '<br>'.join(lignes_finales)
 
-    # --- ASSEMBLAGE DES BANDEAUX ---
-    if interruption:
-        info_longue = preparer_texte(interruption.get('text', ''))
-        
+    # ... (le début de la fonction avec la fonction interne preparer_texte reste identique) ...
+
+        # Dans preparer_texte, tu peux ajouter ça à `lignes_a_zapper` pour nettoyer encore plus :
+        # "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi : "
+
+    # --- ASSEMBLAGE DES BANDEAUX (MULTI-ALERTES) ---
+    
+    # On récupère TOUTES les interruptions et TOUTES les perturbations
+    interruptions = [a for a in alertes if a['severity'] >= 40]
+    perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
+
+    if not interruptions and not perturbations:
+        return ""
+
+    # On empile les alertes ROUGES
+    for inter in interruptions:
+        info_longue = preparer_texte(inter.get('text', ''))
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
@@ -361,33 +383,35 @@ def afficher_bandeau_trafic(line_id):
         </details>
         """
         
-    elif perturbation:
-        texte_brut = perturbation.get('text', '')
-        header_brut = perturbation.get('header', '')
+    # On empile les alertes ORANGES / BLEUES
+    for pert in perturbations:
+        texte_brut = pert.get('text', '')
+        header_brut = pert.get('header', '')
         
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
+        
+        # 🛡️ LE FILTRE 7 JOURS : Si c'est trop loin, on passe directement à l'alerte suivante !
+        if type_pert == "TROP_LOIN":
+            continue
+            
         info_longue = preparer_texte(texte_brut)
         
-        # 🚧 LE FILTRE DES MODES VISUELS (Travaux & Futur) 📅
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
         
-        # 🎨 GESTION DYNAMIQUE DES COULEURS
         if est_futur:
             icone = "📅"
-            couleur_hex = "#3498db" # Bleu "Information"
+            couleur_hex = "#3498db" 
             couleur_rgb = "52, 152, 219"
             titre_affiche = f"Information <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
-            
         elif est_travaux:
             icone = "🚧"
-            couleur_hex = "#f39c12" # Orange
+            couleur_hex = "#f39c12" 
             couleur_rgb = "243, 156, 18"
             titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
-            
         else:
             icone = "⚠️"
-            couleur_hex = "#f39c12" # Orange
+            couleur_hex = "#f39c12" 
             couleur_rgb = "243, 156, 18"
             titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
         
