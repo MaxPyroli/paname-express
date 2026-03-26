@@ -42,9 +42,8 @@ def demander_coordonnees_arret(stop_id):
     return None
 
 @st.cache_data(ttl=300)
-@st.cache_data(ttl=300)
-def demander_info_trafic(line_id):
-    """Récupère les bulletins avec horloge intelligente pour les travaux."""
+def demander_info_trafic(line_id, nom_ligne=""):
+    """Récupère les bulletins avec horloge intelligente et filtre anti-pollution."""
     suffixe = f"lines/{line_id}/line_reports"
     data = demander_api(suffixe)
     
@@ -64,7 +63,6 @@ def demander_info_trafic(line_id):
             texte_lower = texte_complet.lower()
 
             # 🗑️ LE BOUCLIER ANTI-SPAM & ANTI-PUB 🗑️
-            # Si le texte contient un de ces mots, on jette l'alerte à la poubelle
             mots_spam = [
                 "ascenseur", "escalator", "bagage", 
                 "@idfmobilites", "ouvrez l'app", "app de mobilité",
@@ -72,27 +70,30 @@ def demander_info_trafic(line_id):
                 "files d'attente", "bonne nouvelle", "mode raccourci",
                 "titre sur votre téléphone", "lutte contre la fraude"
             ]
-            
-            # On vérifie si un mot spam est dans le texte
             if any(mot in texte_lower for mot in mots_spam):
                 continue
 
-            # ... (juste en dessous de la suppression des ascenseurs)
+            # 🛑 ANTI-POLLUTION INTER-LIGNES 🛑
+            if nom_ligne:
+                match_autre = re.search(r"(?i)la ligne\s+([a-zA-Z0-9]+)\s+(?:est|sera|ne|circule)", texte_lower)
+                if match_autre:
+                    ligne_mentionnee = match_autre.group(1).lower()
+                    if ligne_mentionnee != str(nom_ligne).lower():
+                        continue 
 
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
             # 🔥 LE NOUVEAU SCORING "FILET DE SÉCURITÉ" 🔥
             score = 10 
-            
-            # On prépare nos listes de mots-clés AVANT les conditions (la voilà la correction !)
             mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
-            mots_pertu = ["perturbé", "non desservi", "dévié", "ralenti", "retard"]
+            mots_pertu = ["perturbé", "non desservi", "dévié", "déviation", "ralenti", "retard"]
 
-            # On vérifie les coupures
-            if effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
+            # 🔥 CORRECTION : Si c'est dévié, c'est Orange (20), pas Rouge (50) !
+            if any(mot in texte_lower for mot in ["dévié", "déviation"]):
+                score = 20
+            elif effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
                 score = 50 
-            # On vérifie les perturbations
             elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
                 score = 20 
 
@@ -100,14 +101,11 @@ def demander_info_trafic(line_id):
             mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
             if re.search(mots_nuit, texte_lower):
                 if 5 <= heure_actuelle < 17:
-                    # Entre 5h et 17h : Trop tôt, on jette
                     continue 
                 elif 17 <= heure_actuelle < 21:
-                    # Entre 17h et 21h : On rétrograde en Orange (score 20)
                     if score >= 40:
                         score = 20
 
-            # On valide l'alerte si elle est active
             if score >= 10 and status == 'active':
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
