@@ -318,7 +318,7 @@ if st.session_state.geoloc_active:
             lon = loc['coords']['longitude']
             
             with st.spinner("Recherche des arrêts à proximité..."):
-                data_proches = demander_arrets_proches(lat, lon, rayon=1100)
+                data_proches = demander_arrets_proches(lat, lon, rayon=1500)
             
             resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
@@ -411,8 +411,10 @@ if submitted and search_query:
             for p in data['places']:
                 if 'stop_area' in p:
                     sa = p['stop_area']
-                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
                     nom = sa['name']
+                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+                    # 🔢 LA CORRECTION EST ICI : On force en "int" (nombre entier)
+                    distance = int(p.get('distance', 0))
                     
                     # ✨ L'analyse magique
                     rang, _ = analyser_importance_arret(sa)
