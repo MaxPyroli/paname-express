@@ -3,6 +3,7 @@ import streamlit as st
 import re
 from constants import API_KEY, BASE_URL
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def demander_api(suffixe):
     headers = {'apiKey': API_KEY.strip()}
@@ -50,7 +51,7 @@ def demander_info_trafic(line_id, nom_ligne=""):
     
     alertes = []
     if data and 'disruptions' in data:
-        heure_actuelle = datetime.now().hour
+        heure_actuelle = datetime.now(ZoneInfo("Europe/Paris")).hour
         
         for disruption in data['disruptions']:
             status = disruption.get('status', '')
@@ -115,7 +116,6 @@ def demander_info_trafic(line_id, nom_ligne=""):
                 elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
                     score = 20
 
-            # 🌙 L'ANTI-PANIQUE HORAIRE (Le réveil intelligent)
             mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
             if re.search(mots_nuit, texte_lower):
                 if 5 <= heure_actuelle < 17:
@@ -124,8 +124,7 @@ def demander_info_trafic(line_id, nom_ligne=""):
                     if score >= 40:
                         score = 20
 
-            # Avant : if score >= 10 and status.lower() in ['active', '']:
-            # APRÈS : On ratisse plus large !
+            # 🚀 NOUVEAU : On accepte les statuts des travaux planifiés !
             if score >= 10 and status.lower() in ['active', '', 'published', 'in_progress', 'planned']:
                 alertes.append({'text': texte_complet, 'severity': score, 'header': header})
                 
