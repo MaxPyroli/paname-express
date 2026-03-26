@@ -65,7 +65,7 @@ def demander_info_trafic(line_id, nom_ligne=""):
 
             # 🗑️ LE BOUCLIER ANTI-SPAM & ANTI-PUB 🗑️
             mots_spam = [
-                "ascenseur", "escalator", "bagage", 
+                "ascenseur", "escalator", 
                 "@idfmobilites", "ouvrez l'app", "app de mobilité",
                 "dos du téléphone", "titres-et-tarifs", "rechargez",
                 "files d'attente", "bonne nouvelle", "mode raccourci",
