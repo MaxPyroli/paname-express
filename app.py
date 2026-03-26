@@ -14,6 +14,9 @@ from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+# Initialisation des variables de session
+if 'search_key' not in st.session_state:
+    st.session_state.search_key = 0
 
 
 # ==========================================
