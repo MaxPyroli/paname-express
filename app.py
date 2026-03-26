@@ -948,21 +948,7 @@ def afficher_live_content(stop_id, clean_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     
                     if html_badges:
-                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True) 
-                        # --- MODE DÉVELOPPEUR ---
-                        st.markdown("---")
-                        # 🔑 On ajoute 'key' pour que chaque ligne ait sa propre case unique !
-                        if st.checkbox("🛠️ Activer le mode Développeur (Données brutes API)", key=f"dev_mode_{line_id}"):
-                            st.info(f"Requête API en cours pour la ligne : {line_id}...")
-                            
-                            # On appelle l'API directement, sans passer par notre filtre !
-                            donnees_brutes = demander_api(f"lines/{line_id}/line_reports")
-                            
-                            if donnees_brutes:
-                                st.success("Données récupérées avec succès !")
-                                st.json(donnees_brutes)
-                            else:
-                                st.warning("L'API n'a renvoyé aucune alerte ou est indisponible.")
+                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
