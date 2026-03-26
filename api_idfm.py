@@ -45,87 +45,26 @@ def demander_coordonnees_arret(stop_id):
 
 @st.cache_data(ttl=300)
 def demander_info_trafic(line_id, nom_ligne=""):
-    """Récupère les bulletins avec horloge intelligente et filtre anti-pollution."""
     suffixe = f"lines/{line_id}/line_reports"
     data = demander_api(suffixe)
     
     alertes = []
     if data and 'disruptions' in data:
-        heure_actuelle = datetime.now(ZoneInfo("Europe/Paris")).hour
-        
         for disruption in data['disruptions']:
-            status = disruption.get('status', '')
+            # On chope le statut brut
+            status = disruption.get('status', 'STATUT_VIDE')
+            
+            # On chope le texte
             messages = disruption.get('messages', [])
             texte_complet = " ".join([m.get('text', '') for m in messages])
-            header = disruption.get('header_text', '')
-            
             if not texte_complet:
-                texte_complet = header
+                texte_complet = disruption.get('header_text', 'ALERTE SANS TEXTE')
 
-            texte_lower = texte_complet.lower()
-
-            # 🗑️ LE BOUCLIER ANTI-SPAM & ANTI-PUB 🗑️
-            mots_spam = [
-                "ascenseur", "escalator", 
-                "@idfmobilites", "ouvrez l'app", "app de mobilité",
-                "dos du téléphone", "titres-et-tarifs", "rechargez",
-                "files d'attente", "bonne nouvelle", "mode raccourci",
-                "titre sur votre téléphone", "lutte contre la fraude"
-            ]
-            if any(mot in texte_lower for mot in mots_spam):
-                continue # NOUVEAU : On remplace le 'continue' par 'pass' pour voir si ça vient de là !
-
-            # 🛑 ANTI-POLLUTION INTER-LIGNES (Smarter Version) 🛑
-            if nom_ligne:
-                match_autre = re.search(r"(?i)la ligne\s+([a-zA-Z0-9]+)\s+(?:est|sera|ne|circule)", texte_lower)
-                if match_autre:
-                    ligne_mentionnee = match_autre.group(1).lower()
-                    nom_propre = str(nom_ligne).lower()
-                    
-                    # On nettoie les préfixes "ex", "express", ou "bus" pour garder que le numéro
-                    coeur_mention = re.sub(r'^(ex|express|bus)\s*', '', ligne_mentionnee)
-                    coeur_nom = re.sub(r'^(ex|express|bus)\s*', '', nom_propre)
-                    
-                    # Si les coeurs ne se ressemblent pas (ex: "19" vs "6"), on jette !
-                    if coeur_nom not in coeur_mention and coeur_mention not in coeur_nom:
-                        continue
-
-            severity_obj = disruption.get('severity', {})
-            effect = severity_obj.get('effect', '')
+            # ☢️ AUCUN FILTRE : ON PREND ABSOLUMENT TOUT EN ROUGE !
+            alertes.append({
+                'text': f"[DEBUG STATUT: {status}] {texte_complet}", 
+                'severity': 50, 
+                'header': disruption.get('header_text', '')
+            })
             
-            # 🎯 LA VRAIE VARIABLE OFFICIELLE DE L'API 🎯
-            type_alerte = severity_obj.get('name', '').lower()
-            
-            # 🔥 LE SCORING BASÉ SUR LA DONNÉE 🔥
-            score = 10 
-            mots_coupure = ["interrompu", "fermé", "fermeture", "coupé", "aucun train"]
-            mots_pertu = ["perturbé", "non desservi", "dévié", "déviation", "ralenti", "retard"]
-
-            # 🥇 PRIORITÉ ABSOLUE : On écoute ce que dit l'API !
-            if type_alerte == "information":
-                score = 10  # C'est classé comme Info : on force le bleu/gris
-            elif type_alerte == "travaux":
-                score = 20  # C'est classé comme Travaux : on force le jaune/orange
-            
-            # 🥈 SINON (si c'est une "perturbation" ou que c'est vide), on analyse le texte/l'effet
-            else:
-                if any(mot in texte_lower for mot in ["dévié", "déviation"]):
-                    score = 20
-                elif effect == "NO_SERVICE" or any(mot in texte_lower for mot in mots_coupure):
-                    score = 50 
-                elif effect in ["SIGNIFICANT_DELAYS", "REDUCED_SERVICE", "DETOUR", "MODIFIED_SERVICE"] or any(mot in texte_lower for mot in mots_pertu):
-                    score = 20
-
-            mots_nuit = r"(?i)(dès|à partir de)\s*(2[0-3]|0[0-4])[:h]|en soirée|les soirs|nuits?"
-            if re.search(mots_nuit, texte_lower):
-                if 5 <= heure_actuelle < 17:
-                    continue 
-                elif 17 <= heure_actuelle < 21:
-                    if score >= 40:
-                        score = 20
-
-            # 🚀 NOUVEAU : On accepte les statuts des travaux planifiés !
-            if score >= 10 and status.lower() in ['active', '', 'published', 'in_progress', 'planned']:
-                alertes.append({'text': texte_complet, 'severity': score, 'header': header})
-                
     return alertes
