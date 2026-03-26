@@ -318,7 +318,7 @@ if st.session_state.geoloc_active:
             lon = loc['coords']['longitude']
             
             with st.spinner("Recherche des arrêts à proximité..."):
-                data_proches = demander_arrets_proches(lat, lon, rayon=1500)
+                data_proches = demander_arrets_proches(lat, lon, rayon=1000)
             
             resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
