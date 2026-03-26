@@ -219,7 +219,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id):
-    """Retourne le HTML du bandeau trafic (Avec paragraphes aérés)."""
+    """Retourne le HTML du bandeau trafic (Propre, stable, avec tous les filtres)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id)
@@ -237,12 +237,16 @@ def afficher_bandeau_trafic(line_id):
 
     html_output = css
 
-    def preparer_texte_deroulant(texte_brut):
-        if not texte_brut: 
-            return ""
-            
+    # 🌬️ LE MOTEUR INTÉGRÉ (100% blindé)
+    def preparer_texte(texte_brut):
+        if not texte_brut or str(texte_brut).strip().lower() == "none": 
+            return "Information non disponible."
+        
+        # On force en string au cas où l'API envoie un format bizarre
+        t = str(texte_brut)
+        
         # 1. On remplace les balises de structure par des sauts de ligne
-        t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', texte_brut)
+        t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', t)
         t = re.sub(r'<[^>]+>', '', t)
         
         # 2. GOMMAGE EXTRÊME : On détruit les bégaiements IDFM / RATP
@@ -258,7 +262,12 @@ def afficher_bandeau_trafic(line_id):
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
             
-        t = nettoyer_texte_details(t)
+        # 🛡️ Sécurité anti-crash sur ta fonction existante
+        try:
+            t_propre = nettoyer_texte_details(t)
+            if t_propre: t = t_propre
+        except:
+            pass # Si ça plante, on garde le texte tel quel
 
         # 3. Phrases entières à zapper complètement
         lignes_a_zapper = [
@@ -276,10 +285,10 @@ def afficher_bandeau_trafic(line_id):
         
         for l in lignes:
             l_clean = l.strip()
-            # On nettoie la ponctuation qui traîne en début de phrase suite au gommage
+            # Nettoyage de la ponctuation résiduelle en début de phrase
             l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
             
-            if not l_clean or len(l_clean) < 3:
+            if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none":
                 continue
                 
             if any(z in l_clean.lower() for z in lignes_a_zapper):
@@ -292,25 +301,26 @@ def afficher_bandeau_trafic(line_id):
                     est_doublon = True
                     break
                 elif existante.lower() in l_clean.lower():
-                    # Si la nouvelle ligne est plus complète, on remplace l'ancienne
                     lignes_finales[i] = l_clean
                     est_doublon = True
                     break
             
             if not est_doublon:
-                # On met une belle majuscule au début
                 l_clean = l_clean[0].upper() + l_clean[1:]
                 lignes_finales.append(l_clean)
         
-        # 🛡️ SÉCURITÉ ANTI-VIDE : Si le filtre a tout mangé, on affiche le texte de base
+        # 5. SÉCURITÉ ANTI-VIDE ABSOLUE
         if not lignes_finales:
-            return texte_brut.replace('\n', ' ').strip()
+            secours = str(texte_brut).replace('\n', ' ').strip()
+            if secours.lower() == "none" or not secours:
+                return "Information non disponible."
+            return secours
             
-        # 5. On rassemble le tout avec des sauts de ligne simples
         return '<br>'.join(lignes_finales)
 
+    # --- ASSEMBLAGE DES BANDEAUX ---
     if interruption:
-        info_longue = preparer_texte_deroulant(interruption['text'])
+        info_longue = preparer_texte(interruption.get('text', ''))
         
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
@@ -328,19 +338,20 @@ def afficher_bandeau_trafic(line_id):
         """
         
     elif perturbation:
-        texte_brut = perturbation['text']
+        texte_brut = perturbation.get('text', '')
         header_brut = perturbation.get('header', '')
         
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        icone = "🚧" if "Travaux" in type_pert else "⚠️"
         
-        info_longue = preparer_texte_deroulant(texte_brut)
+        titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:#f1c40f; font-weight:normal;'>{type_pert}</span>"
+        info_longue = preparer_texte(texte_brut)
         
         html_output += f"""
         <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12;">
             <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
                 <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">⚠️</div>
+                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(243, 156, 18, 0.2); font-size: 1.1em;">{icone}</div>
                     <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #f39c12; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
                     <div style="padding: 0 12px; display: flex; align-items: center; color: #f39c12; font-size: 0.8em;"><span class="chevron">▼</span></div>
                 </div>
