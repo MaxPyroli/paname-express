@@ -370,9 +370,7 @@ if submitted and search_query:
                     })
         
         if resultats_bruts:
-            # ✨ TRI : Les gares les plus importantes (RER, Métro) remontent en haut
-            resultats_bruts.sort(key=lambda x: x['rang'])
-            
+            # ✨ On laisse l'API Navitia faire son tri textuel naturel (pertinence > hiérarchie)
             opts = {r['label']: r['id'] for r in resultats_bruts}
             st.session_state.search_results = opts
         else:
