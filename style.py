@@ -44,7 +44,7 @@ def appliquer_style_global():
     # 1. On charge la police
     charger_police_locale("GrandParis.otf", "Grand Paris")
     
-    # 2. On injecte tout le CSS (colle ici TOUT ton bloc <style> actuel)
+    # 2. On injecte tout le CSS
     st.markdown("""
     <style>
         /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
@@ -55,6 +55,19 @@ def appliquer_style_global():
         div[data-testid="stSpinner"] { display: none !important; }
         .stApp > header { visibility: hidden !important; }
         
+        /* ------------------------------------------- */
+        /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
+        /* ------------------------------------------- */
+        /* On cible le conteneur exact de la carte Deck.gl de Streamlit */
+        [data-testid="stDeckGlJsonChart"], 
+        [data-testid="stDeckGlJsonChart"] > div,
+        [data-testid="stDeckGlJsonChart"] canvas {
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(128, 128, 128, 0.2) !important;
+        }
+        /* ------------------------------------------- */
+
         /* Animation Clignotement (Blink) */
         @keyframes blink-live { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
         .live-icon { display: inline-block; animation: blink-live 1.5s infinite step-start; margin: 0 4px; vertical-align: middle; font-size: 0.6em; }
@@ -143,5 +156,39 @@ def appliquer_style_global():
         button[key^="btn_fav_"] { width: 100% !important; height: 42px !important; text-align: left !important; padding-left: 10px !important; }
         button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
         button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+
+        /* 🚨 BANDEAU DÉFILANT STYLE NEWS 🚨 */
+        .traffic-ticker {
+            overflow: hidden;
+            white-space: nowrap;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 4px;
+            padding: 4px 0;
+            margin-top: 4px;
+            border-left: 3px solid #e74c3c;
+        }
+        .ticker-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 20s linear infinite;
+            color: #e74c3c;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 0.85em;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* ⚠️ STYLE PERTURBÉ (MOINS IMPACTANT) */
+        .traffic-warning {
+            color: #f39c12;
+            font-size: 0.8em;
+            font-weight: 500;
+            margin-top: 2px;
+        }
     </style>
     """, unsafe_allow_html=True)
+
+

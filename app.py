@@ -7,17 +7,17 @@ import os
 from PIL import Image
 import base64
 import json
-from streamlit_js_eval import streamlit_js_eval # <--- La librairie JS robuste
+from streamlit_js_eval import streamlit_js_eval, get_geolocation # <--- La librairie JS robuste
 import streamlit.components.v1 as components  # <--- AJOUT INDISPENSABLE
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
-from utils import (
-    get_img_as_base64, generer_icones_html, normaliser_mode,
-    clean_code_line, format_html_time, get_all_changelogs
-) # <-- CETTE PARENTHÈSE EST CRUCIALE !
-
-from api_idfm import demander_api, demander_lignes_arret
+from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret, synthetiser_alerte, afficher_bandeau_trafic
+from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+# Initialisation des variables de session
+if 'search_key' not in st.session_state:
+    st.session_state.search_key = 0
+
 
 # ==========================================
 #              CONFIGURATION
@@ -154,6 +154,14 @@ def toggle_favorite(stop_id, stop_name):
 with st.sidebar:
     st.caption(f"{APP_VERSION} - {APP_CODENAME}")
     
+    # 🏠 NOUVEAU : BOUTON ACCUEIL 
+    if st.button("🏠 Retour à l'accueil", use_container_width=True, type="secondary"):
+        st.session_state.selected_stop = None
+        st.session_state.selected_name = None
+        st.session_state.search_results = {}
+        st.query_params.clear() # 🔗 On efface l'URL !
+        st.rerun()
+        
     # --- SECTION FAVORIS ---
     st.header("⭐ Mes Favoris")
     
@@ -164,7 +172,9 @@ with st.sidebar:
         st.session_state.search_results = {}
         st.session_state.last_query = ""
         st.session_state.search_key += 1
-
+        
+        # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+        st.query_params["gare"] = fav_id
     # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
     if not st.session_state.favorites:
         # CAS 1 : PAS DE FAVORIS
@@ -247,6 +257,31 @@ if 'last_query' not in st.session_state:
 if 'search_error' not in st.session_state:
     st.session_state.search_error = None
 
+# 🔗 NOUVEAU : LECTURE DE L'URL AU DÉMARRAGE 🔗
+if "gare" in st.query_params and st.session_state.selected_stop is None:
+    stop_id_url = st.query_params["gare"]
+    
+    with st.spinner("Chargement de la gare partagée..."):
+        # On demande à l'API comment s'appelle cette gare mystère
+        data_gare = demander_api(f"stop_areas/{stop_id_url}")
+        
+        if data_gare and 'stop_areas' in data_gare and len(data_gare['stop_areas']) > 0:
+            sa = data_gare['stop_areas'][0]
+            nom = sa['name']
+            ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+            
+            # On recrée un joli nom avec la ville
+            nom_complet = f"{nom.upper()} ({ville})" if ville else nom.upper()
+            
+            # On force la sélection
+            st.session_state.selected_stop = stop_id_url
+            st.session_state.selected_name = nom_complet
+            # On n'a pas besoin de rerun, Streamlit va naturellement afficher la gare en descendant le code !
+# --- GESTION DE LA RECHERCHE & GÉOLOCALISATION ---
+if 'geoloc_active' not in st.session_state:
+    st.session_state.geoloc_active = False
+
+# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Version Claire & Lisible)
 with st.form("search_form"):
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
@@ -254,7 +289,73 @@ with st.form("search_form"):
         value=st.session_state.last_query, 
         key=f"search_input_{st.session_state.search_key}"
     )
-    submitted = st.form_submit_button("Rechercher")
+    
+    # On utilise des colonnes pour aligner les boutons.
+    # [0.65, 0.35] donne plus de place au bouton de localisation pour son texte.
+    col_submit, col_geo = st.columns([0.65, 0.35], gap="small")
+    with col_submit:
+        # Bouton standard
+        submitted = st.form_submit_button("Rechercher", use_container_width=True)
+    with col_geo:
+        # 📍 Me localiser : L'ajout de texte rend le bouton BEAUCOUP plus lisible.
+        # type="primary" le colore pour le mettre en valeur.
+        geo_clicked = st.form_submit_button("📍 Me localiser", type="primary", use_container_width=True)
+
+# Si le bouton "Me localiser" est cliqué, on active le mode géoloc
+if geo_clicked:
+    st.session_state.geoloc_active = True
+
+# 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
+if st.session_state.geoloc_active:
+    st.info("📡 Recherche de votre position...")
+    # ... (le reste de ton code avec get_geolocation() reste exactement pareil) ...
+    # La magie opère ici : ça demande l'autorisation au navigateur
+    loc = get_geolocation() 
+    
+    if loc:
+        lat = loc['coords']['latitude']
+        lon = loc['coords']['longitude']
+        
+        with st.spinner("Recherche des gares à proximité..."):
+            data_proches = demander_arrets_proches(lat, lon)
+            
+            resultats_bruts = []
+            if data_proches and 'places_nearby' in data_proches:
+                for p in data_proches['places_nearby']:
+                    if 'stop_area' in p:
+                        sa = p['stop_area']
+                        nom = sa['name']
+                        ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+                        distance = p.get('distance', 0)
+                        
+                       # ✨ L'analyse magique (On ignore le tag avec "_")
+                        rang, _ = analyser_importance_arret(sa)
+                        
+                        # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
+                        nom_affiche = nom.upper() if rang <= 3 else nom
+                        
+                        label = f"{nom_affiche} ({ville}) - à {distance}m" if ville else f"{nom_affiche} - à {distance}m"
+                        
+                        resultats_bruts.append({
+                            'label': label,
+                            'id': sa['id'],
+                            'rang': rang,
+                            'distance': distance
+                        })
+            
+            if resultats_bruts:
+                # ✨ TRI HYBRIDE : On trie d'abord par importance (rang), puis par distance !
+                resultats_bruts.sort(key=lambda x: (x['rang'], x['distance']))
+                
+                # On reformate pour le selectbox
+                opts = {r['label']: r['id'] for r in resultats_bruts}
+                
+                st.session_state.search_results = opts
+                st.session_state.geoloc_active = False 
+                st.rerun()
+            else:
+                st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
+                st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
@@ -281,17 +382,32 @@ if submitted and search_query:
     # --- FIN EASTER EGG ---
 
     with st.spinner("Recherche des arrêts..."):
-        # ... (La suite de ton code habituel) ...
-        # ... (La suite de ton code habituel reste ici) ...
         data = demander_api(f"places?q={search_query}")
-        opts = {}
+        resultats_bruts = []
+        
         if data and 'places' in data:
             for p in data['places']:
                 if 'stop_area' in p:
-                    ville = p.get('administrative_regions', [{}])[0].get('name', '')
-                    label = f"{p['name']} ({ville})" if ville else p['name']
-                    opts[label] = p['stop_area']['id']
-        if len(opts) > 0:
+                    sa = p['stop_area']
+                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+                    nom = sa['name']
+                    
+                    # ✨ L'analyse magique
+                    rang, _ = analyser_importance_arret(sa)
+                    
+                    nom_affiche = nom.upper() if rang <= 3 else nom
+                    
+                    label = f"{nom_affiche} ({ville})" if ville else f"{nom_affiche}"
+                    
+                    resultats_bruts.append({
+                        'label': label,
+                        'id': sa['id'],
+                        'rang': rang
+                    })
+        
+        if resultats_bruts:
+            # ✨ On laisse l'API Navitia faire son tri textuel naturel (pertinence > hiérarchie)
+            opts = {r['label']: r['id'] for r in resultats_bruts}
             st.session_state.search_results = opts
         else:
             st.session_state.search_results = {}
@@ -299,6 +415,7 @@ if submitted and search_query:
     st.session_state.search_key += 1
     st.rerun()
 
+# 4. AFFICHAGE DES RÉSULTATS (Valable pour recherche ET géoloc)
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
@@ -307,8 +424,11 @@ if st.session_state.search_results:
         if st.session_state.selected_stop != stop_id:
             st.session_state.selected_stop = stop_id
             st.session_state.selected_name = choice
+            
+            # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+            st.query_params["gare"] = stop_id
+            
             st.rerun()
-
 
 # ==========================================
 #           FRAGMENT LIVE (AUTO-REFRESH)
@@ -391,7 +511,7 @@ def afficher_live_content(stop_id, clean_name):
             mode = normaliser_mode(raw_mode)
             code = clean_code_line(line.get('code', '?')) 
             color = line.get('color', '666666')
-            all_lines_at_stop[(mode, code)] = {'color': color}
+            all_lines_at_stop[(mode, code)] = {'color': color, 'id': line.get('id')}
             
             # DÉTECTION CÂBLE C1
             if mode == "CABLE" and code == "C1":
@@ -607,6 +727,12 @@ def afficher_live_content(stop_id, clean_name):
             # ... (Le reste de la boucle d'affichage reste identique) ...
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
+                
+                # --- INFO TRAFIC ---
+                line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
+                bandeau_html = afficher_bandeau_trafic(line_id, code) if line_id else ""
+                # -------------------
+
                 departs = lignes_du_mode[cle]
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches:
@@ -638,7 +764,7 @@ def afficher_live_content(stop_id, clean_name):
                     # Nettoyage de p3 pour ne garder que les vrais trajets (pas les "Service terminé" générés par Ghost Lines)
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
                     
                     # Fonction helper (inchangée)
                     def render_group(titre, items):
@@ -681,7 +807,7 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
                 # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
@@ -753,6 +879,7 @@ def afficher_live_content(stop_id, clean_name):
 {rows_html}
 </div>
 """, unsafe_allow_html=True)
+
                 # CAS 3: BUS/METRO/TRAM (Standard)
                 else:
                     dest_data = {}
@@ -811,7 +938,7 @@ def afficher_live_content(stop_id, clean_name):
                             else:
                                 rows_html += row_content                    
 
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
@@ -861,7 +988,7 @@ def afficher_live_content(stop_id, clean_name):
                         html_badges += f'<span class="line-badge footer-badge" style="background-color:#{color};">{code}</span>'
                     
                     if html_badges:
-                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)                        
+                        st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
 # ========================================================
 #                  AFFICHAGE LIVE (WRAPPER PRINCIPAL)
 # ========================================================
@@ -869,9 +996,16 @@ def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
     # 1. TITRE (PLEINE LARGEUR)
-    st.markdown(f"<div class='station-title'>📍 {clean_name}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
             
-    # 2. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
+    # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
+    coords_df = demander_coordonnees_arret(stop_id)
+    if coords_df is not None:
+        # On remet le magnifique st.map natif
+        st.map(coords_df, height=150, zoom=14, use_container_width=True)
+    # -------------------------------------
+    
+    # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
