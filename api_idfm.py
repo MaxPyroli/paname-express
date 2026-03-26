@@ -22,9 +22,10 @@ def demander_lignes_arret(stop_id):
     except: 
         return None
 
-def demander_arrets_proches(lat, lon, rayon=3000): # <-- On passe à 3000 mètres
+def demander_arrets_proches(lat, lon, rayon=3000): 
     # ATTENTION AU PIÈGE NAVITIA : C'est {longitude};{latitude} !
-    suffixe = f"coords/{lon};{lat}/places_nearby?type[]=stop_area&distance={rayon}"
+    # 🚀 NOUVEAU : On ajoute &count=60 pour forcer la recherche au-delà des 10 premiers bus
+    suffixe = f"coords/{lon};{lat}/places_nearby?type[]=stop_area&distance={rayon}&count=60"
     return demander_api(suffixe)
 
 @st.cache_data(ttl=86400)
