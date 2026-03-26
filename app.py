@@ -284,7 +284,7 @@ if 'geoloc_active' not in st.session_state:
 # 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Version Claire & Lisible)
 with st.form("search_form"):
     search_query = st.text_input(
-        "🔍 Rechercher une station :", 
+        "🔍 Rechercher un arrêt :", 
         placeholder="Ex: Noisiel, Saint-Lazare...",
         value=st.session_state.last_query, 
         key=f"search_input_{st.session_state.search_key}"
@@ -317,8 +317,8 @@ if st.session_state.geoloc_active:
             lat = loc['coords']['latitude']
             lon = loc['coords']['longitude']
             
-            with st.spinner("Recherche des gares à proximité..."):
-                data_proches = demander_arrets_proches(lat, lon)
+            with st.spinner("Recherche des arrêts à proximité..."):
+                data_proches = demander_arrets_proches(lat, lon, rayon=1500)
             
             resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
@@ -358,7 +358,7 @@ if st.session_state.geoloc_active:
                 st.session_state.geoloc_active = False 
                 st.rerun()
             else:
-                st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
+                st.warning("⚠️ Aucun arrêt trouvé dans un rayon de 1,5km.")
                 st.session_state.geoloc_active = False
         else:
             # 🛑 Le navigateur a bloqué ou refusé la position !
