@@ -327,9 +327,11 @@ if st.session_state.geoloc_active:
                         sa = p['stop_area']
                         nom = sa['name']
                         ville = sa.get('administrative_regions', [{}])[0].get('name', '')
-                        distance = p.get('distance', 0)
                         
-                       # ✨ L'analyse magique (On ignore le tag avec "_")
+                        # 🔢 LA CORRECTION EST ICI : On force en "int" (nombre entier)
+                        distance = int(p.get('distance', 0))
+                        
+                        # ✨ L'analyse magique (On ignore le tag avec "_")
                         rang, _ = analyser_importance_arret(sa)
                         
                         # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
