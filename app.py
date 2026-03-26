@@ -281,7 +281,7 @@ if "gare" in st.query_params and st.session_state.selected_stop is None:
 if 'geoloc_active' not in st.session_state:
     st.session_state.geoloc_active = False
 
-# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Nouveau Design Intégré)
+# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Version Claire & Lisible)
 with st.form("search_form"):
     search_query = st.text_input(
         "🔍 Rechercher une station :", 
@@ -290,15 +290,18 @@ with st.form("search_form"):
         key=f"search_input_{st.session_state.search_key}"
     )
     
-    # On met les deux boutons côte à côte DANS la boîte du formulaire
-    col_submit, col_geo = st.columns([0.85, 0.15], gap="small")
+    # On utilise des colonnes pour aligner les boutons.
+    # [0.65, 0.35] donne plus de place au bouton de localisation pour son texte.
+    col_submit, col_geo = st.columns([0.65, 0.35], gap="small")
     with col_submit:
+        # Bouton standard
         submitted = st.form_submit_button("Rechercher", use_container_width=True)
     with col_geo:
-        # Le type="primary" va le colorer automatiquement pour le faire ressortir !
-        geo_clicked = st.form_submit_button("📍", type="primary", use_container_width=True)
+        # 📍 Me localiser : L'ajout de texte rend le bouton BEAUCOUP plus lisible.
+        # type="primary" le colore pour le mettre en valeur.
+        geo_clicked = st.form_submit_button("📍 Me localiser", type="primary", use_container_width=True)
 
-# Si le bouton 📍 est cliqué, on active le mode géoloc
+# Si le bouton "Me localiser" est cliqué, on active le mode géoloc
 if geo_clicked:
     st.session_state.geoloc_active = True
 
