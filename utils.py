@@ -249,31 +249,11 @@ def determiner_type_perturbation(texte, header):
     if header and len(header) < 30: return header
     return "En cours"
 
-def afficher_bandeau_trafic(line_id):
+def afficher_bandeau_trafic(line_id, nom_ligne=""):
     """Retourne le HTML du bandeau trafic (Propre, stable, avec tous les filtres)."""
     if not line_id: return ""
     
-    alertes = demander_info_trafic(line_id)
-    interruption = next((a for a in alertes if a['severity'] >= 40), None)
-    perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
-
-    if not interruption and not perturbation:
-        return ""
-
-    css = """<style>
-    details.traffic-box > summary::-webkit-details-marker { display: none; }
-    details.traffic-box .chevron { display: inline-block; transition: transform 0.3s ease; }
-    details.traffic-box[open] .chevron { transform: rotate(180deg); }
-    </style>"""
-
-    html_output = css
-
-    # 🌬️ LE MOTEUR INTÉGRÉ (100% blindé)
-    def afficher_bandeau_trafic(line_id, nom_ligne=""): # <-- 1. AJOUTE ÇA
-    """Retourne le HTML du bandeau trafic (Propre, stable, avec tous les filtres)."""
-    if not line_id: return ""
-    
-    alertes = demander_info_trafic(line_id, nom_ligne) # <-- 2. AJOUTE ÇA
+    alertes = demander_info_trafic(line_id, nom_ligne)
     interruption = next((a for a in alertes if a['severity'] >= 40), None)
     perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
 
@@ -304,13 +284,11 @@ def afficher_bandeau_trafic(line_id):
         bouts_a_effacer = [
             r"(?i)bus \d+\s*:\s*travaux\s*[-:]?\s*",
             r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
-            # ⚠️ J'AI EFFACÉ LA LIGNE "en raison de travaux" ICI !
             r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?",
             r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*",
             r"(?i)trafic perturbé\s*[-:]?\s*",
             r"(?i)trafic interrompu\s*[-:]?\s*"
         ]
-        # ... (le reste de ta fonction reste identique, ne le touche pas) ...
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
             
@@ -331,7 +309,8 @@ def afficher_bandeau_trafic(line_id):
             "consultez le compte x",
             "plus d'informations sur cette perturbation",
             "nous vous prions de bien vouloir",
-            "pour la gêne occasionnée"
+            "pour la gêne occasionnée",
+            "fi :"
         ]
 
         lignes = t.split('\n')
@@ -371,11 +350,6 @@ def afficher_bandeau_trafic(line_id):
             return secours
             
         return '<br>'.join(lignes_finales)
-
-    # ... (le début de la fonction avec la fonction interne preparer_texte reste identique) ...
-
-        # Dans preparer_texte, tu peux ajouter ça à `lignes_a_zapper` pour nettoyer encore plus :
-        # "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi : "
 
     # --- ASSEMBLAGE DES BANDEAUX (MULTI-ALERTES) ---
     
