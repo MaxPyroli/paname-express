@@ -281,28 +281,31 @@ if "gare" in st.query_params and st.session_state.selected_stop is None:
 if 'geoloc_active' not in st.session_state:
     st.session_state.geoloc_active = False
 
-# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC
-col_search, col_geo = st.columns([0.85, 0.15], gap="small", vertical_alignment="bottom")
+# 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Nouveau Design Intégré)
+with st.form("search_form"):
+    search_query = st.text_input(
+        "🔍 Rechercher une station :", 
+        placeholder="Ex: Noisiel, Saint-Lazare...",
+        value=st.session_state.last_query, 
+        key=f"search_input_{st.session_state.search_key}"
+    )
+    
+    # On met les deux boutons côte à côte DANS la boîte du formulaire
+    col_submit, col_geo = st.columns([0.85, 0.15], gap="small")
+    with col_submit:
+        submitted = st.form_submit_button("Rechercher", use_container_width=True)
+    with col_geo:
+        # Le type="primary" va le colorer automatiquement pour le faire ressortir !
+        geo_clicked = st.form_submit_button("📍", type="primary", use_container_width=True)
 
-with col_search:
-    with st.form("search_form"):
-        search_query = st.text_input(
-            "🔍 Rechercher une station :", 
-            placeholder="Ex: Noisiel, Saint-Lazare...",
-            value=st.session_state.last_query, 
-            key=f"search_input_{st.session_state.search_key}"
-        )
-        submitted = st.form_submit_button("Rechercher")
-
-with col_geo:
-    # Le bouton bascule l'état de la géolocalisation
-    if st.button("📍", help="Gares autour de moi", use_container_width=True):
-        st.session_state.geoloc_active = not st.session_state.geoloc_active
-        st.rerun()
+# Si le bouton 📍 est cliqué, on active le mode géoloc
+if geo_clicked:
+    st.session_state.geoloc_active = True
 
 # 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
 if st.session_state.geoloc_active:
     st.info("📡 Recherche de votre position...")
+    # ... (le reste de ton code avec get_geolocation() reste exactement pareil) ...
     # La magie opère ici : ça demande l'autorisation au navigateur
     loc = get_geolocation() 
     
