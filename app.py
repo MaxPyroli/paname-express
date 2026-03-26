@@ -441,13 +441,18 @@ if submitted and search_query:
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
-    if choice:
+    
+    # 🛑 NOUVEAU : On vérifie que le choix n'est pas un titre de catégorie (qui vaut None)
+    if choice and opts.get(choice) is not None:
         stop_id = opts[choice]
         if st.session_state.selected_stop != stop_id:
             st.session_state.selected_stop = stop_id
-            st.session_state.selected_name = choice
             
-            # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+            # On nettoie l'émoji pour le beau titre de la page
+            nom_propre = choice.replace("🚇 ", "").replace("🚌 ", "")
+            st.session_state.selected_name = nom_propre
+            
+            # 🔗 On écrit l'ID de la gare dans l'URL
             st.query_params["gare"] = stop_id
             
             st.rerun()
