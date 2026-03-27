@@ -39,13 +39,19 @@ st.set_page_config(
 appliquer_style_global()
 
 # ==========================================
-# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL VERS LE HAUT
+# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL VERS LE HAUT (Le Ninja)
 # ==========================================
 if st.session_state.get('fermer_sidebar', False):
-    # Le script JS fait 2 choses : 1. Il clique sur la croix | 2. Il remonte la vue principale (smooth)
     js_magic = """
-    window.parent.document.querySelector('[data-testid="stSidebar"] button').click();
-    window.parent.document.querySelector('.main').scrollTo({top: 0, behavior: 'smooth'});
+    // 1. On ferme la sidebar tout de suite
+    const closeBtn = window.parent.document.querySelector('[data-testid="stSidebar"] button');
+    if(closeBtn) closeBtn.click();
+    
+    // 2. On attend 300 millisecondes (que Streamlit ait fini de faire n'importe quoi) puis on remonte
+    setTimeout(function() {
+        const mainElement = window.parent.document.querySelector('.main') || window.parent.document.documentElement;
+        mainElement.scrollTo({top: 0, behavior: 'smooth'});
+    }, 300);
     """
     
     streamlit_js_eval(
