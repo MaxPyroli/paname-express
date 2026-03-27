@@ -39,13 +39,18 @@ st.set_page_config(
 appliquer_style_global()
 
 # ==========================================
-# 🪄 MAGIE : AUTO-FERMETURE DE LA SIDEBAR
+# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL VERS LE HAUT
 # ==========================================
 if st.session_state.get('fermer_sidebar', False):
-    # On exécute un mini-script JS qui va chercher le tout premier bouton de la sidebar (la Croix / Flèche) et clique dessus !
+    # Le script JS fait 2 choses : 1. Il clique sur la croix | 2. Il remonte la vue principale (smooth)
+    js_magic = """
+    window.parent.document.querySelector('[data-testid="stSidebar"] button').click();
+    window.parent.document.querySelector('.main').scrollTo({top: 0, behavior: 'smooth'});
+    """
+    
     streamlit_js_eval(
-        js_expressions="window.parent.document.querySelector('[data-testid=\"stSidebar\"] button').click()", 
-        key=f"close_sb_{time.time()}"
+        js_expressions=js_magic.replace('\n', ' '), 
+        key=f"close_and_scroll_{time.time()}"
     )
     st.session_state.fermer_sidebar = False
 # ==========================================
