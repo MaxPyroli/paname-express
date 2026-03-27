@@ -238,8 +238,7 @@ with st.sidebar:
     st.sidebar.success(
         "🎉 **Bienvenue sur Grand Paname V2.0 !**\n\n"
         "Profitez de la nouvelle interface, des alertes trafic intelligentes "
-        "et d'une navigation encore plus fluide. Bonne route ! 🚆"
-    )
+        "et d'une navigation encore plus fluide. Bon voyage ! 🚀"
     )
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
