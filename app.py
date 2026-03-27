@@ -153,11 +153,6 @@ def toggle_favorite(stop_id, stop_name):
     time.sleep(0.1)
 with st.sidebar:
     st.caption(f"{APP_VERSION} - {APP_CODENAME}")
-    st.sidebar.info(
-        "🚦 **Info Trafic (BÊTA)**\n\n"
-        "Les remontées de l'API régionale sont en cours d'ajustement. "
-        "Il se peut que certaines alertes capricieuses (coucou le RER B) passent sous le radar !"
-    )
     
     # 🏠 NOUVEAU : BOUTON ACCUEIL 
     if st.button("🏠 Retour à l'accueil", use_container_width=True, type="secondary"):
@@ -240,7 +235,11 @@ with st.sidebar:
     
    # --- SECTION INFOS ---
     st.header("🗄️ Informations")
-    st.info("👋 **Bienvenue à bord !**\n\nGrand Paname passe en version 1.0 ! Profitez d'une information voyageur claire et rapide pour vos trajets du quotidien.")
+    st.sidebar.warning(
+        "🚧 **Info Trafic (BÊTA)**\n\n"
+        "Les remontées de l'API régionale sont en cours d'ajustement. "
+        "Il se peut que certaines alertes capricieuses (coucou le RER B) passent sous le radar !"
+    )
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
