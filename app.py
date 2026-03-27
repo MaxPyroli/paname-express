@@ -235,10 +235,11 @@ with st.sidebar:
     
    # --- SECTION INFOS ---
     st.header("🗄️ Informations")
-    st.sidebar.warning(
-        "🚧 **Info Trafic (BÊTA)**\n\n"
-        "Les remontées de l'API régionale sont en cours d'ajustement. "
-        "Il se peut que certaines alertes capricieuses (coucou le RER B) passent sous le radar !"
+    st.sidebar.success(
+        "🎉 **Bienvenue sur Grand Paname V2.0 !**\n\n"
+        "Profitez de la nouvelle interface, des alertes trafic intelligentes "
+        "et d'une navigation encore plus fluide. Bonne route ! 🚆"
+    )
     )
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
