@@ -68,6 +68,17 @@ def demander_info_trafic(line_id, nom_ligne=""):
                 texte_complet = header
 
             texte_lower = texte_complet.lower()
+            
+            # 🗑️ LE RETOUR DU BOUCLIER ANTI-SPAM 🗑️
+            mots_spam = [
+                "ascenseur", "escalator", 
+                "dos du téléphone", "titres-et-tarifs", "rechargez",
+                "files d'attente", "bonne nouvelle", "mode raccourci",
+                "titre sur votre téléphone", "lutte contre la fraude"
+            ]
+            if any(mot in texte_lower for mot in mots_spam):
+                continue
+                
             severity_obj = disruption.get('severity', {})
             effect = severity_obj.get('effect', '')
             
