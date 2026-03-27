@@ -37,6 +37,17 @@ st.set_page_config(
 
 # 2. APPLICATION DU STYLE
 appliquer_style_global()
+
+# ==========================================
+# 🪄 MAGIE : AUTO-FERMETURE DE LA SIDEBAR
+# ==========================================
+if st.session_state.get('fermer_sidebar', False):
+    # On exécute un mini-script JS qui va chercher le tout premier bouton de la sidebar (la Croix / Flèche) et clique dessus !
+    streamlit_js_eval(
+        js_expressions="window.parent.document.querySelector('[data-testid=\"stSidebar\"] button').click()", 
+        key=f"close_sb_{time.time()}"
+    )
+    st.session_state.fermer_sidebar = False
 # ==========================================
 #          FONCTIONS UTILITAIRES
 # ==========================================
@@ -190,6 +201,10 @@ with st.sidebar:
             with col_nav:
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                     load_fav(fav['id'], fav['full_name'])
+                    
+                    # 🪄 NOUVEAU : On dit à l'application de fermer la sidebar au prochain rechargement
+                    st.session_state.fermer_sidebar = True 
+                    
                     st.rerun()
 
             with col_del:
