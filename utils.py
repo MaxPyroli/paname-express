@@ -356,7 +356,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             
         return '<br>'.join(lignes_finales)
 
-    # --- ASSEMBLAGE DU MENU DÉROULANT COMPACT ---
+    # --- ASSEMBLAGE DES ICÔNES INDÉPENDANTES (MENUS FLOTTANTS) ---
     
     interruptions = [a for a in alertes if a['severity'] >= 40]
     perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
@@ -364,28 +364,27 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruptions and not perturbations:
         return ""
 
-    # CSS pour cacher la petite flèche native du menu déroulant et aligner les boutons
+    # CSS pour rendre chaque icône indépendante et afficher le texte en "pop-up"
     css = """<style>
-    details.traffic-compact > summary::-webkit-details-marker { display: none; }
-    details.traffic-compact > summary { list-style: none; display: inline-flex; gap: 8px; align-items: center; cursor: pointer; outline: none; }
+    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
+    details.traffic-icon > summary::-webkit-details-marker { display: none; }
+    details.traffic-icon > summary { list-style: none; cursor: pointer; outline: none; display: block; }
     </style>"""
 
-    summary_badges = ""
-    content_details = ""
+    # Le conteneur global en inline-block pour se coller au badge
+    html_output = css + '<div style="display: inline-block; vertical-align: middle;">'
 
     # On empile les alertes ROUGES
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
-        
-        # 1. Le petit bouton coloré quand c'est fermé
-        summary_badges += f'<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="Trafic Interrompu">❌</div>'
-        
-        # 2. Le texte complet quand on clique
-        content_details += f"""
-        <div style="background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 4px; font-size: 0.85em; color: #ddd;">
-            <strong style="color: #e74c3c;">❌ TRAFIC INTERROMPU</strong><br>
-            <div style="margin-top: 4px; line-height: 1.5;">{info_longue}</div>
-        </div>
+        html_output += f"""
+        <details class="traffic-icon">
+            <summary style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="Trafic Interrompu">❌</summary>
+            <div style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #e74c3c; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: #e74c3c; font-size: 0.9em;">❌ TRAFIC INTERROMPU</strong><br>
+                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            </div>
+        </details>
         """
         
     # On empile les alertes ORANGES / BLEUES
@@ -394,55 +393,28 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         header_brut = pert.get('header', '')
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         
-        if type_pert == "TROP_LOIN":
-            continue
+        if type_pert == "TROP_LOIN": continue
             
         info_longue = preparer_texte(texte_brut)
-        
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
         
         if est_futur:
-            icone = "📅"
-            couleur_hex = "#3498db" 
-            couleur_rgb = "52, 152, 219"
-            titre = f"Information • {type_pert}"
+            icone, couleur_hex, couleur_rgb, titre = "📅", "#3498db", "52, 152, 219", f"Information • {type_pert}"
         elif est_travaux:
-            icone = "🚧"
-            couleur_hex = "#f39c12" 
-            couleur_rgb = "243, 156, 18"
-            titre = f"TRAVAUX • {type_pert}"
+            icone, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
         else:
-            icone = "⚠️"
-            couleur_hex = "#f39c12" 
-            couleur_rgb = "243, 156, 18"
-            titre = f"Trafic perturbé • {type_pert}"
+            icone, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
-        # 1. Le petit bouton coloré quand c'est fermé
-        summary_badges += f'<div style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="{titre}">{icone}</div>'
-        
-        # 2. Le texte complet quand on clique
-        content_details += f"""
-        <div style="background: rgba({couleur_rgb}, 0.1); border-left: 3px solid {couleur_hex}; padding: 8px 12px; border-radius: 4px; font-size: 0.85em; color: #ddd;">
-            <strong style="color: {couleur_hex};">{icone} {titre}</strong><br>
-            <div style="margin-top: 4px; line-height: 1.5;">{info_longue}</div>
-        </div>
+        html_output += f"""
+        <details class="traffic-icon">
+            <summary style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="{titre}">{icone}</summary>
+            <div style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid {couleur_hex}; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: {couleur_hex}; font-size: 0.9em;">{icone} {titre}</strong><br>
+                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            </div>
+        </details>
         """
 
-    if not summary_badges:
-        return ""
-
-    # On englobe le tout dans un seul menu déroulant natif HTML (<details>)
-    html_output = f"""
-    {css}
-    <details class="traffic-compact" style="margin-bottom: 8px; margin-left: 8px; display: inline-block; vertical-align: middle;">
-        <summary>
-            {summary_badges}
-        </summary>
-        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 250px;">
-            {content_details}
-        </div>
-    </details>
-    """
-
+    html_output += '</div>'
     return html_output.replace('\n', '')
