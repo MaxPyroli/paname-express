@@ -71,6 +71,15 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
+    /* --- CSS INFO TRAFIC COMPACT --- */
+    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
+    details.traffic-icon > summary::-webkit-details-marker { display: none; }
+    details.traffic-icon > summary { 
+        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
+    }
+    details.traffic-icon > summary:hover { opacity: 0.8; }
+    
     .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
     .footer-icon { margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; }
     .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
@@ -95,15 +104,15 @@ st.markdown("""
         border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; 
     }
     
-    /* --- MISE A JOUR : COULEUR ANTHRACITE IDFM --- */
+    /* --- COULEUR ANTHRACITE IDFM --- */
     .bus-card, .rail-card {
-        background-color: #383E42 !important; /* Anthracite plus doux */
+        background-color: #383E42 !important; 
         padding: 12px; 
         margin-bottom: 15px; 
         border-radius: 8px; 
         border-left: 5px solid #666; 
-        color: #f5f5f5 !important; /* Texte blanc cassé pour la douceur */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* Ombre légère pour le relief */
+        color: #f5f5f5 !important; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15); 
     }
 
     .bus-row, .rail-row {
@@ -135,27 +144,11 @@ st.markdown("""
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     .replacement-box {
-        border: 2px dashed #e74c3c;
-        border-radius: 6px; 
-        padding: 8px 10px; 
-        margin-top: 8px; 
-        margin-bottom: 8px;
+        border: 2px dashed #e74c3c; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px;
         background-color: rgba(231, 76, 60, 0.1);
     }
-    .replacement-label { 
-        display: block; 
-        font-size: 0.75em; 
-        text-transform: uppercase; 
-        font-weight: bold; 
-        color: #e74c3c; 
-        margin-bottom: 4px; 
-        letter-spacing: 1px; 
-    }
-    .replacement-box .rail-row, .replacement-box .bus-row { 
-        border-top: none !important; 
-        padding-top: 0 !important; 
-        margin-top: 0 !important; 
-    }
+    .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
+    .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -188,50 +181,79 @@ def format_html_time(minutes):
     if minutes < 5: return (minutes, f"<span class='text-orange'>{minutes} min</span>")
     return (minutes, f"<span class='text-green'>{minutes} min</span>")
 
+def generer_fausse_alerte(type_alerte):
+    """Génère le HTML d'un bouton d'alerte simulé pour la démo."""
+    if not type_alerte: return ""
+    
+    html = '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
+    
+    if type_alerte == "interrompu":
+        html += """
+        <details class="traffic-icon" name="trafic">
+            <summary style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px;" title="Trafic Interrompu">❌</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #e74c3c; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
+                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">Le trafic est interrompu sur l'ensemble de la ligne suite à un incident technique. Reprise estimée vers 18h30.</div>
+            </div>
+        </details>
+        """
+    elif type_alerte == "travaux":
+        html += """
+        <details class="traffic-icon" name="trafic">
+            <summary style="background: rgba(243, 156, 18, 0.2); border: 1px solid #f39c12; border-radius: 6px;" title="TRAVAUX • Soirée">🚧</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #f39c12; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: #f39c12; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">🚧 TRAVAUX • Soirée</strong><br>
+                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">En raison de travaux de modernisation, le trafic est fortement modifié à partir de 22h30. Des bus de remplacement sont prévus.</div>
+            </div>
+        </details>
+        """
+    elif type_alerte == "info":
+        html += """
+        <details class="traffic-icon" name="trafic">
+            <summary style="background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; border-radius: 6px;" title="Information • À venir">ℹ️</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #3498db; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: #3498db; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">ℹ️ Information • À venir</strong><br>
+                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">Mouvement social interprofessionnel prévu ce jeudi. Prévoyez de fortes perturbations sur le réseau.</div>
+            </div>
+        </details>
+        """
+    html += '</div>'
+    return html
+
 # ==========================================
 #      GÉNÉRATEUR DE SCÉNARIOS FICTIFS
 # ==========================================
 def get_demo_data():
-    # Scénario ULTIME : Tout en un
     data = {'lines': [], 'departures': []}
     
-    # 1. CABLE C1 (Normal)
+    # 1. CABLE C1
     data['lines'].append({'physical_mode': 'CABLE', 'code': 'C1', 'color': '56CCF2'})
     data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Pointe du Lac', 'min': 0, 'color': '56CCF2'})
     data['departures'].append({'mode': 'CABLE', 'code': 'C1', 'dest': 'Villa Nova', 'min': 0, 'color': '56CCF2'})
 
-    # 2. RER A (Smart Geo + "À l'approche")
+    # 2. RER A (Avec alerte Travaux)
     data['lines'].append({'physical_mode': 'RER', 'code': 'A', 'color': 'E3051C'})
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'St-Germain-en-Laye', 'min': 1, 'color': 'E3051C'})
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Cergy-le-Haut', 'min': 8, 'color': 'E3051C'})
     data['departures'].append({'mode': 'RER', 'code': 'A', 'dest': 'Marne-la-Vallée Chessy', 'min': 15, 'color': 'E3051C', 'is_last': True})
 
-    # 3. TRAIN H (Branches)
+    # 3. TRAIN H (Avec alerte Interrompu)
     data['lines'].append({'physical_mode': 'TRAIN', 'code': 'H', 'color': '8D5E2A'})
     data['departures'].append({'mode': 'TRAIN', 'code': 'H', 'dest': 'Pontoise', 'min': 4, 'color': '8D5E2A'})
     data['departures'].append({'mode': 'TRAIN', 'code': 'H', 'dest': 'Paris Gare du Nord', 'min': 0, 'color': '8D5E2A'})
 
-    # 4. METRO 1 (Dernier départ IMMINENT)
+    # 4. METRO 1 (Avec alerte Info)
     data['lines'].append({'physical_mode': 'METRO', 'code': '1', 'color': 'FFCD00'})
     data['departures'].append({'mode': 'METRO', 'code': '1', 'dest': 'Château de Vincennes', 'min': 4, 'color': 'FFCD00', 'is_last': True})
 
-    # 5. BUS 172 (Standard)
+    # 5. BUS 172
     data['lines'].append({'physical_mode': 'BUS', 'code': '172', 'color': 'F68F2D'})
     data['departures'].append({'mode': 'BUS', 'code': '172', 'dest': 'Bourg-la-Reine RER', 'min': 0, 'color': 'F68F2D'})
     data['departures'].append({'mode': 'BUS', 'code': '172', 'dest': 'Bourg-la-Reine RER', 'min': 9, 'color': 'F68F2D'})
 
-    # 6. BUS N01 (Noctilien)
-    data['lines'].append({'physical_mode': 'BUS', 'code': 'N01', 'color': '000000'})
-    data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 15, 'color': '000000'})
-    data['departures'].append({'mode': 'BUS', 'code': 'N01', 'dest': 'Gare de l\'Est', 'min': 75, 'color': '000000'})
-
-    # 7. SUBSTITUTIONS
+    # 6. SUBSTITUTIONS
     data['lines'].append({'physical_mode': 'BUS', 'code': 'A', 'color': 'E3051C'})
     data['departures'].append({'mode': 'BUS', 'code': 'A', 'dest': 'Poissy (Bus de remplacement)', 'min': 5, 'color': 'E3051C'})
-    
-    data['lines'].append({'physical_mode': 'METRO', 'code': '6', 'color': '75C695'})
-    data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Nation', 'min': 2, 'color': '75C695'})
-    data['departures'].append({'mode': 'BUS', 'code': 'M6', 'dest': 'Charles de Gaulle - Étoile', 'min': 6, 'color': '75C695'})
 
     return data
 
@@ -240,9 +262,8 @@ def get_demo_data():
 # ==========================================
 def afficher_demo():
     st.title("💎 Grand Paname - SHOWCASE")
-    st.caption("Vitrine des fonctionnalités & Design")
+    st.caption("Vitrine des fonctionnalités & Design V2.0")
     
-    # Zone Statut Fixe
     st.markdown("""<div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; font-style: italic; margin-bottom: 10px;'><span class="custom-loader"></span> Démonstration temps réel...</div>""", unsafe_allow_html=True)
 
     mock_data = get_demo_data()
@@ -251,37 +272,22 @@ def afficher_demo():
     displayed_lines_keys = set()
     footer_data = {m: {} for m in buckets.keys()}
     
-    # 1. Calcul des max
     last_departures_map = {}
     for d in mock_data['departures']:
         key = (d['mode'], d['code'], d['dest'])
         current_max = last_departures_map.get(key, -999)
         if d['min'] > current_max: last_departures_map[key] = d['min']
 
-    # 2. Remplissage INTELLIGENT
     for d in mock_data['departures']:
-        mode = d['mode']
-        code = d['code']
-        dest = d['dest']
-        color = d['color']
-        minutes = d['min']
-        
-        # --- LOGIQUE DE DÉTECTION SUBSTITUTION ---
+        mode, code, dest, color, minutes = d['mode'], d['code'], d['dest'], d['color'], d['min']
         is_replacement = False
         
         if mode == "BUS":
             if code in ["A", "B", "C", "D", "E", "H", "J", "K", "L", "N", "P", "R", "U", "V"]:
                 is_replacement = True
                 mode = "RER" if code in ["A", "B", "C", "D", "E"] else "TRAIN"
-            elif code.startswith('M') and code[1:].isdigit():
-                is_replacement = True
-                mode = "METRO"
-                code = code[1:] 
-        # -----------------------------------------
 
-        is_last = False
-        if d.get('is_last'): is_last = True
-            
+        is_last = d.get('is_last', False)
         _, html = format_html_time(minutes)
         displayed_lines_keys.add((mode, code))
         
@@ -290,14 +296,11 @@ def afficher_demo():
             if cle not in buckets[mode]: buckets[mode][cle] = []
             buckets[mode][cle].append({'dest': dest, 'html': html, 'tri': minutes, 'is_last': is_last, 'is_replacement': is_replacement})
 
-    # Footer filling
     for l in mock_data['lines']:
-        mode = l['physical_mode']
-        code = l['code']
+        mode, code = l['physical_mode'], l['code']
         if (mode, code) not in displayed_lines_keys:
             footer_data[mode][code] = l['color']
 
-    # 3. Rendu
     count_visible_footer = sum(len(footer_data[m]) for m in footer_data if m != "AUTRE")
     ordre = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     
@@ -312,9 +315,15 @@ def afficher_demo():
             _, code, color = cle
             departs = lignes[cle]
             
-            # --- CAS 1 & 2 : RER / TRAIN (Avec Branches) ---
+            # --- ATTRIBUTION DES FAUSSES ALERTES ---
+            bandeau_html = ""
+            if code == "A": bandeau_html = generer_fausse_alerte("travaux")
+            elif code == "H": bandeau_html = generer_fausse_alerte("interrompu")
+            elif code == "1": bandeau_html = generer_fausse_alerte("info")
+
+            # --- CAS 1 & 2 : RER / TRAIN ---
             if mode_actuel in ["RER", "TRAIN"] and code in GEOGRAPHIE_RER:
-                card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>"""
+                card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                 
                 geo = GEOGRAPHIE_RER[code]
                 p1 = [d for d in departs if d['tri'] < 3000 and any(k in d['dest'].upper() for k in geo['mots_1'])] 
@@ -337,10 +346,8 @@ def afficher_demo():
                 card_html += "</div>"
                 st.markdown(card_html, unsafe_allow_html=True)
 
-            # --- CAS SPÉCIAL DÉMO : CÂBLE C1 (SHOWROOM) ---
-            # On force l'affichage de 2 cartes pour montrer les 2 états (Normal et Perturbé)
+            # --- CAS CÂBLE C1 ---
             elif code == "C1":
-                # --- CARTE 1 : FONCTIONNEMENT NORMAL (Rotation) ---
                 st.caption("Scénario 1 : Fonctionnement Normal")
                 rows_normal = ""
                 dests_demo = ["Pointe du Lac", "Villa Nova"]
@@ -358,25 +365,9 @@ def afficher_demo():
                 </div>
                 """, unsafe_allow_html=True)
 
-                # --- CARTE 2 : PERTURBATION (Alerte) ---
-                st.caption("Scénario 2 : Perturbation Majeure")
-                alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>Arrêt temporaire : Vent violent (> 90km/h)</span></div>"
-                
-                st.markdown(f"""
-                <div class="bus-card" style="border-left-color: #{color}; position: relative;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span><span style="font-weight:bold; color:#fff; font-size: 1.1em;">Câble 1</span></div>
-                <span style="font-size:1.5em;" title="Téléphérique">🚡</span>
-                </div>
-                {alert_html}
-                <div class="service-box">😴 Service suspendu</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # --- CAS 3 : AUTRES (Bus / Métro Standard) ---
+            # --- CAS 3 : AUTRES (Bus / Métro) ---
             else:
                 rows_html = ""
-                # Tri
                 if mode_actuel in ["METRO", "CABLE"]: departs.sort(key=lambda x: x['dest'])
                 else: departs.sort(key=lambda x: x['tri'])
                 
@@ -412,7 +403,7 @@ def afficher_demo():
                     else:
                         rows_html += row_html_content
                 
-                st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{rows_html}</div>""", unsafe_allow_html=True)
+                st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
 
     if count_visible_footer > 0:
         st.markdown("<div style='margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;'></div>", unsafe_allow_html=True)
@@ -421,24 +412,29 @@ def afficher_demo():
             if mode in footer_data and footer_data[mode]:
                 badges = "".join([f'<span class="line-badge footer-badge" style="background-color:#{c};">{cd}</span>' for cd, c in footer_data[mode].items()])
                 st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{badges}</div></div>""", unsafe_allow_html=True)
+
 # ==========================================
 #              FAUX PANNEAU LATÉRAL
 # ==========================================
 with st.sidebar:
-    st.caption("v0.13.0 - Anthracite • 🧪 SHOWROOM") 
+    st.caption("v2.0.0 - Grand Paname • 🧪 SHOWROOM") 
+    
+    st.success(
+        "🎉 **Bienvenue sur Grand Paname V2.0 !**\n\n"
+        "Profitez de la nouvelle interface, des alertes trafic intelligentes "
+        "et d'une navigation encore plus fluide. Bonne route ! 🚆"
+    )
+    
     st.header("🗄️ Informations")
-    st.info("Ce mode **SHOWROOM** permet de visualiser tous les styles graphiques et scénarios possibles (perturbations, derniers départs, travaux, téléphérique...) sans dépendre de l'API réelle.")
+    st.info("Ce mode **SHOWROOM** permet de visualiser tous les styles graphiques et scénarios possibles sans dépendre de l'API réelle.")
     st.markdown("---")
     with st.expander("🎨 Nouveautés Design"):
         st.markdown("""
-        **Update Anthracite**
-        * Cartes plus douces (`#383E42`)
-        * Ombres portées pour le relief
-        * Textes blanc cassé (`#F5F5F5`)
-        
-        **Câble C1**
-        * Affichage "Rotation continue"
-        * Gestion des alertes météo
+        **Grand Paname V2.0**
+        * Nouveau système d'Info Trafic ultra-compact
+        * Icônes d'alertes interactives (❌, 🚧, ℹ️, ⚠️)
+        * Auto-fermeture des menus et de la sidebar
+        * Cartes Anthracite et Ombres portées
         """)
     st.markdown("---")
     st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
