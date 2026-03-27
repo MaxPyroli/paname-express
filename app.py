@@ -39,35 +39,13 @@ st.set_page_config(
 appliquer_style_global()
 
 # ==========================================
-# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL (Le Marteau-Piqueur)
+# 🪄 MAGIE : AUTO-FERMETURE DE LA SIDEBAR
 # ==========================================
 if st.session_state.get('fermer_sidebar', False):
-    js_magic = """
-    let btnClicked = false;
-    let attempts = 0;
-    
-    let interval = setInterval(function() {
-        // 1. On cherche et on clique sur la croix (Une seule fois !)
-        if (!btnClicked) {
-            let btn = window.parent.document.querySelector('[data-testid="stSidebar"] button');
-            if (btn) {
-                btn.click();
-                btnClicked = true;
-            }
-        }
-        
-        // 2. On tape sur le vrai conteneur de scroll de Streamlit pour le forcer en haut
-        let container = window.parent.document.querySelector('[data-testid="stAppViewContainer"]') || window.parent;
-        container.scrollTo({top: 0, behavior: 'instant'});
-        
-        attempts++;
-        if (attempts > 10) clearInterval(interval); // On arrête le harcèlement après 1 seconde
-    }, 100);
-    """
-    
+    # On ferme juste la sidebar proprement, sans toucher au scroll !
     streamlit_js_eval(
-        js_expressions=js_magic.replace('\n', ' '), 
-        key=f"hammer_scroll_{time.time()}"
+        js_expressions="window.parent.document.querySelector('[data-testid=\"stSidebar\"] button').click()", 
+        key=f"close_sb_{time.time()}"
     )
     st.session_state.fermer_sidebar = False
 # ==========================================
