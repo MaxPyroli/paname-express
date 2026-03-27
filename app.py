@@ -39,24 +39,35 @@ st.set_page_config(
 appliquer_style_global()
 
 # ==========================================
-# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL VERS LE HAUT (Le Ninja)
+# 🪄 MAGIE : AUTO-FERMETURE ET SCROLL (Le Marteau-Piqueur)
 # ==========================================
 if st.session_state.get('fermer_sidebar', False):
     js_magic = """
-    // 1. On ferme la sidebar tout de suite
-    const closeBtn = window.parent.document.querySelector('[data-testid="stSidebar"] button');
-    if(closeBtn) closeBtn.click();
+    let btnClicked = false;
+    let attempts = 0;
     
-    // 2. On attend 300 millisecondes (que Streamlit ait fini de faire n'importe quoi) puis on remonte
-    setTimeout(function() {
-        const mainElement = window.parent.document.querySelector('.main') || window.parent.document.documentElement;
-        mainElement.scrollTo({top: 0, behavior: 'smooth'});
-    }, 300);
+    let interval = setInterval(function() {
+        // 1. On cherche et on clique sur la croix (Une seule fois !)
+        if (!btnClicked) {
+            let btn = window.parent.document.querySelector('[data-testid="stSidebar"] button');
+            if (btn) {
+                btn.click();
+                btnClicked = true;
+            }
+        }
+        
+        // 2. On tape sur le vrai conteneur de scroll de Streamlit pour le forcer en haut
+        let container = window.parent.document.querySelector('[data-testid="stAppViewContainer"]') || window.parent;
+        container.scrollTo({top: 0, behavior: 'instant'});
+        
+        attempts++;
+        if (attempts > 10) clearInterval(interval); // On arrête le harcèlement après 1 seconde
+    }, 100);
     """
     
     streamlit_js_eval(
         js_expressions=js_magic.replace('\n', ' '), 
-        key=f"close_and_scroll_{time.time()}"
+        key=f"hammer_scroll_{time.time()}"
     )
     st.session_state.fermer_sidebar = False
 # ==========================================
