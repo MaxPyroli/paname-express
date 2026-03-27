@@ -410,7 +410,6 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
-        # Remplacer <details class="traffic-icon"> par :
         <details class="traffic-icon" name="trafic">
             <summary style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px;" title="{titre}">{icone_emoji}</summary>
             <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid {couleur_hex}; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
