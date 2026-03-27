@@ -364,11 +364,20 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruptions and not perturbations:
         return ""
 
-    # CSS pour rendre chaque icône indépendante et afficher le texte en "pop-up"
+    # CSS pour rendre chaque icône indépendante ET refermer au clic extérieur
     css = """<style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
     details.traffic-icon > summary { list-style: none; cursor: pointer; outline: none; display: block; }
+    
+    /* 🪄 LA MAGIE : L'écran géant invisible qui capte le clic pour fermer */
+    details.traffic-icon[open] summary::before {
+        content: "";
+        position: fixed;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: 9998; /* Juste en dessous du texte du menu */
+        cursor: default;
+    }
     </style>"""
 
     # Le conteneur global en inline-block pour se coller au badge
