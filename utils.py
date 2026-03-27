@@ -364,7 +364,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruptions and not perturbations:
         return ""
 
-    # CSS pour rendre chaque icône indépendante ET refermer au clic extérieur
+    # CSS propre sans l'écran invisible qui bloquait les autres clics
     css = """<style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
@@ -373,12 +373,6 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
     }
     details.traffic-icon > summary:hover { opacity: 0.8; }
-    
-    /* L'écran invisible pour fermer au clic */
-    details.traffic-icon[open] summary::before {
-        content: ""; position: fixed; top: 0; right: 0; bottom: 0; left: 0;
-        z-index: 9998; cursor: default;
-    }
     </style>"""
 
     html_output = css + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
@@ -387,7 +381,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
         html_output += f"""
-        <details class="traffic-icon">
+        <details class="traffic-icon" name="trafic">
             <summary style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px;" title="Trafic Interrompu">❌</summary>
             <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #e74c3c; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
@@ -416,7 +410,8 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
-        <details class="traffic-icon">
+        # Remplacer <details class="traffic-icon"> par :
+        <details class="traffic-icon" name="trafic">
             <summary style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px;" title="{titre}">{icone_emoji}</summary>
             <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid {couleur_hex}; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
