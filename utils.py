@@ -368,29 +368,29 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     css = """<style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
-    details.traffic-icon > summary { list-style: none; cursor: pointer; outline: none; display: block; }
+    details.traffic-icon > summary { 
+        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
+    }
+    details.traffic-icon > summary:hover { opacity: 0.8; }
     
-    /* 🪄 LA MAGIE : L'écran géant invisible qui capte le clic pour fermer */
+    /* L'écran invisible pour fermer au clic */
     details.traffic-icon[open] summary::before {
-        content: "";
-        position: fixed;
-        top: 0; right: 0; bottom: 0; left: 0;
-        z-index: 9998; /* Juste en dessous du texte du menu */
-        cursor: default;
+        content: ""; position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+        z-index: 9998; cursor: default;
     }
     </style>"""
 
-    # Le conteneur global en inline-block pour se coller au badge
-    html_output = css + '<div style="display: inline-block; vertical-align: middle;">'
+    html_output = css + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
 
     # On empile les alertes ROUGES
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
         html_output += f"""
         <details class="traffic-icon">
-            <summary style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #e74c3c; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
-                <strong style="color: #e74c3c; font-size: 0.9em;">❌ TRAFIC INTERROMPU</strong><br>
+            <summary style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 6px;" title="Trafic Interrompu">❌</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #e74c3c; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
@@ -409,17 +409,17 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         est_futur = "À venir" in type_pert
         
         if est_futur:
-            icone, couleur_hex, couleur_rgb, titre = "📅", "#3498db", "52, 152, 219", f"Information • {type_pert}"
+            icone_emoji, couleur_hex, couleur_rgb, titre = "ℹ️", "#3498db", "52, 152, 219", f"Information • {type_pert}"
         elif est_travaux:
-            icone, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
+            icone_emoji, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
         else:
-            icone, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
+            icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
         <details class="traffic-icon">
-            <summary style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px; padding: 4px 8px; font-size: 1.1em;" title="{titre}">{icone}</summary>
-            <div style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid {couleur_hex}; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
-                <strong style="color: {couleur_hex}; font-size: 0.9em;">{icone} {titre}</strong><br>
+            <summary style="background: rgba({couleur_rgb}, 0.2); border: 1px solid {couleur_hex}; border-radius: 6px;" title="{titre}">{icone_emoji}</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 9999; background: #262730; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid {couleur_hex}; padding: 12px; border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
