@@ -356,7 +356,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             
         return '<br>'.join(lignes_finales)
 
-    # --- ASSEMBLAGE DES BANDEAUX (MULTI-ALERTES) ---
+    # --- ASSEMBLAGE DES ICÔNES (BULLES D'INFO) ---
     
     # On récupère TOUTES les interruptions et TOUTES les perturbations
     interruptions = [a for a in alertes if a['severity'] >= 40]
@@ -365,23 +365,16 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruptions and not perturbations:
         return ""
 
+    # On crée un conteneur inline pour aligner les icônes à côté du numéro de ligne
+    html_output = '<span style="display: inline-flex; gap: 8px; margin-left: 12px; align-items: center; vertical-align: middle;">'
+
     # On empile les alertes ROUGES
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
-        html_output += f"""
-        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
-            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-                <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba(231, 76, 60, 0.2); font-size: 1.1em;">❌</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: #e74c3c; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TRAFIC INTERROMPU</div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; color: #e74c3c; font-size: 0.8em;"><span class="chevron">▼</span></div>
-                </div>
-            </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba(231, 76, 60, 0.2); line-height: 1.6;">
-                {info_longue}
-            </div>
-        </details>
-        """
+        # On remplace les <br> par des espaces pour la bulle et on gère les guillemets
+        info_bulle = info_longue.replace('<br>', ' | ').replace('"', '&quot;')
+        
+        html_output += f'<span title="❌ TRAFIC INTERROMPU : {info_bulle}" style="cursor: help; font-size: 1.3em;">🔴</span>'
         
     # On empile les alertes ORANGES / BLEUES
     for pert in perturbations:
@@ -390,44 +383,29 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         
         type_pert = determiner_type_perturbation(texte_brut, header_brut)
         
-        # 🛡️ LE FILTRE 7 JOURS : Si c'est trop loin, on passe directement à l'alerte suivante !
+        # 🛡️ LE FILTRE 7 JOURS
         if type_pert == "TROP_LOIN":
             continue
             
         info_longue = preparer_texte(texte_brut)
+        info_bulle = info_longue.replace('<br>', ' | ').replace('"', '&quot;')
         
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
         
         if est_futur:
             icone = "📅"
-            couleur_hex = "#3498db" 
-            couleur_rgb = "52, 152, 219"
-            titre_affiche = f"Information <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
+            prefixe = "Information"
         elif est_travaux:
             icone = "🚧"
-            couleur_hex = "#f39c12" 
-            couleur_rgb = "243, 156, 18"
-            titre_affiche = f"TRAVAUX <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
+            prefixe = "TRAVAUX"
         else:
             icone = "⚠️"
-            couleur_hex = "#f39c12" 
-            couleur_rgb = "243, 156, 18"
-            titre_affiche = f"Trafic perturbé <span style='margin: 0 8px; opacity: 0.5;'>•</span> <span style='color:inherit; font-weight:normal; opacity:0.9;'>{type_pert}</span>"
-        
-        html_output += f"""
-        <details class="traffic-box" style="margin-bottom:8px; border-radius: 4px; overflow: hidden; background: rgba({couleur_rgb}, 0.1); border-left: 3px solid {couleur_hex};">
-            <summary style="cursor: pointer; list-style: none; display: block; outline: none; margin: 0;">
-                <div style="display: flex; align-items: stretch;">
-                    <div style="padding: 8px 12px; display: flex; align-items: center; background: rgba({couleur_rgb}, 0.2); font-size: 1.1em;">{icone}</div>
-                    <div style="flex: 1; display: flex; align-items: center; padding: 8px 12px; color: {couleur_hex}; font-size: 0.85em; font-weight: bold;">{titre_affiche}</div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; color: {couleur_hex}; font-size: 0.8em;"><span class="chevron">▼</span></div>
-                </div>
-            </summary>
-            <div style="color: #ddd; font-size: 0.8em; padding: 12px; border-top: 1px solid rgba({couleur_rgb}, 0.2); line-height: 1.6;">
-                {info_longue}
-            </div>
-        </details>
-        """
+            prefixe = "Trafic perturbé"
+            
+        titre_complet = f"{icone} {prefixe} ({type_pert}) : {info_bulle}"
+        html_output += f'<span title="{titre_complet}" style="cursor: help; font-size: 1.3em;">{icone}</span>'
 
-    return html_output.replace('\n', '')
+    html_output += '</span>'
+
+    return html_output
