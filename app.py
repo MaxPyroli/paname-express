@@ -830,7 +830,7 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Transparence + Effet Sous-titre 🎬)
+            # 📌 L'en-tête "Collant" (Transparence 0.25 + Fix Bug Safari/iOS 🍏)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
@@ -840,51 +840,58 @@ def afficher_live_content(stop_id, clean_name):
                     z-index: 99 !important; 
                 }}
                 
-                div.section-header.sticky-header-{mode_actuel} {{
-                    /* 🎨 1. Texte dynamique (Noir en clair, Blanc en sombre) */
-                    color: var(--text-color) !important;
-                    font-weight: 900 !important;
-                    
-                    /* 🛡️ 2. LE CONTOUR PROTECTEUR (Garanti sans bug mobile) */
-                    /* On projette 4 ombres dures (0px de flou) pour créer une bordure parfaite 
-                       de la couleur du fond de ton app. */
-                    text-shadow: 
-                        -1.5px -1.5px 0 var(--background-color),  
-                         1.5px -1.5px 0 var(--background-color),
-                        -1.5px  1.5px 0 var(--background-color),
-                         1.5px  1.5px 0 var(--background-color) !important;
-                    
-                    /* 🧊 3. Ton fond transparent réglé à 0.25 (Gris neutre universel) */
+                /* 1. LA VITRE (Transparente à 0.25 comme tu aimes) */
+                div.sticky-header-{mode_actuel} {{
                     background: rgba(128, 128, 128, 0.25) !important; 
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
-                    /* 📏 Design de la bulle */
                     padding: 12px 20px !important;
                     margin: 15px 0 25px 0 !important;
                     border-radius: 16px !important;
                     border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
-                    
+                }}
+                
+                /* 2. LE TEXTE (Séparé de la vitre pour éviter le bug fantôme) */
+                div.sticky-content-{mode_actuel} {{
                     display: flex !important;
                     align-items: center !important;
                     gap: 10px !important;
+                    
+                    color: var(--text-color) !important;
+                    font-weight: 900 !important;
+                    
+                    /* 🛠️ LE FIX SAFARI : Force le texte sur une couche 3D au-dessus du verre */
+                    transform: translate3d(0, 0, 0) !important;
+                    
+                    /* 🛡️ LE CONTOUR INFAILLIBLE : Dessine un trait physique autour des lettres */
+                    /* var(--background-color) sera Blanc en mode clair, Noir en mode sombre */
+                    -webkit-text-stroke: 1.5px var(--background-color) !important;
+                    
+                    /* Petite lueur en renfort */
+                    text-shadow: 0px 4px 15px var(--background-color) !important;
                 }}
                 
-                /* ⚪ 4. Les icônes SVG ont aussi leur propre contour de protection */
-                div.section-header.sticky-header-{mode_actuel} svg {{
+                /* 3. L'ICÔNE SVG PROTÉGÉE */
+                div.sticky-content-{mode_actuel} svg {{
                     fill: currentColor !important; 
                     height: 1.2em !important;
-                    /* Utilisation d'un contour SVG compatible mobile */
+                    
+                    /* Filtre SVG de contour pour protéger l'icône (Le stroke ne marche pas bien sur les SVG) */
                     filter: 
-                        drop-shadow(-1px -1px 0px var(--background-color)) 
-                        drop-shadow(1px 1px 0px var(--background-color)) !important;
+                        drop-shadow(-1.5px -1.5px 0px var(--background-color)) 
+                        drop-shadow(1.5px 1.5px 0px var(--background-color)) !important;
                 }}
             </style>
             
-            <div class='section-header sticky-header-{mode_actuel}'>
-                {ICONES_TITRE[mode_actuel]}
+            <div class='sticky-header-{mode_actuel}'>
+                <div class='section-header sticky-content-{mode_actuel}' style='margin:0; padding:0; border:none; background:none; box-shadow:none;'>
+                    {ICONES_TITRE[mode_actuel]}
+                </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             
