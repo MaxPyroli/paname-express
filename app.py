@@ -830,25 +830,31 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Version Ultime 🌟 Infaillible)
+            # 📌 L'en-tête "Collant" (Le bouclier anti-contraste 🛡️)
             st.markdown(f"""
             <style>
                 /* 1. On rend le parent collant */
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
                 .element-container:has(.sticky-header-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: 2.875rem; /* 🛠️ Ajuste à 0px si tu n'as pas la barre Streamlit */
+                    top: 2.875rem; 
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. On FORCE l'écrasement de ton ancien .section-header */
+                /* 2. Le design de la bulle */
                 div.section-header.sticky-header-{mode_actuel} {{
-                    /* 🎨 On laisse le thème naturel de Streamlit décider de la couleur du texte */
-                    color: inherit !important;
+                    /* 🎨 Texte qui s'adapte à ton thème (Noir le jour, Blanc la nuit) */
+                    color: var(--text-color) !important;
                     font-weight: 700 !important;
                     
-                    /* 🌓 Gris neutre transparent (Magique en Clair ET en Sombre) */
-                    background: rgba(128, 128, 128, 0.15) !important;
+                    /* 👇 🎛️ REGLAGE DE LA TRANSPARENCE ICI 👇 */
+                    /* Actuellement à 90% (très opaque pour cacher les blocs noirs en dessous). 
+                       - Si tu veux plus transparent, descends à 70% ou 80%.
+                       - Si tu veux totalement opaque, mets 100%. 
+                       var(--background-color) garantit que la bulle sera blanche le jour et noire la nuit. */
+                    background: color-mix(in srgb, var(--background-color) 90%, transparent) !important;
+                    
+                    /* 🌫️ L'effet de flou (Glassmorphism) */
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
@@ -858,8 +864,10 @@ def afficher_live_content(stop_id, clean_name):
                     
                     /* ✨ Design qui claque */
                     border-radius: 16px !important;
+                    /* Ombre douce pour décoller la bulle du fond */
                     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
-                    border: 1px solid rgba(128, 128, 128, 0.25) !important;
+                    /* Bordure ultra-fine dynamique */
+                    border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent) !important;
                     
                     /* 🔠 Alignement parfait */
                     display: flex !important;
@@ -867,9 +875,8 @@ def afficher_live_content(stop_id, clean_name):
                     gap: 10px !important;
                 }}
                 
-                /* 3. On sauve les icônes SVG ! 🦸‍♂️ */
+                /* 3. Les icônes SVG copient la couleur du texte ! */
                 div.section-header.sticky-header-{mode_actuel} svg {{
-                    /* currentColor = "Prends la couleur du texte autour de toi" */
                     fill: currentColor !important; 
                     height: 1.2em !important;
                 }}
