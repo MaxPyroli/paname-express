@@ -1112,21 +1112,21 @@ elif not st.session_state.search_results:
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Recherchez</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre station ci-dessus.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre station</div>',
             '</div>',
             
             # CARTE 3
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Temps Réel</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs actualisés en temps réel.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs sont actualisés en temps réel</div>',
             '</div>',
 
             # CARTE 2
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Favoris</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt</div>',
             '</div>',
             
         '</div>'
