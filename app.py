@@ -102,17 +102,25 @@ ICONES_TITRE = generer_icones_html()
 # --- RECUPERATION DE L'ICONE DU TITRE ---
 img_app_b64 = get_img_as_base64("app_icon.png")
 if img_app_b64:
-    # On crée la balise image si le fichier existe
-    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
+    # On ajuste un peu la taille de l'icône pour qu'elle colle au grand titre
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.1em; vertical-align: middle; margin-right: 12px;">'
 else:
-    # Sinon on met l'émoji par défaut
-    icone_html = "🚆"
+    icone_html = "<span style='font-size: 1.1em; vertical-align: middle; margin-right: 12px;'>🚆</span>"
 
-# Titre avec Logo personnalisé + Badge dynamique
-st.markdown(f"<h1>{icone_html} {APP_NAME} <span class='version-badge'>{APP_VERSION}</span></h1>", unsafe_allow_html=True)
+# --- NOUVEAU TITRE GÉANT (Pleine largeur, Badge en dessous) ---
+st.markdown(f"""
+<div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
+    <h1 style="font-size: 3.5rem; font-weight: 900; margin: 0; padding: 0; line-height: 1.1; letter-spacing: -1px; display: flex; align-items: center;">
+        {icone_html}<span>{APP_NAME}</span>
+    </h1>
+    <div style="margin-top: 12px;">
+        <span class='version-badge' style="font-size: 1rem; padding: 4px 12px; display: inline-block;">{APP_VERSION}</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Sous-titre dynamique
-st.markdown(f"##### *{APP_SUBTITLE}*", unsafe_allow_html=True)
+st.markdown(f"<h5 style='color: #888; font-style: italic; margin-top: -10px; margin-bottom: 25px;'>*{APP_SUBTITLE}*</h5>", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
 # 1. On initialise la session si elle n'existe pas
