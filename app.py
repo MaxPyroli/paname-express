@@ -101,19 +101,25 @@ if img_app_b64:
 else:
     icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- TITRE GÉANT (Astuce des marges négatives) ---
+# --- TITRE DÉBLOQUÉ (Adieu les marges invisibles !) ---
 st.markdown(f"""
-<div style="margin-top: 10px; margin-bottom: 25px; margin-left: -15px; margin-right: -15px; text-align: left;">
-    
-    <h1 style="font-size: clamp(2.5rem, 11.5vw, 4.5rem); font-weight: 900; margin: 0; padding: 0 15px; line-height: 1.1; letter-spacing: -1.5px; display: flex; align-items: center; white-space: nowrap;">
+<style>
+    /* 🔓 ASTUCE : On écrase les marges par défaut de Streamlit sur mobile */
+    .block-container {{
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+    }}
+</style>
+
+<div style="margin-top: 5px; margin-bottom: 30px; text-align: left;">
+    <h1 style="font-size: clamp(2rem, 11vw, 4rem); font-weight: 900; margin: 0; padding: 0; line-height: 1.1; letter-spacing: -1.5px; display: flex; align-items: center;">
         {icone_html}<span>{APP_NAME}</span>
     </h1>
     
-    <div style="margin-top: 12px; padding: 0 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <span class='version-badge' style="font-size: 1.1rem; padding: 6px 14px; display: inline-block;">{APP_VERSION}</span>
-        <span style="color: #aaa; font-style: italic; font-size: 1.1rem;">{APP_SUBTITLE}</span>
+    <div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span class='version-badge' style="font-size: 1rem; padding: 4px 12px; display: inline-block;">{APP_VERSION}</span>
+        <span style="color: #aaa; font-style: italic; font-size: 1.05rem;">{APP_SUBTITLE}</span>
     </div>
-
 </div>
 """, unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
