@@ -97,27 +97,22 @@ def afficher_popup_feur(mot_declencheur):
 # --- RECUPERATION DE L'ICONE DU TITRE ---
 img_app_b64 = get_img_as_base64("app_icon.png")
 if img_app_b64:
-    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: bottom; margin-right: 10px;">'
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
 else:
-    icone_html = "<span style='font-size: 1.1em; vertical-align: middle; margin-right: 12px;'>🚆</span>"
+    icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- TITRE GÉANTISSIME & BADGE CHUNKY (Optimisation Mobile) ---
-# ⚠️ BIEN COLLER À GAUCHE POUR LE MARKDOWN
+# --- TITRE GÉANT & SOUS-TITRE (Version Équilibrée) ---
 st.markdown(f"""
-<div style="margin-top: 5px; margin-bottom: 25px; text-align: left;">
-<h1 style="font-size: clamp(3.8rem, 15vw, 5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center;">
-{icone_html}<span>{APP_NAME}</span>
+<div style="margin-top: 10px; margin-bottom: 30px; text-align: left;">
+<h1 style="font-size: clamp(2.6rem, 11vw, 4.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -2px; white-space: nowrap;">
+{icone_html}{APP_NAME}
 </h1>
-<div style="margin-top: 15px;">
-<span class='version-badge' style="font-size: 1.2rem; font-weight: bold; padding: 10px 20px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-{APP_VERSION}
-</span>
+<div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+<span class='version-badge' style="font-size: clamp(1.1rem, 4.5vw, 1.3rem); padding: 6px 14px; display: inline-block;">{APP_VERSION}</span>
+<span style="color: #aaa; font-style: italic; font-size: clamp(1.1rem, 4vw, 1.3rem);">{APP_SUBTITLE}</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
-
-# Sous-titre dynamique
-st.markdown(f"<h5 style='color: #888; font-style: italic; margin-top: -10px; margin-bottom: 25px;'>*{APP_SUBTITLE}*</h5>", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
 # 1. On initialise la session si elle n'existe pas
