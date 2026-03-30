@@ -830,56 +830,67 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 1. LE FAUX FOND FIXE (Couleur de tes cadres)
-            # Il restera à sa place de départ et glissera vers le haut au scroll
+            # 📌 1. LE FAUX FOND FIXE (Scrolle vers le haut)
             st.markdown(f"""
             <div style="
-                background-color: #041b3b; /* 🛠️ À remplacer par le code de ton vrai bleu ! */
-                height: 50px; 
-                border-radius: 16px;
-                margin-top: 15px;
+                background-color: #1A2435; /* 🛠️ N'oublie pas de mettre ton vrai code couleur ! */
+                height: 52px; 
+                width: 100%;
+                border-radius: 12px;
+                margin-top: 20px;
+                box-sizing: border-box;
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Qui vient se poser dessus)
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Superposée au pixel près)
             st.markdown(f"""
             <style>
-                /* On rend le conteneur collant et on le remonte sur le faux fond */
-                div[data-testid="stElementContainer"]:has(.sticky-bubble-{mode_actuel}),
-                .element-container:has(.sticky-bubble-{mode_actuel}) {{
+                /* 1. On remonte LE CONTENEUR pour se superposer parfaitement au faux fond */
+                div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
+                .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: 2.875rem; 
+                    top: 2.875rem !important; 
                     z-index: 99 !important; 
-                    /* 🪄 On remonte la bulle exactement par-dessus le faux fond (50px + 16px de gap) */
-                    margin-top: -66px !important; 
+                    
+                    /* 🪄 MAGIE MATHÉMATIQUE : Hauteur du fond (52px) + Espace Streamlit (16px) = -68px */
+                    margin-top: -68px !important; 
+                    
+                    /* On repousse les cartes en dessous pour recréer une belle marge de respiration */
+                    margin-bottom: 20px !important;
                 }}
                 
-                div.sticky-bubble-{mode_actuel} {{
-                    height: 50px !important;
+                /* 2. Design de la bulle (Totalement isolé de tes autres styles) */
+                div.sticky-glass-{mode_actuel} {{
+                    height: 52px !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important; /* Indispensable pour que la bordure ne casse pas la taille */
+                    
                     background: rgba(255, 255, 255, 0.08) !important; 
                     backdrop-filter: blur(12px) !important; 
                     -webkit-backdrop-filter: blur(12px) !important;
                     
-                    padding: 0 20px !important;
-                    border-radius: 16px !important;
+                    border-radius: 12px !important;
                     border: 1px solid rgba(255, 255, 255, 0.15) !important;
                     
                     display: flex !important;
                     align-items: center !important;
-                    gap: 10px !important;
+                    padding: 0 16px !important;
+                    gap: 12px !important;
                     
-                    /* 🎨 Texte 100% Blanc ! */
                     color: #ffffff !important;
-                    font-weight: 900 !important;
+                    font-size: 1.15rem !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.5px !important;
                 }}
                 
-                div.sticky-bubble-{mode_actuel} svg {{
+                /* 3. L'icône SVG */
+                div.sticky-glass-{mode_actuel} svg {{
                     fill: #ffffff !important; 
-                    height: 1.2em !important;
+                    height: 1.3em !important;
                 }}
             </style>
             
-            <div class='section-header sticky-bubble-{mode_actuel}' style='margin:0;'>
+            <div class='sticky-glass-{mode_actuel}'>
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
