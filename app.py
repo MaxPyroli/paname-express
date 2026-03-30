@@ -1078,7 +1078,7 @@ elif not st.session_state.search_results:
             # Titre adaptatif
             '<h3 style="color: var(--text-color); margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
             # Sous-titre adaptatif
-            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage pour l\'Île-de-France.</p>',
+            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage en Île-de-France.</p>',
         '</div>',
         
         '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">',
