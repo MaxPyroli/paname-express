@@ -113,7 +113,6 @@ line-height: 1.1 !important;
 letter-spacing: -1.5px !important;
 display: flex !important;
 align-items: center !important;
-white-space: nowrap !important;
 }}
 .badge-geant-custom {{
 font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
