@@ -830,7 +830,7 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Version 💎 Premium & Adaptative 100%)
+            # 📌 L'en-tête "Collant" (Version Ultime 🌟 Infaillible)
             st.markdown(f"""
             <style>
                 /* 1. On rend le parent collant */
@@ -841,43 +841,45 @@ def afficher_live_content(stop_id, clean_name):
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. Le design ultra-sexy du bandeau (Bulle flottante) */
-                .sticky-header-{mode_actuel} {{
-                    /* 🌓 Fond : on utilise la couleur des cartes Streamlit en transparence */
-                    background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important;
+                /* 2. On FORCE l'écrasement de ton ancien .section-header */
+                div.section-header.sticky-header-{mode_actuel} {{
+                    /* 🎨 On laisse le thème naturel de Streamlit décider de la couleur du texte */
+                    color: inherit !important;
+                    font-weight: 700 !important;
+                    
+                    /* 🌓 Gris neutre transparent (Magique en Clair ET en Sombre) */
+                    background: rgba(128, 128, 128, 0.15) !important;
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
-                    /* 🎨 Texte : on FORCE la couleur dynamique (Noir en clair, Blanc en sombre) */
-                    color: var(--text-color) !important;
-                    
-                    /* 📏 Marges et espacements généreux pour respirer */
-                    padding: 10px 20px !important;
+                    /* 📏 Marges pour l'effet "Bulle" */
+                    padding: 12px 20px !important;
                     margin: 15px 0 25px 0 !important;
                     
-                    /* ✨ La touche "Claque" : Bords très arrondis, ombre douce et bordure subtile */
+                    /* ✨ Design qui claque */
                     border-radius: 16px !important;
-                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1) !important;
-                    border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
+                    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+                    border: 1px solid rgba(128, 128, 128, 0.25) !important;
                     
                     /* 🔠 Alignement parfait */
                     display: flex !important;
                     align-items: center !important;
+                    gap: 10px !important;
                 }}
                 
-                /* 🧹 On force aussi la couleur des SVG/Icones à l'intérieur pour qu'ils matchent le texte */
-                .sticky-header-{mode_actuel} svg {{
-                    fill: var(--text-color) !important;
+                /* 3. On sauve les icônes SVG ! 🦸‍♂️ */
+                div.section-header.sticky-header-{mode_actuel} svg {{
+                    /* currentColor = "Prends la couleur du texte autour de toi" */
+                    fill: currentColor !important; 
+                    height: 1.2em !important;
                 }}
             </style>
             
-            <div class='section-header sticky-header-{mode_actuel}' style='margin: 0;'>
+            <div class='section-header sticky-header-{mode_actuel}'>
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
-            
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
-            
+
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
             
