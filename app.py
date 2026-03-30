@@ -101,16 +101,42 @@ if img_app_b64:
 else:
     icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- TITRE GÉANT & SOUS-TITRE (Version Équilibrée) ---
+# --- TITRE GÉANT (Version Blindée Anti-Streamlit) ---
 st.markdown(f"""
-<div style="margin-top: 10px; margin-bottom: 30px; text-align: left;">
-<h1 style="font-size: 60px; font-weight: 900; margin: 0; padding: 0 15px; line-height: 1.1; letter-spacing: -1.5px; display: flex; align-items: center; white-space: nowrap;">
-{icone_html}{APP_NAME}
-</h1>
-<div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-<span class='version-badge' style="font-size: clamp(1.3rem, 4.5vw, 1.3rem); padding: 6px 14px; display: inline-block;">{APP_VERSION}</span>
-<span style="color: #aaa; font-style: italic; font-size: clamp(1.1rem, 4vw, 1.3rem);">{APP_SUBTITLE}</span>
-</div>
+<style>
+/* On crée nos propres règles indestructibles */
+.titre-geant-custom {{
+    font-size: clamp(2.8rem, 13vw, 4.5rem) !important;
+    font-weight: 900 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -1.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+}}
+.badge-geant-custom {{
+    font-size: clamp(1rem, 4.5vw, 1.2rem) !important;
+    padding: 6px 14px !important;
+    display: inline-block !important;
+}}
+.sous-titre-geant-custom {{
+    color: #aaa !important;
+    font-style: italic !important;
+    font-size: clamp(1.05rem, 4.5vw, 1.2rem) !important;
+}}
+</style>
+
+<div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
+    <div class="titre-geant-custom">
+        {icone_html}<span>{APP_NAME}</span>
+    </div>
+    
+    <div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <span class='version-badge badge-geant-custom'>{APP_VERSION}</span>
+        <span class="sous-titre-geant-custom">{APP_SUBTITLE}</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
