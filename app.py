@@ -842,7 +842,7 @@ def afficher_live_content(stop_id, clean_name):
                     
                     /* 👇 COULEUR BLEU FONCÉ : J'ai mis un beau bleu nuit par défaut (#1A2435). 
                        Si tes cartes ont un bleu différent, remplace ce code hexadécimal ! */
-                    background-color: #1A2435 !important; 
+                    background-color: #041b3b !important; 
                     
                     /* Espace en haut et en bas pour que la bulle respire */
                     padding: 10px 0px 15px 0px !important;
