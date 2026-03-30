@@ -101,42 +101,40 @@ if img_app_b64:
 else:
     icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- TITRE GÉANT (Version Blindée Anti-Streamlit) ---
+# --- TITRE GÉANT (Version Finale : Ajustée et sans indentation) ---
 st.markdown(f"""
 <style>
-/* On crée nos propres règles indestructibles */
 .titre-geant-custom {{
-    font-size: clamp(2.8rem, 13vw, 4.5rem) !important;
-    font-weight: 900 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.1 !important;
-    letter-spacing: -1.5px !important;
-    display: flex !important;
-    align-items: center !important;
-    white-space: nowrap !important;
+font-size: clamp(2rem, 8.5vw, 4rem) !important;
+font-weight: 900 !important;
+margin: 0 !important;
+padding: 0 !important;
+line-height: 1.1 !important;
+letter-spacing: -1.5px !important;
+display: flex !important;
+align-items: center !important;
+white-space: nowrap !important;
 }}
 .badge-geant-custom {{
-    font-size: clamp(1rem, 4.5vw, 1.2rem) !important;
-    padding: 6px 14px !important;
-    display: inline-block !important;
+font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
+padding: 4px 12px !important;
+display: inline-block !important;
 }}
 .sous-titre-geant-custom {{
-    color: #aaa !important;
-    font-style: italic !important;
-    font-size: clamp(1.05rem, 4.5vw, 1.2rem) !important;
+color: #aaa !important;
+font-style: italic !important;
+font-size: clamp(1rem, 4vw, 1.15rem) !important;
 }}
 </style>
 
 <div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
-    <div class="titre-geant-custom">
-        {icone_html}<span>{APP_NAME}</span>
-    </div>
-    
-    <div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <span class='version-badge badge-geant-custom'>{APP_VERSION}</span>
-        <span class="sous-titre-geant-custom">{APP_SUBTITLE}</span>
-    </div>
+<div class="titre-geant-custom">
+{icone_html}<span>{APP_NAME}</span>
+</div>
+<div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+<span class='version-badge badge-geant-custom'>{APP_VERSION}</span>
+<span class="sous-titre-geant-custom">{APP_SUBTITLE}</span>
+</div>
 </div>
 """, unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
