@@ -104,16 +104,16 @@ else:
     icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
 # --- NOUVEAU TITRE GÉANT & SOUS-TITRE (Regroupés) ---
+# --- NOUVEAU TITRE GÉANT & SOUS-TITRE (Regroupés) ---
 st.markdown(f"""
 <div style="margin-top: 10px; margin-bottom: 30px; text-align: left;">
-    <h1 style="font-size: clamp(2.2rem, 9vw, 3.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -1px; white-space: nowrap;">
-        {icone_html}{APP_NAME}
-    </h1>
-    
-    <div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <span class='version-badge' style="font-size: 0.9rem; padding: 4px 10px; display: inline-block;">{APP_VERSION}</span>
-        <span style="color: #aaa; font-style: italic; font-size: 1.05rem;">{APP_SUBTITLE}</span>
-    </div>
+<h1 style="font-size: clamp(2.2rem, 9vw, 3.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -1px; white-space: nowrap;">
+{icone_html}{APP_NAME}
+</h1>
+<div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+<span class='version-badge' style="font-size: 0.9rem; padding: 4px 10px; display: inline-block;">{APP_VERSION}</span>
+<span style="color: #aaa; font-style: italic; font-size: 1.05rem;">{APP_SUBTITLE}</span>
+</div>
 </div>
 """, unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
