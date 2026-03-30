@@ -113,6 +113,9 @@ line-height: 1.1 !important;
 letter-spacing: -1.5px !important;
 display: flex !important;
 align-items: center !important;
+/* 🔓 LA MAGIE EST ICI : */
+flex-wrap: wrap !important; /* Permet aux éléments de glisser les uns sous les autres */
+white-space: normal !important; /* Autorise le texte à se couper aux espaces */
 }}
 .badge-geant-custom {{
 font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
