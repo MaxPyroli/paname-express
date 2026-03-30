@@ -830,10 +830,10 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Version Sniper 🎯)
+            # 📌 L'en-tête "Collant" (Version 💎 Premium & Adaptative)
             st.markdown(f"""
             <style>
-                /* 1. On rend collante UNIQUEMENT la petite boîte qui contient le titre */
+                /* 1. On rend le parent collant */
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
                 .element-container:has(.sticky-header-{mode_actuel}) {{
                     position: sticky !important; 
@@ -841,19 +841,29 @@ def afficher_live_content(stop_id, clean_name):
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. On applique le bel effet visuel sur notre titre */
+                /* 2. Le design ultra-sexy du bandeau (Bulle flottante) */
                 .sticky-header-{mode_actuel} {{
-                    background: rgba(14, 17, 23, 0.85); /* Fond sombre transparent */
-                    backdrop-filter: blur(12px); 
-                    -webkit-backdrop-filter: blur(12px);
-                    padding: 10px 0 5px 0;
-                    margin-top: -10px;
-                    margin-bottom: 10px;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    /* 🌓 S'adapte au thème clair/sombre avec 85% d'opacité */
+                    background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
+                    backdrop-filter: blur(16px) !important; 
+                    -webkit-backdrop-filter: blur(16px) !important;
+                    
+                    /* 📏 Marges et espacements généreux pour respirer */
+                    padding: 12px 20px !important;
+                    margin: 15px 0 25px 0 !important;
+                    
+                    /* ✨ La touche "Claque" : Bords très arrondis, ombre douce et bordure subtile */
+                    border-radius: 16px !important;
+                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2) !important;
+                    border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
+                    
+                    /* 🔠 Alignement parfait */
+                    display: flex !important;
+                    align-items: center !important;
                 }}
             </style>
             
-            <div class='section-header sticky-header-{mode_actuel}' style='margin: 0;'>
+            <div class='section-header sticky-header-{mode_actuel}'>
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
