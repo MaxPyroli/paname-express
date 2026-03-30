@@ -830,7 +830,7 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Design "Badge Premium" dans une barre en verre 🍏)
+            # 📌 L'en-tête "Collant" (Version Transparence + Halo Protecteur 🛡️)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
@@ -840,59 +840,48 @@ def afficher_live_content(stop_id, clean_name):
                     z-index: 99 !important; 
                 }}
                 
-                /* 1. LA BARRE EN VERRE (Ultra transparente comme tu l'as réglée) */
-                div.sticky-header-{mode_actuel} {{
-                    /* Ton fond transparent parfait (0.25) */
-                    background: rgba(128, 128, 128, 0.25) !important;
+                div.section-header.sticky-header-{mode_actuel} {{
+                    /* 🎨 1. Texte dynamique (Noir en clair, Blanc en sombre) */
+                    color: var(--text-color) !important;
+                    font-weight: 900 !important; /* Un peu plus gras pour bien ressortir */
+                    
+                    /* 🛡️ 2. LE BOUCLIER HALO (L'astuce magique) */
+                    /* Crée une aura de la couleur du fond autour du texte. */
+                    text-shadow: 
+                        0 0 10px var(--background-color), 
+                        0 0 15px var(--background-color), 
+                        0 0 20px var(--background-color) !important;
+                    
+                    /* 🧊 3. Ton fond ultra-transparent (Léger voile de la couleur du texte) */
+                    background: color-mix(in srgb, var(--text-color) 8%, transparent) !important; 
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
-                    /* Design de la bulle globale */
-                    padding: 8px 12px !important;
+                    /* 📏 Design de la bulle */
+                    padding: 12px 20px !important;
                     margin: 15px 0 25px 0 !important;
                     border-radius: 16px !important;
                     border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1) !important;
                     
                     display: flex !important;
                     align-items: center !important;
+                    gap: 10px !important;
                 }}
                 
-                /* 2. LE BADGE SOLIDE (La solution infaillible pour le contraste) */
-                div.sticky-label-{mode_actuel} {{
-                    /* Magie : Fond Noir en mode clair, Blanc en mode sombre */
-                    background: var(--text-color) !important; 
-                    /* Texte Blanc en mode clair, Noir en mode sombre */
-                    color: var(--background-color) !important; 
-                    
-                    padding: 6px 14px !important;
-                    border-radius: 10px !important;
-                    font-weight: 800 !important;
-                    font-size: 0.95em !important;
-                    
-                    display: flex !important;
-                    align-items: center !important;
-                    gap: 8px !important;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
-                }}
-                
-                /* 3. L'icône prend la couleur du texte du badge */
-                div.sticky-label-{mode_actuel} svg {{
-                    fill: var(--background-color) !important; 
-                    height: 1.1em !important;
-                    margin-right: 2px !important;
+                /* ⚪ 4. Les icônes SVG copient la couleur ET ont leur propre halo ! */
+                div.section-header.sticky-header-{mode_actuel} svg {{
+                    fill: currentColor !important; 
+                    height: 1.2em !important;
+                    filter: drop-shadow(0 0 6px var(--background-color)) drop-shadow(0 0 3px var(--background-color)) !important;
                 }}
             </style>
             
-            <div class='sticky-header-{mode_actuel}'>
-                <div class='sticky-label-{mode_actuel}'>
-                    {ICONES_TITRE[mode_actuel]}
-                </div>
+            <div class='section-header sticky-header-{mode_actuel}'>
+                {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
             
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
-            
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
             
