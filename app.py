@@ -102,16 +102,16 @@ ICONES_TITRE = generer_icones_html()
 # --- RECUPERATION DE L'ICONE DU TITRE ---
 img_app_b64 = get_img_as_base64("app_icon.png")
 if img_app_b64:
-    # On ajuste un peu la taille de l'icône pour qu'elle colle au grand titre
-    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.1em; vertical-align: middle; margin-right: 12px;">'
+    # L'icône s'adapte automatiquement à la taille du texte (1em)
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
 else:
-    icone_html = "<span style='font-size: 1.1em; vertical-align: middle; margin-right: 12px;'>🚆</span>"
+    icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- NOUVEAU TITRE GÉANT (Pleine largeur, Badge en dessous) ---
+# --- NOUVEAU TITRE GÉANT (Responsive / Élastique) ---
 st.markdown(f"""
 <div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
-    <h1 style="font-size: 3.5rem; font-weight: 900; margin: 0; padding: 0; line-height: 1.1; letter-spacing: -1px; display: flex; align-items: center;">
-        {icone_html}<span>{APP_NAME}</span>
+    <h1 style="font-size: clamp(2.2rem, 9vw, 3.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -1px; white-space: nowrap;">
+        {icone_html}{APP_NAME}
     </h1>
     <div style="margin-top: 12px;">
         <span class='version-badge' style="font-size: 1rem; padding: 4px 12px; display: inline-block;">{APP_VERSION}</span>
