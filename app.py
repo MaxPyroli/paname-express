@@ -105,7 +105,7 @@ else:
 st.markdown(f"""
 <style>
 .titre-geant-custom {{
-font-size: clamp(2.8rem, 8.5vw, 4rem) !important;
+font-size: clamp(2rem, 9vw, 4rem) !important;
 font-weight: 900 !important;
 margin: 0 !important;
 padding: 0 !important;
