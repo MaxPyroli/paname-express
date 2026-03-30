@@ -917,33 +917,51 @@ def afficher_live_content(stop_id, clean_name):
                     rows_html = ""
                     destinations_vues = []
                     
+                    # On vérifie si c'est le faux départ "Service terminé" généré par le script
+                    est_termine = (len(proches) == 1 and "Service terminé" in proches[0]['dest'])
+                    
                     # --- A. GESTION DES PERTURBATIONS ---
                     perturbation_msg = None 
                     
                     tz_paris = pytz.timezone('Europe/Paris')
                     now_hour = datetime.now(tz_paris).hour
                     
-                    if not proches and (6 <= now_hour < 23):
+                    # On affiche le message d'erreur s'il n'y a rien en pleine journée
+                    if not est_termine and not proches and (6 <= now_hour < 23):
                          perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
 
-                    # Alerte
+                    # Alerte HTML
                     alert_html = ""
                     if perturbation_msg:
                         alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>{perturbation_msg}</span></div>"
 
                     # --- B. AFFICHAGE DES DESTINATIONS ---
-                    for d in proches:
-                        dn = d['dest']
-                        if dn not in destinations_vues:
-                            destinations_vues.append(dn)
-                            freq_text = "Départ toutes les ~30s"
+                    if est_termine:
+                        # Si le service est terminé, on met le beau bloc gris classique !
+                        rows_html = '<div class="service-box">😴 Service terminé</div>'
+                    else:
+                        for d in proches:
+                            dn = d['dest']
+                            if dn not in destinations_vues:
+                                destinations_vues.append(dn)
+                                freq_text = "Départ toutes les ~30s"
 
-                            # HTML compacté
-                            rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
+                                # HTML compacté
+                                rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
                     
                     if not rows_html and not perturbation_msg:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
+                    # --- C. RENDU DE LA CARTE ---
+                    st.markdown(f"""
+<div class="bus-card" style="border-left-color: #{color}; position: relative;">
+<div style="display:flex; align-items:center; margin-bottom:10px;">
+<span class="line-badge" style="background-color:#{color};">{code}</span>
+</div>
+{alert_html}
+{rows_html}
+</div>
+""", unsafe_allow_html=True)
                     # --- C. RENDU DE LA CARTE ---
                     # Suppression de l'émoji et simplification de l'en-tête
                     st.markdown(f"""
