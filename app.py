@@ -830,7 +830,7 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (La Bulle Sombre Intemporelle 🦇)
+            # 📌 L'en-tête "Collant" (Version Transparence + Halo Protecteur 🛡️)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
@@ -841,33 +841,39 @@ def afficher_live_content(stop_id, clean_name):
                 }}
                 
                 div.section-header.sticky-header-{mode_actuel} {{
-                    /* 🎨 Texte TOUJOURS blanc pour une lisibilité absolue */
-                    color: #ffffff !important;
-                    font-weight: 700 !important;
+                    /* 🎨 1. Texte dynamique (Noir en clair, Blanc en sombre) */
+                    color: var(--text-color) !important;
+                    font-weight: 900 !important; /* Un peu plus gras pour bien ressortir */
                     
-                    /* 🌑 Fond sombre profond avec une pointe de transparence pour l'élégance */
-                    background: rgba(22, 27, 34, 0.25) !important;
+                    /* 🛡️ 2. LE BOUCLIER HALO (L'astuce magique) */
+                    /* Crée une aura de la couleur du fond autour du texte. */
+                    text-shadow: 
+                        0 0 10px var(--background-color), 
+                        0 0 15px var(--background-color), 
+                        0 0 20px var(--background-color) !important;
+                    
+                    /* 🧊 3. Ton fond ultra-transparent (Léger voile de la couleur du texte) */
+                    background: color-mix(in srgb, var(--text-color) 8%, transparent) !important; 
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
                     /* 📏 Design de la bulle */
-                    padding: 10px 20px !important;
+                    padding: 12px 20px !important;
                     margin: 15px 0 25px 0 !important;
                     border-radius: 16px !important;
-                    
-                    /* ✨ Ombre sombre et bordure lumineuse pour la faire ressortir en mode clair */
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1) !important;
                     
                     display: flex !important;
                     align-items: center !important;
                     gap: 10px !important;
                 }}
                 
-                /* ⚪ Les icônes SVG forcées en blanc brillant */
+                /* ⚪ 4. Les icônes SVG copient la couleur ET ont leur propre halo ! */
                 div.section-header.sticky-header-{mode_actuel} svg {{
-                    fill: #ffffff !important; 
+                    fill: currentColor !important; 
                     height: 1.2em !important;
+                    filter: drop-shadow(0 0 6px var(--background-color)) drop-shadow(0 0 3px var(--background-color)) !important;
                 }}
             </style>
             
@@ -875,7 +881,8 @@ def afficher_live_content(stop_id, clean_name):
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
-
+            
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
             
