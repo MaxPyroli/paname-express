@@ -800,8 +800,17 @@ def afficher_live_content(stop_id, clean_name):
         with containers[mode_actuel]:
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
             
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
+            c1_vu = False
+            
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
+                
+                # --- VERIFICATION ANTI-DOUBLON ---
+                if code == "C1":
+                    if c1_vu: 
+                        continue # On passe au suivant sans l'afficher
+                    c1_vu = True
                 
                 # --- INFO TRAFIC ---
                 line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
@@ -952,16 +961,6 @@ def afficher_live_content(stop_id, clean_name):
                     if not rows_html and not perturbation_msg:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
-                    # --- C. RENDU DE LA CARTE ---
-                    st.markdown(f"""
-<div class="bus-card" style="border-left-color: #{color}; position: relative;">
-<div style="display:flex; align-items:center; margin-bottom:10px;">
-<span class="line-badge" style="background-color:#{color};">{code}</span>
-</div>
-{alert_html}
-{rows_html}
-</div>
-""", unsafe_allow_html=True)
                     # --- C. RENDU DE LA CARTE ---
                     # Suppression de l'émoji et simplification de l'en-tête
                     st.markdown(f"""
