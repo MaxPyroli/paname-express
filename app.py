@@ -830,70 +830,63 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Transparence 0.25 + Fix Bug Safari/iOS 🍏)
+            # 📌 L'en-tête "Collant" (Fond Bleu Foncé + Bulle Transparente 💎)
             st.markdown(f"""
             <style>
-                div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
-                .element-container:has(.sticky-header-{mode_actuel}) {{
+                /* 1. LE RIDEAU ARRIÈRE-PLAN (Couleur de tes cartes) */
+                div[data-testid="stElementContainer"]:has(.sticky-container-{mode_actuel}),
+                .element-container:has(.sticky-container-{mode_actuel}) {{
                     position: sticky !important; 
                     top: 2.875rem; 
                     z-index: 99 !important; 
-                }}
-                
-                /* 1. LA VITRE (Transparente à 0.25 comme tu aimes) */
-                div.sticky-header-{mode_actuel} {{
-                    background: rgba(128, 128, 128, 0.25) !important; 
-                    backdrop-filter: blur(16px) !important; 
-                    -webkit-backdrop-filter: blur(16px) !important;
                     
-                    padding: 12px 20px !important;
-                    margin: 15px 0 25px 0 !important;
-                    border-radius: 16px !important;
-                    border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    /* 👇 COULEUR BLEU FONCÉ : J'ai mis un beau bleu nuit par défaut (#1A2435). 
+                       Si tes cartes ont un bleu différent, remplace ce code hexadécimal ! */
+                    background-color: #1A2435 !important; 
+                    
+                    /* Espace en haut et en bas pour que la bulle respire */
+                    padding: 10px 0px 15px 0px !important;
+                    margin-top: -10px !important;
+                    
+                    /* Ombre sous le rideau pour séparer de ce qui scrolle en dessous */
+                    box-shadow: 0 8px 15px -5px rgba(0,0,0,0.3) !important;
                 }}
                 
-                /* 2. LE TEXTE (Séparé de la vitre pour éviter le bug fantôme) */
-                div.sticky-content-{mode_actuel} {{
+                /* 2. LA BELLE BULLE EN VERRE PUR (Sans fond gris) */
+                div.sticky-bubble-{mode_actuel} {{
+                    /* Transparence très pure : juste un voile blanc à 8% */
+                    background: rgba(255, 255, 255, 0.08) !important; 
+                    backdrop-filter: blur(12px) !important; 
+                    -webkit-backdrop-filter: blur(12px) !important;
+                    
+                    /* Design de la bulle */
+                    padding: 10px 20px !important;
+                    border-radius: 16px !important;
+                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                    
+                    /* Alignement */
                     display: flex !important;
                     align-items: center !important;
                     gap: 10px !important;
                     
-                    color: var(--text-color) !important;
+                    /* 🎨 TEXTE 100% BLANC */
+                    color: #ffffff !important;
                     font-weight: 900 !important;
-                    
-                    /* 🛠️ LE FIX SAFARI : Force le texte sur une couche 3D au-dessus du verre */
-                    transform: translate3d(0, 0, 0) !important;
-                    
-                    /* 🛡️ LE CONTOUR INFAILLIBLE : Dessine un trait physique autour des lettres */
-                    /* var(--background-color) sera Blanc en mode clair, Noir en mode sombre */
-                    -webkit-text-stroke: 1.5px var(--background-color) !important;
-                    
-                    /* Petite lueur en renfort */
-                    text-shadow: 0px 4px 15px var(--background-color) !important;
                 }}
                 
-                /* 3. L'ICÔNE SVG PROTÉGÉE */
-                div.sticky-content-{mode_actuel} svg {{
-                    fill: currentColor !important; 
+                /* 3. L'ICÔNE 100% BLANCHE */
+                div.sticky-bubble-{mode_actuel} svg {{
+                    fill: #ffffff !important; 
                     height: 1.2em !important;
-                    
-                    /* Filtre SVG de contour pour protéger l'icône (Le stroke ne marche pas bien sur les SVG) */
-                    filter: 
-                        drop-shadow(-1.5px -1.5px 0px var(--background-color)) 
-                        drop-shadow(1.5px 1.5px 0px var(--background-color)) !important;
                 }}
             </style>
             
-            <div class='sticky-header-{mode_actuel}'>
-                <div class='section-header sticky-content-{mode_actuel}' style='margin:0; padding:0; border:none; background:none; box-shadow:none;'>
+            <div class='sticky-container-{mode_actuel}'>
+                <div class='section-header sticky-bubble-{mode_actuel}' style='margin:0; box-shadow:none; border: 1px solid rgba(255, 255, 255, 0.15) !important;'>
                     {ICONES_TITRE[mode_actuel]}
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
-            
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
