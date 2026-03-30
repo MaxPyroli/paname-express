@@ -799,10 +799,18 @@ def afficher_live_content(stop_id, clean_name):
         
         with containers[mode_actuel]:
             st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
+
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
+            c1_vu = False
             
-            # ... (Le reste de la boucle d'affichage reste identique) ...
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
+                
+                # --- VERIFICATION ANTI-DOUBLON ---
+                if code == "C1":
+                    if c1_vu: 
+                        continue # On passe au suivant sans l'afficher
+                    c1_vu = True
                 
                 # --- INFO TRAFIC ---
                 line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
@@ -810,6 +818,7 @@ def afficher_live_content(stop_id, clean_name):
                 # -------------------
 
                 departs = lignes_du_mode[cle]
+                
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
