@@ -830,27 +830,33 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Le hack ultime pour Streamlit)
+            # 📌 L'en-tête "Collant" (Version Sniper 🎯)
             st.markdown(f"""
             <style>
-                /* 🔓 On cible la boîte parente de Streamlit qui contient notre classe spéciale */
-                div[data-testid="stVerticalBlock"] > div:has(.sticky-header-{mode_actuel}) {{
-                    position: sticky; 
-                    top: 2.875rem; /* 🛠️ La hauteur de la barre Streamlit. Passe à 0px si elle est masquée ! */
-                    z-index: 99; 
-                    background: rgba(14, 17, 23, 0.85); 
+                /* 1. On rend collante UNIQUEMENT la petite boîte qui contient le titre */
+                div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
+                .element-container:has(.sticky-header-{mode_actuel}) {{
+                    position: sticky !important; 
+                    top: 2.875rem; /* 🛠️ Ajuste à 0px si tu n'as pas la barre Streamlit */
+                    z-index: 99 !important; 
+                }}
+                
+                /* 2. On applique le bel effet visuel sur notre titre */
+                .sticky-header-{mode_actuel} {{
+                    background: rgba(14, 17, 23, 0.85); /* Fond sombre transparent */
                     backdrop-filter: blur(12px); 
                     -webkit-backdrop-filter: blur(12px);
+                    padding: 10px 0 5px 0;
                     margin-top: -10px;
-                    padding-top: 10px;
-                    padding-bottom: 5px;
+                    margin-bottom: 10px;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                 }}
             </style>
-            <div class='section-header sticky-header-{mode_actuel}' style='margin: 0;'>{ICONES_TITRE[mode_actuel]}</div>
-            """, unsafe_allow_html=True)
             
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
+            <div class='section-header sticky-header-{mode_actuel}' style='margin: 0;'>
+                {ICONES_TITRE[mode_actuel]}
+            </div>
+            """, unsafe_allow_html=True)
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
