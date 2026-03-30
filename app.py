@@ -108,7 +108,7 @@ st.markdown(f"""
 {icone_html}{APP_NAME}
 </h1>
 <div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-<span class='version-badge' style="font-size: clamp(1.1rem, 4.5vw, 1.3rem); padding: 6px 14px; display: inline-block;">{APP_VERSION}</span>
+<span class='version-badge' style="font-size: clamp(1.3rem, 4.5vw, 1.3rem); padding: 6px 14px; display: inline-block;">{APP_VERSION}</span>
 <span style="color: #aaa; font-style: italic; font-size: clamp(1.1rem, 4vw, 1.3rem);">{APP_SUBTITLE}</span>
 </div>
 </div>
