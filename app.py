@@ -104,7 +104,7 @@ else:
 # --- TITRE GÉANT & SOUS-TITRE (Version Équilibrée) ---
 st.markdown(f"""
 <div style="margin-top: 10px; margin-bottom: 30px; text-align: left;">
-<h1 style="font-size: clamp(3.6rem, 11vw, 4.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -2px; white-space: nowrap;">
+<h1 style="font-size: clamp(2.6rem, 11vw, 6.5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -2px; white-space: nowrap;">
 {icone_html}{APP_NAME}
 </h1>
 <div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
