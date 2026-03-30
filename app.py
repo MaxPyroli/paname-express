@@ -830,7 +830,23 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
+            # 📌 NOUVEAU : L'en-tête "Collant" (Sticky) avec effet verre dépoli
+            st.markdown(f"""
+            <div style="
+                position: sticky; 
+                top: 2.875rem; /* 🛠️ Ajuste à 0px si tu n'as pas la barre de menu Streamlit en haut */
+                z-index: 99; 
+                background: rgba(14, 17, 23, 0.85); /* Fond sombre transparent */
+                backdrop-filter: blur(12px); 
+                -webkit-backdrop-filter: blur(12px); /* Indispensable pour que le flou marche sur iPhone */
+                padding: 10px 0 5px 0;
+                margin-top: -10px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Petite ligne de séparation élégante */
+            ">
+                <div class='section-header' style='margin: 0;'>{ICONES_TITRE[mode_actuel]}</div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
