@@ -282,12 +282,26 @@ with st.sidebar:
         "Profitez de la nouvelle interface, des alertes trafic intelligentes "
         "et d'une navigation encore plus fluide. Bon voyage ! 🚀"
     )
-    # 📱 NOUVEAU : LE BOUTON WHATSAPP
-    st.link_button(
-        "💬 Canal WhatsApp Updates", 
-        "https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N", # <-- Remplace ça par ton vrai lien !
-        use_container_width=True
-    )
+    # 📱 NOUVEAU : LE BOUTON WHATSAPP VERT CUSTOM
+    st.markdown("""
+        <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
+            display: block;
+            width: 100%;
+            background-color: #25D366;
+            color: white;
+            text-align: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s ease;
+        ">
+            🟢 Suivre les Alertes Trafic en direct
+        </a>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
