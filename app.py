@@ -830,61 +830,57 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Fond Bleu Foncé + Bulle Transparente 💎)
+            # 📌 1. LE FAUX FOND FIXE (Couleur de tes cadres)
+            # Il restera à sa place de départ et glissera vers le haut au scroll
+            st.markdown(f"""
+            <div style="
+                background-color: #041b3b; /* 🛠️ À remplacer par le code de ton vrai bleu ! */
+                height: 50px; 
+                border-radius: 16px;
+                margin-top: 15px;
+            "></div>
+            """, unsafe_allow_html=True)
+            
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Qui vient se poser dessus)
             st.markdown(f"""
             <style>
-                /* 1. LE RIDEAU ARRIÈRE-PLAN (Couleur de tes cartes) */
-                div[data-testid="stElementContainer"]:has(.sticky-container-{mode_actuel}),
-                .element-container:has(.sticky-container-{mode_actuel}) {{
+                /* On rend le conteneur collant et on le remonte sur le faux fond */
+                div[data-testid="stElementContainer"]:has(.sticky-bubble-{mode_actuel}),
+                .element-container:has(.sticky-bubble-{mode_actuel}) {{
                     position: sticky !important; 
                     top: 2.875rem; 
                     z-index: 99 !important; 
-                    
-                    /* 👇 COULEUR BLEU FONCÉ : J'ai mis un beau bleu nuit par défaut (#1A2435). 
-                       Si tes cartes ont un bleu différent, remplace ce code hexadécimal ! */
-                    background-color: #041b3b !important; 
-                    
-                    /* Espace en haut et en bas pour que la bulle respire */
-                    padding: 10px 0px 15px 0px !important;
-                    margin-top: -10px !important;
-                    
-                    /* Ombre sous le rideau pour séparer de ce qui scrolle en dessous */
-                    box-shadow: 0 8px 15px -5px rgba(0,0,0,0.3) !important;
+                    /* 🪄 On remonte la bulle exactement par-dessus le faux fond (50px + 16px de gap) */
+                    margin-top: -66px !important; 
                 }}
                 
-                /* 2. LA BELLE BULLE EN VERRE PUR (Sans fond gris) */
                 div.sticky-bubble-{mode_actuel} {{
-                    /* Transparence très pure : juste un voile blanc à 8% */
+                    height: 50px !important;
                     background: rgba(255, 255, 255, 0.08) !important; 
                     backdrop-filter: blur(12px) !important; 
                     -webkit-backdrop-filter: blur(12px) !important;
                     
-                    /* Design de la bulle */
-                    padding: 10px 20px !important;
+                    padding: 0 20px !important;
                     border-radius: 16px !important;
                     border: 1px solid rgba(255, 255, 255, 0.15) !important;
                     
-                    /* Alignement */
                     display: flex !important;
                     align-items: center !important;
                     gap: 10px !important;
                     
-                    /* 🎨 TEXTE 100% BLANC */
+                    /* 🎨 Texte 100% Blanc ! */
                     color: #ffffff !important;
                     font-weight: 900 !important;
                 }}
                 
-                /* 3. L'ICÔNE 100% BLANCHE */
                 div.sticky-bubble-{mode_actuel} svg {{
                     fill: #ffffff !important; 
                     height: 1.2em !important;
                 }}
             </style>
             
-            <div class='sticky-container-{mode_actuel}'>
-                <div class='section-header sticky-bubble-{mode_actuel}' style='margin:0; box-shadow:none; border: 1px solid rgba(255, 255, 255, 0.15) !important;'>
-                    {ICONES_TITRE[mode_actuel]}
-                </div>
+            <div class='section-header sticky-bubble-{mode_actuel}' style='margin:0;'>
+                {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
             
