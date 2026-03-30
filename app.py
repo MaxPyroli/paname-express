@@ -846,7 +846,7 @@ def afficher_live_content(stop_id, clean_name):
                     font-weight: 700 !important;
                     
                     /* 🌑 Fond sombre profond avec une pointe de transparence pour l'élégance */
-                    background: rgba(22, 27, 34, 0.75) !important;
+                    background: rgba(22, 27, 34, 0.55) !important;
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
