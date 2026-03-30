@@ -830,10 +830,9 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Le bouclier anti-contraste 🛡️)
+            # 📌 L'en-tête "Collant" (La Bulle Sombre Intemporelle 🦇)
             st.markdown(f"""
             <style>
-                /* 1. On rend le parent collant */
                 div[data-testid="stElementContainer"]:has(.sticky-header-{mode_actuel}),
                 .element-container:has(.sticky-header-{mode_actuel}) {{
                     position: sticky !important; 
@@ -841,43 +840,33 @@ def afficher_live_content(stop_id, clean_name):
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. Le design de la bulle */
                 div.section-header.sticky-header-{mode_actuel} {{
-                    /* 🎨 Texte qui s'adapte à ton thème (Noir le jour, Blanc la nuit) */
-                    color: var(--text-color) !important;
+                    /* 🎨 Texte TOUJOURS blanc pour une lisibilité absolue */
+                    color: #ffffff !important;
                     font-weight: 700 !important;
                     
-                    /* 👇 🎛️ REGLAGE DE LA TRANSPARENCE ICI 👇 */
-                    /* Actuellement à 90% (très opaque pour cacher les blocs noirs en dessous). 
-                       - Si tu veux plus transparent, descends à 70% ou 80%.
-                       - Si tu veux totalement opaque, mets 100%. 
-                       var(--background-color) garantit que la bulle sera blanche le jour et noire la nuit. */
-                    background: color-mix(in srgb, var(--background-color) 90%, transparent) !important;
-                    
-                    /* 🌫️ L'effet de flou (Glassmorphism) */
+                    /* 🌑 Fond sombre profond avec une pointe de transparence pour l'élégance */
+                    background: rgba(22, 27, 34, 0.85) !important;
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
-                    /* 📏 Marges pour l'effet "Bulle" */
-                    padding: 12px 20px !important;
+                    /* 📏 Design de la bulle */
+                    padding: 10px 20px !important;
                     margin: 15px 0 25px 0 !important;
-                    
-                    /* ✨ Design qui claque */
                     border-radius: 16px !important;
-                    /* Ombre douce pour décoller la bulle du fond */
-                    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
-                    /* Bordure ultra-fine dynamique */
-                    border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent) !important;
                     
-                    /* 🔠 Alignement parfait */
+                    /* ✨ Ombre sombre et bordure lumineuse pour la faire ressortir en mode clair */
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    
                     display: flex !important;
                     align-items: center !important;
                     gap: 10px !important;
                 }}
                 
-                /* 3. Les icônes SVG copient la couleur du texte ! */
+                /* ⚪ Les icônes SVG forcées en blanc brillant */
                 div.section-header.sticky-header-{mode_actuel} svg {{
-                    fill: currentColor !important; 
+                    fill: #ffffff !important; 
                     height: 1.2em !important;
                 }}
             </style>
