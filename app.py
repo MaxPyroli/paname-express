@@ -222,7 +222,7 @@ with st.sidebar:
         
         # --- A. LISTE DES FAVORIS ---
         for fav in st.session_state.favorites[:]:
-            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+            col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
             
             with col_nav:
                 if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
