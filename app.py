@@ -830,7 +830,7 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 L'en-tête "Collant" (Version 💎 Premium & Adaptative)
+            # 📌 L'en-tête "Collant" (Version 💎 Premium & Adaptative 100%)
             st.markdown(f"""
             <style>
                 /* 1. On rend le parent collant */
@@ -843,30 +843,40 @@ def afficher_live_content(stop_id, clean_name):
                 
                 /* 2. Le design ultra-sexy du bandeau (Bulle flottante) */
                 .sticky-header-{mode_actuel} {{
-                    /* 🌓 S'adapte au thème clair/sombre avec 85% d'opacité */
-                    background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
+                    /* 🌓 Fond : on utilise la couleur des cartes Streamlit en transparence */
+                    background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important;
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important;
                     
+                    /* 🎨 Texte : on FORCE la couleur dynamique (Noir en clair, Blanc en sombre) */
+                    color: var(--text-color) !important;
+                    
                     /* 📏 Marges et espacements généreux pour respirer */
-                    padding: 12px 20px !important;
+                    padding: 10px 20px !important;
                     margin: 15px 0 25px 0 !important;
                     
                     /* ✨ La touche "Claque" : Bords très arrondis, ombre douce et bordure subtile */
                     border-radius: 16px !important;
-                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2) !important;
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1) !important;
                     border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
                     
                     /* 🔠 Alignement parfait */
                     display: flex !important;
                     align-items: center !important;
                 }}
+                
+                /* 🧹 On force aussi la couleur des SVG/Icones à l'intérieur pour qu'ils matchent le texte */
+                .sticky-header-{mode_actuel} svg {{
+                    fill: var(--text-color) !important;
+                }}
             </style>
             
-            <div class='section-header sticky-header-{mode_actuel}'>
+            <div class='section-header sticky-header-{mode_actuel}' style='margin: 0;'>
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
+            
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
