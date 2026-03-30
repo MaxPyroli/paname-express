@@ -18,6 +18,7 @@ from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
 if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
 
+ICONES_TITRE = generer_icones_html()
 
 # ==========================================
 #              CONFIGURATION
