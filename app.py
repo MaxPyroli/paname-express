@@ -571,7 +571,14 @@ def afficher_live_content(stop_id, clean_name):
     # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
     
     def sort_key(k): 
+        mode = k[0]
         code = str(k[1]).strip().upper()
+        
+        # 🦉 NOUVEAU : On isole les Noctiliens pour les mettre tout à la fin (groupe 4)
+        if mode == "BUS" and code.startswith("N"):
+            match = re.match(r"^N(\d+)", code)
+            return (4, int(match.group(1))) if match else (4, code)
+
         if code.isalpha(): return (0, code)
         match = re.match(r"^([a-zA-Z]+)(\d+)", code)
         if match: return (1, match.group(1), int(match.group(2)))
@@ -911,7 +918,7 @@ def afficher_live_content(stop_id, clean_name):
                         
                         # Si on a des rescapés dans p3 (souvent les bus !), on les affiche
                         if has_data_p3: 
-                            card_html += render_group("AUTRES DIRECTIONS / BUS", real_p3)
+                            card_html += render_group("AUTRES DIRECTIONS", real_p3)
                             
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
@@ -1080,25 +1087,36 @@ def afficher_live_content(stop_id, clean_name):
                     html_badges = ""
                     items = footer_data[mode]
                     
-                    # --- MÉTHODE TRI INFAILLIBLE (SÉPARATION) ---
+                    # --- MÉTHODE TRI INFAILLIBLE (AVEC NOCTILIENS À LA FIN) ---
                     liste_lettres = []
                     liste_chiffres = []
+                    liste_noctiliens = []
                     
                     for code in items.keys():
                         c_str = str(code).strip()
-                        if c_str.isdigit():
+                        
+                        # Si c'est un bus et qu'il commence par N (ex: N137, N34)
+                        if mode == "BUS" and c_str.upper().startswith('N'):
+                            liste_noctiliens.append(c_str)
+                        elif c_str.isdigit():
                             liste_chiffres.append(c_str)
                         else:
                             liste_lettres.append(c_str)
                     
-                    # 1. On trie les lettres par ordre alphabétique (A, B, J, N137...)
+                    # 1. On trie les lettres par ordre alphabétique (A, B, TVM...)
                     liste_lettres.sort()
                     
                     # 2. On trie les chiffres par valeur numérique (1, 10, 100...)
                     liste_chiffres.sort(key=lambda x: int(x))
                     
-                    # 3. ON COLLE : Lettres D'ABORD, Chiffres ENSUITE
-                    sorted_codes = liste_lettres + liste_chiffres
+                    # 3. On trie les Noctiliens proprement entre eux (N34 avant N137)
+                    def tri_noc(n):
+                        num = ''.join(filter(str.isdigit, n))
+                        return int(num) if num else 0
+                    liste_noctiliens.sort(key=tri_noc)
+                    
+                    # 4. ON COLLE : Lettres -> Chiffres -> Noctiliens (tout à la fin !)
+                    sorted_codes = liste_lettres + liste_chiffres + liste_noctiliens
                     # --------------------------------------------
 
                     for code in sorted_codes:
