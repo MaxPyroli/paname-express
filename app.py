@@ -92,29 +92,32 @@ def afficher_popup_feur(mot_declencheur):
     st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
-#        GESTION DES LOGOS (RETOUR IMG)
+#              INTERFACE GLOBALE
 # ==========================================
-# 3. ENFIN : On lance la génération
-ICONES_TITRE = generer_icones_html()
 # --- RECUPERATION DE L'ICONE DU TITRE ---
 img_app_b64 = get_img_as_base64("app_icon.png")
 if img_app_b64:
-    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: bottom; margin-right: 10px;">'
 else:
-    icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
+    icone_html = "<span style='font-size: 1.1em; vertical-align: middle; margin-right: 12px;'>🚆</span>"
 
-# --- NOUVEAU TITRE GÉANT & SOUS-TITRE (Contraste Maximisé) ---
+# --- TITRE GÉANTISSIME & BADGE CHUNKY (Optimisation Mobile) ---
+# ⚠️ BIEN COLLER À GAUCHE POUR LE MARKDOWN
 st.markdown(f"""
-<div style="margin-top: 10px; margin-bottom: 30px; text-align: left;">
-<h1 style="font-size: clamp(3.2rem, 13vw, 5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -2px; white-space: nowrap;">
-{icone_html}{APP_NAME}
+<div style="margin-top: 5px; margin-bottom: 25px; text-align: left;">
+<h1 style="font-size: clamp(3.8rem, 15vw, 5rem); font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: -3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center;">
+{icone_html}<span>{APP_NAME}</span>
 </h1>
-<div style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-<span class='version-badge' style="font-size: clamp(0.9rem, 3vw, 1.1rem); padding: 4px 10px; display: inline-block;">{APP_VERSION}</span>
-<span style="color: #aaa; font-style: italic; font-size: clamp(0.95rem, 3.5vw, 1.15rem);">{APP_SUBTITLE}</span>
+<div style="margin-top: 15px;">
+<span class='version-badge' style="font-size: 1.2rem; font-weight: bold; padding: 10px 20px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+{APP_VERSION}
+</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
+
+# Sous-titre dynamique
+st.markdown(f"<h5 style='color: #888; font-style: italic; margin-top: -10px; margin-bottom: 25px;'>*{APP_SUBTITLE}*</h5>", unsafe_allow_html=True)
 # --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
 
 # 1. On initialise la session si elle n'existe pas
