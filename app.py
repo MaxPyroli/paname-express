@@ -282,6 +282,13 @@ with st.sidebar:
         "Profitez de la nouvelle interface, des alertes trafic intelligentes "
         "et d'une navigation encore plus fluide. Bon voyage ! 🚀"
     )
+    # 📱 NOUVEAU : LE BOUTON WHATSAPP
+    st.link_button(
+        "💬 Canal WhatsApp Updates", 
+        "https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N", # <-- Remplace ça par ton vrai lien !
+        use_container_width=True
+    )
+    
     st.markdown("---")
     with st.expander("📜 Historique des versions"):
         notes_history = get_all_changelogs()
