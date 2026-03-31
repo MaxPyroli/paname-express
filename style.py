@@ -65,6 +65,7 @@ def appliquer_style_global():
             border-radius: 12px !important;
             overflow: hidden !important;
             border: 1px solid rgba(128, 128, 128, 0.2) !important;
+            pointer-events: none !important; /* 🛑 CARTE FIGÉE ICI 🛑 */
         }
         /* ------------------------------------------- */
 

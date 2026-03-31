@@ -14,10 +14,12 @@ from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+from sidebar import initialiser_favoris, afficher_sidebar
 # Initialisation des variables de session
 if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
 
+ICONES_TITRE = generer_icones_html()
 
 # ==========================================
 #              CONFIGURATION
@@ -37,6 +39,17 @@ st.set_page_config(
 
 # 2. APPLICATION DU STYLE
 appliquer_style_global()
+
+# ==========================================
+# 🪄 MAGIE : AUTO-FERMETURE DE LA SIDEBAR
+# ==========================================
+if st.session_state.get('fermer_sidebar', False):
+    # On ferme juste la sidebar proprement, sans toucher au scroll !
+    streamlit_js_eval(
+        js_expressions="window.parent.document.querySelector('[data-testid=\"stSidebar\"] button').click()", 
+        key=f"close_sb_{time.time()}"
+    )
+    st.session_state.fermer_sidebar = False
 # ==========================================
 #          FONCTIONS UTILITAIRES
 # ==========================================
@@ -81,169 +94,57 @@ def afficher_popup_feur(mot_declencheur):
     st.markdown("*Cliquez en dehors de la fenêtre pour fermer.*")
 
 # ==========================================
-#        GESTION DES LOGOS (RETOUR IMG)
-# ==========================================
-# 3. ENFIN : On lance la génération
-ICONES_TITRE = generer_icones_html()
-# ==========================================
 #              INTERFACE GLOBALE
 # ==========================================
 # --- RECUPERATION DE L'ICONE DU TITRE ---
 img_app_b64 = get_img_as_base64("app_icon.png")
 if img_app_b64:
-    # On crée la balise image si le fichier existe
-    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1.5em; vertical-align: bottom; margin-right: 10px;">'
+    icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
 else:
-    # Sinon on met l'émoji par défaut
-    icone_html = "🚆"
+    icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# Titre avec Logo personnalisé + Badge dynamique
-st.markdown(f"<h1>{icone_html} {APP_NAME} <span class='version-badge'>{APP_VERSION}</span></h1>", unsafe_allow_html=True)
+# --- TITRE GÉANT (Version Finale : Ajustée et sans indentation) ---
+st.markdown(f"""
+<style>
+.titre-geant-custom {{
+font-size: clamp(2rem, 11.5vw, 4rem) !important;
+font-weight: 900 !important;
+margin: 0 !important;
+padding: 0 !important;
+line-height: 1.1 !important;
+letter-spacing: -1.5px !important;
+display: flex !important;
+align-items: center !important;
+/* 🔓 LA MAGIE EST ICI : */
+flex-wrap: wrap !important; /* Permet aux éléments de glisser les uns sous les autres */
+white-space: normal !important; /* Autorise le texte à se couper aux espaces */
+}}
+.badge-geant-custom {{
+font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
+padding: 4px 12px !important;
+display: inline-block !important;
+}}
+.sous-titre-geant-custom {{
+color: #aaa !important;
+font-style: italic !important;
+font-size: clamp(1rem, 4vw, 1.15rem) !important;
+}}
+</style>
 
-# Sous-titre dynamique
-st.markdown(f"##### *{APP_SUBTITLE}*", unsafe_allow_html=True)
-# --- INITIALISATION DES FAVORIS (LocalStorage JS Pur - V4 Instantanée) ---
+<div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
+<div class="titre-geant-custom">
+{icone_html}<span>{APP_NAME}</span>
+</div>
+<div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+<span class='version-badge badge-geant-custom'>{APP_VERSION}</span>
+<span class="sous-titre-geant-custom">{APP_SUBTITLE}</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
-# 1. On initialise la session si elle n'existe pas
-if 'favorites' not in st.session_state:
-    st.session_state.favorites = []
-if 'favs_loaded' not in st.session_state:
-    st.session_state.favs_loaded = False
+initialiser_favoris()
+afficher_sidebar()
 
-# 2. Lecture du navigateur (UNE SEULE FOIS au démarrage)
-if not st.session_state.favs_loaded:
-    # On demande les données au navigateur
-    favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs_init")
-    
-    if favs_from_browser:
-        try:
-            # Si on reçoit des données, on remplit la session et on verrouille
-            st.session_state.favorites = json.loads(favs_from_browser)
-            st.session_state.favs_loaded = True
-            st.rerun() # On recharge pour afficher la sidebar remplie
-        except:
-            pass
-    # Si le composant a fini de charger mais renvoie rien (premier lancement), on verrouille aussi
-    # Note : streamlit_js_eval renvoie souvent None au tout premier tick, c'est normal.
-
-def toggle_favorite(stop_id, stop_name):
-    """Ajoute/Retire : Met à jour l'affichage IMMÉDIATEMENT et sauvegarde en fond."""
-    clean_name = stop_name.split('(')[0].strip()
-    exists = False
-    
-    # 1. MISE À JOUR DE LA SESSION
-    for i, fav in enumerate(st.session_state.favorites):
-        if fav['id'] == stop_id:
-            st.session_state.favorites.pop(i)
-            exists = True
-            st.toast(f"❌ {clean_name} retiré", icon="🗑️")
-            break
-    if not exists:
-        st.session_state.favorites.append({'id': stop_id, 'name': clean_name, 'full_name': stop_name})
-        st.toast(f"⭐ {clean_name} ajouté !", icon="✅")
-    
-    # 2. SAUVEGARDE
-    # CORRECTION CRITIQUE : On a retiré 'with st.sidebar' qui faisait planter le Fragment.
-    # Le CSS ajouté plus haut se charge de rendre ce composant invisible.
-    st.session_state.favs_loaded = True 
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-    
-    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_{time.time()}")
-    
-    time.sleep(0.1)
-with st.sidebar:
-    st.caption(f"{APP_VERSION} - {APP_CODENAME}")
-    
-    # 🏠 NOUVEAU : BOUTON ACCUEIL 
-    if st.button("🏠 Retour à l'accueil", use_container_width=True, type="secondary"):
-        st.session_state.selected_stop = None
-        st.session_state.selected_name = None
-        st.session_state.search_results = {}
-        st.query_params.clear() # 🔗 On efface l'URL !
-        st.rerun()
-        
-    # --- SECTION FAVORIS ---
-    st.header("⭐ Mes Favoris")
-    
-    # Fonction pour charger un favori (inchangée)
-    def load_fav(fav_id, fav_name):
-        st.session_state.selected_stop = fav_id
-        st.session_state.selected_name = fav_name
-        st.session_state.search_results = {}
-        st.session_state.last_query = ""
-        st.session_state.search_key += 1
-        
-        # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
-        st.query_params["gare"] = fav_id
-    # --- LOGIQUE D'AFFICHAGE CORRIGÉE ---
-    if not st.session_state.favorites:
-        # CAS 1 : PAS DE FAVORIS
-        st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
-        
-    else:
-        # CAS 2 : IL Y A DES FAVORIS (On affiche la liste ET le bouton supprimer)
-        
-        # --- A. LISTE DES FAVORIS ---
-        for fav in st.session_state.favorites[:]:
-            col_nav, col_del = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
-            
-            with col_nav:
-                if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
-                    load_fav(fav['id'], fav['full_name'])
-                    st.rerun()
-
-            with col_del:
-                if st.button("🗑️", key=f"del_fav_{fav['id']}", help="Supprimer", use_container_width=True):
-                    st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-                    streamlit_js_eval(
-                        js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", 
-                        key=f"del_sync_{time.time()}"
-                    )
-                    st.rerun()
-
-        # --- B. ESPACE ---
-        st.write("")
-        st.write("") 
-        
-        # --- C. BOUTON TOUT EFFACER (Uniquement si favoris existants) ---
-        if 'confirm_reset' not in st.session_state:
-            st.session_state.confirm_reset = False
-
-        if not st.session_state.confirm_reset:
-            if st.button("💥 Tout effacer", use_container_width=True, type="primary", key="reset_all_favs_btn"):
-                st.session_state.confirm_reset = True
-                st.rerun()
-        else:
-            # LE PANNEAU DE CONFIRMATION
-            with st.container(border=True):
-                st.warning("Tout supprimer ?")
-                
-                # Bouton OUI (Rouge)
-                if st.button("Oui, tout effacer", use_container_width=True, type="primary", key="confirm_yes"):
-                    st.session_state.favorites = []
-                    st.session_state.confirm_reset = False
-                    streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
-                    st.rerun()
-                
-                # Bouton NON (Gris)
-                if st.button("Non, annuler", use_container_width=True, key="confirm_no"):
-                    st.session_state.confirm_reset = False
-                    st.rerun()
-
-    st.markdown("---")
-    
-   # --- SECTION INFOS ---
-    st.header("🗄️ Informations")
-    st.info("👋 **Bienvenue à bord !**\n\nGrand Paname passe en version 1.0 ! Profitez d'une information voyageur claire et rapide pour vos trajets du quotidien.")
-    st.markdown("---")
-    with st.expander("📜 Historique des versions"):
-        notes_history = get_all_changelogs()
-        for i, note in enumerate(notes_history):
-            st.markdown(note)
-            if i < len(notes_history) - 1: st.divider()
-    st.markdown("---")
-    st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
@@ -284,7 +185,7 @@ if 'geoloc_active' not in st.session_state:
 # 1. LA BARRE DE RECHERCHE ET LE BOUTON GÉOLOC (Version Claire & Lisible)
 with st.form("search_form"):
     search_query = st.text_input(
-        "🔍 Rechercher une station :", 
+        "🔍 Rechercher un arrêt :", 
         placeholder="Ex: Noisiel, Saint-Lazare...",
         value=st.session_state.last_query, 
         key=f"search_input_{st.session_state.search_key}"
@@ -308,16 +209,17 @@ if geo_clicked:
 # 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
 if st.session_state.geoloc_active:
     st.info("📡 Recherche de votre position...")
-    # ... (le reste de ton code avec get_geolocation() reste exactement pareil) ...
     # La magie opère ici : ça demande l'autorisation au navigateur
     loc = get_geolocation() 
     
     if loc:
-        lat = loc['coords']['latitude']
-        lon = loc['coords']['longitude']
-        
-        with st.spinner("Recherche des gares à proximité..."):
-            data_proches = demander_arrets_proches(lat, lon)
+        # 🛡️ LE BOUCLIER ANTI-CRASH (Vérification de l'autorisation)
+        if 'coords' in loc:
+            lat = loc['coords']['latitude']
+            lon = loc['coords']['longitude']
+            
+            with st.spinner("Recherche des arrêts à proximité..."):
+                data_proches = demander_arrets_proches(lat, lon, rayon=1500)
             
             resultats_bruts = []
             if data_proches and 'places_nearby' in data_proches:
@@ -326,9 +228,11 @@ if st.session_state.geoloc_active:
                         sa = p['stop_area']
                         nom = sa['name']
                         ville = sa.get('administrative_regions', [{}])[0].get('name', '')
-                        distance = p.get('distance', 0)
                         
-                       # ✨ L'analyse magique (On ignore le tag avec "_")
+                        # 🔢 LA CORRECTION EST ICI : On force en "int" (nombre entier)
+                        distance = int(p.get('distance', 0))
+                        
+                        # ✨ L'analyse magique (On ignore le tag avec "_")
                         rang, _ = analyser_importance_arret(sa)
                         
                         # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
@@ -344,18 +248,38 @@ if st.session_state.geoloc_active:
                         })
             
             if resultats_bruts:
-                # ✨ TRI HYBRIDE : On trie d'abord par importance (rang), puis par distance !
-                resultats_bruts.sort(key=lambda x: (x['rang'], x['distance']))
+                # 1. Tri kilométrique strict
+                resultats_bruts.sort(key=lambda x: x['distance'])
                 
-                # On reformate pour le selectbox
-                opts = {r['label']: r['id'] for r in resultats_bruts}
+                # 2. Séparation en deux mondes
+                gares_lourdes = [r for r in resultats_bruts if r['rang'] <= 3] # RER, Train, Métro
+                arrets_legers = [r for r in resultats_bruts if r['rang'] > 3]  # Bus, Tram
+                
+                # 3. On garde les 10 plus proches de CHAQUE catégorie
+                gares_lourdes = gares_lourdes[:10]
+                arrets_legers = arrets_legers[:10]
+                
+               # 4. On crée le menu déroulant SANS les titres (mais on garde l'ordre intelligent)
+                opts = {}
+                
+                # On met d'abord les gares lourdes (s'il y en a)
+                for r in gares_lourdes:
+                    opts[f"🚇 {r['label']}"] = r['id']
+                        
+                # Puis on met les arrêts de bus à la suite
+                for r in arrets_legers:
+                    opts[f"🚌 {r['label']}"] = r['id']
                 
                 st.session_state.search_results = opts
                 st.session_state.geoloc_active = False 
                 st.rerun()
             else:
-                st.warning("⚠️ Aucune gare trouvée dans un rayon de 3km.")
+                st.warning("⚠️ Aucune gare trouvée dans un rayon de 1,5km.")
                 st.session_state.geoloc_active = False
+        else:
+            # 🛑 Le navigateur a bloqué ou refusé la position !
+            st.warning("⚠️ Accès à la position refusé. Veuillez l'autoriser dans les paramètres de votre navigateur.")
+            st.session_state.geoloc_active = False
 
 if st.session_state.search_error:
     st.warning(st.session_state.search_error)
@@ -389,8 +313,10 @@ if submitted and search_query:
             for p in data['places']:
                 if 'stop_area' in p:
                     sa = p['stop_area']
-                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
                     nom = sa['name']
+                    ville = sa.get('administrative_regions', [{}])[0].get('name', '')
+                    # 🔢 LA CORRECTION EST ICI : On force en "int" (nombre entier)
+                    distance = int(p.get('distance', 0))
                     
                     # ✨ L'analyse magique
                     rang, _ = analyser_importance_arret(sa)
@@ -419,13 +345,18 @@ if submitted and search_query:
 if st.session_state.search_results:
     opts = st.session_state.search_results
     choice = st.selectbox("Résultats trouvés :", list(opts.keys()))
-    if choice:
+    
+    # 🛑 NOUVEAU : On vérifie que le choix n'est pas un titre de catégorie (qui vaut None)
+    if choice and opts.get(choice) is not None:
         stop_id = opts[choice]
         if st.session_state.selected_stop != stop_id:
             st.session_state.selected_stop = stop_id
-            st.session_state.selected_name = choice
             
-            # 🔗 NOUVEAU : On écrit l'ID de la gare dans l'URL !
+            # On nettoie l'émoji pour le beau titre de la page
+            nom_propre = choice.replace("🚇 ", "").replace("🚌 ", "")
+            st.session_state.selected_name = nom_propre
+            
+            # 🔗 On écrit l'ID de la gare dans l'URL
             st.query_params["gare"] = stop_id
             
             st.rerun()
@@ -470,7 +401,14 @@ def afficher_live_content(stop_id, clean_name):
     # ... LE RESTE DU CODE RESTE EXACTEMENT LE MÊME ...
     
     def sort_key(k): 
+        mode = k[0]
         code = str(k[1]).strip().upper()
+        
+        # 🦉 NOUVEAU : On isole les Noctiliens pour les mettre tout à la fin (groupe 4)
+        if mode == "BUS" and code.startswith("N"):
+            match = re.match(r"^N(\d+)", code)
+            return (4, int(match.group(1))) if match else (4, code)
+
         if code.isalpha(): return (0, code)
         match = re.match(r"^([a-zA-Z]+)(\d+)", code)
         if match: return (1, match.group(1), int(match.group(2)))
@@ -722,11 +660,79 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            st.markdown(f"<div class='section-header'>{ICONES_TITRE[mode_actuel]}</div>", unsafe_allow_html=True)
+            # 📌 1. LE FAUX FOND FIXE
+            st.markdown(f"""
+            <div style="
+                background-color: #041b3b;
+                height: 54px; 
+                width: 100%;
+                border-radius: 12px;
+                box-sizing: border-box;
+            "></div>
+            """, unsafe_allow_html=True)
             
-            # ... (Le reste de la boucle d'affichage reste identique) ...
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
+            st.markdown(f"""
+            <style>
+                /* 1. On accroche la bulle un poil plus bas (3.2rem) pour éviter le chevauchement du menu haut */
+                div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
+                .element-container:has(.sticky-glass-{mode_actuel}) {{
+                    position: sticky !important; 
+                    top: calc(3.2rem + 62px) !important; /* 👈 Le nouveau calcul d'accroche */
+                    z-index: 99 !important; 
+                }}
+                
+                /* 2. Design de la bulle */
+                div.sticky-glass-{mode_actuel} {{
+                    /* 🪄 On tire la bulle vers le haut un peu MOINS fort (-64px au lieu de -70px) 
+                       pour la faire descendre pile sur le fond bleu ! */
+                    margin-top: -62px !important; 
+                    
+                    height: 54px !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                    
+                    background: rgba(255, 255, 255, 0.08) !important; 
+                    backdrop-filter: blur(12px) !important; 
+                    -webkit-backdrop-filter: blur(12px) !important;
+                    
+                    border-radius: 12px !important;
+                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                    
+                    display: flex !important;
+                    align-items: center !important;
+                    padding: 0 16px !important;
+                    gap: 12px !important;
+                    
+                    color: #ffffff !important;
+                    font-size: 1.15rem !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.5px !important;
+                }}
+                
+                /* 3. L'icône SVG */
+                div.sticky-glass-{mode_actuel} svg {{
+                    fill: #ffffff !important; 
+                    height: 1.3em !important;
+                }}
+            </style>
+            
+            <div class='sticky-glass-{mode_actuel}'>
+                {ICONES_TITRE[mode_actuel]}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
+            c1_vu = False
+            
             for cle in sorted(lignes_du_mode.keys(), key=sort_key):
                 _, code, color = cle
+                
+                # --- VERIFICATION ANTI-DOUBLON ---
+                if code == "C1":
+                    if c1_vu: 
+                        continue # On passe au suivant sans l'afficher
+                    c1_vu = True
                 
                 # --- INFO TRAFIC ---
                 line_id = all_lines_at_stop.get((mode_actuel, code), {}).get('id')
@@ -734,6 +740,7 @@ def afficher_live_content(stop_id, clean_name):
                 # -------------------
 
                 departs = lignes_du_mode[cle]
+                
                 proches = [d for d in departs if d['tri'] < 3000]
                 if not proches:
                      proches = [{'dest': 'Service terminé', 'html': "<span class='service-end'>-</span>", 'tri': 3000, 'is_last': False}]
@@ -764,7 +771,7 @@ def afficher_live_content(stop_id, clean_name):
                     # Nettoyage de p3 pour ne garder que les vrais trajets (pas les "Service terminé" générés par Ghost Lines)
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     
                     # Fonction helper (inchangée)
                     def render_group(titre, items):
@@ -801,13 +808,13 @@ def afficher_live_content(stop_id, clean_name):
                         
                         # Si on a des rescapés dans p3 (souvent les bus !), on les affiche
                         if has_data_p3: 
-                            card_html += render_group("AUTRES DIRECTIONS / BUS", real_p3)
+                            card_html += render_group("AUTRES DIRECTIONS", real_p3)
                             
                     card_html += "</div>"
                     st.markdown(card_html, unsafe_allow_html=True)
                 # CAS 2: RER/TRAIN SIMPLE
                 elif mode_actuel in ["RER", "TRAIN"]:
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}"""
+                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
@@ -841,29 +848,37 @@ def afficher_live_content(stop_id, clean_name):
                     rows_html = ""
                     destinations_vues = []
                     
+                    # On vérifie si c'est le faux départ "Service terminé" généré par le script
+                    est_termine = (len(proches) == 1 and "Service terminé" in proches[0]['dest'])
+                    
                     # --- A. GESTION DES PERTURBATIONS ---
                     perturbation_msg = None 
                     
                     tz_paris = pytz.timezone('Europe/Paris')
                     now_hour = datetime.now(tz_paris).hour
                     
-                    if not proches and (6 <= now_hour < 23):
+                    # On affiche le message d'erreur s'il n'y a rien en pleine journée
+                    if not est_termine and not proches and (6 <= now_hour < 23):
                          perturbation_msg = "Aucun départ détecté - Vérifiez l'état de la ligne"
 
-                    # Alerte
+                    # Alerte HTML
                     alert_html = ""
                     if perturbation_msg:
                         alert_html = f"<div style='background:rgba(231,76,60,0.15);border-left:4px solid #e74c3c;color:#ffadad;padding:10px;margin-bottom:12px;border-radius:4px;display:flex;align-items:start;gap:10px;'><span style='font-size:1.2em;'>⚠️</span><span style='font-size:0.9em;line-height:1.4;'>{perturbation_msg}</span></div>"
 
                     # --- B. AFFICHAGE DES DESTINATIONS ---
-                    for d in proches:
-                        dn = d['dest']
-                        if dn not in destinations_vues:
-                            destinations_vues.append(dn)
-                            freq_text = "Départ toutes les ~30s"
+                    if est_termine:
+                        # Si le service est terminé, on met le beau bloc gris classique !
+                        rows_html = '<div class="service-box">😴 Service terminé</div>'
+                    else:
+                        for d in proches:
+                            dn = d['dest']
+                            if dn not in destinations_vues:
+                                destinations_vues.append(dn)
+                                freq_text = "Départ toutes les ~30s"
 
-                            # HTML compacté
-                            rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
+                                # HTML compacté
+                                rows_html += f"""<div class="bus-row" style="align-items:center;"><span class="bus-dest">➜ {dn}</span><span style="background-color:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;font-size:0.85em;color:#a9cce3;white-space:nowrap;">⏱ {freq_text}</span></div>"""
                     
                     if not rows_html and not perturbation_msg:
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
@@ -938,7 +953,7 @@ def afficher_live_content(stop_id, clean_name):
                             else:
                                 rows_html += row_content                    
 
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span></div>{bandeau_html}{rows_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
     # 6. FOOTER
     with containers["AUTRE"]:
         for (mode_theo, code_theo), info in all_lines_at_stop.items():
@@ -962,25 +977,36 @@ def afficher_live_content(stop_id, clean_name):
                     html_badges = ""
                     items = footer_data[mode]
                     
-                    # --- MÉTHODE TRI INFAILLIBLE (SÉPARATION) ---
+                    # --- MÉTHODE TRI INFAILLIBLE (AVEC NOCTILIENS À LA FIN) ---
                     liste_lettres = []
                     liste_chiffres = []
+                    liste_noctiliens = []
                     
                     for code in items.keys():
                         c_str = str(code).strip()
-                        if c_str.isdigit():
+                        
+                        # Si c'est un bus et qu'il commence par N (ex: N137, N34)
+                        if mode == "BUS" and c_str.upper().startswith('N'):
+                            liste_noctiliens.append(c_str)
+                        elif c_str.isdigit():
                             liste_chiffres.append(c_str)
                         else:
                             liste_lettres.append(c_str)
                     
-                    # 1. On trie les lettres par ordre alphabétique (A, B, J, N137...)
+                    # 1. On trie les lettres par ordre alphabétique (A, B, TVM...)
                     liste_lettres.sort()
                     
                     # 2. On trie les chiffres par valeur numérique (1, 10, 100...)
                     liste_chiffres.sort(key=lambda x: int(x))
                     
-                    # 3. ON COLLE : Lettres D'ABORD, Chiffres ENSUITE
-                    sorted_codes = liste_lettres + liste_chiffres
+                    # 3. On trie les Noctiliens proprement entre eux (N34 avant N137)
+                    def tri_noc(n):
+                        num = ''.join(filter(str.isdigit, n))
+                        return int(num) if num else 0
+                    liste_noctiliens.sort(key=tri_noc)
+                    
+                    # 4. ON COLLE : Lettres -> Chiffres -> Noctiliens (tout à la fin !)
+                    sorted_codes = liste_lettres + liste_chiffres + liste_noctiliens
                     # --------------------------------------------
 
                     for code in sorted_codes:
@@ -1027,7 +1053,7 @@ elif not st.session_state.search_results:
             # Titre adaptatif
             '<h3 style="color: var(--text-color); margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
             # Sous-titre adaptatif
-            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage pour l\'Île-de-France.</p>',
+            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage en Île-de-France.</p>',
         '</div>',
         
         '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">',
@@ -1037,21 +1063,21 @@ elif not st.session_state.search_results:
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Recherchez</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre station ci-dessus.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre arrêt et sélectionnez-le dans la liste déroulante</div>',
             '</div>',
             
             # CARTE 3
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Temps Réel</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs actualisés en temps réel.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs et votre info trafic sont actualisés en temps réel</div>',
             '</div>',
 
             # CARTE 2
             '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
                 '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
                 '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Favoris</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt.</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt et le retrouver lors de votre prochain trajet</div>',
             '</div>',
             
         '</div>'
