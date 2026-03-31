@@ -271,6 +271,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     details.traffic-box[open] .chevron { transform: rotate(180deg); }
     </style>"""
 
+    # CSS propre et Hack JS pour Streamlit
     css_and_script = """
     <style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
@@ -283,22 +284,20 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     details.traffic-icon > summary:hover { opacity: 0.8; }
     </style>
     
-    <script>
-    // On n'ajoute l'écouteur qu'une seule fois pour éviter les ralentissements
-    if (!window.trafficScriptLoaded) {
-        window.trafficScriptLoaded = true;
-        document.addEventListener('click', function(e) {
-            // On cherche tous les menus d'info trafic ouverts
-            const openedDetails = document.querySelectorAll('details.traffic-icon[open]');
-            openedDetails.forEach(details => {
-                // Si le clic n'est pas CONTENU dans le menu ouvert, on le ferme
-                if (!details.contains(e.target)) {
-                    details.removeAttribute('open');
-                }
+    <img src="x" style="display:none;" onerror="
+        if (!window.trafficScriptLoaded) {
+            window.trafficScriptLoaded = true;
+            document.addEventListener('click', function(e) {
+                const openedDetails = document.querySelectorAll('details.traffic-icon[open]');
+                openedDetails.forEach(details => {
+                    // Si on clique en dehors du menu, on le ferme
+                    if (!details.contains(e.target)) {
+                        details.removeAttribute('open');
+                    }
+                });
             });
-        });
-    }
-    </script>
+        }
+    ">
     """
 
     html_output = css_and_script + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
