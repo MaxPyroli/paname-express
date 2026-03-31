@@ -1033,7 +1033,7 @@ def afficher_tableau_live(stop_id, stop_name):
         {clean_name}
     </div>
 
-    <img src="x" style="display:none;" onerror="setInterval(()=>{const el=document.querySelector('.sticky-station-title');if(el){document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}, 200);">
+    <img src="x" style="display:none;" onerror="setInterval(()=>{{const el=document.querySelector('.sticky-station-title');if(el){{document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}}}, 200);">
     """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
