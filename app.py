@@ -1032,12 +1032,11 @@ def afficher_tableau_live(stop_id, stop_name):
         div[data-testid="stElementContainer"]:has(.sticky-station-title),
         .element-container:has(.sticky-station-title) {{
             position: sticky !important; 
-            /* 👇 On augmente à 3.5rem pour bien dégager la barre du haut */
-            top: 3.5rem !important; 
+            /* 👇 On descend à 3.8rem (environ 60px) pour être pile sous la barre invisible de Streamlit */
+            top: 3.8rem !important; 
             z-index: 105 !important;
-            /* 🛡️ On ajoute une marge pour éviter que le haut du bleu soit coupé */
-            padding-top: 10px;
-            background-color: var(--background-color, #0e1117);
+            /* 🗑️ Fini le padding et le background qui faisaient une barre moche ! */
+            background-color: transparent !important; 
         }}
     </style>
     
