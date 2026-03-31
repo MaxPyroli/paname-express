@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import time
 from streamlit_js_eval import streamlit_js_eval
-from ui_components import afficher_bouton_whatsapp
 from config import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
 
