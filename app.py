@@ -670,16 +670,14 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Dynamique sur tous les écrans !)
+            # 📌 2. LA BULLE COLLANTE EN VERRE
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    
-                    /* 👇 MAGIE : 3.8rem (top du titre) + var(--title-height) + 15px (pour laisser respirer l'ombre) */
+                    /* 👇 On lit la variable calculée par notre radar */
                     top: calc(3.8rem + var(--title-height, 80px) + 15px) !important; 
-                    
                     z-index: 99 !important; 
                 }}
                 
@@ -1019,7 +1017,7 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
-    # 📌 1. TITRE COLLANT (PLEINE LARGEUR) + CAPTEUR DE HAUTEUR
+    # 📌 1. TITRE COLLANT (PLEINE LARGEUR) + CAPTEUR DE HAUTEUR EN BOUCLE
     st.markdown(f"""
     <style>
         div[data-testid="stElementContainer"]:has(.sticky-station-title),
@@ -1035,7 +1033,7 @@ def afficher_tableau_live(stop_id, stop_name):
         {clean_name}
     </div>
 
-    <img src="x" style="display:none;" onerror="const setHeight=()=>{{const el=document.querySelector('.sticky-station-title');if(el){{document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}}};setHeight();if(!window.resizeListenerAdded){{window.addEventListener('resize',setHeight);window.resizeListenerAdded=true;}}">
+    <img src="x" style="display:none;" onerror="setInterval(()=>{const el=document.querySelector('.sticky-station-title');if(el){document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}, 200);">
     """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
