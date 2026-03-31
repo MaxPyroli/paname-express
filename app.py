@@ -848,7 +848,7 @@ def afficher_live_content(stop_id, clean_name):
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: calc(3.2rem + 64px) !important; /* 👈 Le nouveau calcul d'accroche */
+                    top: calc(3.2rem + 62px) !important; /* 👈 Le nouveau calcul d'accroche */
                     z-index: 99 !important; 
                 }}
                 
@@ -856,7 +856,7 @@ def afficher_live_content(stop_id, clean_name):
                 div.sticky-glass-{mode_actuel} {{
                     /* 🪄 On tire la bulle vers le haut un peu MOINS fort (-64px au lieu de -70px) 
                        pour la faire descendre pile sur le fond bleu ! */
-                    margin-top: -64px !important; 
+                    margin-top: -62px !important; 
                     
                     height: 54px !important;
                     width: 100% !important;
