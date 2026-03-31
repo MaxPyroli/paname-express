@@ -21,8 +21,23 @@ def charger_police_locale(file_path, font_name):
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            .station-title, .rail-dest, .bus-dest, .version-badge, .last-dep-label {{
-                font-family: '{font_name}', sans-serif !important;
+            .station-title { 
+            font-size: 24px; 
+            font-weight: 800; 
+            color: #fff; 
+            text-align: center; 
+            margin: 10px 0 20px 0; 
+            text-transform: uppercase; 
+            /* 👇 Le dégradé bleu est maintenant en RGBA (85% d'opacité) */
+            background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); 
+            /* 👇 L'effet de flou sur ce qui passe en dessous */
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            /* 👇 Un petit bord blanc très léger pour l'effet "vitre" */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
             }}
             .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
