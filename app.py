@@ -651,17 +651,7 @@ def afficher_live_content(stop_id, clean_name):
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
-    # 🎯 L'ASTUCE : On calcule l'espacement selon la longueur du nom de la gare
-    longueur_nom = len(clean_name)
-    if longueur_nom > 40:
-        decalage_top = 185  # Très long (2-3 lignes)
-    elif longueur_nom > 25:
-        decalage_top = 150  # Moyen (risque de s'enrouler sur mobile)
-    else:
-        decalage_top = 115   # Court (1 ligne garantie)
-
     for mode_actuel in ordre_affichage:
-        # SÉCURITÉ ABSOLUE : Si le mode n'est plus dans les buckets, on passe au suivant
         if mode_actuel not in buckets: 
             continue
         
@@ -680,22 +670,25 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Dynamique sur tous les écrans !)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    /* 👇 On passe de 3.2rem à 3.5rem pour s'aligner sur le nouveau top du titre */
-                    top: calc(3.5rem + {decalage_top}px) !important; 
+                    
+                    /* 👇 MAGIE : 3.8rem (top du titre) + var(--title-height) + 15px (pour laisser respirer l'ombre) */
+                    top: calc(3.8rem + var(--title-height, 80px) + 15px) !important; 
+                    
                     z-index: 99 !important; 
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{
-                    margin-top: -62px !important;                    
+                    margin-top: -62px !important; 
                     height: 54px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
+                    /* ... le reste ne change pas ... */
                     
                     background: rgba(255, 255, 255, 0.08) !important; 
                     backdrop-filter: blur(12px) !important; 
