@@ -671,23 +671,19 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
+            # 📌 2. LA BULLE COLLANTE EN VERRE
             st.markdown(f"""
             <style>
-                /* 1. On accroche la bulle un poil plus bas (3.2rem) pour éviter le chevauchement du menu haut */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: calc(3.2rem + 62px) !important; /* 👈 Le nouveau calcul d'accroche */
+                    /* 👇 C'EST ICI : On passe de 62px à environ 135px pour laisser la place au gros titre */
+                    top: calc(3.2rem + 135px) !important; 
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. Design de la bulle */
                 div.sticky-glass-{mode_actuel} {{
-                    /* 🪄 On tire la bulle vers le haut un peu MOINS fort (-64px au lieu de -70px) 
-                       pour la faire descendre pile sur le fond bleu ! */
-                    margin-top: -62px !important; 
-                    
+                    margin-top: -62px !important;                    
                     height: 54px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
