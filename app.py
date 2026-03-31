@@ -652,7 +652,6 @@ def afficher_live_content(stop_id, clean_name):
     has_data = False
 
     for mode_actuel in ordre_affichage:
-        # SÉCURITÉ ABSOLUE : Si le mode n'est plus dans les buckets, on passe au suivant
         if mode_actuel not in buckets: 
             continue
         
@@ -674,20 +673,16 @@ def afficher_live_content(stop_id, clean_name):
             # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
             st.markdown(f"""
             <style>
-                /* 1. On accroche la bulle un poil plus bas (3.2rem) pour éviter le chevauchement du menu haut */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: calc(3.2rem + 62px) !important; /* 👈 Le nouveau calcul d'accroche */
+                    /* 👇 On baisse la valeur de 75px à 35px */
+                    top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; 
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. Design de la bulle */
                 div.sticky-glass-{mode_actuel} {{
-                    /* 🪄 On tire la bulle vers le haut un peu MOINS fort (-64px au lieu de -70px) 
-                       pour la faire descendre pile sur le fond bleu ! */
                     margin-top: -62px !important; 
-                    
                     height: 54px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
@@ -1021,8 +1016,24 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
-    # 1. TITRE (PLEINE LARGEUR)
-    st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
+    # 📌 1. TITRE COLLANT (PLEINE LARGEUR) + CAPTEUR DE HAUTEUR EN BOUCLE
+    st.markdown(f"""
+    <style>
+        div[data-testid="stElementContainer"]:has(.sticky-station-title),
+        .element-container:has(.sticky-station-title) {{
+            position: sticky !important; 
+            top: 3.8rem !important; 
+            z-index: 105 !important;
+            background-color: transparent !important; 
+        }}
+    </style>
+    
+    <div class='station-title sticky-station-title' style='margin-top: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.5);'>
+        {clean_name}
+    </div>
+
+    <img src="x" style="display:none;" onerror="setInterval(()=>{{const el=document.querySelector('.sticky-station-title');if(el){{document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}}}, 200);">
+    """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
     coords_df = demander_coordonnees_arret(stop_id)
