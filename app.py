@@ -1021,8 +1021,28 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
-    # 1. TITRE (PLEINE LARGEUR)
-    st.markdown(f"<div class='station-title'>{clean_name}</div>", unsafe_allow_html=True)
+    # 📌 1. TITRE COLLANT (PLEINE LARGEUR)
+    st.markdown(f"""
+    <style>
+        /* On rend le conteneur du titre collant en haut de l'écran */
+        div[data-testid="stElementContainer"]:has(.sticky-station-title),
+        .element-container:has(.sticky-station-title) {{
+            position: sticky !important; 
+            top: 2.875rem !important; /* Juste sous la barre Streamlit */
+            z-index: 105 !important;  /* 👑 Priorité MAX : au-dessus des bulles (99) et popups (50) ! */
+            
+            /* Fond "cache-misère" : empêche de voir les cartes défiler sur les bords arrondis du titre */
+            background-color: var(--background-color, #0e1117); 
+            padding-top: 15px;
+            padding-bottom: 10px;
+            margin-top: -15px;
+        }}
+    </style>
+    
+    <div class='station-title sticky-station-title' style='margin-top: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.5);'>
+        {clean_name}
+    </div>
+    """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
     coords_df = demander_coordonnees_arret(stop_id)
