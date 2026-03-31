@@ -658,7 +658,7 @@ def afficher_live_content(stop_id, clean_name):
     elif longueur_nom > 25:
         decalage_top = 115  # Moyen (risque de s'enrouler sur mobile)
     else:
-        decalage_top = 85   # Court (1 ligne garantie)
+        decalage_top = 185   # Court (1 ligne garantie)
 
     for mode_actuel in ordre_affichage:
         # SÉCURITÉ ABSOLUE : Si le mode n'est plus dans les buckets, on passe au suivant
