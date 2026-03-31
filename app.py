@@ -654,9 +654,9 @@ def afficher_live_content(stop_id, clean_name):
     # 🎯 L'ASTUCE : On calcule l'espacement selon la longueur du nom de la gare
     longueur_nom = len(clean_name)
     if longueur_nom > 40:
-        decalage_top = 150  # Très long (2-3 lignes)
+        decalage_top = 185  # Très long (2-3 lignes)
     elif longueur_nom > 25:
-        decalage_top = 115  # Moyen (risque de s'enrouler sur mobile)
+        decalage_top = 150  # Moyen (risque de s'enrouler sur mobile)
     else:
         decalage_top = 115   # Court (1 ligne garantie)
 
