@@ -830,10 +830,10 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 1. LE FAUX FOND FIXE (Reste sagement à sa place)
+            # 📌 1. LE FAUX FOND FIXE
             st.markdown(f"""
             <div style="
-                background-color: #041b3b; /* 🎨 Ta vraie couleur parfaite ! */
+                background-color: #041b3b;
                 height: 54px; 
                 width: 100%;
                 border-radius: 12px;
@@ -841,22 +841,22 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Superposition Mathématique 🧮)
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
             st.markdown(f"""
             <style>
-                /* 1. La magie : Le conteneur Streamlit devient collant 70px plus BAS */
-                /* Ça compense exactement le décalage visuel qu'on fait juste en dessous */
+                /* 1. On accroche la bulle un poil plus bas (3.2rem) pour éviter le chevauchement du menu haut */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: calc(2.875rem + 70px) !important; 
+                    top: calc(3.2rem + 64px) !important; /* 👈 Le nouveau calcul d'accroche */
                     z-index: 99 !important; 
                 }}
                 
-                /* 2. Design de la bulle isolée */
+                /* 2. Design de la bulle */
                 div.sticky-glass-{mode_actuel} {{
-                    /* On remonte visuellement la bulle de 70px (54px de fond + 16px d'espace Streamlit) */
-                    margin-top: -70px !important; 
+                    /* 🪄 On tire la bulle vers le haut un peu MOINS fort (-64px au lieu de -70px) 
+                       pour la faire descendre pile sur le fond bleu ! */
+                    margin-top: -64px !important; 
                     
                     height: 54px !important;
                     width: 100% !important;
