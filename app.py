@@ -676,8 +676,8 @@ def afficher_live_content(stop_id, clean_name):
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    /* 👇 LA CORRECTION EST LÀ : On ajoute 75px pour contrer le margin-top négatif de la bulle ! */
-                    top: calc(3.8rem + var(--title-height, 80px) + 75px) !important; 
+                    /* 👇 On baisse la valeur de 75px à 35px */
+                    top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
                     z-index: 99 !important; 
                 }}
                 
