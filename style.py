@@ -11,6 +11,7 @@ def charger_police_locale(file_path, font_name):
         b64 = base64.b64encode(data).decode()
         ext = file_path.split('.')[-1].lower()
         format_str = "opentype" if ext == "otf" else "truetype"
+        # ICI : Le CSS pour déclarer la police (avec les doubles accolades {{ }})
         css = f"""
             <style>
             @font-face {{
@@ -44,7 +45,7 @@ def appliquer_style_global():
     # 1. On charge la police
     charger_police_locale("GrandParis.otf", "Grand Paris")
     
-    # 2. On injecte tout le CSS
+    # 2. On injecte tout le CSS (sans f-string, donc sans risque de crash)
     st.markdown("""
     <style>
         /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
@@ -58,14 +59,13 @@ def appliquer_style_global():
         /* ------------------------------------------- */
         /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
         /* ------------------------------------------- */
-        /* On cible le conteneur exact de la carte Deck.gl de Streamlit */
         [data-testid="stDeckGlJsonChart"], 
         [data-testid="stDeckGlJsonChart"] > div,
         [data-testid="stDeckGlJsonChart"] canvas {
             border-radius: 12px !important;
             overflow: hidden !important;
             border: 1px solid rgba(128, 128, 128, 0.2) !important;
-            pointer-events: none !important; /* 🛑 CARTE FIGÉE ICI 🛑 */
+            pointer-events: none !important;
         }
         /* ------------------------------------------- */
 
@@ -94,8 +94,12 @@ def appliquer_style_global():
         .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
+        
+        /* ✨ TON TITRE EN VERRE EST ICI (Sur une seule ligne) ✨ */
         .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
+        
         .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
         .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
@@ -189,5 +193,3 @@ def appliquer_style_global():
         }
     </style>
     """, unsafe_allow_html=True)
-
-
