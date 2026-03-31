@@ -671,16 +671,17 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    /* 👇 C'EST ICI : On passe de 62px à environ 135px pour laisser la place au gros titre */
-                    top: calc(3.2rem + 135px) !important; 
+                    top: calc(3.2rem + 150px) !important; /* 👈 On descend à 150px pour laisser la place aux longs noms de gare */
                     z-index: 99 !important; 
                 }}
+                
+                /* ... le reste du CSS de la bulle reste identique ... */
                 
                 div.sticky-glass-{mode_actuel} {{
                     margin-top: -62px !important;                    
@@ -1025,13 +1026,7 @@ def afficher_tableau_live(stop_id, stop_name):
         .element-container:has(.sticky-station-title) {{
             position: sticky !important; 
             top: 2.875rem !important; /* Juste sous la barre Streamlit */
-            z-index: 105 !important;  /* 👑 Priorité MAX : au-dessus des bulles (99) et popups (50) ! */
-            
-            /* Fond "cache-misère" : empêche de voir les cartes défiler sur les bords arrondis du titre */
-            background-color: var(--background-color, #0e1117); 
-            padding-top: 15px;
-            padding-bottom: 10px;
-            margin-top: -15px;
+            z-index: 105 !important;  /* 👑 Priorité MAX */
         }}
     </style>
     
