@@ -94,18 +94,18 @@ def appliquer_style_global():
         .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
-        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); padding: 12px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
         
-        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 8px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
         .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
         .bus-row > span:last-child, .rail-row > span:last-child { color: #ffffff !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
         
-        .service-box { text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em; background: rgba(255, 255, 255, 0.05); border-radius: 6px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444; }
+        .service-box { text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444; }
         .service-end { color: #999; font-style: italic; font-size: 0.9em; }
 
-        .last-dep-box { border: 2px solid #f1c40f; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
+        .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         .last-dep-small-frame { border: 1px solid #f1c40f; border-radius: 4px; padding: 1px 5px; color: #f1c40f; font-weight: bold; }
@@ -131,7 +131,7 @@ def appliquer_style_global():
         div[data-testid="column"] button { border: none; background: transparent; font-size: 1.5rem; padding: 0; }
         div[data-testid="column"] button:hover { color: #f1c40f; border: none; background: transparent; }
         
-        .replacement-box { border: 2px dashed #e74c3c; border-radius: 6px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(231, 76, 60, 0.1); }
+        .replacement-box { border: 2px dashed #e74c3c; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(231, 76, 60, 0.1); }
         .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
         .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         
