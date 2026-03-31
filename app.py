@@ -830,42 +830,35 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
-            # 📌 1. LE FAUX FOND FIXE (Scrolle vers le haut)
+            # 📌 1. LE FAUX FOND FIXE (Reste sagement à sa place)
             st.markdown(f"""
-            <style>
-                /* 🪄 LA SOLUTION : On tire le bloc suivant (la bulle) vers le haut 
-                   depuis le fond, pour ne pas casser le calcul du 'sticky' ! */
-                div[data-testid="stElementContainer"]:has(.faux-fond-{mode_actuel}),
-                .element-container:has(.faux-fond-{mode_actuel}) {{
-                    margin-bottom: -68px !important; /* 52px (hauteur) + 16px (espace Streamlit) */
-                    position: relative !important;
-                    z-index: 1 !important;
-                }}
-            </style>
-            <div class="faux-fond-{mode_actuel}" style="
-                background-color: #041b3b; /* 🛠️ Ton vrai code couleur ! */
-                height: 52px; 
+            <div style="
+                background-color: #041b3b; /* 🎨 Ta vraie couleur parfaite ! */
+                height: 54px; 
                 width: 100%;
                 border-radius: 12px;
                 box-sizing: border-box;
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Superposée au pixel près)
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Superposition Mathématique 🧮)
             st.markdown(f"""
             <style>
-                /* 1. Le conteneur est sain : il collera parfaitement sous la barre Streamlit */
+                /* 1. La magie : Le conteneur Streamlit devient collant 70px plus BAS */
+                /* Ça compense exactement le décalage visuel qu'on fait juste en dessous */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: 2.875rem !important; /* 🛠️ Passe à 0px si tu as caché la barre du haut ! */
+                    top: calc(2.875rem + 70px) !important; 
                     z-index: 99 !important; 
-                    margin-bottom: 20px !important; /* Espace avant les cartes de transport */
                 }}
                 
-                /* 2. Design de la bulle pure */
+                /* 2. Design de la bulle isolée */
                 div.sticky-glass-{mode_actuel} {{
-                    height: 52px !important;
+                    /* On remonte visuellement la bulle de 70px (54px de fond + 16px d'espace Streamlit) */
+                    margin-top: -70px !important; 
+                    
+                    height: 54px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
                     
@@ -898,8 +891,6 @@ def afficher_live_content(stop_id, clean_name):
                 {ICONES_TITRE[mode_actuel]}
             </div>
             """, unsafe_allow_html=True)
-            
-            # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             
             # 🛑 NOUVEAU : Anti-doublon exclusif pour le Câble C1
             c1_vu = False
