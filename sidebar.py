@@ -69,7 +69,7 @@ def afficher_sidebar():
 
         st.markdown("---")
         st.header("🗄️ Informations")
-        st.success("🎉 **Bienvenue sur Grand Paname {APP_VERSION} !**")
+        st.success("🎉 **Bienvenue sur Grand Paname v2.0 !**")
         
         st.markdown("""
         <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
