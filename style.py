@@ -158,12 +158,11 @@ def appliquer_style_global():
         button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
         button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 
-        /* 🚨 BANDEAU DÉFILANT STYLE NEWS 🚨 */
         .traffic-ticker {
             overflow: hidden;
             white-space: nowrap;
             background: rgba(231, 76, 60, 0.1);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 4px 0;
             margin-top: 4px;
             border-left: 3px solid #e74c3c;
