@@ -680,17 +680,16 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
+            # 📌 2. LA BULLE COLLANTE EN VERRE
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: calc(3.2rem + 150px) !important; /* 👈 On descend à 150px pour laisser la place aux longs noms de gare */
+                    /* 👇 On passe de 3.2rem à 3.5rem pour s'aligner sur le nouveau top du titre */
+                    top: calc(3.5rem + {decalage_top}px) !important; 
                     z-index: 99 !important; 
                 }}
-                
-                /* ... le reste du CSS de la bulle reste identique ... */
                 
                 div.sticky-glass-{mode_actuel} {{
                     margin-top: -62px !important;                    
@@ -1030,12 +1029,15 @@ def afficher_tableau_live(stop_id, stop_name):
     # 📌 1. TITRE COLLANT (PLEINE LARGEUR)
     st.markdown(f"""
     <style>
-        /* On rend le conteneur du titre collant en haut de l'écran */
         div[data-testid="stElementContainer"]:has(.sticky-station-title),
         .element-container:has(.sticky-station-title) {{
             position: sticky !important; 
-            top: 2.875rem !important; /* Juste sous la barre Streamlit */
-            z-index: 105 !important;  /* 👑 Priorité MAX */
+            /* 👇 On augmente à 3.5rem pour bien dégager la barre du haut */
+            top: 3.5rem !important; 
+            z-index: 105 !important;
+            /* 🛡️ On ajoute une marge pour éviter que le haut du bleu soit coupé */
+            padding-top: 10px;
+            background-color: var(--background-color, #0e1117);
         }}
     </style>
     
