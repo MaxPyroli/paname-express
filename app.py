@@ -1026,16 +1026,14 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
-    # 📌 1. TITRE COLLANT (PLEINE LARGEUR)
+    # 📌 1. TITRE COLLANT (PLEINE LARGEUR) + CAPTEUR DE HAUTEUR
     st.markdown(f"""
     <style>
         div[data-testid="stElementContainer"]:has(.sticky-station-title),
         .element-container:has(.sticky-station-title) {{
             position: sticky !important; 
-            /* 👇 On descend à 3.8rem (environ 60px) pour être pile sous la barre invisible de Streamlit */
             top: 3.8rem !important; 
             z-index: 105 !important;
-            /* 🗑️ Fini le padding et le background qui faisaient une barre moche ! */
             background-color: transparent !important; 
         }}
     </style>
@@ -1043,6 +1041,27 @@ def afficher_tableau_live(stop_id, stop_name):
     <div class='station-title sticky-station-title' style='margin-top: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.5);'>
         {clean_name}
     </div>
+
+    <img src="x" style="display:none;" onerror="
+        const setHeight = () => {{
+            const el = document.querySelector('.sticky-station-title');
+            if(el) {{
+                // On récupère la vraie hauteur en pixels sur l'appareil
+                const h = el.offsetHeight; 
+                // On l'envoie dans une variable CSS globale
+                document.documentElement.style.setProperty('--title-height', h + 'px');
+            }}
+        }};
+        
+        // On lance la mesure tout de suite
+        setHeight();
+        
+        // Et on la relance si l'utilisateur tourne son téléphone (changement de taille)
+        if(!window.resizeListenerAdded) {{
+            window.addEventListener('resize', setHeight);
+            window.resizeListenerAdded = true;
+        }}
+    ">
     """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
