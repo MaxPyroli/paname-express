@@ -21,23 +21,8 @@ def charger_police_locale(file_path, font_name):
             h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, td, th {{
                 font-family: '{font_name}', sans-serif !important;
             }}
-            .station-title { 
-            font-size: 24px; 
-            font-weight: 800; 
-            color: #fff; 
-            text-align: center; 
-            margin: 10px 0 20px 0; 
-            text-transform: uppercase; 
-            /* 👇 Le dégradé bleu est maintenant en RGBA (85% d'opacité) */
-            background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); 
-            /* 👇 L'effet de flou sur ce qui passe en dessous */
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            /* 👇 Un petit bord blanc très léger pour l'effet "vitre" */
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 12px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            .station-title, .rail-dest, .bus-dest, .version-badge, .last-dep-label {{
+                font-family: '{font_name}', sans-serif !important;
             }}
             .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
                 font-family: '{font_name}', sans-serif !important;
@@ -109,9 +94,8 @@ def appliquer_style_global():
         .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
-        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
-        
         .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
         .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
