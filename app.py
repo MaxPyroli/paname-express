@@ -1035,26 +1035,7 @@ def afficher_tableau_live(stop_id, stop_name):
         {clean_name}
     </div>
 
-    <img src="x" style="display:none;" onerror="
-        const setHeight = () => {{
-            const el = document.querySelector('.sticky-station-title');
-            if(el) {{
-                // On récupère la vraie hauteur en pixels sur l'appareil
-                const h = el.offsetHeight; 
-                // On l'envoie dans une variable CSS globale
-                document.documentElement.style.setProperty('--title-height', h + 'px');
-            }}
-        }};
-        
-        // On lance la mesure tout de suite
-        setHeight();
-        
-        // Et on la relance si l'utilisateur tourne son téléphone (changement de taille)
-        if(!window.resizeListenerAdded) {{
-            window.addEventListener('resize', setHeight);
-            window.resizeListenerAdded = true;
-        }}
-    ">
+    <img src="x" style="display:none;" onerror="const setHeight=()=>{{const el=document.querySelector('.sticky-station-title');if(el){{document.documentElement.style.setProperty('--title-height',el.offsetHeight+'px');}}}};setHeight();if(!window.resizeListenerAdded){{window.addEventListener('resize',setHeight);window.resizeListenerAdded=true;}}">
     """, unsafe_allow_html=True)
             
     # --- 🗺️ NOUVEAU : LE BANDEAU CARTE (ÉLÉGANT) ---
