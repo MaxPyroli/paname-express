@@ -670,14 +670,14 @@ def afficher_live_content(stop_id, clean_name):
             "></div>
             """, unsafe_allow_html=True)
             
-            # 📌 2. LA BULLE COLLANTE EN VERRE
+            # 📌 2. LA BULLE COLLANTE EN VERRE (Calibrage au pixel près 🎯)
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    /* 👇 On lit la variable calculée par notre radar */
-                    top: calc(3.8rem + var(--title-height, 80px) + 15px) !important; 
+                    /* 👇 LA CORRECTION EST LÀ : On ajoute 75px pour contrer le margin-top négatif de la bulle ! */
+                    top: calc(3.8rem + var(--title-height, 80px) + 75px) !important; 
                     z-index: 99 !important; 
                 }}
                 
@@ -686,7 +686,6 @@ def afficher_live_content(stop_id, clean_name):
                     height: 54px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
-                    /* ... le reste ne change pas ... */
                     
                     background: rgba(255, 255, 255, 0.08) !important; 
                     backdrop-filter: blur(12px) !important; 
