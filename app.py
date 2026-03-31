@@ -677,7 +677,7 @@ def afficher_live_content(stop_id, clean_name):
                 .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
                     /* 👇 On baisse la valeur de 75px à 35px */
-                    top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
+                    top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; 
                     z-index: 99 !important; 
                 }}
                 
