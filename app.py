@@ -651,75 +651,6 @@ def afficher_live_content(stop_id, clean_name):
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
-    # ==========================================
-    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
-    # ==========================================
-    import datetime as dt
-    import random
-
-    now = dt.datetime.now()
-    if now.month == 4 and now.day == 1:
-        # On utilise la minute en cours pour que les temps et destinations "changent" à chaque minute
-        random.seed(now.minute)
-        t1 = random.randint(1, 4)
-        t2 = random.randint(6, 12)
-        t3 = random.randint(15, 25)
-        
-        # Ta liste de destinations + quelques ajouts maison !
-        fausses_dest = [
-            "Perpette-les-Oies - Université", 
-            "Pétaouchnok RER", 
-            "Eglise de Trifouillis-les-Oies",
-            "Trou-Perdu-sous-Bois",
-            "Montcuq (Centre)",
-            "Mairie de Villeneuve-Bad-Loin",
-            "Nulle-Part-sur-Oise",
-            "Saint-Glinglin-des-Prés",
-            "Bled-Paumé-sur-Seine",
-            "Tataouine-les-Bains",
-            "Bout-du-Monde (Zone Industrielle)"
-        ]
-        
-        # On mélange et on en pioche 3
-        random.shuffle(fausses_dest)
-        d1, d2, d3 = fausses_dest[0], fausses_dest[1], fausses_dest[2]
-        
-        # Le code HTML/CSS (CSS aéré, mais HTML compressé sur une ligne pour zéro bug)
-        html_poisson = f"""
-        <style>
-        div[data-testid="stElementContainer"]:has(.sticky-glass-CHARRETTE),
-        .element-container:has(.sticky-glass-CHARRETTE) {{
-            position: sticky !important; 
-            top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
-            z-index: 99 !important; 
-        }}
-        
-        div.sticky-glass-CHARRETTE {{
-            margin-top: -62px !important; 
-            height: 54px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            background: rgba(255, 255, 255, 0.08) !important; 
-            backdrop-filter: blur(12px) !important; 
-            -webkit-backdrop-filter: blur(12px) !important;
-            border-radius: 12px !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            display: flex !important;
-            align-items: center !important;
-            padding: 0 16px !important;
-            gap: 12px !important;
-            color: #ffffff !important;
-            font-size: 1.15rem !important;
-            font-weight: 800 !important;
-            letter-spacing: 0.5px !important;
-        }}
-        </style>
-        <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div><div class="sticky-glass-CHARRETTE" style="margin-bottom: 15px;">🐴 CHARRETTE EXPRESS</div><div class="bus-card" style="border-left-color: #8B4513 !important;"><div class="bus-row" style="border-top: none !important;"><span class="line-badge" style="background-color: #8B4513;">CH1</span><span class="bus-dest">{d1}</span><span><span style="color: #f39c12; font-weight: bold;">{t1} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #8B4513; visibility: hidden;">CH1</span><span class="bus-dest">{d2}</span><span><span style="color: #2ecc71; font-weight: bold;">{t2} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #A0522D;">CH2</span><span class="bus-dest">{d3}</span><span><del style="color: #888;">{t3} min</del> &nbsp;<span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></span></div></div>
-        """
-        st.markdown(html_poisson, unsafe_allow_html=True)
-        
-    # ==========================================
-    # --- TA BOUCLE NORMALE COMMENCE JUSTE EN DESSOUS ---
     # for mode_actuel in ordre_affichage:
     
     for mode_actuel in ordre_affichage:
@@ -1112,7 +1043,73 @@ def afficher_tableau_live(stop_id, stop_name):
         # On remet le magnifique st.map natif
         st.map(coords_df, height=150, zoom=14, use_container_width=True)
     # -------------------------------------
+
+    # (Le code juste au-dessus doit être le st.markdown du titre et du Hack JS)
     
+    # ==========================================
+    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
+    # ==========================================
+    import datetime as dt
+    import random
+
+    now = dt.datetime.now()
+    if now.month == 4 and now.day == 1:
+        # On utilise la minute en cours pour que les temps et destinations "changent" à chaque minute
+        random.seed(now.minute)
+        t1 = random.randint(1, 4)
+        t2 = random.randint(6, 12)
+        t3 = random.randint(15, 25)
+        
+        fausses_dest = [
+            "Perpette-les-Oies - Université", 
+            "Pétaouchnok RER", 
+            "Eglise de Trifouillis-les-Oies",
+            "Trou-Perdu-sous-Bois METRO",
+            "Montcuq (Centre)",
+            "Mairie de Villeneuve-Bad-Loin",
+            "Stade de Nulle-Part-sur-Oise",
+            "Melun (🐄)",
+            "Gare de Bled-Paumé-sur-Yvette",
+            "Marché International de Chépaou",
+            "Bout-du-Monde (Z.I.)"
+        ]
+        
+        random.shuffle(fausses_dest)
+        d1, d2, d3 = fausses_dest[0], fausses_dest[1], fausses_dest[2]
+        
+        # Le code HTML/CSS (HTML compressé + "opacity: 0" pour réparer l'alignement !)
+        html_poisson = f"""
+        <style>
+        div[data-testid="stElementContainer"]:has(.sticky-glass-CHARRETTE),
+        .element-container:has(.sticky-glass-CHARRETTE) {{
+            position: sticky !important; 
+            top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
+            z-index: 99 !important; 
+        }}
+        
+        div.sticky-glass-CHARRETTE {{
+            margin-top: -54px !important; 
+            height: 54px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            background: rgba(255, 255, 255, 0.08) !important; 
+            backdrop-filter: blur(12px) !important; 
+            -webkit-backdrop-filter: blur(12px) !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 0 16px !important;
+            gap: 12px !important;
+            color: #ffffff !important;
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.5px !important;
+        }}
+        </style>
+        <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box; margin-top: 20px;"></div><div class="sticky-glass-CHARRETTE" style="margin-bottom: 15px;">🐴 CHARRETTE EXPRESS</div><div class="bus-card" style="border-left-color: #8B4513 !important;"><div class="bus-row" style="border-top: none !important;"><span class="line-badge" style="background-color: #8B4513;">CH1</span><span class="bus-dest">{d1}</span><span><span style="color: #f39c12; font-weight: bold;">{t1} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #8B4513; opacity: 0;">CH1</span><span class="bus-dest">{d2}</span><span><span style="color: #2ecc71; font-weight: bold;">{t2} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #A0522D;">CH2</span><span class="bus-dest">{d3}</span><span><del style="color: #888;">{t3} min</del> &nbsp;<span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></span></div></div>
+        """
+        st.markdown(html_poisson, unsafe_allow_html=True)
     
     # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
