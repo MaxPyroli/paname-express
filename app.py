@@ -651,6 +651,77 @@ def afficher_live_content(stop_id, clean_name):
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
 
+    # ==========================================
+    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
+    # ==========================================
+    import datetime as dt
+    import random
+
+    now = dt.datetime.now()
+    if now.month == 4 and now.day == 1:
+        # On utilise la minute en cours pour que les temps et destinations "changent" à chaque minute
+        random.seed(now.minute)
+        t1 = random.randint(1, 4)
+        t2 = random.randint(6, 12)
+        t3 = random.randint(15, 25)
+        
+        # Ta liste de destinations + quelques ajouts maison !
+        fausses_dest = [
+            "Perpette-les-Oies - Université", 
+            "Pétaouchnok RER", 
+            "Eglise de Trifouillis-les-Oies",
+            "Trou-Perdu-sous-Bois",
+            "Montcuq (Centre)",
+            "Mairie de Villeneuve-Bad-Loin",
+            "Nulle-Part-sur-Oise",
+            "Saint-Glinglin-des-Prés",
+            "Bled-Paumé-sur-Seine",
+            "Tataouine-les-Bains",
+            "Bout-du-Monde (Zone Industrielle)"
+        ]
+        
+        # On mélange et on en pioche 3
+        random.shuffle(fausses_dest)
+        d1, d2, d3 = fausses_dest[0], fausses_dest[1], fausses_dest[2]
+        
+        # Le code HTML/CSS (CSS aéré, mais HTML compressé sur une ligne pour zéro bug)
+        html_poisson = f"""
+        <style>
+        div[data-testid="stElementContainer"]:has(.sticky-glass-CHARRETTE),
+        .element-container:has(.sticky-glass-CHARRETTE) {{
+            position: sticky !important; 
+            top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
+            z-index: 99 !important; 
+        }}
+        
+        div.sticky-glass-CHARRETTE {{
+            margin-top: -62px !important; 
+            height: 54px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            background: rgba(255, 255, 255, 0.08) !important; 
+            backdrop-filter: blur(12px) !important; 
+            -webkit-backdrop-filter: blur(12px) !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 0 16px !important;
+            gap: 12px !important;
+            color: #ffffff !important;
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.5px !important;
+        }}
+        </style>
+        <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div><div class="sticky-glass-CHARRETTE" style="margin-bottom: 15px;">🐴 CHARRETTE EXPRESS</div><div class="bus-card" style="border-left-color: #8B4513 !important;"><div class="bus-row" style="border-top: none !important;"><span class="line-badge" style="background-color: #8B4513;">CH1</span><span class="bus-dest">{d1}</span><span><span style="color: #f39c12; font-weight: bold;">{t1} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #8B4513; visibility: hidden;">CH1</span><span class="bus-dest">{d2}</span><span><span style="color: #2ecc71; font-weight: bold;">{t2} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #A0522D;">CH2</span><span class="bus-dest">{d3}</span><span><del style="color: #888;">{t3} min</del> &nbsp;<span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></span></div></div>
+        """
+        st.markdown(html_poisson, unsafe_allow_html=True)
+        
+    # ==========================================
+    # --- TA BOUCLE NORMALE COMMENCE JUSTE EN DESSOUS ---
+    # for mode_actuel in ordre_affichage:
+    
     for mode_actuel in ordre_affichage:
         if mode_actuel not in buckets: 
             continue
@@ -1045,33 +1116,6 @@ def afficher_tableau_live(stop_id, stop_name):
     
     # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
-
-    # ==========================================
-    # 🐟 EASTER EGG : LE FAUX MODE DE TRANSPORT (1er Avril)
-    # ==========================================
-    import datetime as dt
-    import random
-    
-    # S'active uniquement le 1er Avril (on utilise dt.datetime pour éviter les conflits !)
-    if dt.datetime.now().month == 4 and dt.datetime.now().day == 1:
-        
-        # Destinations campagnardes imaginaires et drôles
-        fausses_dest = [
-            "Perpette-les-Oies - Université", 
-            "Pétaouchnok RER", 
-            "Trifouillis-les-Oies", 
-            "Saint-Glinglin (Bourg)", 
-            "Trou-Perdu-sous-Bois",
-            "Montcuq (Centre)",
-            "Mairie de Villeneuve-Bad-Loin",
-            "Nulle-Part-sur-Oise"
-        ]
-        random.shuffle(fausses_dest)
-        
-        # 👇 CAMOUFLAGE ACTIF : Même design de verre, texte blanc, et couleurs d'horaires habituelles !
-        html_charrette = f"""<div style="margin-top: 10px; margin-bottom: 20px;"><div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div><div style="margin-top: -54px; height: 54px; width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; padding: 0 16px; gap: 12px; color: #ffffff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;">🐴 CHARRETTE</div><div class="rail-card" style="margin-top: 15px; border-left-color: #8B4513 !important;"><div class="rail-row"><span class="rail-dest">{fausses_dest[0]}</span><span style="color: #f39c12; font-weight: bold;">Au pas</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[1]}</span><span style="color: #2ecc71; font-weight: bold;">Après la sieste</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[2]}</span><span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></div></div></div>"""
-        
-        st.markdown(html_charrette, unsafe_allow_html=True)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
