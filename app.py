@@ -1041,6 +1041,11 @@ def afficher_tableau_live(stop_id, stop_name):
         # On remet le magnifique st.map natif
         st.map(coords_df, height=150, zoom=14, use_container_width=True)
     # -------------------------------------
+    
+    
+    # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
+    afficher_live_content(stop_id, clean_name)
+
     # ==========================================
     # 🐟 EASTER EGG : LE FAUX MODE DE TRANSPORT (1er Avril)
     # ==========================================
@@ -1063,13 +1068,10 @@ def afficher_tableau_live(stop_id, stop_name):
         ]
         random.shuffle(fausses_dest)
         
-        # 👇 L'ARME NUCLÉAIRE : Tout le HTML sur une seule ligne !
-        html_charrette = f"""<div style="margin-top: 30px; margin-bottom: 20px;"><div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div><div style="margin-top: -54px; height: 54px; width: 100%; box-sizing: border-box; background: rgba(139, 69, 19, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(139, 69, 19, 0.4); display: flex; align-items: center; padding: 0 16px; gap: 12px; color: #e67e22; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;">🐴 CHARRETTE EXPRESS</div><div class="rail-card" style="margin-top: 15px; border-left-color: #d35400 !important;"><div class="rail-row"><span class="rail-dest">{fausses_dest[0]}</span><span style="color: #e67e22; font-weight: bold;">Au pas</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[1]}</span><span style="color: #e67e22; font-weight: bold;">Après la sieste</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[2]}</span><span style="color: #e74c3c; font-weight: bold; font-style: italic;">Supprimé (Cheval enfui)</span></div></div></div>"""
+        # 👇 CAMOUFLAGE ACTIF : Même design de verre, texte blanc, et couleurs d'horaires habituelles !
+        html_charrette = f"""<div style="margin-top: 10px; margin-bottom: 20px;"><div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div><div style="margin-top: -54px; height: 54px; width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; padding: 0 16px; gap: 12px; color: #ffffff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;">🐴 CHARRETTE</div><div class="rail-card" style="margin-top: 15px; border-left-color: #8B4513 !important;"><div class="rail-row"><span class="rail-dest">{fausses_dest[0]}</span><span style="color: #f39c12; font-weight: bold;">Au pas</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[1]}</span><span style="color: #2ecc71; font-weight: bold;">Après la sieste</span></div><div class="rail-row"><span class="rail-dest">{fausses_dest[2]}</span><span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></div></div></div>"""
         
         st.markdown(html_charrette, unsafe_allow_html=True)
-    
-    # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
-    afficher_live_content(stop_id, clean_name)
 # ========================================================
 #           AFFICHAGE LIVE OU ACCUEIL (TUTO)
 # ========================================================
