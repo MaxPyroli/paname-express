@@ -1076,39 +1076,10 @@ def afficher_tableau_live(stop_id, stop_name):
         
         random.shuffle(fausses_dest)
         d1, d2, d3 = fausses_dest[0], fausses_dest[1], fausses_dest[2]
+    
+        # Le code HTML/CSS (Zéro CSS sticky, juste le design en ligne !)
+        html_poisson = f"""<div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box; margin-top: 20px;"></div><div style="margin-top: -54px; height: 54px; width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; padding: 0 16px; gap: 12px; color: #ffffff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 15px;">🐴 CHEVAL</div><div class="bus-card" style="border-left-color: #8B4513 !important;"><div class="bus-row" style="border-top: none !important;"><span class="line-badge" style="background-color: #8B4513;">CH1</span><span class="bus-dest">{d1}</span><span><span style="color: #f39c12; font-weight: bold;">{t1} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #8B4513; opacity: 0;">CH1</span><span class="bus-dest">{d2}</span><span><span style="color: #2ecc71; font-weight: bold;">{t2} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #A0522D;">CH2</span><span class="bus-dest">{d3}</span><span><del style="color: #888;">{t3} min</del> &nbsp;<span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></span></div></div>"""
         
-        # Le code HTML/CSS (HTML compressé + "opacity: 0" pour réparer l'alignement !)
-        html_poisson = f"""
-        <style>
-        div[data-testid="stElementContainer"]:has(.sticky-glass-CHARRETTE),
-        .element-container:has(.sticky-glass-CHARRETTE) {{
-            position: sticky !important; 
-            top: calc(3.8rem + var(--title-height, 80px) + 35px) !important; 
-            z-index: 99 !important; 
-        }}
-        
-        div.sticky-glass-CHARRETTE {{
-            margin-top: -54px !important; 
-            height: 54px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            background: rgba(255, 255, 255, 0.08) !important; 
-            backdrop-filter: blur(12px) !important; 
-            -webkit-backdrop-filter: blur(12px) !important;
-            border-radius: 12px !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            display: flex !important;
-            align-items: center !important;
-            padding: 0 16px !important;
-            gap: 12px !important;
-            color: #ffffff !important;
-            font-size: 1.15rem !important;
-            font-weight: 800 !important;
-            letter-spacing: 0.5px !important;
-        }}
-        </style>
-        <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box; margin-top: 20px;"></div><div class="sticky-glass-CHARRETTE" style="margin-bottom: 15px;">🐴 CHARRETTE EXPRESS</div><div class="bus-card" style="border-left-color: #8B4513 !important;"><div class="bus-row" style="border-top: none !important;"><span class="line-badge" style="background-color: #8B4513;">CH1</span><span class="bus-dest">{d1}</span><span><span style="color: #f39c12; font-weight: bold;">{t1} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #8B4513; opacity: 0;">CH1</span><span class="bus-dest">{d2}</span><span><span style="color: #2ecc71; font-weight: bold;">{t2} min</span></span></div><div class="bus-row"><span class="line-badge" style="background-color: #A0522D;">CH2</span><span class="bus-dest">{d3}</span><span><del style="color: #888;">{t3} min</del> &nbsp;<span style="color: #e74c3c; font-weight: bold; font-style: italic;">Cheval enfui</span></span></div></div>
-        """
         st.markdown(html_poisson, unsafe_allow_html=True)
     
     # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
