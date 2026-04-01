@@ -1044,10 +1044,11 @@ def afficher_tableau_live(stop_id, stop_name):
     # ==========================================
     # 🐟 EASTER EGG : LE FAUX MODE DE TRANSPORT (1er Avril)
     # ==========================================
+    import datetime as dt
     import random
     
-    # S'active uniquement le 1er Avril
-    if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
+    # S'active uniquement le 1er Avril (on utilise dt.datetime pour éviter les conflits !)
+    if dt.datetime.now().month == 4 and dt.datetime.now().day == 1:
         
         # Destinations campagnardes imaginaires et drôles
         fausses_dest = [
