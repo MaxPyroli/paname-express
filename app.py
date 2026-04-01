@@ -1041,6 +1041,69 @@ def afficher_tableau_live(stop_id, stop_name):
         # On remet le magnifique st.map natif
         st.map(coords_df, height=150, zoom=14, use_container_width=True)
     # -------------------------------------
+    # ==========================================
+    # 🐟 EASTER EGG : LE FAUX MODE DE TRANSPORT (1er Avril)
+    # ==========================================
+    import random
+    
+    # S'active uniquement le 1er Avril
+    if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
+        
+        # Destinations campagnardes imaginaires et drôles
+        fausses_dest = [
+            "Perpette-les-Oies - Université", 
+            "Pétaouchnok RER", 
+            "Trifouillis-les-Oies", 
+            "Saint-Glinglin (Bourg)", 
+            "Trou-Perdu-sous-Bois",
+            "Montcuq (Centre)",
+            "Mairie de Villeneuve-Bad-Loin",
+            "Nulle-Part-sur-Oise"
+        ]
+        random.shuffle(fausses_dest)
+        
+        st.markdown(f"""
+        <div style="margin-top: 30px; margin-bottom: 20px;">
+            <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div>
+            
+            <div style="
+                margin-top: -54px; 
+                height: 54px;
+                width: 100%;
+                box-sizing: border-box;
+                background: rgba(139, 69, 19, 0.15); 
+                backdrop-filter: blur(12px); 
+                -webkit-backdrop-filter: blur(12px);
+                border-radius: 12px;
+                border: 1px solid rgba(139, 69, 19, 0.4);
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
+                gap: 12px;
+                color: #e67e22;
+                font-size: 1.15rem;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+            ">
+                🐴 CHARRETTE EXPRESS
+            </div>
+            
+            <div class="rail-card" style="margin-top: 15px; border-left-color: #d35400 !important;">
+                <div class="rail-row">
+                    <span class="rail-dest">{fausses_dest[0]}</span>
+                    <span style="color: #e67e22; font-weight: bold;">Au pas</span>
+                </div>
+                <div class="rail-row">
+                    <span class="rail-dest">{fausses_dest[1]}</span>
+                    <span style="color: #e67e22; font-weight: bold;">Après la sieste</span>
+                </div>
+                <div class="rail-row">
+                    <span class="rail-dest">{fausses_dest[2]}</span>
+                    <span style="color: #e74c3c; font-weight: bold; font-style: italic;">Supprimé (Cheval enfui)</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # 3. APPEL DU FRAGMENT (Il gère maintenant le Header ET le Bouton)
     afficher_live_content(stop_id, clean_name)
