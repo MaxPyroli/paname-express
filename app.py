@@ -15,6 +15,7 @@ from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proche
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
 from sidebar import initialiser_favoris, afficher_sidebar
+from ui_composants import afficher_titre_app, afficher_tuto_bienvenue
 # Initialisation des variables de session
 if 'search_key' not in st.session_state:
     st.session_state.search_key = 0
@@ -103,45 +104,8 @@ if img_app_b64:
 else:
     icone_html = "<span style='font-size: 1em; vertical-align: middle; margin-right: 8px;'>🚆</span>"
 
-# --- TITRE GÉANT (Version Finale : Ajustée et sans indentation) ---
-st.markdown(f"""
-<style>
-.titre-geant-custom {{
-font-size: clamp(2rem, 11.5vw, 4rem) !important;
-font-weight: 900 !important;
-margin: 0 !important;
-padding: 0 !important;
-line-height: 1.1 !important;
-letter-spacing: -1.5px !important;
-display: flex !important;
-align-items: center !important;
-/* 🔓 LA MAGIE EST ICI : */
-flex-wrap: wrap !important; /* Permet aux éléments de glisser les uns sous les autres */
-white-space: normal !important; /* Autorise le texte à se couper aux espaces */
-}}
-.badge-geant-custom {{
-font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
-padding: 4px 12px !important;
-display: inline-block !important;
-}}
-.sous-titre-geant-custom {{
-color: #aaa !important;
-font-style: italic !important;
-font-size: clamp(1rem, 4vw, 1.15rem) !important;
-}}
-</style>
-
-<div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
-<div class="titre-geant-custom">
-{icone_html}<span>{APP_NAME}</span>
-</div>
-<div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-<span class='version-badge badge-geant-custom'>{APP_VERSION}</span>
-<span class="sous-titre-geant-custom">{APP_SUBTITLE}</span>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
+# --- TITRE GÉANT ---
+afficher_titre_app(APP_NAME, APP_VERSION, APP_SUBTITLE, icone_html)
 initialiser_favoris()
 afficher_sidebar()
 
@@ -1099,44 +1063,4 @@ if st.session_state.selected_stop:
 
 # 2. Sinon -> Tuto de Bienvenue (Construction sécurisée & Couleurs dynamiques)
 elif not st.session_state.search_results:
-    # On construit le HTML morceau par morceau pour éviter les erreurs d'indentation
-    html_content = "".join([
-        '<div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">',
-            '<span style="font-size: 50px;">👋</span>',
-        '</div>',
-        
-        '<div style="text-align: center; margin-bottom: 30px;">',
-            # Titre adaptatif
-            '<h3 style="color: var(--text-color); margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
-            # Sous-titre adaptatif
-            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage en Île-de-France.</p>',
-        '</div>',
-        
-        '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">',
-            
-            # CARTE 1
-            # Background adaptatif (gris clair ou sombre) + Bordure neutre + Texte adaptatif
-            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
-                '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Recherchez</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre arrêt et sélectionnez-le dans la liste déroulante</div>',
-            '</div>',
-            
-            # CARTE 3
-            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
-                '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Temps Réel</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs et votre info trafic sont actualisés en temps réel</div>',
-            '</div>',
-
-            # CARTE 2
-            '<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">',
-                '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
-                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Favoris</div>',
-                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt et le retrouver lors de votre prochain trajet</div>',
-            '</div>',
-            
-        '</div>'
-    ])
-    
-    st.markdown(html_content, unsafe_allow_html=True)
+    afficher_tuto_bienvenue()
