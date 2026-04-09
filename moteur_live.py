@@ -47,6 +47,8 @@ def afficher_live_content(stop_id, clean_name):
     # 🧠 DÉTECTION : Nouveau changement ou simple actualisation ?
     if 'last_rendered_stop' not in st.session_state:
         st.session_state.last_rendered_stop = None
+    if 'last_update_time' not in st.session_state:
+        st.session_state.last_update_time = "--:--:--"
 
     est_nouvelle_gare = (st.session_state.last_rendered_stop != stop_id)
     st.session_state.last_rendered_stop = stop_id
@@ -64,24 +66,52 @@ def afficher_live_content(stop_id, clean_name):
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🪄 ASTUCE MAGIQUE : On n'anime que si c'est une nouvelle gare !
+    def update_header(is_loading=False, new_time=None):
+        if new_time:
+            st.session_state.last_update_time = new_time
+            
+        loader_html = '<span class="custom-loader" style="width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;"></span>' if is_loading else ''
+        loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
+
+        # L'astuce : Le texte s'ajoute sur la même ligne avec une transition "fade-in" douce
+        html_content = f"""
+        <div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>
+            Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span>
+            <div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>
+                {loader_html}{loading_text}
+            </div>
+        </div>
+        """
+        header_placeholder.markdown(html_content, unsafe_allow_html=True)
+
     if est_nouvelle_gare:
+        st.session_state.last_update_time = "--:--:--"
+        update_header(is_loading=True)
+        # 🪄 ANIMATION D'ENTRÉE + SKELETON LOADER (Maintient la page ouverte)
         st.markdown("""
         <style>
-            .rail-card, .bus-card {
-                animation: fadeInSlide 0.4s ease-out forwards !important;
-            }
+            .rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; }
             @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         </style>
         """, unsafe_allow_html=True)
-        time.sleep(0.05) # Petite pause pour laisser l'écran se préparer
+        
+        skeleton_placeholder = st.empty()
+        skeleton_placeholder.markdown("""
+        <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; margin-top: 20px; border: 1px dashed rgba(255,255,255,0.1);">
+            <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
+            <h3 style="color: #3498db; margin: 0; font-size: 1.2rem;">Connexion à la gare...</h3>
+            <p style="color: #888; font-size: 0.9em; margin-top: 5px;">Récupération des horaires en temps réel</p>
+        </div>
+        """, unsafe_allow_html=True)
+        time.sleep(0.05)
+    else:
+        update_header(is_loading=True)
 
-    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
+    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
 
     # C. Préparation des conteneurs pour les résultats
     containers = {
-        "Header": header_placeholder, 
         "RER": st.container(),
         "TRAIN": st.container(),
         "METRO": st.container(),
@@ -102,22 +132,6 @@ def afficher_live_content(stop_id, clean_name):
         if match: return (1, match.group(1), int(match.group(2)))
         if code.isdigit(): return (2, int(code))
         return (3, code)
-
-    def update_header(text, is_loading=False):
-        # Un loader un peu plus discret
-        loader_html = '<span class="custom-loader" style="width: 12px; height: 12px; border-width: 2px;"></span>' if is_loading else ''
-        html_content = f"""
-        <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; transition: opacity 0.3s;'>
-            {loader_html} <span style='margin-left: 8px;'>{text}</span>
-        </div>
-        """
-        containers["Header"].markdown(html_content, unsafe_allow_html=True)
-
-    # Message différent selon l'action (très esthétique !)
-    if est_nouvelle_gare:
-        update_header("Chargement de la gare...", is_loading=True)
-    else:
-        update_header("Actualisation en arrière-plan...", is_loading=True)
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
@@ -296,9 +310,13 @@ def afficher_live_content(stop_id, clean_name):
             del buckets[mode]
 
     # 5. RENDU HTML
+    if est_nouvelle_gare:
+        # On supprime la belle boîte de chargement car les données sont prêtes
+        skeleton_placeholder.empty()
+
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    update_header(f"Dernière mise à jour : {heure_actuelle} • LIVE <span class='live-icon'>🟢</span>", is_loading=False)
+    update_header(is_loading=False, new_time=heure_actuelle)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
