@@ -101,7 +101,7 @@ def afficher_sidebar():
             st.markdown("""
             <style>
                 div[data-testid="stExpanderDetails"] {
-                    max-height: 350px;
+                    max-height: 500px;
                     overflow-y: auto;
                 }
             </style>
