@@ -53,7 +53,7 @@ def afficher_live_content(stop_id, clean_name):
     with col_fav:
         st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
         label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
-         if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
+        if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
             toggle_favorite(stop_id, clean_name)
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
