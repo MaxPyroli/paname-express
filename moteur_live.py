@@ -70,32 +70,29 @@ def afficher_live_content(stop_id, clean_name):
         if new_time:
             st.session_state.last_update_time = new_time
             
-        loader_html = '<span class="custom-loader" style="width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;"></span>' if is_loading else ''
+        loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        # L'astuce : Le texte s'ajoute sur la même ligne avec une transition "fade-in" douce
-        html_content = f"""
-        <div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>
-            Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span>
-            <div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>
-                {loader_html}{loading_text}
-            </div>
-        </div>
-        """
+        # 🩹 CORRECTION DU </div> : HTML compressé sur UNE SEULE LIGNE pour éviter les caprices du Markdown Streamlit !
+        html_content = f"<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         header_placeholder.markdown(html_content, unsafe_allow_html=True)
+
+    # 🛑 SÉCURITÉ ANTI-SAUT (Layout Shift) : Ces "boîtes" existent à CHAQUE actualisation pour stabiliser la structure !
+    style_placeholder = st.empty()
+    skeleton_placeholder = st.empty()
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
         update_header(is_loading=True)
-        # 🪄 ANIMATION D'ENTRÉE + SKELETON LOADER (Maintient la page ouverte)
-        st.markdown("""
+        
+        # On remplit les boîtes
+        style_placeholder.markdown("""
         <style>
             .rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; }
             @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         </style>
         """, unsafe_allow_html=True)
         
-        skeleton_placeholder = st.empty()
         skeleton_placeholder.markdown("""
         <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; margin-top: 20px; border: 1px dashed rgba(255,255,255,0.1);">
             <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
@@ -106,6 +103,8 @@ def afficher_live_content(stop_id, clean_name):
         time.sleep(0.05)
     else:
         update_header(is_loading=True)
+        # On insère juste un commentaire vide, mais la "boîte" style_placeholder existe toujours, évitant le saut !
+        style_placeholder.markdown("", unsafe_allow_html=True)
 
     # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
@@ -310,9 +309,9 @@ def afficher_live_content(stop_id, clean_name):
             del buckets[mode]
 
     # 5. RENDU HTML
-    if est_nouvelle_gare:
-        # On supprime la belle boîte de chargement car les données sont prêtes
-        skeleton_placeholder.empty()
+    
+    # On vide TOUJOURS la zone de chargement pour que l'arbre Streamlit reste mathématiquement parfait
+    skeleton_placeholder.empty()
 
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
