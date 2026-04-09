@@ -209,6 +209,17 @@ def afficher_live_content(stop_id, clean_name):
                 mode = match_found[0] 
                 code = match_found[1] 
                 color = all_lines_at_stop[match_found]['color'] 
+                
+                # 🛑 L'EXCEPTION SARTROUVILLE 🛑
+                if "SARTROUVILLE" in clean_name.upper() and code == "J":
+                    keywords = ["REMPLACEMENT", "SUBSTITUTION", "TRAVAUX", "BUS RELAIS", "BUS DE"]
+                    has_keywords = any(k in raw_dest.upper() for k in keywords)
+                    if not has_keywords:
+                        # Ce n'est pas un bus de substitution, c'est le vrai bus J !
+                        is_replacement = False
+                        mode = "BUS"
+                        code = clean_code
+                        color = info.get('color', '666666') # On remet sa vraie couleur
 
             elif mode == "BUS":
                 is_admin_train = ("RER" in comm_mode or "TRAIN" in comm_mode or "TRANSILIEN" in comm_mode)
