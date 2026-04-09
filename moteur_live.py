@@ -73,20 +73,21 @@ def afficher_live_content(stop_id, clean_name):
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        # 🪄 L'ANIMATION CACHÉE : Elle est injectée dans le texte pour prendre 0 espace vertical !
         anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }</style>""" if inject_animation else ""
 
-        # Note le margin-bottom: -10px pour resserrer l'espace avec les trains !
         html_content = f"{anim_css}<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; margin-bottom: -10px;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         
         header_placeholder.markdown(html_content, unsafe_allow_html=True)
+
+    # 🛑 LE SECRET ABSOLU EST ICI : CRÉATION INCONDITIONNELLE
+    # On crée la boîte TOUT LE TEMPS pour que les numéros des éléments suivants ne bougent jamais !
+    loader_ph = st.empty()
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
         update_header(is_loading=True, inject_animation=True)
         
-        # On crée une SEULE et unique boîte, uniquement si on en a besoin !
-        loader_ph = st.empty()
+        # On remplit la boîte avec le mode "chargement" uniquement si nécessaire
         loader_ph.markdown("""
         <style>
             /* Masquer l'ancienne gare instantanément */
@@ -104,7 +105,7 @@ def afficher_live_content(stop_id, clean_name):
 
     # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
-
+    
     # C. Préparation des conteneurs pour les résultats
     containers = {
         "RER": st.container(),
@@ -306,13 +307,12 @@ def afficher_live_content(stop_id, clean_name):
             del buckets[mode]
 
     # 5. RENDU HTML
-    if est_nouvelle_gare:
-        loader_ph.empty() # On supprime le mode "caché" et le loader
+    # On vide la boîte de manière INCONDITIONNELLE pour qu'elle disparaisse proprement à chaque fois
+    loader_ph.empty()
 
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
     
-    # 🪄 On maintient le CSS d'animation pour que les trains générés juste en dessous s'animent !
     update_header(is_loading=False, new_time=heure_actuelle, inject_animation=est_nouvelle_gare)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
