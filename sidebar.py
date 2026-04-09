@@ -97,13 +97,20 @@ def afficher_sidebar():
         
         st.markdown("---")
         with st.expander("📜 Historique des versions"):
+            # L'astuce CSS invisible pour forcer la hauteur max et l'ascenseur
+            st.markdown("""
+            <style>
+                div[data-testid="stExpanderDetails"] {
+                    max-height: 350px;
+                    overflow-y: auto;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
             notes_history = get_all_changelogs()
-            # On enferme les notes dans une "boîte" de 350 pixels de haut
-            with st.container(height=350, border=False):
-                for i, note in enumerate(notes_history):
-                    st.markdown(note)
-                    if i < len(notes_history) - 1: 
-                        st.divider()
+            for i, note in enumerate(notes_history):
+                st.markdown(note)
+                if i < len(notes_history) - 1: st.divider()
         
         st.markdown("---")
         st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
