@@ -44,21 +44,15 @@ def toggle_favorite(stop_id, stop_name):
 # ==========================================
 @st.fragment(run_every=15)
 def afficher_live_content(stop_id, clean_name):
-    # 🪄 ASTUCE MAGIQUE : Griser l'écran pendant le chargement
-    loading_css = st.empty()
-    loading_css.markdown("""
-    <style>
-        .rail-card, .bus-card {
-            opacity: 0.4 !important;
-            filter: grayscale(100%) !important;
-            transition: opacity 0.2s, filter 0.2s;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # 🧠 DÉTECTION : Nouveau changement ou simple actualisation ?
+    if 'last_rendered_stop' not in st.session_state:
+        st.session_state.last_rendered_stop = None
 
-    # 1. CRÉATION DE LA BARRE D'ACTIONS 
+    est_nouvelle_gare = (st.session_state.last_rendered_stop != stop_id)
+    st.session_state.last_rendered_stop = stop_id
+
+    # 1. CRÉATION DE LA BARRE D'ACTIONS
     col_header, col_fav = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
-    
     header_placeholder = col_header.empty()
     
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
@@ -70,7 +64,19 @@ def afficher_live_content(stop_id, clean_name):
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
+    # 🪄 ASTUCE MAGIQUE : On n'anime que si c'est une nouvelle gare !
+    if est_nouvelle_gare:
+        st.markdown("""
+        <style>
+            .rail-card, .bus-card {
+                animation: fadeInSlide 0.4s ease-out forwards !important;
+            }
+            @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+        </style>
+        """, unsafe_allow_html=True)
+        time.sleep(0.05) # Petite pause pour laisser l'écran se préparer
+
+    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
     afficher_cheval_express()
 
     # C. Préparation des conteneurs pour les résultats
@@ -98,18 +104,20 @@ def afficher_live_content(stop_id, clean_name):
         return (3, code)
 
     def update_header(text, is_loading=False):
-        loader_html = '<span class="custom-loader"></span>' if is_loading else ''
+        # Un loader un peu plus discret
+        loader_html = '<span class="custom-loader" style="width: 12px; height: 12px; border-width: 2px;"></span>' if is_loading else ''
         html_content = f"""
-        <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>
+        <div style='display: flex; align-items: center; color: #888; font-size: 0.8rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; transition: opacity 0.3s;'>
             {loader_html} <span style='margin-left: 8px;'>{text}</span>
         </div>
         """
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
-    update_header("Actualisation en cours...", is_loading=True)
-
-    # ⏳ LE SECRET EST ICI : On force Streamlit à afficher le gris et le texte AVANT de bloquer l'API
-    time.sleep(0.05)
+    # Message différent selon l'action (très esthétique !)
+    if est_nouvelle_gare:
+        update_header("Chargement de la gare...", is_loading=True)
+    else:
+        update_header("Actualisation en arrière-plan...", is_loading=True)
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
@@ -548,9 +556,7 @@ def afficher_live_content(stop_id, clean_name):
                     
                     if html_badges:
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-                        
-    # TOUT À LA FIN : On retire le filtre gris une fois que les nouvelles données sont là
-    loading_css.empty()
+
 # ========================================================
 # AFFICHAGE DU TABLEAU PRINCIPAL
 # ========================================================
