@@ -66,44 +66,33 @@ def afficher_live_content(stop_id, clean_name):
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    def update_header(is_loading=False, new_time=None):
+    def update_header(is_loading=False, new_time=None, inject_animation=False):
         if new_time:
             st.session_state.last_update_time = new_time
             
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        html_content = f"<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
-        header_placeholder.markdown(html_content, unsafe_allow_html=True)
+        # 🪄 L'ANIMATION CACHÉE : Elle est injectée dans le texte pour prendre 0 espace vertical !
+        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }</style>""" if inject_animation else ""
 
-    # 🛑 SÉCURITÉ ANTI-SAUT
-    style_placeholder = st.empty()
-    skeleton_placeholder = st.empty()
-    hide_old_placeholder = st.empty() # 🪄 NOUVEAU : Le nettoyeur magique !
+        # Note le margin-bottom: -10px pour resserrer l'espace avec les trains !
+        html_content = f"{anim_css}<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; margin-bottom: -10px;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
+        
+        header_placeholder.markdown(html_content, unsafe_allow_html=True)
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
-        update_header(is_loading=True)
+        update_header(is_loading=True, inject_animation=True)
         
-        style_placeholder.markdown("""
+        # On crée une SEULE et unique boîte, uniquement si on en a besoin !
+        loader_ph = st.empty()
+        loader_ph.markdown("""
         <style>
-            .rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; }
-            @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+            /* Masquer l'ancienne gare instantanément */
+            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container { display: none !important; }
         </style>
-        """, unsafe_allow_html=True)
-        
-        # 🪄 ON CACHE TOTALEMENT L'ANCIENNE GARE INSTANTANÉMENT
-        hide_old_placeholder.markdown("""
-        <style>
-            /* Fait disparaître tous les anciens éléments pour laisser la place au chargement */
-            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container {
-                display: none !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        skeleton_placeholder.markdown("""
-        <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; margin-top: 20px; border: 1px dashed rgba(255,255,255,0.1);">
+        <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
             <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
             <h3 style="color: #3498db; margin: 0; font-size: 1.2rem;">Connexion à la gare...</h3>
             <p style="color: #888; font-size: 0.9em; margin-top: 5px;">Récupération des horaires en temps réel</p>
@@ -112,8 +101,6 @@ def afficher_live_content(stop_id, clean_name):
         time.sleep(0.05)
     else:
         update_header(is_loading=True)
-        style_placeholder.markdown("", unsafe_allow_html=True)
-        hide_old_placeholder.markdown("", unsafe_allow_html=True)
 
     # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
@@ -130,7 +117,6 @@ def afficher_live_content(stop_id, clean_name):
     }
     
     def sort_key(k): 
-        # ... (Garde ta fonction sort_key intacte ici)
         mode = k[0]
         code = str(k[1]).strip().upper()
         if mode == "BUS" and code.startswith("N"):
@@ -320,15 +306,14 @@ def afficher_live_content(stop_id, clean_name):
             del buckets[mode]
 
     # 5. RENDU HTML
-    
-    # On libère l'écran pour laisser apparaître les nouveaux trains !
     if est_nouvelle_gare:
-        skeleton_placeholder.empty()
-        hide_old_placeholder.empty()
+        loader_ph.empty() # On supprime le mode "caché" et le loader
 
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
-    update_header(is_loading=False, new_time=heure_actuelle)
+    
+    # 🪄 On maintient le CSS d'animation pour que les trains générés juste en dessous s'animent !
+    update_header(is_loading=False, new_time=heure_actuelle, inject_animation=est_nouvelle_gare)
 
     ordre_affichage = ["RER", "TRAIN", "METRO", "CABLE", "TRAM", "BUS", "AUTRE"]
     has_data = False
