@@ -114,3 +114,28 @@ def afficher_sidebar():
         
         st.markdown("---")
         st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
+
+        # ==========================================
+        # FOOTER / CRÉDITS (Tout en bas de la sidebar)
+        # ==========================================
+        # On ajoute un espace flexible pour pousser le footer vers le bas s'il y a de la place
+        st.markdown('<div style="flex-grow: 1;"></div>', unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
+                🚀 Propulsé par <strong>Grand Paname</strong>
+            </div>
+            <div style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">
+                Fait avec ❤️ pour les Franciliens
+            </div>
+            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
+                <a href="#" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Signaler un bug</a>
+                <span style="color: #444;">•</span>
+                <a href="#" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
+                © 2024 Grand Paname. Données : API IDFM.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
