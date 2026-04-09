@@ -44,7 +44,19 @@ def toggle_favorite(stop_id, stop_name):
 # ==========================================
 @st.fragment(run_every=15)
 def afficher_live_content(stop_id, clean_name):
-    # 1. CRÉATION DE LA BARRE D'ACTIONS (Interne au fragment pour éviter les bugs d'accumulation)
+    # 🪄 ASTUCE MAGIQUE : Griser l'écran pendant le chargement
+    loading_css = st.empty()
+    loading_css.markdown("""
+    <style>
+        .rail-card, .bus-card {
+            opacity: 0.4 !important;
+            filter: grayscale(100%) !important;
+            transition: opacity 0.2s, filter 0.2s;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 1. CRÉATION DE LA BARRE D'ACTIONS 
     col_header, col_fav = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
     
     header_placeholder = col_header.empty()
@@ -58,7 +70,7 @@ def afficher_live_content(stop_id, clean_name):
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
+    # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
 
     # C. Préparation des conteneurs pour les résultats
@@ -95,6 +107,9 @@ def afficher_live_content(stop_id, clean_name):
         containers["Header"].markdown(html_content, unsafe_allow_html=True)
 
     update_header("Actualisation en cours...", is_loading=True)
+
+    # ⏳ LE SECRET EST ICI : On force Streamlit à afficher le gris et le texte AVANT de bloquer l'API
+    time.sleep(0.05)
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
@@ -533,7 +548,9 @@ def afficher_live_content(stop_id, clean_name):
                     
                     if html_badges:
                         st.markdown(f"""<div class="footer-container"><span class="footer-icon">{ICONES_TITRE[mode]}</span><div>{html_badges}</div></div>""", unsafe_allow_html=True)
-
+                        
+    # TOUT À LA FIN : On retire le filtre gris une fois que les nouvelles données sont là
+    loading_css.empty()
 # ========================================================
 # AFFICHAGE DU TABLEAU PRINCIPAL
 # ========================================================
