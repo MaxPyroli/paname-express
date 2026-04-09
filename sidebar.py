@@ -98,9 +98,12 @@ def afficher_sidebar():
         st.markdown("---")
         with st.expander("📜 Historique des versions"):
             notes_history = get_all_changelogs()
-            for i, note in enumerate(notes_history):
-                st.markdown(note)
-                if i < len(notes_history) - 1: st.divider()
+            # On enferme les notes dans une "boîte" de 350 pixels de haut
+            with st.container(height=350, border=False):
+                for i, note in enumerate(notes_history):
+                    st.markdown(note)
+                    if i < len(notes_history) - 1: 
+                        st.divider()
         
         st.markdown("---")
         st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
