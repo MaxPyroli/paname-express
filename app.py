@@ -185,8 +185,8 @@ if st.session_state.geoloc_active:
                         # ✨ L'analyse magique (On ignore le tag avec "_")
                         rang, _ = analyser_importance_arret(sa)
                         
-                        # Si c'est un mode lourd (RER, Train, Métro, rang <= 3), on met en MAJUSCULES
-                        nom_affiche = nom.upper() if rang <= 3 else nom
+                        # On garde le nom normal, sans forcer les majuscules
+                        nom_affiche = nom
                         
                         label = f"{nom_affiche} ({ville}) - à {distance}m" if ville else f"{nom_affiche} - à {distance}m"
                         
@@ -271,7 +271,8 @@ if submitted and search_query:
                     # ✨ L'analyse magique
                     rang, _ = analyser_importance_arret(sa)
                     
-                    nom_affiche = nom.upper() if rang <= 3 else nom
+                    # On garde le nom normal, sans forcer les majuscules
+                    nom_affiche = nom
                     
                     label = f"{nom_affiche} ({ville})" if ville else f"{nom_affiche}"
                     
