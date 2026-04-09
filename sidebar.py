@@ -124,7 +124,7 @@ def afficher_sidebar():
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
             <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">
-                Fait avec ❤️ pour les Franciliens
+                Fait avec ❤️ pour les Franciliens (et les autres!)
             </div>
             <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
                 ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
