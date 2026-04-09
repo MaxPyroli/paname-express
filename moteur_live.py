@@ -73,23 +73,32 @@ def afficher_live_content(stop_id, clean_name):
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        # 🩹 CORRECTION DU </div> : HTML compressé sur UNE SEULE LIGNE pour éviter les caprices du Markdown Streamlit !
         html_content = f"<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         header_placeholder.markdown(html_content, unsafe_allow_html=True)
 
-    # 🛑 SÉCURITÉ ANTI-SAUT (Layout Shift) : Ces "boîtes" existent à CHAQUE actualisation pour stabiliser la structure !
+    # 🛑 SÉCURITÉ ANTI-SAUT
     style_placeholder = st.empty()
     skeleton_placeholder = st.empty()
+    hide_old_placeholder = st.empty() # 🪄 NOUVEAU : Le nettoyeur magique !
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
         update_header(is_loading=True)
         
-        # On remplit les boîtes
         style_placeholder.markdown("""
         <style>
             .rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; }
             @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # 🪄 ON CACHE TOTALEMENT L'ANCIENNE GARE INSTANTANÉMENT
+        hide_old_placeholder.markdown("""
+        <style>
+            /* Fait disparaître tous les anciens éléments pour laisser la place au chargement */
+            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container {
+                display: none !important;
+            }
         </style>
         """, unsafe_allow_html=True)
         
@@ -103,8 +112,8 @@ def afficher_live_content(stop_id, clean_name):
         time.sleep(0.05)
     else:
         update_header(is_loading=True)
-        # On insère juste un commentaire vide, mais la "boîte" style_placeholder existe toujours, évitant le saut !
         style_placeholder.markdown("", unsafe_allow_html=True)
+        hide_old_placeholder.markdown("", unsafe_allow_html=True)
 
     # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE
     afficher_cheval_express()
@@ -121,6 +130,7 @@ def afficher_live_content(stop_id, clean_name):
     }
     
     def sort_key(k): 
+        # ... (Garde ta fonction sort_key intacte ici)
         mode = k[0]
         code = str(k[1]).strip().upper()
         if mode == "BUS" and code.startswith("N"):
@@ -134,6 +144,7 @@ def afficher_live_content(stop_id, clean_name):
 
     # 1. LIGNES THEORIQUES
     data_lines = demander_lignes_arret(stop_id)
+
     all_lines_at_stop = {} 
     has_c1_cable = False 
 
@@ -310,8 +321,10 @@ def afficher_live_content(stop_id, clean_name):
 
     # 5. RENDU HTML
     
-    # On vide TOUJOURS la zone de chargement pour que l'arbre Streamlit reste mathématiquement parfait
-    skeleton_placeholder.empty()
+    # On libère l'écran pour laisser apparaître les nouveaux trains !
+    if est_nouvelle_gare:
+        skeleton_placeholder.empty()
+        hide_old_placeholder.empty()
 
     paris_tz = pytz.timezone('Europe/Paris')
     heure_actuelle = datetime.now(paris_tz).strftime('%H:%M:%S')
