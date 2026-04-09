@@ -1,5 +1,6 @@
 import streamlit as st
 import re
+import time
 import pytz
 from datetime import datetime
 import json
@@ -11,6 +12,32 @@ from easter_eggs import afficher_cheval_express
 from constants import GEOGRAPHIE_RER
 
 ICONES_TITRE = generer_icones_html()
+
+# ==========================================
+# GESTION DES FAVORIS
+# ==========================================
+def toggle_favorite(stop_id, stop_name):
+    if 'favorites' not in st.session_state:
+        st.session_state.favorites = []
+        
+    # Vérifie si la gare est déjà dans les favoris
+    is_already_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
+    
+    if is_already_fav:
+        # On la supprime
+        st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != stop_id]
+    else:
+        # On l'ajoute
+        short_name = stop_name.split('(')[0].strip()
+        st.session_state.favorites.append({
+            'id': stop_id,
+            'name': short_name,
+            'full_name': stop_name
+        })
+        
+    # On sauvegarde directement dans le cache du navigateur de l'utilisateur
+    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
+    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_fav_{time.time()}")
 
 # ==========================================
 # FRAGMENT LIVE (AUTO-REFRESH)
@@ -26,9 +53,9 @@ def afficher_live_content(stop_id, clean_name):
     with col_fav:
         st.markdown('<div class="fav-btn-container">', unsafe_allow_html=True)
         label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
-        if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
-            # On a temporairement désactivé toggle_favorite car il était introuvable
-            st.warning("Fonction suivi en cours de maintenance")
+         if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
+            toggle_favorite(stop_id, clean_name)
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 🐟 EASTER EGG : CHARRETTE EN TÊTE DE LISTE (1er Avril)
