@@ -124,15 +124,15 @@ def afficher_sidebar():
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
             <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">
-                Fait avec ❤️ pour les Franciliens (et les autres!)
+                Fait avec ❤️ par un Francilien
             </div>
             <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
                 ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
             </div>
             <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
-                <a href="#" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Signaler un bug</a>
+                <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Signaler un bug</a>
                 <span style="color: #444;">•</span>
-                <a href="#" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
+                <a href="contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
             </div>
             <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
                 © 2026 Grand Paname. Données : API IDFM.
