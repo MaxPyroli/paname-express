@@ -137,10 +137,10 @@ config_ia = types.GenerateContentConfig(
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE
 # ==========================================
-@st.dialog("🤖 Assistant Paname")
+# 👇 Ajout de width="large" ici
+@st.dialog("🤖 Assistant Paname", width="large")
 def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Trafic, horaires, itinéraires... Demandez-moi tout !</p>", unsafe_allow_html=True)
-
     # On passe en V3 pour forcer Streamlit à oublier l'ancienne mémoire !
     if "chat_session_v3" not in st.session_state:
         
@@ -154,7 +154,7 @@ def ouvrir_assistant():
             {"role": "assistant", "content": "Coucou ! 👋 Mon nouveau cerveau V2 est enfin connecté. Tu vas où de beau aujourd'hui ? 🚇"}
         ]
 
-    chat_container = st.container(height=350)
+    chat_container = st.container(height=500)
     
     with chat_container:
         for message in st.session_state.messages_ia_v3:
