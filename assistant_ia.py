@@ -176,6 +176,15 @@ def ouvrir_assistant():
     )
 
     # 2. LE SOUS-TITRE AVEC LE BADGE
+    # ==========================================
+# 🎨 L'INTERFACE DE LA MODALE & LE BADGE
+# ==========================================
+@st.dialog("🤖 Pana") 
+def ouvrir_assistant():
+    
+    # ... (Garde ton bloc <style> CSS ici) ...
+
+    # Le sous-titre de Pana
     st.markdown(
         "<p style='color: #888; font-size: 0.9em; margin-top: -10px; margin-bottom: 20px;'>"
         "Coucou ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi ! <span class='badge-beta'>BÊTA</span>"
@@ -183,7 +192,15 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
 
-    # 3. LE DÉMARRAGE DU CERVEAU (Il trouvera config_ia car il est défini plus haut !)
+    # 👇 LE FAMEUX BOUTON MAGIQUE 👇
+    if st.button("🔄 Effacer la mémoire", type="tertiary", help="Recommencer la conversation à zéro"):
+        # On supprime les variables de la mémoire Streamlit
+        st.session_state.pop("chat_session", None)
+        st.session_state.pop("messages_ia", None)
+        st.rerun() # On recharge l'interface instantanément
+    # 👆 ------------------------ 👆
+
+    # 3. LE DÉMARRAGE DU CERVEAU (Avec des noms propres, sans "v5")
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = client.chats.create(
             model="gemini-3.1-flash-lite-preview", 
@@ -191,10 +208,12 @@ def ouvrir_assistant():
         )
         
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit assistant de poche. Tu vas où de beau aujourd'hui ? 🐾"}
+            {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit renard de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
 
     chat_container = st.container(height=500)
+    
+    # ... (La suite reste identique, assure-toi juste d'avoir enlevé les _v5 partout !) ...
     
     with chat_container:
         for message in st.session_state.messages_ia:
