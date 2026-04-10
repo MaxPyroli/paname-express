@@ -191,5 +191,25 @@ def appliquer_style_global():
             font-weight: 500;
             margin-top: 2px;
         }
+
+        /* Effet de survol (Hover) pour les cartes Tuto */
+        .tuto-card {
+            background-color: rgba(4, 27, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease; /* L'animation douce */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            height: 100%;
+        }
+
+        .tuto-card:hover {
+            transform: translateY(-8px); /* Soulève la carte vers le haut */
+            background-color: rgba(4, 27, 59, 0.7); /* Rend le fond un peu plus plein */
+            border: 1px solid rgba(52, 152, 219, 0.5); /* Bordure bleue qui s'allume */
+            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.25); /* Halo bleu (relief) */
+            cursor: pointer; /* Change la souris en petite main */
+        }
     </style>
     """, unsafe_allow_html=True)
