@@ -42,48 +42,40 @@ model = genai.GenerativeModel(
 def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Posez-moi vos questions sur le trafic (ex: RER A, Ligne 14...).</p>", unsafe_allow_html=True)
 
-    # Initialisation du CHAT GEMINI dans la mémoire (pour garder le contexte)
+    # 1. Initialisation de la mémoire et du Chat Gemini
     if "chat_session" not in st.session_state:
-        # On démarre une vraie session de chat avec Gemini
         st.session_state.chat_session = model.start_chat(enable_automatic_function_calling=True)
-        # On initialise aussi notre affichage local
         st.session_state.messages_ia = [
             {"role": "assistant", "content": "Salut ! Je suis connecté au réseau. Demande-moi l'état d'une ligne ! 🚇"}
         ]
 
-    # Conteneur avec scroll
+    # 2. ON CAPTURE LE MESSAGE ICI (avant de dessiner l'historique)
+    prompt = st.chat_input("Ex: Y a-t-il des problèmes sur le RER A ?")
+    
+    # Si l'utilisateur a tapé quelque chose, on l'ajoute direct à la mémoire
+    if prompt:
+        st.session_state.messages_ia.append({"role": "user", "content": prompt})
+
+    # 3. Conteneur avec scroll
     chat_container = st.container(height=350)
     
-    # Affichage de l'historique
     with chat_container:
+        # On dessine tout l'historique (qui inclut maintenant la question de l'utilisateur !)
         for message in st.session_state.messages_ia:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-    # Barre de saisie
-    if prompt := st.chat_input("Ex: Y a-t-il des problèmes sur le RER A ?"):
-        # Affichage immédiat de la question
-        st.session_state.messages_ia.append({"role": "user", "content": prompt})
-        st.rerun() 
-        
-    # --- LA MAGIE OPÈRE ICI ---
-    if st.session_state.messages_ia and st.session_state.messages_ia[-1]["role"] == "user":
-        dernier_prompt = st.session_state.messages_ia[-1]["content"]
-        
-        with chat_container:
+        # 4. Si on vient de recevoir une question, l'IA répond dans la foulée
+        if prompt:
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 message_placeholder.markdown("🤔 *Je consulte le réseau...*")
                 
                 try:
-                    # On envoie le message au chat Gemini.
-                    # S'il a besoin de l'info trafic, il va de lui-même exécuter
-                    # la fonction 'obtenir_info_trafic', lire le résultat, et te faire une belle phrase !
                     response = st.session_state.chat_session.send_message(
-                        f"Consigne : Tu es l'assistant de l'app Grand Paname. Réponds de façon concise. Question : {dernier_prompt}"
+                        f"Consigne : Tu es l'assistant de l'app Grand Paname. Réponds de façon concise et naturelle. Question : {prompt}"
                     )
                     reponse_finale = response.text
-                    
                     message_placeholder.markdown(reponse_finale)
                     
                 except Exception as e:
@@ -91,4 +83,5 @@ def ouvrir_assistant():
                     message_placeholder.markdown(reponse_finale)
                     print(f"Erreur API : {e}")
                 
-        st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
+            # On sauvegarde la réponse de l'IA pour le prochain tour
+            st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
