@@ -146,7 +146,7 @@ def ouvrir_assistant():
         
         # 👇 LA NOUVELLE FAÇON DE DÉMARRER LE CHAT EN V2 👇
         st.session_state.chat_session_v3 = client.chats.create(
-            model="gemini-3.1-flash",
+            model="gemini-3.1-flash-lite-preview",
             config=config_ia
         )
         
