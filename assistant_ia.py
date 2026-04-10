@@ -1,6 +1,8 @@
 import streamlit as st
 import time
 import google.generativeai as genai
+# Importe ta vraie fonction ici ! (Remplace 'ton_fichier' par api ou utils)
+from api_idfm import demander_info_trafic
 
 # 1. Configuration de l'API
 # On s'assure que la clé est bien lue
