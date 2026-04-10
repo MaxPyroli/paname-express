@@ -210,9 +210,6 @@ def ouvrir_assistant():
             model="gemini-3.1-flash-lite-preview", 
             config=config_ia
         )
-        st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
-        ]
         st.rerun() # Rafraîchit l'écran
     # 👆 ------------------------------------------ 👆
 
@@ -224,7 +221,7 @@ def ouvrir_assistant():
         )
         
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! 👋 Moi c'est Pana, ton petit Corgi de poche. Tu vas où de beau aujourd'hui ? 🐾"}
+            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
         ]
 
     chat_container = st.container(height=500)
