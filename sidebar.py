@@ -4,7 +4,7 @@ import time
 from streamlit_js_eval import streamlit_js_eval
 from config import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
-from assistant_ia import ouvrir_assistant
+from assistant_ia import outil_info_trafic_ia
 
 def initialiser_favoris():
     """Charge les favoris depuis le navigateur au démarrage."""
