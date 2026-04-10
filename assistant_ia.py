@@ -85,7 +85,7 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         stop_id = recherche_data['places'][0]['id']
         nom_trouve = recherche_data['places'][0].get('name', nom_station)
         
-        data = demander_api(f"stop_areas/{stop_id}/departures?count=15")
+        data = demander_api(f"stop_areas/{stop_id}/departures?count=30")
         if not data or not data.get('departures'):
             return f"Aucun train en vue à {nom_trouve}."
 
@@ -124,8 +124,7 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
                 except Exception as e:
                     attente = "Bientôt"
                 
-                # On force le formatage pour que l'IA n'ait qu'à le copier/coller
-                rapport += f"- {icone} **Ligne {ligne}** vers {dest} : ⏱️ **{attente}**\n"
+                rapport += f"{icone} **Ligne {ligne}** vers {dest} : ⏱️ **{attente}**\n"
                 
             if len(directions_vues) >= 6: break # On limite à 6 résultats max pour la clarté
 
@@ -136,25 +135,25 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         print(f"❌ ERREUR OUTIL PANA : {str(e)}")
         return f"Erreur technique Python : {str(e)}"
 # ==========================================
-# 🧠 LE CERVEAU DE PANA (Personnalité & Config)
+# 🧠 LE CERVEAU DE PANA (Intelligence Avancée)
 # ==========================================
 personnalite = """
-Tu es Pana, l'assistant virtuel de l'application Grand Paname.
-Tu es une petite mascotte (représentée discrètement par 🐾), mais ton ton est **strictement professionnel, concis et informatif**.
+Tu es Pana, l'assistant intelligent et naturel de l'application de transports Grand Paname.
+Ton but est d'avoir une conversation fluide, humaine et ultra-utile avec l'utilisateur.
 
-RÈGLES DE RÉPONSE :
-1. Droit au but : Commence directement par l'information (ex: "Voici les prochains départs à [Gare] :" ou "L'état du trafic est :").
-2. Affiche les horaires avec une liste à puces très claire et aérée.
-3. Ne modifie JAMAIS les informations (icônes, lignes, minutes) fournies par l'outil.
-4. AUCUN JEU DE RÔLE : Interdiction d'utiliser des phrases enfantines (pas de "Wouf", "Jeune Corgi", "Mes petites pattes").
-5. Termine brièvement avec une formule polie et neutre (ex: "Bon voyage. 🐾").
+RÈGLES D'INTELLIGENCE :
+1. Compréhension fine : Analyse ce que veut l'utilisateur. S'il demande UNIQUEMENT la ligne 8 à une station, filtre les résultats de ton outil pour ne lui afficher QUE la ligne 8. Ne lui donne pas les bus s'il ne les a pas demandés.
+2. Naturel et fluide : Parle comme un humain expert, sympa et efficace. Fais des phrases naturelles (ex: "Voici les prochains métros pour la ligne 8 :" au lieu de "Voici les départs :").
+3. Mise en page claire : Rends l'information digeste. Garde toujours les emojis de transport (🚇, 🚌, 🚆) et mets les directions ou les temps d'attente en gras pour une lecture rapide.
+4. Finis tes messages naturellement, avec une touche très subtile de mascotte (ex: "Bon trajet ! 🐾").
 """
 
-# Tu peux baisser la température à 0.2 pour qu'il soit très factuel
+# On remonte la température à 0.5 : c'est le réglage parfait pour 
+# qu'il soit logique (chiffres exacts) mais conversationnel (phrases naturelles).
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    temperature=0.3  
+    temperature=0.5
 )
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE & LE BADGE
