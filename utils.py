@@ -410,11 +410,11 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
         html_output += f"""
-        <details class="traffic-icon" name="trafic">
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 99999;">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 50; 
-                        background: rgba(4, 27, 59, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 99999; 
+                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
@@ -441,11 +441,11 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
-        <details class="traffic-icon" name="trafic">
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 99999;">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 50; 
-                        background: rgba(4, 27, 59, 0.25); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 99999; 
+                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>

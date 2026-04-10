@@ -100,7 +100,7 @@ def appliquer_style_global():
         
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
         
-        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.3s; }
         .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
         .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
         .bus-row > span:last-child, .rail-row > span:last-child { color: #ffffff !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
@@ -192,5 +192,26 @@ def appliquer_style_global():
             margin-top: 2px;
         }
 
+        /* La classe de base */
+        .tuto-card {
+            background-color: var(--secondary-background-color);
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease !important; /* On force la fluidité */
+        }
+    
+        /* L'effet magique au survol (AVEC !IMPORTANT) */
+        .tuto-card:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important;
+            border: 1px solid rgba(52, 152, 219, 0.8) !important;
+            background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
+            cursor: pointer !important;
+        }
     </style>
     """, unsafe_allow_html=True)

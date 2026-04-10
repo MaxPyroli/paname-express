@@ -97,10 +97,45 @@ def afficher_sidebar():
         
         st.markdown("---")
         with st.expander("📜 Historique des versions"):
+            # L'astuce CSS invisible pour forcer la hauteur max et l'ascenseur
+            st.markdown("""
+            <style>
+                div[data-testid="stExpanderDetails"] {
+                    max-height: 500px;
+                    overflow-y: auto;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
             notes_history = get_all_changelogs()
             for i, note in enumerate(notes_history):
                 st.markdown(note)
                 if i < len(notes_history) - 1: st.divider()
         
-        st.markdown("---")
-        st.caption("✨ Réalisé à l'aide de l'IA **Gemini**")
+        # ==========================================
+        # FOOTER / CRÉDITS (Tout en bas de la sidebar)
+        # ==========================================
+        # On ajoute un espace flexible pour pousser le footer vers le bas s'il y a de la place
+        st.markdown('<div style="flex-grow: 1;"></div>', unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
+                🚀 Propulsé par <strong>Grand Paname</strong>
+            </div>
+            <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">
+                Fait avec ❤️ par un Francilien
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
+                ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
+                <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Signaler un bug</a>
+                <span style="color: #444;">•</span>
+                <a href="contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
+                © 2026 Grand Paname. Données : API IDFM.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
