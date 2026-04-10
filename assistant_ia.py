@@ -76,7 +76,7 @@ Tu es l'assistant virtuel de l'application Grand Paname, spécialisée dans les 
 
 # On déclare le modèle avec ses 2 outils et sa personnalité
 model = genai.GenerativeModel(
-    'gemini-2.5-flash', # Garde celui qui fonctionnait pour toi !
+    'gemini-3.1-flash-lite-preview', # Garde celui qui fonctionnait pour toi !
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
     system_instruction=personnalite
 )
@@ -88,21 +88,23 @@ model = genai.GenerativeModel(
 def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Trafic, horaires, itinéraires... Demandez-moi tout !</p>", unsafe_allow_html=True)
 
-    if "chat_session" not in st.session_state:
-        st.session_state.chat_session = model.start_chat(enable_automatic_function_calling=True)
-        st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Coucou ! 👋 Je suis prêt à t'accompagner. Tu vas où de beau aujourd'hui ? 🚇"}
+    # 1. ON CHANGE LE NOM DES VARIABLES POUR VIDER LE CACHE
+    if "chat_session_v2" not in st.session_state:
+        # Assure-toi que ton modèle s'appelle bien model = genai.GenerativeModel('gemini-3.1-flash', ...) plus haut !
+        st.session_state.chat_session_v2 = model.start_chat(enable_automatic_function_calling=True)
+        st.session_state.messages_ia_v2 = [
+            {"role": "assistant", "content": "Coucou ! 👋 J'ai un tout nouveau cerveau. Tu vas où de beau aujourd'hui ? 🚇"}
         ]
 
     chat_container = st.container(height=350)
     
     with chat_container:
-        for message in st.session_state.messages_ia:
+        for message in st.session_state.messages_ia_v2:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
     if prompt := st.chat_input("Ex: Dans combien de temps est le prochain RER A à Châtelet ?"):
-        st.session_state.messages_ia.append({"role": "user", "content": prompt})
+        st.session_state.messages_ia_v2.append({"role": "user", "content": prompt})
         
         with chat_container:
             with st.chat_message("user"):
@@ -113,28 +115,24 @@ def ouvrir_assistant():
                 message_placeholder.markdown("🤔 *Je fouille dans les serveurs...*")
                 
                 try:
-                    # Plus besoin de lui répéter de répondre gentiment, 
-                    # c'est ancré dans sa "system_instruction" en haut !
-                    response = st.session_state.chat_session.send_message(prompt)
+                    # On utilise bien la nouvelle session V2
+                    response = st.session_state.chat_session_v2.send_message(prompt)
                     reponse_finale = response.text
                     message_placeholder.markdown(reponse_finale)
                     
-                    st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
+                    st.session_state.messages_ia_v2.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
                     
-                    # 🛡️ INTERCEPTION INTELLIGENTE DU QUOTA (429)
                     if "429" in erreur_brute or "Quota exceeded" in erreur_brute:
-                        # On cherche le nombre de secondes dans l'erreur avec une expression régulière
                         match = re.search(r'retry in (\d+)', erreur_brute)
                         if match:
                             secondes = match.group(1)
-                            erreur_texte = f"**Oups !** 🥵 On va un peu trop vite ! Laisse-moi reprendre mon souffle pendant environ **{secondes} secondes** avant ta prochaine question. ☕"
+                            erreur_texte = f"**Oups !** 🥵 Laisse-moi reprendre mon souffle pendant environ **{secondes} secondes**. ☕"
                         else:
-                            erreur_texte = "**Oups !** 🥵 Beaucoup trop de questions à la fois, le serveur surchauffe. Laisse-moi souffler une petite minute. ☕"
+                            erreur_texte = "**Oups !** 🥵 Le serveur surchauffe. Laisse-moi souffler une petite minute. ☕"
                         
                         message_placeholder.warning(erreur_texte)
                     else:
-                        # Si c'est une autre erreur, on l'affiche normalement
                         message_placeholder.error(f"Erreur technique : {erreur_brute}")
