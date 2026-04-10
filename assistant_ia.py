@@ -48,9 +48,13 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
-    """Récupère les horaires des prochains départs pour une gare."""
+    """
+    UTILISE CET OUTIL OBLIGATOIREMENT pour obtenir les horaires, 
+    les prochains trains ou les prochains départs d'une gare ou d'une station.
+    """
     
     print(f"\n--- 🚀 DÉBUT RECHERCHE IA: {nom_station} ---")
+    # ... la suite du code ...
     
     try:
         nom_station_propre = urllib.parse.quote(nom_station)
