@@ -20,7 +20,7 @@ from sidebar import initialiser_favoris, afficher_sidebar
 from ui_composants import afficher_titre_app, afficher_tuto_bienvenue
 from easter_eggs import afficher_popup_feur, afficher_cheval_express
 from moteur_live import afficher_tableau_live
-from assistant_ia import outil_info_trafic_ia
+from assistant_ia import ouvrir_assistant
 
 # Initialisation des variables de session
 if 'search_key' not in st.session_state:
