@@ -201,13 +201,18 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
 
-    # 👇 LE FAMEUX BOUTON MAGIQUE 👇
+    # 👇 LE NOUVEAU BOUTON MAGIQUE (MÉTHODE FORTE) 👇
     if st.button("🔄 Effacer la mémoire", type="tertiary", help="Recommencer la conversation à zéro"):
-        # On supprime les variables de la mémoire Streamlit
-        st.session_state.pop("chat_session", None)
-        st.session_state.pop("messages_ia", None)
-        st.rerun() # On recharge l'interface instantanément
-    # 👆 ------------------------ 👆
+        # On n'efface plus, on écrase avec un cerveau tout neuf !
+        st.session_state.chat_session = client.chats.create(
+            model="gemini-3.1-flash-lite-preview", 
+            config=config_ia
+        )
+        st.session_state.messages_ia = [
+            {"role": "assistant", "content": "Wouf ! 👋 Moi c'est Pana, ton petit Corgi de poche. Tu vas où de beau aujourd'hui ? 🐾"}
+        ]
+        st.rerun() # Rafraîchit l'écran
+    # 👆 ------------------------------------------ 👆
 
     # 3. LE DÉMARRAGE DU CERVEAU (Avec des noms propres, sans "v5")
     if "chat_session" not in st.session_state:
