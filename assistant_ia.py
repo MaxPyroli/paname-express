@@ -118,50 +118,80 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         print(f"ERREUR CRITIQUE IA : {str(e)}")
         return "Désolé, petit bug technique avec les horaires. Réessaie !"
 # ==========================================
-# 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
+# 🧠 LE CERVEAU DE PANA (Personnalité & Config)
 # ==========================================
 personnalite = """
 Tu t'appelles Pana, le petit assistant virtuel tout mignon de l'application Grand Paname. 🦊✨
 Tu as une personnalité adorable, très chaleureuse, pétillante et toujours prête à aider.
 
 RÈGLES DE RÉPONSE :
-1. Accueille toujours l'utilisateur avec un petit mot mignon et joyeux (ex: Coucou !, Salut toi !).
-2. Affiche EXACTEMENT la liste fournie par l'outil en gardant le format "X min". Ne modifie pas les chiffres.
+1. Accueille toujours l'utilisateur avec un petit mot mignon et joyeux.
+2. Affiche EXACTEMENT la liste fournie par l'outil. Ne modifie pas les chiffres.
 3. Fais une liste à puces propre avec les emojis.
-4. Finis par une petite phrase adorable et bienveillante pour souhaiter un bon voyage (ex: Fais bon voyage, Fais attention à toi, etc.).
+4. Finis par une petite phrase adorable et bienveillante pour souhaiter un bon voyage.
 5. Reste concis : on veut de la mignonnerie, mais pas de gros pavés de texte.
 """
+
+# 👇 C'EST ICI QUE TU CHANGES LA TEMPÉRATURE 👇
+# Plus c'est proche de 0.0 = Robot très strict (bon pour les horaires purs)
+# Plus c'est proche de 1.0 = Très bavard et créatif (risque d'inventer)
+# 0.4 est le compromis idéal pour Pana !
+config_ia = types.GenerateContentConfig(
+    system_instruction=personnalite,
+    tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
+    temperature=0.4  
+)
+
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE
+# 🎨 L'INTERFACE DE LA MODALE & LE BADGE
 # ==========================================
-@st.dialog("🤖 Pana (Bêta)") 
+@st.dialog("🤖 Pana") 
 def ouvrir_assistant():
-    # 👇 Ce petit bloc de code ajuste la largeur précisément (ici 600px)
+    
+    # 1. LE STYLE CSS (Largeur de la modale + Design du Badge Orange)
     st.markdown(
         """
         <style>
-            div[data-testid="stDialog"] div[role="dialog"] {
-                max-width: 650px !important; /* Ajuste ce chiffre selon ton goût */
+            div[data-testid="stDialog"] div[role="dialog"] { max-width: 580px !important; }
+            .stChatMessage { border-radius: 15px; }
+            
+            /* Le design de ton badge Bêta orange ! */
+            .badge-beta {
+                background-color: #ff9f43; /* Un bel orange moderne */
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.75em;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                margin-left: 8px;
+                box-shadow: 0 2px 4px rgba(255, 159, 67, 0.3);
+                vertical-align: middle;
             }
         </style>
         """,
         unsafe_allow_html=True
     )
-    
-    # On peut même mettre à jour le sous-titre gris !
-    st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Coucou ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi !</p>", unsafe_allow_html=True)
 
-    # Change le V3 en V4 pour forcer Streamlit à prendre en compte Pana !
+    # 2. LE SOUS-TITRE AVEC LE BADGE
+    st.markdown(
+        "<p style='color: #888; font-size: 0.9em; margin-top: -10px; margin-bottom: 20px;'>"
+        "Coucou ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi ! <span class='badge-beta'>BÊTA</span>"
+        "</p>", 
+        unsafe_allow_html=True
+    )
+
+    # 3. LE DÉMARRAGE DU CERVEAU (Il trouvera config_ia car il est défini plus haut !)
     if "chat_session_v4" not in st.session_state:
         st.session_state.chat_session_v4 = client.chats.create(
             model="gemini-3.1-flash-lite-preview", 
             config=config_ia
         )
         
-        # 👇 Le premier message mignon de Pana
         st.session_state.messages_ia_v4 = [
             {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit assistant de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
+
     chat_container = st.container(height=500)
     
     with chat_container:
@@ -178,10 +208,9 @@ def ouvrir_assistant():
             
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
-                message_placeholder.markdown("🤔 *Je fouille dans les serveurs...*")
+                message_placeholder.markdown("🦊 *Pana cherche dans ses fiches...*")
                 
                 try:
-                    # Envoi du message avec la nouvelle syntaxe
                     response = st.session_state.chat_session_v4.send_message(prompt)
                     reponse_finale = response.text
                     message_placeholder.markdown(reponse_finale)
@@ -190,14 +219,7 @@ def ouvrir_assistant():
                     
                 except Exception as e:
                     erreur_brute = str(e)
-                    
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        match = re.search(r'retry in (\d+)', erreur_brute)
-                        if match:
-                            secondes = match.group(1)
-                            erreur_texte = f"**Oups !** 🥵 Laisse-moi reprendre mon souffle pendant environ **{secondes} secondes**. ☕"
-                        else:
-                            erreur_texte = "**Oups !** 🥵 Le serveur surchauffe. Laisse-moi souffler une petite minute. ☕"
-                        message_placeholder.warning(erreur_texte)
+                        message_placeholder.warning("**Oups !** 🥵 Le réseau est saturé. Laisse-moi souffler une petite minute. 🐾")
                     else:
                         message_placeholder.error(f"Erreur technique : {erreur_brute}")
