@@ -50,95 +50,85 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
-    """
-    UTILISE CET OUTIL OBLIGATOIREMENT pour obtenir les horaires, 
-    les prochains trains ou les prochains départs d'une gare ou d'une station.
-    """
-    
-    print(f"\n--- 🚀 DÉBUT RECHERCHE IA: {nom_station} ---")
-    # ... la suite du code ...
-    
+    """Récupère les horaires uniques par direction pour une gare."""
     try:
         nom_station_propre = urllib.parse.quote(nom_station)
-        print(f"📍 1. Texte nettoyé : {nom_station_propre}")
-        
         recherche_data = demander_api(f"places?q={nom_station_propre}")
         
-        if not recherche_data:
-            print("⚠️ 2. CRASH SILENCIEUX : demander_api n'a rien renvoyé (None) pour la recherche.")
-            return f"Je ne trouve pas {nom_station}."
+        if not recherche_data or not recherche_data.get('places'):
+            return f"Je n'ai pas trouvé la gare '{nom_station}'."
             
-        places = recherche_data.get('places', [])
-        print(f"📍 2. Nombre de lieux trouvés par IDFM : {len(places)}")
+        stop_id = recherche_data['places'][0]['id']
+        nom_trouve = recherche_data['places'][0].get('name', nom_station)
         
-        if len(places) == 0:
-            print("⚠️ 3. CRASH SILENCIEUX : IDFM a répondu, mais la liste est vide.")
-            return f"Je n'ai pas réussi à trouver l'arrêt '{nom_station}' sur le réseau."
+        # On demande 20 trains pour être sûr d'avoir plusieurs directions
+        data = demander_api(f"stop_areas/{stop_id}/departures?count=20")
+        
+        if not data or not data.get('departures'):
+            return f"Aucun départ à {nom_trouve}."
             
-        # On essaie de forcer la recherche sur une "stop_area" (une vraie gare)
-        stop_id = places[0]['id']
-        nom_trouve = places[0].get('name', nom_station)
-        type_lieu = places[0].get('embedded_type', 'inconnu')
+        # --- LOGIQUE DE TRI ET FILTRAGE ---
+        directions_vues = set()
+        departs_uniques = []
         
-        print(f"📍 3. Lieu choisi : {nom_trouve} | ID : {stop_id} | Type : {type_lieu}")
-        
-        # Si l'API a trouvé une ville au lieu d'une gare, on prévient la console
-        if type_lieu != 'stop_area':
-            print("🚨 ATTENTION : L'API a trouvé une ville/région, pas une gare ! Ça risque de foirer.")
-
-        data = demander_api(f"stop_areas/{stop_id}/departures?count=10")
-        
-        if not data:
-            print("⚠️ 4. CRASH SILENCIEUX : demander_api n'a rien renvoyé pour les départs.")
-            return f"Aucun réseau pour {nom_trouve}."
-            
-        departures = data.get('departures', [])
-        print(f"📍 4. Nombre de trains trouvés : {len(departures)}")
-        
-        if len(departures) == 0:
-            return f"Aucun départ trouvé pour {nom_trouve} actuellement."
-            
-        rapport = f"Prochains départs à {nom_trouve} :\n"
-        lignes_vues = 0
-        
-        for d in departures:
-            if lignes_vues >= 6: break
+        for d in data['departures']:
             info = d['display_informations']
-            rapport += f"- {info.get('code', '?')} vers {info.get('direction', '?')}\n"
-            lignes_vues += 1
+            ligne = info.get('code', '?')
+            dest = info.get('direction', 'Inconnue').split('(')[0].strip() # Nettoie les parenthèses
+            cle_unique = (ligne, dest) # On définit l'unicité par le couple Ligne + Destination
             
-        print("✅ 5. SUCCÈS : Rapport envoyé à l'IA !")
-        print("------------------------------------------\n")
+            if cle_unique not in directions_vues:
+                directions_vues.add(cle_unique)
+                
+                # Calcul du temps d'attente
+                try:
+                    time_str = d['stop_date_time']['departure_date_time']
+                    dep_time = datetime.strptime(time_str, '%Y%m%dT%H%M%S').replace(tzinfo=pytz.timezone('Europe/Paris'))
+                    now = datetime.now(pytz.timezone('Europe/Paris'))
+                    diff = int((dep_time - now).total_seconds() / 60)
+                    temps = f"{diff} min" if diff > 0 else "À quai"
+                except:
+                    temps = "Heure inconnue"
+                    
+                departs_uniques.append({
+                    "ligne": ligne,
+                    "dest": dest,
+                    "temps": temps,
+                    "mode": info.get('physical_mode', '')
+                })
+
+        # On limite à 8 directions max pour rester concis
+        rapport = f"Voici ce que j'ai trouvé pour {nom_trouve} :\n"
+        for dep in departs_uniques[:8]:
+            icone = "🚇" if "RER" in dep['mode'] or "METRO" in dep['mode'] else "🚌"
+            rapport += f"- {icone} **{dep['ligne']}** vers **{dep['dest']}** : ⏱️ {dep['temps']}\n"
+            
         return rapport
         
     except Exception as e:
-        print(f"❌ 6. VRAIE ERREUR: {str(e)}")
-        print("------------------------------------------\n")
-        return f"Erreur réseau pour {nom_station}."
-
+        return f"Petit souci technique pour {nom_station}."
 # ==========================================
 # 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
 personnalite = """
-Tu es l'assistant de l'application Grand Paname (transports en Île-de-France).
+Tu es l'assistant de l'app Grand Paname. Tu es un vrai Parisien : chaleureux, accueillant et toujours prêt à aider avec un petit mot gentil. ✨
 
-RÈGLES ABSOLUES :
-1. Tu ne devines JAMAIS un horaire. Utilise tes outils.
-2. Tu DOIS OBLIGATOIREMENT afficher l'heure ou le temps d'attente pour CHAQUE départ que l'outil te fournit. Ne liste jamais un train sans donner son heure.
-3. Sois ultra-CONCIS. Zappe les longues phrases d'introduction. Va droit au but comme un vrai panneau d'affichage.
+TES MISSIONS :
+1. Salue l'utilisateur avec enthousiasme.
+2. Utilise les données de l'outil pour donner les départs.
+3. Ajoute une petite phrase de conclusion sympathique (bonne journée, bon courage pour le trajet, etc.).
 
-TON & STYLE :
-- Reste sympa et chaleureux, mais bref.
-- Utilise des emojis pour rendre la liste lisible (🚇, 🚌, ⏱️).
-- Présente les départs sous forme de liste à puces claire.
+STRUCTURE DE RÉPONSE :
+- Une courte phrase d'accueil avec emojis.
+- La liste à puces fournie par l'outil (ne modifie pas les horaires).
+- Une conclusion brève et chaleureuse.
 """
 
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    temperature=0.3  # 👇 J'ai baissé la température (de 0.7 à 0.3) pour qu'elle soit plus factuelle et moins "créative" !
+    temperature=0.6 # On remonte un peu pour plus de chaleur humaine
 )
-
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE
 # ==========================================
