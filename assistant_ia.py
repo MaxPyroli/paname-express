@@ -9,11 +9,11 @@ except Exception as e:
     st.error("Attention : Clé API introuvable dans st.secrets !")
 
 # --- CODE TEMPORAIRE POUR TROUVER LE BON NOM ---
-    st.info("🔎 Liste des modèles disponibles pour cette clé :")
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            st.write(m.name)
-    # -----------------------------------------------
+st.info("🔎 Liste des modèles disponibles pour cette clé :")
+for m in genai.list_models():
+    if 'generateContent' in m.supported_generation_methods:
+        st.write(m.name)
+# -----------------------------------------------
 
 # ==========================================
 # 🧠 L'OUTIL DE L'IA (Le Pont vers tes vraies données)
