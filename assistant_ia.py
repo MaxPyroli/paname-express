@@ -242,25 +242,38 @@ def ouvrir_assistant():
                 st.markdown(prompt)
             
             with st.chat_message("assistant"):
+                # 1. On crée une "boîte vide"
+                message_placeholder = st.empty()
+                
+                # 2. On y injecte notre animation CSS sur-mesure (3 points qui clignotent)
+                animation_html = """
+                <style>
+                .corgi-loader { color: #555; }
+                .corgi-loader span { animation: blink 1.4s infinite both; font-size: 1.2em; font-weight: bold; }
+                .corgi-loader span:nth-child(2) { animation-delay: 0.2s; }
+                .corgi-loader span:nth-child(3) { animation-delay: 0.4s; }
+                @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
+                </style>
+                <div class="corgi-loader">🐶 <i>Pana trotte sur ses petites pattes</i><span>.</span><span>.</span><span>.</span></div>
+                """
+                message_placeholder.markdown(animation_html, unsafe_allow_html=True)
+                
                 try:
-                    # 👇 LA NOUVELLE ANIMATION "STATUS" 👇
-                    with st.status("🐶 *Pana trotte sur ses petites pattes...*", expanded=True) as status:
-                        
-                        # L'IA réfléchit ici...
-                        response = st.session_state.chat_session.send_message(prompt)
-                        reponse_finale = response.text
-                        
-                        # L'IA a fini ! On met à jour la boîte pour dire que c'est un succès
-                        status.update(label="Wouf ! J'ai trouvé ! 🦴", state="complete", expanded=False)
-                    # 👆 -------------------------------- 👆
+                    # L'IA réfléchit...
+                    response = st.session_state.chat_session.send_message(prompt)
+                    reponse_finale = response.text
                     
-                    # On affiche la vraie réponse juste en dessous
+                    # 3. ON DETRUIT L'ANIMATION et on affiche le vrai texte
+                    message_placeholder.empty()
                     st.markdown(reponse_finale)
                     
                     # On sauvegarde
                     st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
+                    # 4. MÊME SI ÇA PLANTE, on détruit l'animation pour garder l'écran propre !
+                    message_placeholder.empty()
+                    
                     erreur_brute = str(e)
                     if "429" in erreur_brute or "Quota" in erreur_brute:
                         st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau !* 💧")
