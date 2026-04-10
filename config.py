@@ -5,4 +5,4 @@
 APP_NAME = "Grand Paname"
 APP_VERSION = "v2.2"
 APP_CODENAME = "Beaufort 🧀"
-APP_SUBTITLE = "Naviguez le Grand Paris, tout simplement."
+APP_SUBTITLE = "Naviguez le Grand Paris, tout simplement." 
