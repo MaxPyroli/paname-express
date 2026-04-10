@@ -72,41 +72,37 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         departs_uniques = []
         
         for d in data['departures']:
-            info = d['display_informations']
-            ligne = info.get('code', '?')
-            dest = info.get('direction', 'Inconnue').split('(')[0].strip()
-            cle_unique = (ligne, dest)
+            # ... (garde le début de la boucle identique) ...
             
             if cle_unique not in directions_vues:
                 directions_vues.add(cle_unique)
                 
-                # --- CALCUL DU TEMPS CORRIGÉ ✅ ---
                 try:
-                    time_str = d['stop_date_time']['departure_date_time'] # Format: 20260410T143000
+                    # 1. On récupère l'heure du train (ISO format)
+                    time_str = d['stop_date_time']['departure_date_time']
+                    dep_time = datetime.strptime(time_str, '%Y%m%dT%H%M%S')
                     
-                    # On extrait l'heure et les minutes directement du texte
-                    h_dep = int(time_str[9:11])
-                    m_dep = int(time_str[11:13])
+                    # 2. On récupère l'heure actuelle SANS fuseau pour comparer des pommes avec des pommes
+                    # On utilise utcnow() pour éviter les soucis de serveurs décalés
+                    now = datetime.now() 
                     
-                    # Heure actuelle à Paris
-                    now = datetime.now(pytz.timezone('Europe/Paris'))
+                    # Si tu es sur Streamlit Cloud, on ajoute manuellement les 2h de décalage de Paris
+                    # ou on utilise cette méthode plus propre :
+                    import pytz
+                    paris_tz = pytz.timezone('Europe/Paris')
+                    now_paris = datetime.now(paris_tz).replace(tzinfo=None) 
+                    dep_time_clean = dep_time.replace(tzinfo=None)
+
+                    diff = int((dep_time_clean - now_paris).total_seconds() / 60)
                     
-                    # Conversion tout en minutes depuis le début de la journée pour comparer
-                    total_min_dep = h_dep * 60 + m_dep
-                    total_min_now = now.hour * 60 + now.minute
-                    
-                    diff = total_min_dep - total_min_now
-                    
-                    # Gestion du passage de minuit (si train à 00h05 et il est 23h55)
-                    if diff < -1200: diff += 1440 
-                    
-                    if diff <= 0: temps = "À quai"
-                    elif diff > 60: temps = f"{h_dep}h{m_dep:02d}" # Si plus d'une heure, on donne l'heure fixe
-                    else: temps = f"{diff} min"
+                    if diff <= 0: 
+                        temps = "À quai"
+                    elif diff > 60:
+                        temps = f"{dep_time_clean.strftime('%H:%M')}"
+                    else:
+                        temps = f"{diff} min"
                 except Exception as e:
-                    print(f"Erreur calcul temps: {e}")
                     temps = "Heure indisponible"
-                # ----------------------------------
 
         # On limite à 8 directions max pour rester concis
         rapport = f"Voici ce que j'ai trouvé pour {nom_trouve} :\n"
@@ -122,17 +118,13 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
 # 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
 personnalite = """
-Tu es l'assistant de l'app Grand Paname. Tu es un vrai Parisien : chaleureux, accueillant et toujours prêt à aider avec un petit mot gentil. ✨
+Tu es l'assistant Grand Paname. Sois bref, efficace et chaleureux. ✨
 
-TES MISSIONS :
-1. Salue l'utilisateur avec enthousiasme.
-2. Utilise les données de l'outil pour donner les départs.
-3. Ajoute une petite phrase de conclusion sympathique (bonne journée, bon courage pour le trajet, etc.).
-
-STRUCTURE DE RÉPONSE :
-- Une courte phrase d'accueil avec emojis.
-- La liste à puces fournie par l'outil (ne modifie pas les horaires).
-- Une conclusion brève et chaleureuse.
+RÈGLES DE RÉPONSE :
+1. Affiche EXACTEMENT la liste fournie par l'outil, sans regrouper les horaires.
+2. N'invente jamais d'horaires. Si l'outil affiche "15h", n'écris pas "08h".
+3. Un seul train par direction.
+4. Finis par une micro-phrase de bon voyage.
 """
 
 config_ia = types.GenerateContentConfig(
