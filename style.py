@@ -192,24 +192,26 @@ def appliquer_style_global():
             margin-top: 2px;
         }
 
-        /* Effet de survol (Hover) pour les cartes Tuto */
+        /* La classe de base */
         .tuto-card {
-            background-color: rgba(4, 27, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--secondary-background-color);
+            border: 1px solid rgba(128, 128, 128, 0.2);
             border-radius: 12px;
             padding: 20px;
-            transition: all 0.3s ease; /* L'animation douce */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            flex: 1;
+            min-width: 200px;
             text-align: center;
-            height: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease !important; /* On force la fluidité */
         }
-
+    
+        /* L'effet magique au survol (AVEC !IMPORTANT) */
         .tuto-card:hover {
-            transform: translateY(-8px); /* Soulève la carte vers le haut */
-            background-color: rgba(4, 27, 59, 0.7); /* Rend le fond un peu plus plein */
-            border: 1px solid rgba(52, 152, 219, 0.5); /* Bordure bleue qui s'allume */
-            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.25); /* Halo bleu (relief) */
-            cursor: pointer; /* Change la souris en petite main */
+            transform: translateY(-8px) !important;
+            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important;
+            border: 1px solid rgba(52, 152, 219, 0.8) !important;
+            background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
+            cursor: pointer !important;
         }
     </style>
     """, unsafe_allow_html=True)
