@@ -50,70 +50,58 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
-    """Récupère les horaires uniques par direction pour une gare."""
+    """Récupère les horaires simplifiés pour l'IA."""
     try:
+        import urllib.parse
         nom_station_propre = urllib.parse.quote(nom_station)
-        recherche_data = demander_api(f"places?q={nom_station_propre}")
         
+        # 1. Recherche de la gare
+        recherche_data = demander_api(f"places?q={nom_station_propre}")
         if not recherche_data or not recherche_data.get('places'):
-            return f"Je n'ai pas trouvé la gare '{nom_station}'."
+            return f"Je ne trouve pas la gare '{nom_station}'."
             
         stop_id = recherche_data['places'][0]['id']
         nom_trouve = recherche_data['places'][0].get('name', nom_station)
         
-        # On demande 20 trains pour être sûr d'avoir plusieurs directions
-        data = demander_api(f"stop_areas/{stop_id}/departures?count=20")
-        
+        # 2. Récupération des départs
+        data = demander_api(f"stop_areas/{stop_id}/departures?count=15")
         if not data or not data.get('departures'):
-            return f"Aucun départ à {nom_trouve}."
-            
-        # --- LOGIQUE DE TRI ET FILTRAGE ---
+            return f"Aucun départ trouvé pour {nom_trouve}."
+
         directions_vues = set()
-        departs_uniques = []
+        rapport = f"Voici les prochains départs à {nom_trouve} :\n"
         
         for d in data['departures']:
-            # ... (garde le début de la boucle identique) ...
+            info = d['display_informations']
+            ligne = info.get('code', '?')
+            dest = info.get('direction', 'Inconnue').split('(')[0].strip()
             
-            if cle_unique not in directions_vues:
-                directions_vues.add(cle_unique)
+            # On ne garde qu'un train par direction
+            cle = (ligne, dest)
+            if cle not in directions_vues:
+                directions_vues.add(cle)
                 
+                # --- EXTRACTION SIMPLE DE L'HEURE (Sans calcul risqué) ---
                 try:
-                    # 1. On récupère l'heure du train (ISO format)
-                    time_str = d['stop_date_time']['departure_date_time']
-                    dep_time = datetime.strptime(time_str, '%Y%m%dT%H%M%S')
-                    
-                    # 2. On récupère l'heure actuelle SANS fuseau pour comparer des pommes avec des pommes
-                    # On utilise utcnow() pour éviter les soucis de serveurs décalés
-                    now = datetime.now() 
-                    
-                    # Si tu es sur Streamlit Cloud, on ajoute manuellement les 2h de décalage de Paris
-                    # ou on utilise cette méthode plus propre :
-                    import pytz
-                    paris_tz = pytz.timezone('Europe/Paris')
-                    now_paris = datetime.now(paris_tz).replace(tzinfo=None) 
-                    dep_time_clean = dep_time.replace(tzinfo=None)
+                    # On prend juste les caractères de l'heure dans la chaîne "20260410T153000"
+                    time_raw = d['stop_date_time']['departure_date_time']
+                    heure_aff = f"{time_raw[9:11]}:{time_raw[11:13]}"
+                except:
+                    heure_aff = "Bientôt"
+                
+                mode = info.get('physical_mode', '').upper()
+                icone = "🚇" if "RER" in mode or "METRO" in mode else "🚌"
+                
+                rapport += f"- {icone} **{ligne}** vers **{dest}** : ⏱️ **{heure_aff}**\n"
+                
+            if len(directions_vues) >= 6: break # On s'arrête à 6 lignes max
 
-                    diff = int((dep_time_clean - now_paris).total_seconds() / 60)
-                    
-                    if diff <= 0: 
-                        temps = "À quai"
-                    elif diff > 60:
-                        temps = f"{dep_time_clean.strftime('%H:%M')}"
-                    else:
-                        temps = f"{diff} min"
-                except Exception as e:
-                    temps = "Heure indisponible"
-
-        # On limite à 8 directions max pour rester concis
-        rapport = f"Voici ce que j'ai trouvé pour {nom_trouve} :\n"
-        for dep in departs_uniques[:8]:
-            icone = "🚇" if "RER" in dep['mode'] or "METRO" in dep['mode'] else "🚌"
-            rapport += f"- {icone} **{dep['ligne']}** vers **{dep['dest']}** : ⏱️ {dep['temps']}\n"
-            
         return rapport
         
     except Exception as e:
-        return f"Petit souci technique pour {nom_station}."
+        # On print l'erreur réelle dans la console Streamlit pour débugger
+        print(f"ERREUR CRITIQUE IA : {str(e)}")
+        return "Désolé, petit bug technique avec les horaires. Réessaie !"
 # ==========================================
 # 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
