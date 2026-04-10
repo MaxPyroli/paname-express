@@ -96,35 +96,38 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
             info = d['display_informations']
             ligne = info.get('code', '?')
             dest = info.get('direction', 'Inconnue').split('(')[0].strip()
+            
+            # --- LE DÉTECTEUR INTELLIGENT D'ICÔNES ---
+            if ligne in ['A', 'B', 'C', 'D', 'E']: icone = "🚆" # RER
+            elif ligne.isdigit() and int(ligne) <= 14: icone = "🚇" # Métro
+            elif ligne.startswith('T') and len(ligne) <= 4: icone = "🚋" # Tram
+            elif ligne.startswith('N'): icone = "🦉" # Noctilien
+            else: icone = "🚌" # Bus classique pour le reste
+            
+            # Clé unique pour n'avoir qu'un seul départ par Ligne ET par Direction
             cle = (ligne, dest)
             
             if cle not in directions_vues:
                 directions_vues.add(cle)
                 
-                # --- CALCUL DU TEMPS 100% SÉCURISÉ ---
+                # --- CALCUL DU TEMPS SÉCURISÉ ---
                 try:
                     time_raw = d['stop_date_time']['departure_date_time']
-                    # On force le fuseau horaire de Paris
                     dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S').replace(tzinfo=paris_tz)
                     now_paris = datetime.now(paris_tz)
                     
                     diff = int((dep_time - now_paris).total_seconds() / 60)
                     
-                    if diff <= 0:
-                        attente = "À quai 🏃‍♂️"
-                    elif diff > 90:
-                        attente = f"{diff // 60}h{diff % 60:02d}"
-                    else:
-                        attente = f"{diff} min"
+                    if diff <= 0: attente = "À quai 🏃‍♂️"
+                    elif diff > 90: attente = f"{diff // 60}h{diff % 60:02d}"
+                    else: attente = f"{diff} min"
                 except Exception as e:
                     attente = "Bientôt"
                 
-                # Ajout de la ligne au rapport
-                mode = info.get('physical_mode', '').upper()
-                icone = "🚇" if "RER" in mode or "METRO" in mode else "🚌"
-                rapport += f"- {icone} **{ligne}** vers **{dest}** : ⏱️ **{attente}**\n"
+                # On force le formatage pour que l'IA n'ait qu'à le copier/coller
+                rapport += f"- {icone} **Ligne {ligne}** vers {dest} : ⏱️ **{attente}**\n"
                 
-            if len(directions_vues) >= 6: break # 6 lignes max pour être concis
+            if len(directions_vues) >= 6: break # On limite à 6 résultats max pour la clarté
 
         return rapport
         
@@ -151,7 +154,7 @@ RÈGLES DE RÉPONSE :
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    temperature=0.2  
+    temperature=0.3  
 )
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE & LE BADGE
@@ -209,7 +212,7 @@ def ouvrir_assistant():
             config=config_ia
         )
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Wouf ! 👋 Moi c'est Pana, ton petit Corgi de poche. Tu vas où de beau aujourd'hui ? 🐾"}
+            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
         ]
         st.rerun() # Rafraîchit l'écran
     # 👆 ------------------------------------------ 👆
@@ -254,7 +257,7 @@ def ouvrir_assistant():
                 .corgi-loader span:nth-child(3) { animation-delay: 0.4s; }
                 @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
                 </style>
-                <div class="corgi-loader">🐶 <i>Pana trotte sur ses petites pattes</i><span>.</span><span>.</span><span>.</span></div>
+                <div class="corgi-loader">🐾 <i>Pana va chercher l'info</i><span>.</span><span>.</span><span>.</span></div>
                 """
                 message_placeholder.markdown(animation_html, unsafe_allow_html=True)
                 
