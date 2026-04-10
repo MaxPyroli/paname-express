@@ -152,25 +152,25 @@ def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Coucou ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi !</p>", unsafe_allow_html=True)
 
     # Change le V3 en V4 pour forcer Streamlit à prendre en compte Pana !
-    if "chat_session_v3" not in st.session_state:
-        st.session_state.chat_session_v3 = client.chats.create(
+    if "chat_session_v4" not in st.session_state:
+        st.session_state.chat_session_v4 = client.chats.create(
             model="gemini-3.1-flash-lite-preview", 
             config=config_ia
         )
         
         # 👇 Le premier message mignon de Pana
-        st.session_state.messages_ia_v3 = [
+        st.session_state.messages_ia_v4 = [
             {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit assistant de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
     chat_container = st.container(height=500)
     
     with chat_container:
-        for message in st.session_state.messages_ia_v3:
+        for message in st.session_state.messages_ia_v4:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
     if prompt := st.chat_input("Ex: Prochains départs à Noisy Champs ?"):
-        st.session_state.messages_ia_v3.append({"role": "user", "content": prompt})
+        st.session_state.messages_ia_v4.append({"role": "user", "content": prompt})
         
         with chat_container:
             with st.chat_message("user"):
@@ -182,11 +182,11 @@ def ouvrir_assistant():
                 
                 try:
                     # Envoi du message avec la nouvelle syntaxe
-                    response = st.session_state.chat_session_v3.send_message(prompt)
+                    response = st.session_state.chat_session_v4.send_message(prompt)
                     reponse_finale = response.text
                     message_placeholder.markdown(reponse_finale)
                     
-                    st.session_state.messages_ia_v3.append({"role": "assistant", "content": reponse_finale})
+                    st.session_state.messages_ia_v4.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
