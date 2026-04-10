@@ -16,35 +16,32 @@ except Exception as e:
     st.error("Attention : Clé API introuvable dans st.secrets !")
 
 # ==========================================
-# 🧰 OUTIL 1 : INFO TRAFIC
+# 🧰 OUTIL 1 : INFO TRAFIC (VERSION PANA 🦊)
 # ==========================================
-# ... (garde tes fonctions d'outils exactement comme elles étaient) ...
-def outil_info_trafic_ia(nom_ligne: str) -> str:
-    """Récupère l'état du trafic en temps réel pour une ligne de métro ou RER."""
-    dico_lignes = {
-        "1": "line:IDFM:C01371", "2": "line:IDFM:C01372", "3": "line:IDFM:C01373",
-        "4": "line:IDFM:C01374", "5": "line:IDFM:C01375", "14": "line:IDFM:C01386",
-        "RER A": "line:IDFM:C01742", "RER B": "line:IDFM:C01743" # (Ajoute les autres ici)
-    }
+def outil_info_trafic_ia(ligne: str) -> str:
+    """Récupère l'état du trafic pour une ligne de transport (ex: 'A', '1', '14')."""
     
-    nom_propre = str(nom_ligne).upper().replace("LIGNE ", "").strip()
-    line_id = dico_lignes.get(nom_propre)
+    print(f"🦊 Pana renifle le trafic pour la ligne : {ligne}")
     
-    if not line_id:
-        return f"Je ne connais pas l'ID de la ligne {nom_ligne}."
-
     try:
-        alertes = demander_info_trafic(line_id, nom_propre)
+        # 1. Nettoyage de la demande de l'IA (si elle dit "RER A", on garde juste "A")
+        ligne_propre = str(ligne).upper().replace("RER", "").replace("LIGNE", "").replace("METRO", "").strip()
+        print(f"📍 Ligne nettoyée : {ligne_propre}")
+        
+        # 2. Appel de ta fonction existante
+        resultats = demander_info_trafic(ligne_propre)
+        
+        # 3. Vérification des résultats
+        if not resultats:
+            print("⚠️ L'outil trafic n'a rien renvoyé.")
+            return f"Je n'ai pas trouvé de bulletin de trafic pour la ligne {ligne}."
+            
+        return str(resultats)
+        
     except Exception as e:
-        return f"Erreur de réseau : {str(e)}"
-
-    if not alertes or len(alertes) == 0:
-        return f"Trafic normal sur la ligne {nom_propre}."
-    
-    rapport = f"Problèmes sur la ligne {nom_propre} :\n"
-    for alerte in alertes:
-        rapport += f"- {alerte.get('header', 'Alerte')} : {alerte.get('text', '')}\n"
-    return rapport
+        # 4. Le mode espion !
+        print(f"❌ ERREUR TRAFIC PANA : {str(e)}")
+        return f"Erreur technique Python : {str(e)}"
 
 # ==========================================
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
