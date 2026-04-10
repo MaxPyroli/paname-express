@@ -16,35 +16,46 @@ except Exception as e:
     st.error("Attention : Clé API introuvable dans st.secrets !")
 
 # ==========================================
-# 🧰 OUTIL 1 : INFO TRAFIC
+# 🧰 OUTIL 1 : INFO TRAFIC (100% OPÉRATIONNEL 🦊)
 # ==========================================
 def outil_info_trafic_ia(ligne: str) -> str:
     """
     🚨 OUTIL OBLIGATOIRE POUR LE TRAFIC 🚨
     Utilise cet outil IMMÉDIATEMENT dès que l'utilisateur demande l'état du trafic, 
-    les problèmes, les pannes ou les perturbations sur une ligne (ex: RER A, Ligne 1).
+    les problèmes, les pannes ou les perturbations.
     """
-    
     print(f"\n--- 🦊 PANA RENIFLE LE TRAFIC : {ligne} ---")
     
     try:
-        # 1. Nettoyage de la demande de l'IA
         ligne_propre = str(ligne).upper().replace("RER", "").replace("LIGNE", "").replace("METRO", "").strip()
-        print(f"📍 Ligne nettoyée : {ligne_propre}")
         
-        # 2. Appel de ta fonction existante
-        resultats = demander_info_trafic(ligne_propre)
+        # 1. LE TRADUCTEUR SECRET (L'API veut des ID, pas des lettres !)
+        dico_lignes = {
+            "A": "line:IDFM:C01742", "B": "line:IDFM:C01743", "C": "line:IDFM:C01727",
+            "D": "line:IDFM:C01728", "E": "line:IDFM:C01729",
+            "1": "line:IDFM:C01371", "2": "line:IDFM:C01372", "3": "line:IDFM:C01373",
+            "4": "line:IDFM:C01374", "5": "line:IDFM:C01375", "6": "line:IDFM:C01376",
+            "7": "line:IDFM:C01377", "8": "line:IDFM:C01378", "9": "line:IDFM:C01379",
+            "10": "line:IDFM:C01380", "11": "line:IDFM:C01381", "12": "line:IDFM:C01382",
+            "13": "line:IDFM:C01383", "14": "line:IDFM:C01386"
+        }
         
-        # 3. Vérification des résultats
-        if not resultats:
-            print("⚠️ L'outil trafic n'a rien renvoyé (None).")
-            return f"Mon flair ne donne rien pour la ligne {ligne}."
+        id_api = dico_lignes.get(ligne_propre, ligne_propre) # Prend l'ID si connu, sinon tente le texte
+        print(f"📍 ID envoyé à l'API : {id_api}")
+        
+        # 2. Appel de ta fonction
+        resultats = demander_info_trafic(id_api)
+        
+        # 3. GESTION DU "TOUT VA BIEN" (La vraie logique !)
+        if not resultats or resultats == "[]":
+            print("✅ L'API a répondu vide = Aucun problème !")
+            return f"Bonne nouvelle ! Aucun incident signalé sur la ligne {ligne_propre}, le trafic est fluide. 🟢"
             
         return str(resultats)
         
     except Exception as e:
         print(f"❌ ERREUR TRAFIC PANA : {str(e)}")
-        return f"Erreur technique : {str(e)}"
+        return f"Aïe, petite erreur technique Python : {str(e)}"
 
 # ==========================================
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
