@@ -4,3 +4,4 @@ pandas
 pyarrow
 pytz
 streamlit_js_eval
+google-generativeai
