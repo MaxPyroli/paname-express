@@ -54,7 +54,7 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
 
 # 2. Initialisation du Cerveau avec le nouveau modèle
 model = genai.GenerativeModel(
-    'gemini-3.1-flash-lite', 
+    'gemini-3.1-flash-lite-preview', 
     tools=[outil_info_trafic_ia]
 )
 
@@ -64,11 +64,7 @@ model = genai.GenerativeModel(
 @st.dialog("🤖 Assistant Paname")
 def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Je suis connecté aux serveurs d'Île-de-France Mobilités.</p>", unsafe_allow_html=True)
-    # 👇 AJOUTE CES 3 LIGNES ICI 👇
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods and 'flash-lite' in m.name:
-            st.warning(m.name)
-    # 👆 ---------------------- 👆
+
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = model.start_chat(enable_automatic_function_calling=True)
         st.session_state.messages_ia = [
