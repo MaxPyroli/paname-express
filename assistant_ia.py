@@ -1,12 +1,12 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import re  # 👈 Nouveau : Pour lire les textes d'erreurs intelligemment
 import urllib.parse
 
 # ⚠️ À MODIFIER : Importe tes vraies fonctions !
 from api_idfm import demander_info_trafic
 # Ajoute ici l'import de ta fonction qui gère les départs dans la V2 :
-# from nom_de_ton_fichier_api import demander_prochains_departs 
+from api_idfm import demander_prochains_departs
 
 # 1. Configuration de l'API
 try:
