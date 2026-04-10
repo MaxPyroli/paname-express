@@ -251,7 +251,11 @@ def ouvrir_assistant():
                     
                 except Exception as e:
                     erreur_brute = str(e)
+                    
+                    # On intercepte les quotas et les surchauffes (503)
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        message_placeholder.warning("**Oups !** 🥵 Le réseau est saturé. Laisse-moi souffler une petite minute. 🐾")
+                        message_placeholder.warning("🦊 *Oups ! Le réseau est saturé. Laisse-moi reprendre mon souffle une minute !* 🐾")
+                    elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
+                        message_placeholder.warning("🦊 *Mes moustaches frétillent dans le vide... Les serveurs de Google font une petite sieste ! Réessaie dans quelques instants.* 💤")
                     else:
-                        message_placeholder.error(f"Erreur technique : {erreur_brute}")
+                        message_placeholder.error(f"Aïe, petit souci technique : {erreur_brute}")
