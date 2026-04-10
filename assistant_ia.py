@@ -184,25 +184,25 @@ def ouvrir_assistant():
     )
 
     # 3. LE DÉMARRAGE DU CERVEAU (Il trouvera config_ia car il est défini plus haut !)
-    if "chat_session_v4" not in st.session_state:
-        st.session_state.chat_session_v4 = client.chats.create(
+    if "chat_session" not in st.session_state:
+        st.session_state.chat_session = client.chats.create(
             model="gemini-3.1-flash-lite-preview", 
             config=config_ia
         )
         
-        st.session_state.messages_ia_v4 = [
+        st.session_state.messages_ia = [
             {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit assistant de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
 
     chat_container = st.container(height=500)
     
     with chat_container:
-        for message in st.session_state.messages_ia_v4:
+        for message in st.session_state.messages_ia:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
     if prompt := st.chat_input("Ex: Prochains départs à Noisy Champs ?"):
-        st.session_state.messages_ia_v4.append({"role": "user", "content": prompt})
+        st.session_state.messages_ia.append({"role": "user", "content": prompt})
         
         with chat_container:
             with st.chat_message("user"):
@@ -213,11 +213,11 @@ def ouvrir_assistant():
                 message_placeholder.markdown("🦊 *Pana cherche dans ses fiches...*")
                 
                 try:
-                    response = st.session_state.chat_session_v4.send_message(prompt)
+                    response = st.session_state.chat_session.send_message(prompt)
                     reponse_finale = response.text
                     message_placeholder.markdown(reponse_finale)
                     
-                    st.session_state.messages_ia_v4.append({"role": "assistant", "content": reponse_finale})
+                    st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
