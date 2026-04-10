@@ -44,21 +44,59 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
     return rapport
 
 # ==========================================
-# 🧰 OUTIL 2 : PROCHAINS DÉPARTS (NOUVEAU ✨)
+# 🧰 OUTIL 2 : PROCHAINS DÉPARTS (100% AUTOMATIQUE 🤖)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
-    """
-    Récupère les horaires des prochains départs pour une gare ou une station.
-    Args:
-        nom_station: Le nom de la station (ex: 'Châtelet', 'Gare de Lyon', 'La Défense').
-    """
-    # ⚠️ À FAIRE : Connecter ta vraie fonction ici !
-    # Exemple de ce que tu devras coder :
-    # resultats = demander_prochains_departs(nom_station)
-    # return resultats
+    """Récupère les horaires des prochains départs pour une gare."""
     
-    # Pour l'instant, on simule pour voir si l'IA comprend l'outil :
-    return f"Données trouvées pour {nom_station} : Prochain train dans 3 min, le suivant dans 8 min."
+    print(f"🚀 L'IA cherche la gare : {nom_station}")
+    
+    try:
+        # 1. RECHERCHE DE L'ID (Automatique via l'API)
+        # On utilise le point d'accès /places pour chercher le texte tapé par l'utilisateur
+        recherche_data = demander_api(f"places?q={nom_station}")
+        
+        # On vérifie si l'API a trouvé quelque chose
+        if not recherche_data or 'places' not in recherche_data or len(recherche_data['places']) == 0:
+            return f"Je n'ai pas réussi à trouver l'arrêt '{nom_station}' sur le réseau."
+            
+        # On prend l'ID du tout premier résultat (le plus pertinent)
+        stop_id = recherche_data['places'][0]['id']
+        nom_trouve = recherche_data['places'][0].get('name', nom_station)
+        
+        # 2. RÉCUPÉRATION DES 10 PROCHAINS TRAINS (Rapide !)
+        data = demander_api(f"stop_areas/{stop_id}/departures?count=10")
+        
+        if not data or 'departures' not in data or len(data['departures']) == 0:
+            return f"Aucun départ trouvé pour {nom_trouve} actuellement."
+            
+        # 3. CRÉATION DU RAPPORT POUR L'IA
+        rapport = f"Prochains départs à {nom_trouve} :\n"
+        lignes_vues = 0
+        
+        for d in data['departures']:
+            if lignes_vues >= 6:  
+                break
+                
+            info = d['display_informations']
+            ligne = info.get('code', '?')
+            dest = info.get('direction', 'Inconnue')
+            
+            try:
+                time_str = d['stop_date_time']['departure_date_time']
+                heure_min = time_str.split('T')[1][:4]
+                heure_formatee = f"{heure_min[:2]}h{heure_min[2:]}"
+            except:
+                heure_formatee = "Bientôt"
+                
+            rapport += f"- Ligne {ligne} vers {dest} à {heure_formatee}\n"
+            lignes_vues += 1
+            
+        return rapport
+        
+    except Exception as e:
+        print(f"❌ Erreur: {e}")
+        return f"Erreur réseau pour {nom_station}. Le serveur est peut-être occupé."
 
 # ==========================================
 # 🧠 LE CERVEAU & LA PERSONNALITÉ
