@@ -117,24 +117,21 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         return f"Erreur réseau pour {nom_station}."
 
 # ==========================================
-# 🧠 LE CERVEAU & LA PERSONNALITÉ
+# 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
-# On donne un "caractère" à l'IA avant même qu'elle ne parle
 personnalite = """
 Tu es l'assistant virtuel de l'application Grand Paname, spécialisée dans les transports en Île-de-France.
+- RÈGLE ABSOLUE 1 : Ne devine JAMAIS et n'invente JAMAIS d'horaires ou d'état du trafic.
+- RÈGLE ABSOLUE 2 : Si l'utilisateur demande des horaires, des prochains trains ou des départs, tu DOIS OBLIGATOIREMENT utiliser l'outil 'outil_prochains_departs_ia'. 
 - Tu es ultra-sympathique, chaleureux, et tu as beaucoup d'humour.
 - Utilise des emojis pour rendre la conversation vivante (🚇, 🥐, ☔, 🏃‍♂️).
-- Si le trafic est bon, sois enthousiaste ("Excellente nouvelle ! 🎉").
-- S'il y a des retards, sois compatissant et encourageant ("Courage pour l'attente 😔").
-- Fais parfois de très courtes blagues sur la vie parisienne (la pluie, les touristes, le café).
-- Fais des réponses courtes et aérées.
 """
 
-# On déclare le modèle avec ses 2 outils et sa personnalité
-model = genai.GenerativeModel(
-    'gemini-3.1-flash-lite-preview', # Garde celui qui fonctionnait pour toi !
+# Dans la V2, on ne crée plus le modèle ici, on crée juste sa "Configuration"
+config_ia = types.GenerateContentConfig(
+    system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    system_instruction=personnalite
+    temperature=0.7
 )
 
 # ==========================================
@@ -144,23 +141,28 @@ model = genai.GenerativeModel(
 def ouvrir_assistant():
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Trafic, horaires, itinéraires... Demandez-moi tout !</p>", unsafe_allow_html=True)
 
-    # 1. ON CHANGE LE NOM DES VARIABLES POUR VIDER LE CACHE
-    if "chat_session_v2" not in st.session_state:
-        # Assure-toi que ton modèle s'appelle bien model = genai.GenerativeModel('gemini-3.1-flash', ...) plus haut !
-        st.session_state.chat_session_v2 = model.start_chat(enable_automatic_function_calling=True)
-        st.session_state.messages_ia_v2 = [
-            {"role": "assistant", "content": "Coucou ! 👋 J'ai un tout nouveau cerveau. Tu vas où de beau aujourd'hui ? 🚇"}
+    # On passe en V3 pour forcer Streamlit à oublier l'ancienne mémoire !
+    if "chat_session_v3" not in st.session_state:
+        
+        # 👇 LA NOUVELLE FAÇON DE DÉMARRER LE CHAT EN V2 👇
+        st.session_state.chat_session_v3 = client.chats.create(
+            model="gemini-3.1-flash",
+            config=config_ia
+        )
+        
+        st.session_state.messages_ia_v3 = [
+            {"role": "assistant", "content": "Coucou ! 👋 Mon nouveau cerveau V2 est enfin connecté. Tu vas où de beau aujourd'hui ? 🚇"}
         ]
 
     chat_container = st.container(height=350)
     
     with chat_container:
-        for message in st.session_state.messages_ia_v2:
+        for message in st.session_state.messages_ia_v3:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ex: Dans combien de temps est le prochain RER A à Châtelet ?"):
-        st.session_state.messages_ia_v2.append({"role": "user", "content": prompt})
+    if prompt := st.chat_input("Ex: Prochains départs à Noisy Champs ?"):
+        st.session_state.messages_ia_v3.append({"role": "user", "content": prompt})
         
         with chat_container:
             with st.chat_message("user"):
@@ -171,24 +173,23 @@ def ouvrir_assistant():
                 message_placeholder.markdown("🤔 *Je fouille dans les serveurs...*")
                 
                 try:
-                    # On utilise bien la nouvelle session V2
-                    response = st.session_state.chat_session_v2.send_message(prompt)
+                    # Envoi du message avec la nouvelle syntaxe
+                    response = st.session_state.chat_session_v3.send_message(prompt)
                     reponse_finale = response.text
                     message_placeholder.markdown(reponse_finale)
                     
-                    st.session_state.messages_ia_v2.append({"role": "assistant", "content": reponse_finale})
+                    st.session_state.messages_ia_v3.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
                     
-                    if "429" in erreur_brute or "Quota exceeded" in erreur_brute:
+                    if "429" in erreur_brute or "Quota" in erreur_brute:
                         match = re.search(r'retry in (\d+)', erreur_brute)
                         if match:
                             secondes = match.group(1)
                             erreur_texte = f"**Oups !** 🥵 Laisse-moi reprendre mon souffle pendant environ **{secondes} secondes**. ☕"
                         else:
                             erreur_texte = "**Oups !** 🥵 Le serveur surchauffe. Laisse-moi souffler une petite minute. ☕"
-                        
                         message_placeholder.warning(erreur_texte)
                     else:
                         message_placeholder.error(f"Erreur technique : {erreur_brute}")
