@@ -217,7 +217,7 @@ def ouvrir_assistant():
     # 3. LE DÉMARRAGE DU CERVEAU (Avec des noms propres, sans "v5")
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = client.chats.create(
-            model="gemini-3.1-flash-lite-preview", 
+            model="gemini-2.5-flash-lite", 
             config=config_ia
         )
         
