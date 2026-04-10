@@ -45,64 +45,70 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
     return rapport
 
 # ==========================================
-# 🧰 OUTIL 2 : PROCHAINS DÉPARTS (100% AUTOMATIQUE 🤖)
+# 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
     """Récupère les horaires des prochains départs pour une gare."""
     
-    print(f"🚀 L'IA cherche la gare : {nom_station}")
+    print(f"\n--- 🚀 DÉBUT RECHERCHE IA: {nom_station} ---")
     
     try:
-        # 1. RECHERCHE DE L'ID (Automatique via l'API)
-        # On utilise le point d'accès /places pour chercher le texte tapé par l'utilisateur
-        recherche_data = demander_api(f"places?q={nom_station}")
-        # 1. NETTOYAGE DU TEXTE POUR LE WEB (Nouveau ⚡)
         nom_station_propre = urllib.parse.quote(nom_station)
+        print(f"📍 1. Texte nettoyé : {nom_station_propre}")
         
-        # 2. RECHERCHE DE L'ID
         recherche_data = demander_api(f"places?q={nom_station_propre}")
         
-        # On vérifie si l'API a trouvé quelque chose
-        if not recherche_data or 'places' not in recherche_data or len(recherche_data['places']) == 0:
+        if not recherche_data:
+            print("⚠️ 2. CRASH SILENCIEUX : demander_api n'a rien renvoyé (None) pour la recherche.")
+            return f"Je ne trouve pas {nom_station}."
+            
+        places = recherche_data.get('places', [])
+        print(f"📍 2. Nombre de lieux trouvés par IDFM : {len(places)}")
+        
+        if len(places) == 0:
+            print("⚠️ 3. CRASH SILENCIEUX : IDFM a répondu, mais la liste est vide.")
             return f"Je n'ai pas réussi à trouver l'arrêt '{nom_station}' sur le réseau."
             
-        # On prend l'ID du tout premier résultat (le plus pertinent)
-        stop_id = recherche_data['places'][0]['id']
-        nom_trouve = recherche_data['places'][0].get('name', nom_station)
+        # On essaie de forcer la recherche sur une "stop_area" (une vraie gare)
+        stop_id = places[0]['id']
+        nom_trouve = places[0].get('name', nom_station)
+        type_lieu = places[0].get('embedded_type', 'inconnu')
         
-        # 2. RÉCUPÉRATION DES 10 PROCHAINS TRAINS (Rapide !)
+        print(f"📍 3. Lieu choisi : {nom_trouve} | ID : {stop_id} | Type : {type_lieu}")
+        
+        # Si l'API a trouvé une ville au lieu d'une gare, on prévient la console
+        if type_lieu != 'stop_area':
+            print("🚨 ATTENTION : L'API a trouvé une ville/région, pas une gare ! Ça risque de foirer.")
+
         data = demander_api(f"stop_areas/{stop_id}/departures?count=10")
         
-        if not data or 'departures' not in data or len(data['departures']) == 0:
+        if not data:
+            print("⚠️ 4. CRASH SILENCIEUX : demander_api n'a rien renvoyé pour les départs.")
+            return f"Aucun réseau pour {nom_trouve}."
+            
+        departures = data.get('departures', [])
+        print(f"📍 4. Nombre de trains trouvés : {len(departures)}")
+        
+        if len(departures) == 0:
             return f"Aucun départ trouvé pour {nom_trouve} actuellement."
             
-        # 3. CRÉATION DU RAPPORT POUR L'IA
         rapport = f"Prochains départs à {nom_trouve} :\n"
         lignes_vues = 0
         
-        for d in data['departures']:
-            if lignes_vues >= 6:  
-                break
-                
+        for d in departures:
+            if lignes_vues >= 6: break
             info = d['display_informations']
-            ligne = info.get('code', '?')
-            dest = info.get('direction', 'Inconnue')
-            
-            try:
-                time_str = d['stop_date_time']['departure_date_time']
-                heure_min = time_str.split('T')[1][:4]
-                heure_formatee = f"{heure_min[:2]}h{heure_min[2:]}"
-            except:
-                heure_formatee = "Bientôt"
-                
-            rapport += f"- Ligne {ligne} vers {dest} à {heure_formatee}\n"
+            rapport += f"- {info.get('code', '?')} vers {info.get('direction', '?')}\n"
             lignes_vues += 1
             
+        print("✅ 5. SUCCÈS : Rapport envoyé à l'IA !")
+        print("------------------------------------------\n")
         return rapport
         
     except Exception as e:
-        print(f"❌ Erreur: {e}")
-        return f"Erreur réseau pour {nom_station}. Le serveur est peut-être occupé."
+        print(f"❌ 6. VRAIE ERREUR: {str(e)}")
+        print("------------------------------------------\n")
+        return f"Erreur réseau pour {nom_station}."
 
 # ==========================================
 # 🧠 LE CERVEAU & LA PERSONNALITÉ
