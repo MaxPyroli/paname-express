@@ -1,45 +1,47 @@
 import streamlit as st
 import time
 
-def afficher_assistant_ia():
-    # En-tête de la page
-    st.markdown("<h2 class='section-header'>🤖 Assistant Paname (Bêta)</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #888; font-style: italic;'>Posez-moi vos questions sur le trafic, les itinéraires ou les horaires en langage naturel.</p>", unsafe_allow_html=True)
+# Le décorateur transforme cette fonction en fenêtre pop-up (modale) !
+@st.dialog("🤖 Assistant Paname")
+def ouvrir_assistant():
+    
+    st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Posez-moi vos questions sur le trafic ou les horaires.</p>", unsafe_allow_html=True)
 
-    # 1. Initialisation de la mémoire (pour que l'IA se souvienne de la conversation)
+    # 1. Initialisation de la mémoire
     if "messages_ia" not in st.session_state:
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! Je suis ton nouvel assistant Grand Paname. Que veux-tu savoir aujourd'hui ? (Ex: *Y a-t-il des problèmes sur le RER A ?*)"}
+            {"role": "assistant", "content": "Salut ! Je suis l'assistant IA. Demande-moi ce que tu veux sur le réseau ! 🚇"}
         ]
 
-    # 2. Affichage de l'historique des messages
-    for message in st.session_state.messages_ia:
-        # st.chat_message crée automatiquement les belles bulles avec les icônes
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # 2. Conteneur avec une hauteur fixe pour scroller à l'intérieur
+    chat_container = st.container(height=350)
+    
+    with chat_container:
+        for message in st.session_state.messages_ia:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    # 3. La barre de saisie utilisateur (en bas de l'écran)
-    if prompt := st.chat_input("Demandez une info trafic ou un horaire..."):
+    # 3. La barre de saisie (qui se calera parfaitement en bas de la modale)
+    if prompt := st.chat_input("Ex : Y a-t-il des retards sur la ligne 1 ?"):
         
-        # On affiche immédiatement la question de l'utilisateur
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        # On la sauvegarde dans la mémoire
+        # On sauvegarde et on affiche la question
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
-
-        # 4. Simulation de la réflexion de l'IA
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("🤔 *Recherche dans les données du réseau...*")
-            
-            # On simule un petit temps d'attente (comme si on interrogeait l'API)
-            time.sleep(1.5) 
-            
-            # La réponse "bouchon" (placeholder)
-            reponse = f"J'ai bien compris que tu voulais savoir : **« {prompt} »**.\n\n*⚠️ Pour l'instant, mon cerveau n'est pas encore branché. Mais mon interface est prête !*"
-            
-            # On remplace le texte de chargement par la réponse finale
-            message_placeholder.markdown(reponse)
-            
-        # On sauvegarde la réponse dans la mémoire
+        
+        # On force le rafraîchissement de la modale pour afficher la question de suite
+        st.rerun() 
+        
+    # --- LOGIQUE DE RÉPONSE (Si le dernier message vient de l'utilisateur) ---
+    if st.session_state.messages_ia and st.session_state.messages_ia[-1]["role"] == "user":
+        dernier_prompt = st.session_state.messages_ia[-1]["content"]
+        
+        with chat_container:
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                message_placeholder.markdown("🤔 *L'assistant réfléchit...*")
+                time.sleep(1.5) # Faux temps de chargement
+                
+                reponse = f"J'ai bien noté ta question : **{dernier_prompt}** ! Mon cerveau n'est pas encore branché à l'API, mais ça ne saurait tarder."
+                message_placeholder.markdown(reponse)
+                
+        # On sauvegarde la réponse
         st.session_state.messages_ia.append({"role": "assistant", "content": reponse})
