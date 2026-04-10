@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import re  # 👈 Nouveau : Pour lire les textes d'erreurs intelligemment
+import urllib.parse
 
 # ⚠️ À MODIFIER : Importe tes vraies fonctions !
 from api_idfm import demander_info_trafic
@@ -55,6 +56,11 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         # 1. RECHERCHE DE L'ID (Automatique via l'API)
         # On utilise le point d'accès /places pour chercher le texte tapé par l'utilisateur
         recherche_data = demander_api(f"places?q={nom_station}")
+        # 1. NETTOYAGE DU TEXTE POUR LE WEB (Nouveau ⚡)
+        nom_station_propre = urllib.parse.quote(nom_station)
+        
+        # 2. RECHERCHE DE L'ID
+        recherche_data = demander_api(f"places?q={nom_station_propre}")
         
         # On vérifie si l'API a trouvé quelque chose
         if not recherche_data or 'places' not in recherche_data or len(recherche_data['places']) == 0:
