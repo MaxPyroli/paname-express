@@ -136,25 +136,23 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
 # 🧠 LE CERVEAU DE PANA (Personnalité & Config)
 # ==========================================
 personnalite = """
-Tu t'appelles Pana, le petit renard assistant de l'application Grand Paname. 🦊
-Tu es malin, vif, et tu as un flair incroyable pour dénicher les bons horaires. 
-Tu es mignon, mais tu restes un animal astucieux : PAS de phrases niaisement sentimentales (évite les "journée merveilleuse", "petit explorateur", "navré").
+Tu t'appelles Pana, le petit chien Corgi assistant de l'application Grand Paname. 🐶
+Tu es joyeux, énergique, très malin et toujours prêt à trotter sur tes petites pattes pour dénicher les bons horaires.
+Tu es adorable, mais tu restes un petit chien efficace : PAS de phrases niaisement sentimentales (évite les "journée merveilleuse", "petit maître", etc.).
 
 RÈGLES DE RÉPONSE :
-1. Accueille avec un ton vif et renard (ex: "Mes moustaches frétillent !", "Je dresse mes oreilles...", "Snif snif...").
+1. Accueille avec un ton vif de petit chien joyeux (ex: "Wouf !", "Je frétille de la queue !", "Je dresse mes grandes oreilles...").
 2. Affiche la liste des horaires EXACTEMENT comme fournie par l'outil.
-3. Si l'outil ne trouve rien, dis-le avec humour lié à ton flair (ex: "Mon flair m'a fait défaut", "J'ai perdu la piste").
-4. Sois TRÈS concis. Finis juste par un petit mot d'encouragement rapide (ex: "Bonne route ! 🐾", "File vite !").
-5. Si on te demande l'état du trafic, utilise OBLIGATOIREMENT ton outil trafic. Ne devine jamais.
+3. Si l'outil ne trouve rien, dis-le avec humour lié à ta nature de Corgi (ex: "J'ai beau creuser, je ne trouve rien", "Mes petites pattes n'ont pas trouvé la piste").
+4. Sois TRÈS concis. Finis juste par un petit mot d'encouragement rapide (ex: "Bonne route ! 🐾", "File vite, je garde la gare ! 🦴").
 """
 
-# Tu peux garder la température à 0.4
+# La config reste identique
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
     temperature=0.4  
 )
-
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE & LE BADGE
 # ==========================================
@@ -219,7 +217,7 @@ def ouvrir_assistant():
         )
         
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit renard de poche. Tu vas où de beau aujourd'hui ? 🐾"}
+            {"role": "assistant", "content": "Salut ! 👋 Moi c'est Pana, ton petit Corgi de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
 
     chat_container = st.container(height=500)
@@ -240,7 +238,7 @@ def ouvrir_assistant():
             
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
-                message_placeholder.markdown("🦊 *Pana cherche dans ses fiches...*")
+                message_placeholder.markdown("🐶 *Pana est parti chercher l'info...*")
                 
                 try:
                     response = st.session_state.chat_session.send_message(prompt)
@@ -252,10 +250,9 @@ def ouvrir_assistant():
                 except Exception as e:
                     erreur_brute = str(e)
                     
-                    # On intercepte les quotas et les surchauffes (503)
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        message_placeholder.warning("🦊 *Oups ! Le réseau est saturé. Laisse-moi reprendre mon souffle une minute !* 🐾")
+                        message_placeholder.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau et reprendre mon souffle !* 💧")
                     elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        message_placeholder.warning("🦊 *Mes moustaches frétillent dans le vide... Les serveurs de Google font une petite sieste ! Réessaie dans quelques instants.* 💤")
+                        message_placeholder.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste dans leur panier ! Réessaie dans un instant.* 💤")
                     else:
-                        message_placeholder.error(f"Aïe, petit souci technique : {erreur_brute}")
+                        message_placeholder.error(f"Aïe, petit os technique : {erreur_brute}")
