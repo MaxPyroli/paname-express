@@ -50,92 +50,93 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
 # ==========================================
 def outil_prochains_departs_ia(nom_station: str) -> str:
-    """Récupère les horaires simplifiés pour l'IA."""
+    """Récupère les temps d'attente (en minutes) pour une gare."""
+    import urllib.parse
+    from datetime import datetime
+    
+    # 1. Utilisation de zoneinfo (Natif en Python, pas de bug d'installation !)
     try:
-        import urllib.parse
+        from zoneinfo import ZoneInfo
+        paris_tz = ZoneInfo("Europe/Paris")
+    except Exception:
+        # En cas d'extrême urgence si ton Python est vieux
+        import pytz
+        paris_tz = pytz.timezone('Europe/Paris')
+
+    try:
+        print(f"🦊 Pana renifle la piste : {nom_station}")
         nom_station_propre = urllib.parse.quote(nom_station)
         
-        # 1. Recherche de la gare
         recherche_data = demander_api(f"places?q={nom_station_propre}")
         if not recherche_data or not recherche_data.get('places'):
-            return f"Je ne trouve pas la gare '{nom_station}'."
+            return f"Je n'ai pas trouvé de piste pour la gare '{nom_station}'."
             
         stop_id = recherche_data['places'][0]['id']
         nom_trouve = recherche_data['places'][0].get('name', nom_station)
         
-        # 2. Récupération des départs
         data = demander_api(f"stop_areas/{stop_id}/departures?count=15")
         if not data or not data.get('departures'):
-            return f"Aucun départ trouvé pour {nom_trouve}."
+            return f"Aucun train en vue à {nom_trouve}."
 
         directions_vues = set()
-        rapport = f"Voici les prochains départs à {nom_trouve} :\n"
+        rapport = f"Voici ce que j'ai reniflé à {nom_trouve} :\n"
         
         for d in data['departures']:
             info = d['display_informations']
             ligne = info.get('code', '?')
             dest = info.get('direction', 'Inconnue').split('(')[0].strip()
-            
-            # On ne garde qu'un train par direction
             cle = (ligne, dest)
+            
             if cle not in directions_vues:
                 directions_vues.add(cle)
                 
-                # --- CALCUL DU TEMPS EN MINUTES (100% SÉCURISÉ PARIS) ---
+                # --- CALCUL DU TEMPS 100% SÉCURISÉ ---
                 try:
-                    from datetime import datetime
-                    import pytz
-                    
-                    time_raw = d['stop_date_time']['departure_date_time'] # ex: 20260410T153000
-                    dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S')
-                    
-                    # On force le fuseau horaire de Paris sur l'heure du train
-                    paris_tz = pytz.timezone('Europe/Paris')
-                    dep_time_paris = paris_tz.localize(dep_time)
-                    
-                    # On prend l'heure actuelle, strictement à Paris aussi
+                    time_raw = d['stop_date_time']['departure_date_time']
+                    # On force le fuseau horaire de Paris
+                    dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S').replace(tzinfo=paris_tz)
                     now_paris = datetime.now(paris_tz)
                     
-                    # Différence en minutes
-                    diff = int((dep_time_paris - now_paris).total_seconds() / 60)
+                    diff = int((dep_time - now_paris).total_seconds() / 60)
                     
                     if diff <= 0:
-                        heure_aff = "À quai 🏃‍♂️"
-                    elif diff > 90: # Si c'est dans super longtemps
-                        heure_aff = f"{diff // 60}h{diff % 60:02d}"
+                        attente = "À quai 🏃‍♂️"
+                    elif diff > 90:
+                        attente = f"{diff // 60}h{diff % 60:02d}"
                     else:
-                        heure_aff = f"{diff} min"
+                        attente = f"{diff} min"
                 except Exception as e:
-                    heure_aff = "Bientôt"
-                # ---------------------------------------------------------
+                    attente = "Bientôt"
                 
-            if len(directions_vues) >= 6: break # On s'arrête à 6 lignes max
+                # Ajout de la ligne au rapport
+                mode = info.get('physical_mode', '').upper()
+                icone = "🚇" if "RER" in mode or "METRO" in mode else "🚌"
+                rapport += f"- {icone} **{ligne}** vers **{dest}** : ⏱️ **{attente}**\n"
+                
+            if len(directions_vues) >= 6: break # 6 lignes max pour être concis
 
         return rapport
         
     except Exception as e:
-        # On print l'erreur réelle dans la console Streamlit pour débugger
-        print(f"ERREUR CRITIQUE IA : {str(e)}")
-        return "Désolé, petit bug technique avec les horaires. Réessaie !"
+        # L'ASTUCE ULTIME : Si ça plante, on renvoie l'erreur à l'IA !
+        print(f"❌ ERREUR OUTIL PANA : {str(e)}")
+        return f"Erreur technique Python : {str(e)}"
 # ==========================================
 # 🧠 LE CERVEAU DE PANA (Personnalité & Config)
 # ==========================================
 personnalite = """
-Tu t'appelles Pana, le petit assistant virtuel tout mignon de l'application Grand Paname. 🦊✨
-Tu as une personnalité adorable, très chaleureuse, pétillante et toujours prête à aider.
+Tu t'appelles Pana, le petit renard assistant de l'application Grand Paname. 🦊
+Tu es malin, vif, et tu as un flair incroyable pour dénicher les bons horaires. 
+Tu es mignon, mais tu restes un animal astucieux : PAS de phrases niaisement sentimentales (évite les "journée merveilleuse", "petit explorateur", "navré").
 
 RÈGLES DE RÉPONSE :
-1. Accueille toujours l'utilisateur avec un petit mot mignon et joyeux.
-2. Affiche EXACTEMENT la liste fournie par l'outil. Ne modifie pas les chiffres.
-3. Fais une liste à puces propre avec les emojis.
-4. Finis par une petite phrase adorable et bienveillante pour souhaiter un bon voyage.
-5. Reste concis : on veut de la mignonnerie, mais pas de gros pavés de texte.
+1. Accueille avec un ton vif et renard (ex: "Mes moustaches frétillent !", "Je dresse mes oreilles...", "Snif snif...").
+2. Affiche la liste des horaires EXACTEMENT comme fournie par l'outil.
+3. Si l'outil ne trouve rien, dis-le avec humour lié à ton flair (ex: "Mon flair m'a fait défaut", "J'ai perdu la piste").
+4. Sois TRÈS concis. Finis juste par un petit mot d'encouragement rapide (ex: "Bonne route ! 🐾", "File vite !").
 """
 
-# 👇 C'EST ICI QUE TU CHANGES LA TEMPÉRATURE 👇
-# Plus c'est proche de 0.0 = Robot très strict (bon pour les horaires purs)
-# Plus c'est proche de 1.0 = Très bavard et créatif (risque d'inventer)
-# 0.4 est le compromis idéal pour Pana !
+# Tu peux garder la température à 0.4
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
