@@ -242,22 +242,29 @@ def ouvrir_assistant():
                 st.markdown(prompt)
             
             with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown("🐶 *Pana est parti chercher l'info...*")
-                
                 try:
-                    response = st.session_state.chat_session.send_message(prompt)
-                    reponse_finale = response.text
-                    message_placeholder.markdown(reponse_finale)
+                    # 👇 L'ANIMATION DE CHARGEMENT EST ICI 👇
+                    with st.spinner("🐶 *Pana trotte chercher l'info sur ses petites pattes...*"):
+                        
+                        # C'est ici que l'IA réfléchit (le spinner tourne pendant ce temps)
+                        response = st.session_state.chat_session.send_message(prompt)
+                        reponse_finale = response.text
                     
+                    # 👆 Dès qu'on sort du bloc "with st.spinner", l'animation disparaît toute seule ! 👆
+                    
+                    # On affiche le vrai message final
+                    st.markdown(reponse_finale)
+                    
+                    # On le sauvegarde dans la mémoire
                     st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
                     
+                    # Si ça plante, le spinner a disparu, on affiche le message d'erreur
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        message_placeholder.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau et reprendre mon souffle !* 💧")
+                        st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau et reprendre mon souffle !* 💧")
                     elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        message_placeholder.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste dans leur panier ! Réessaie dans un instant.* 💤")
+                        st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste ! Réessaie dans un instant.* 💤")
                     else:
-                        message_placeholder.error(f"Aïe, petit os technique : {erreur_brute}")
+                        st.error(f"Aïe, petit os technique : {erreur_brute}")
