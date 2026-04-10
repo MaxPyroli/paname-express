@@ -26,7 +26,7 @@ def obtenir_info_trafic(ligne: str) -> str:
 
 # Initialisation du modèle
 model = genai.GenerativeModel(
-    'gemini-1.5-flash', 
+    'gemini-2.5-flash', 
     tools=[obtenir_info_trafic]
 )
 
