@@ -52,9 +52,9 @@ def outil_info_trafic_ia(nom_ligne: str) -> str:
         
     return rapport
 
-# 2. Initialisation du Cerveau
+# 2. Initialisation du Cerveau avec le nouveau modèle
 model = genai.GenerativeModel(
-    'gemini-2.5-flash', 
+    'gemini-3.1-flash-lite', 
     tools=[outil_info_trafic_ia]
 )
 
