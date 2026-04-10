@@ -4,6 +4,7 @@ import time
 from streamlit_js_eval import streamlit_js_eval
 from config import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
+from assistant_ia import ouvrir_assistant
 
 def initialiser_favoris():
     """Charge les favoris depuis le navigateur au démarrage."""
@@ -66,6 +67,10 @@ def afficher_sidebar():
                 st.session_state.favorites = []
                 streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
                 st.rerun()
+
+        st.markdown("---") # Petite ligne de séparation
+        if st.button("💬 Parler à l'Assistant IA", use_container_width=True):
+            ouvrir_assistant()
 
         st.markdown("---")
         st.header("🗄️ Informations")
