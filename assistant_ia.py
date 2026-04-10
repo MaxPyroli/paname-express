@@ -1,19 +1,24 @@
 import streamlit as st
-from google import genai
-import re  # 👈 Nouveau : Pour lire les textes d'erreurs intelligemment
 import urllib.parse
+import re
 
+# 1. LA NOUVELLE BIBLIOTHÈQUE GOOGLE (Option B)
+from google import genai
+from google.genai import types
+
+# 2. L'IMPORT CORRIGÉ (Plus d'erreur ligne 9 !)
 from api_idfm import demander_info_trafic, demander_api
 
-# 1. Configuration de l'API
+# 3. NOUVELLE CONFIGURATION DU CLIENT GOOGLE
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 except Exception as e:
     st.error("Attention : Clé API introuvable dans st.secrets !")
 
 # ==========================================
 # 🧰 OUTIL 1 : INFO TRAFIC
 # ==========================================
+# ... (garde tes fonctions d'outils exactement comme elles étaient) ...
 def outil_info_trafic_ia(nom_ligne: str) -> str:
     """Récupère l'état du trafic en temps réel pour une ligne de métro ou RER."""
     dico_lignes = {
