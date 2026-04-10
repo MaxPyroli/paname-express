@@ -243,28 +243,28 @@ def ouvrir_assistant():
             
             with st.chat_message("assistant"):
                 try:
-                    # 👇 L'ANIMATION DE CHARGEMENT EST ICI 👇
-                    with st.spinner("🐶 *Pana trotte chercher l'info sur ses petites pattes...*"):
+                    # 👇 LA NOUVELLE ANIMATION "STATUS" 👇
+                    with st.status("🐶 *Pana trotte sur ses petites pattes...*", expanded=True) as status:
                         
-                        # C'est ici que l'IA réfléchit (le spinner tourne pendant ce temps)
+                        # L'IA réfléchit ici...
                         response = st.session_state.chat_session.send_message(prompt)
                         reponse_finale = response.text
+                        
+                        # L'IA a fini ! On met à jour la boîte pour dire que c'est un succès
+                        status.update(label="Wouf ! J'ai trouvé ! 🦴", state="complete", expanded=False)
+                    # 👆 -------------------------------- 👆
                     
-                    # 👆 Dès qu'on sort du bloc "with st.spinner", l'animation disparaît toute seule ! 👆
-                    
-                    # On affiche le vrai message final
+                    # On affiche la vraie réponse juste en dessous
                     st.markdown(reponse_finale)
                     
-                    # On le sauvegarde dans la mémoire
+                    # On sauvegarde
                     st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
                     
                 except Exception as e:
                     erreur_brute = str(e)
-                    
-                    # Si ça plante, le spinner a disparu, on affiche le message d'erreur
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau et reprendre mon souffle !* 💧")
+                        st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi boire un peu d'eau !* 💧")
                     elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste ! Réessaie dans un instant.* 💤")
+                        st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !* 💤")
                     else:
                         st.error(f"Aïe, petit os technique : {erreur_brute}")
