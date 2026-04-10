@@ -74,28 +74,39 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         for d in data['departures']:
             info = d['display_informations']
             ligne = info.get('code', '?')
-            dest = info.get('direction', 'Inconnue').split('(')[0].strip() # Nettoie les parenthèses
-            cle_unique = (ligne, dest) # On définit l'unicité par le couple Ligne + Destination
+            dest = info.get('direction', 'Inconnue').split('(')[0].strip()
+            cle_unique = (ligne, dest)
             
             if cle_unique not in directions_vues:
                 directions_vues.add(cle_unique)
                 
-                # Calcul du temps d'attente
+                # --- CALCUL DU TEMPS CORRIGÉ ✅ ---
                 try:
-                    time_str = d['stop_date_time']['departure_date_time']
-                    dep_time = datetime.strptime(time_str, '%Y%m%dT%H%M%S').replace(tzinfo=pytz.timezone('Europe/Paris'))
-                    now = datetime.now(pytz.timezone('Europe/Paris'))
-                    diff = int((dep_time - now).total_seconds() / 60)
-                    temps = f"{diff} min" if diff > 0 else "À quai"
-                except:
-                    temps = "Heure inconnue"
+                    time_str = d['stop_date_time']['departure_date_time'] # Format: 20260410T143000
                     
-                departs_uniques.append({
-                    "ligne": ligne,
-                    "dest": dest,
-                    "temps": temps,
-                    "mode": info.get('physical_mode', '')
-                })
+                    # On extrait l'heure et les minutes directement du texte
+                    h_dep = int(time_str[9:11])
+                    m_dep = int(time_str[11:13])
+                    
+                    # Heure actuelle à Paris
+                    now = datetime.now(pytz.timezone('Europe/Paris'))
+                    
+                    # Conversion tout en minutes depuis le début de la journée pour comparer
+                    total_min_dep = h_dep * 60 + m_dep
+                    total_min_now = now.hour * 60 + now.minute
+                    
+                    diff = total_min_dep - total_min_now
+                    
+                    # Gestion du passage de minuit (si train à 00h05 et il est 23h55)
+                    if diff < -1200: diff += 1440 
+                    
+                    if diff <= 0: temps = "À quai"
+                    elif diff > 60: temps = f"{h_dep}h{m_dep:02d}" # Si plus d'une heure, on donne l'heure fixe
+                    else: temps = f"{diff} min"
+                except Exception as e:
+                    print(f"Erreur calcul temps: {e}")
+                    temps = "Heure indisponible"
+                # ----------------------------------
 
         # On limite à 8 directions max pour rester concis
         rapport = f"Voici ce que j'ai trouvé pour {nom_trouve} :\n"
