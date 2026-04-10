@@ -81,18 +81,33 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
             if cle not in directions_vues:
                 directions_vues.add(cle)
                 
-                # --- EXTRACTION SIMPLE DE L'HEURE (Sans calcul risqué) ---
+                # --- CALCUL DU TEMPS EN MINUTES (100% SÉCURISÉ PARIS) ---
                 try:
-                    # On prend juste les caractères de l'heure dans la chaîne "20260410T153000"
-                    time_raw = d['stop_date_time']['departure_date_time']
-                    heure_aff = f"{time_raw[9:11]}:{time_raw[11:13]}"
-                except:
+                    from datetime import datetime
+                    import pytz
+                    
+                    time_raw = d['stop_date_time']['departure_date_time'] # ex: 20260410T153000
+                    dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S')
+                    
+                    # On force le fuseau horaire de Paris sur l'heure du train
+                    paris_tz = pytz.timezone('Europe/Paris')
+                    dep_time_paris = paris_tz.localize(dep_time)
+                    
+                    # On prend l'heure actuelle, strictement à Paris aussi
+                    now_paris = datetime.now(paris_tz)
+                    
+                    # Différence en minutes
+                    diff = int((dep_time_paris - now_paris).total_seconds() / 60)
+                    
+                    if diff <= 0:
+                        heure_aff = "À quai 🏃‍♂️"
+                    elif diff > 90: # Si c'est dans super longtemps
+                        heure_aff = f"{diff // 60}h{diff % 60:02d}"
+                    else:
+                        heure_aff = f"{diff} min"
+                except Exception as e:
                     heure_aff = "Bientôt"
-                
-                mode = info.get('physical_mode', '').upper()
-                icone = "🚇" if "RER" in mode or "METRO" in mode else "🚌"
-                
-                rapport += f"- {icone} **{ligne}** vers **{dest}** : ⏱️ **{heure_aff}**\n"
+                # ---------------------------------------------------------
                 
             if len(directions_vues) >= 6: break # On s'arrête à 6 lignes max
 
@@ -106,24 +121,20 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
 # 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
 personnalite = """
-Tu es l'assistant Grand Paname. Sois bref, efficace et chaleureux. ✨
+Tu t'appelles Pana, le petit assistant virtuel tout mignon de l'application Grand Paname. 🦊✨
+Tu as une personnalité adorable, très chaleureuse, pétillante et toujours prête à aider.
 
 RÈGLES DE RÉPONSE :
-1. Affiche EXACTEMENT la liste fournie par l'outil, sans regrouper les horaires.
-2. N'invente jamais d'horaires. Si l'outil affiche "15h", n'écris pas "08h".
-3. Un seul train par direction.
-4. Finis par une micro-phrase de bon voyage.
+1. Accueille toujours l'utilisateur avec un petit mot mignon et joyeux (ex: Coucou !, Salut toi !).
+2. Affiche EXACTEMENT la liste fournie par l'outil en gardant le format "X min". Ne modifie pas les chiffres.
+3. Fais une liste à puces propre avec les emojis.
+4. Finis par une petite phrase adorable et bienveillante pour souhaiter un bon voyage (ex: Fais bon voyage, Fais attention à toi, etc.).
+5. Reste concis : on veut de la mignonnerie, mais pas de gros pavés de texte.
 """
-
-config_ia = types.GenerateContentConfig(
-    system_instruction=personnalite,
-    tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    temperature=0.6 # On remonte un peu pour plus de chaleur humaine
-)
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE
 # ==========================================
-@st.dialog("🤖 Assistant Paname") # On retire le width="large"
+@st.dialog("🤖 Pana (Bêta)") 
 def ouvrir_assistant():
     # 👇 Ce petit bloc de code ajuste la largeur précisément (ici 600px)
     st.markdown(
@@ -137,21 +148,20 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
     
-    st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Trafic, horaires, itinéraires... Demandez-moi tout !</p>", unsafe_allow_html=True)
-    
-    # ... (Le reste de ton code avec la hauteur à 500 ou 600) ...
+    # On peut même mettre à jour le sous-titre gris !
+    st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Coucou ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi !</p>", unsafe_allow_html=True)
+
+    # Change le V3 en V4 pour forcer Streamlit à prendre en compte Pana !
     if "chat_session_v3" not in st.session_state:
-        
-        # 👇 LA NOUVELLE FAÇON DE DÉMARRER LE CHAT EN V2 👇
         st.session_state.chat_session_v3 = client.chats.create(
-            model="gemini-3.1-flash-lite-preview",
+            model="gemini-3.1-flash-lite-preview", 
             config=config_ia
         )
         
+        # 👇 Le premier message mignon de Pana
         st.session_state.messages_ia_v3 = [
-            {"role": "assistant", "content": "Coucou ! 👋 Mon nouveau cerveau V2 est enfin connecté. Tu vas où de beau aujourd'hui ? 🚇"}
+            {"role": "assistant", "content": "Coucou ! 👋 Moi c'est Pana, ton petit assistant de poche. Tu vas où de beau aujourd'hui ? 🐾"}
         ]
-
     chat_container = st.container(height=500)
     
     with chat_container:
