@@ -16,15 +16,19 @@ except Exception as e:
     st.error("Attention : Clé API introuvable dans st.secrets !")
 
 # ==========================================
-# 🧰 OUTIL 1 : INFO TRAFIC (VERSION PANA 🦊)
+# 🧰 OUTIL 1 : INFO TRAFIC
 # ==========================================
 def outil_info_trafic_ia(ligne: str) -> str:
-    """Récupère l'état du trafic pour une ligne de transport (ex: 'A', '1', '14')."""
+    """
+    🚨 OUTIL OBLIGATOIRE POUR LE TRAFIC 🚨
+    Utilise cet outil IMMÉDIATEMENT dès que l'utilisateur demande l'état du trafic, 
+    les problèmes, les pannes ou les perturbations sur une ligne (ex: RER A, Ligne 1).
+    """
     
-    print(f"🦊 Pana renifle le trafic pour la ligne : {ligne}")
+    print(f"\n--- 🦊 PANA RENIFLE LE TRAFIC : {ligne} ---")
     
     try:
-        # 1. Nettoyage de la demande de l'IA (si elle dit "RER A", on garde juste "A")
+        # 1. Nettoyage de la demande de l'IA
         ligne_propre = str(ligne).upper().replace("RER", "").replace("LIGNE", "").replace("METRO", "").strip()
         print(f"📍 Ligne nettoyée : {ligne_propre}")
         
@@ -33,15 +37,14 @@ def outil_info_trafic_ia(ligne: str) -> str:
         
         # 3. Vérification des résultats
         if not resultats:
-            print("⚠️ L'outil trafic n'a rien renvoyé.")
-            return f"Je n'ai pas trouvé de bulletin de trafic pour la ligne {ligne}."
+            print("⚠️ L'outil trafic n'a rien renvoyé (None).")
+            return f"Mon flair ne donne rien pour la ligne {ligne}."
             
         return str(resultats)
         
     except Exception as e:
-        # 4. Le mode espion !
         print(f"❌ ERREUR TRAFIC PANA : {str(e)}")
-        return f"Erreur technique Python : {str(e)}"
+        return f"Erreur technique : {str(e)}"
 
 # ==========================================
 # 🧰 OUTIL 2 : PROCHAINS DÉPARTS (MODE DEBUG 🕵️‍♂️)
@@ -131,6 +134,7 @@ RÈGLES DE RÉPONSE :
 2. Affiche la liste des horaires EXACTEMENT comme fournie par l'outil.
 3. Si l'outil ne trouve rien, dis-le avec humour lié à ton flair (ex: "Mon flair m'a fait défaut", "J'ai perdu la piste").
 4. Sois TRÈS concis. Finis juste par un petit mot d'encouragement rapide (ex: "Bonne route ! 🐾", "File vite !").
+5. Si on te demande l'état du trafic, utilise OBLIGATOIREMENT ton outil trafic. Ne devine jamais.
 """
 
 # Tu peux garder la température à 0.4
