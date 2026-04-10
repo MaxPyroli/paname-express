@@ -120,28 +120,45 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
 # 🧠 LE CERVEAU & LA PERSONNALITÉ (SYNTAXE V2)
 # ==========================================
 personnalite = """
-Tu es l'assistant virtuel de l'application Grand Paname, spécialisée dans les transports en Île-de-France.
-- RÈGLE ABSOLUE 1 : Ne devine JAMAIS et n'invente JAMAIS d'horaires ou d'état du trafic.
-- RÈGLE ABSOLUE 2 : Si l'utilisateur demande des horaires, des prochains trains ou des départs, tu DOIS OBLIGATOIREMENT utiliser l'outil 'outil_prochains_departs_ia'. 
-- Tu es ultra-sympathique, chaleureux, et tu as beaucoup d'humour.
-- Utilise des emojis pour rendre la conversation vivante (🚇, 🥐, ☔, 🏃‍♂️).
+Tu es l'assistant de l'application Grand Paname (transports en Île-de-France).
+
+RÈGLES ABSOLUES :
+1. Tu ne devines JAMAIS un horaire. Utilise tes outils.
+2. Tu DOIS OBLIGATOIREMENT afficher l'heure ou le temps d'attente pour CHAQUE départ que l'outil te fournit. Ne liste jamais un train sans donner son heure.
+3. Sois ultra-CONCIS. Zappe les longues phrases d'introduction. Va droit au but comme un vrai panneau d'affichage.
+
+TON & STYLE :
+- Reste sympa et chaleureux, mais bref.
+- Utilise des emojis pour rendre la liste lisible (🚇, 🚌, ⏱️).
+- Présente les départs sous forme de liste à puces claire.
 """
 
-# Dans la V2, on ne crée plus le modèle ici, on crée juste sa "Configuration"
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
     tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
-    temperature=0.7
+    temperature=0.3  # 👇 J'ai baissé la température (de 0.7 à 0.3) pour qu'elle soit plus factuelle et moins "créative" !
 )
 
 # ==========================================
 # 🎨 L'INTERFACE DE LA MODALE
 # ==========================================
-# 👇 Ajout de width="large" ici
-@st.dialog("🤖 Assistant Paname", width="large")
+@st.dialog("🤖 Assistant Paname") # On retire le width="large"
 def ouvrir_assistant():
+    # 👇 Ce petit bloc de code ajuste la largeur précisément (ici 600px)
+    st.markdown(
+        """
+        <style>
+            div[data-testid="stDialog"] div[role="dialog"] {
+                max-width: 650px !important; /* Ajuste ce chiffre selon ton goût */
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     st.markdown("<p style='color: #888; font-size: 0.9em; margin-top: -10px;'>Trafic, horaires, itinéraires... Demandez-moi tout !</p>", unsafe_allow_html=True)
-    # On passe en V3 pour forcer Streamlit à oublier l'ancienne mémoire !
+    
+    # ... (Le reste de ton code avec la hauteur à 500 ou 600) ...
     if "chat_session_v3" not in st.session_state:
         
         # 👇 LA NOUVELLE FAÇON DE DÉMARRER LE CHAT EN V2 👇
