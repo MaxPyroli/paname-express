@@ -92,44 +92,65 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         directions_vues = set()
         rapport = f"Voici ce que j'ai reniflé à {nom_trouve} :\n"
         
+                directions_vues = set()
+        departs_trouves = [] # On stocke ici pour trier à la fin
+        
         for d in data['departures']:
             info = d['display_informations']
-            ligne = info.get('code', '?')
+            ligne = str(info.get('code', '?'))
             dest = info.get('direction', 'Inconnue').split('(')[0].strip()
             
-            # --- LE DÉTECTEUR INTELLIGENT D'ICÔNES ---
-            if ligne in ['A', 'B', 'C', 'D', 'E']: icone = "🚆" # RER
-            elif ligne.isdigit() and int(ligne) <= 14: icone = "🚇" # Métro
-            elif ligne.startswith('T') and len(ligne) <= 4: icone = "🚋" # Tram
-            elif ligne.startswith('N'): icone = "🦉" # Noctilien
-            else: icone = "🚌" # Bus classique pour le reste
+            # --- DÉTECTEUR D'ICÔNES ET HIÉRARCHIE (Priorité de 1 à 6) ---
+            if ligne in ['A', 'B', 'C', 'D', 'E']: 
+                icone, prio = "🚆", 1 # RER
+            elif ligne in ['H', 'J', 'K', 'L', 'N', 'P', 'R', 'U', 'V']: 
+                icone, prio = "🚂", 2 # Transilien (Train)
+            elif ligne.isdigit() and int(ligne) <= 14: 
+                icone, prio = "🚇", 3 # Métro
+            elif "CABLE" in ligne.upper() or ligne == "C1":
+                icone, prio = "🚡", 4 # Câble
+            elif ligne.startswith('T') and len(ligne) <= 4: 
+                icone, prio = "🚋", 5 # Tram
+            else: 
+                icone, prio = "🚌", 6 # Bus et Noctilien
             
-            # Clé unique pour n'avoir qu'un seul départ par Ligne ET par Direction
             cle = (ligne, dest)
             
             if cle not in directions_vues:
                 directions_vues.add(cle)
                 
-                # --- CALCUL DU TEMPS SÉCURISÉ ---
+                # Calcul du temps
                 try:
                     time_raw = d['stop_date_time']['departure_date_time']
                     dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S').replace(tzinfo=paris_tz)
                     now_paris = datetime.now(paris_tz)
-                    
                     diff = int((dep_time - now_paris).total_seconds() / 60)
                     
-                    if diff <= 0: attente = "À quai 🏃‍♂️"
+                    if diff <= 0: attente = "À quai"
                     elif diff > 90: attente = f"{diff // 60}h{diff % 60:02d}"
                     else: attente = f"{diff} min"
-                except Exception as e:
+                except:
                     attente = "Bientôt"
                 
-                rapport += f"{icone} **Ligne {ligne}** vers {dest} : ⏱️ **{attente}**\n"
+                # On sauvegarde dans notre liste pour le tri
+                departs_trouves.append({
+                    "prio": prio, 
+                    "texte": f"{icone} **{ligne}** ➔ {dest} : **{attente}**"
+                })
                 
-            if len(directions_vues) >= 6: break # On limite à 6 résultats max pour la clarté
+            if len(directions_vues) >= 15: break # On prend plus de résultats avant de trier
 
-        return rapport
+        # --- LE TRI ET L'AFFICHAGE FINAL ---
+        # On trie par priorité (RER d'abord, Bus à la fin)
+        departs_trouves.sort(key=lambda x: x["prio"])
         
+        rapport = ""
+        # On ne garde que les 8 premiers résultats pour que ça reste lisible sur mobile
+        for depart in departs_trouves[:8]:
+            rapport += f"* {depart['texte']}\n"
+            
+        return rapport if rapport else "Aucun départ trouvé."
+
     except Exception as e:
         # L'ASTUCE ULTIME : Si ça plante, on renvoie l'erreur à l'IA !
         print(f"❌ ERREUR OUTIL PANA : {str(e)}")
@@ -138,14 +159,14 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
 # 🧠 LE CERVEAU DE PANA (Intelligence Avancée)
 # ==========================================
 personnalite = """
-Tu es Pana, l'assistant intelligent et naturel de l'application de transports Grand Paname.
-Ton but est d'avoir une conversation fluide, humaine et ultra-utile avec l'utilisateur.
+Tu es Pana, l'assistant intelligent de Grand Paname.
+Ton but est d'avoir une conversation fluide et ultra-utile.
 
-RÈGLES D'INTELLIGENCE :
-1. Compréhension fine : Analyse ce que veut l'utilisateur. S'il demande UNIQUEMENT la ligne 8 à une station, filtre les résultats de ton outil pour ne lui afficher QUE la ligne 8. Ne lui donne pas les bus s'il ne les a pas demandés.
-2. Naturel et fluide : Parle comme un humain expert, sympa et efficace. Fais des phrases naturelles (ex: "Voici les prochains métros pour la ligne 8 :" au lieu de "Voici les départs :").
-3. Mise en page claire : Rends l'information digeste. Garde toujours les emojis de transport (🚇, 🚌, 🚆) et mets les directions ou les temps d'attente en gras pour une lecture rapide.
-4. Finis tes messages naturellement, avec une touche très subtile de mascotte (ex: "Bon trajet ! 🐾").
+RÈGLES DE MISE EN PAGE OBLIGATOIRES :
+1. Affiche TOUJOURS les horaires sous forme de liste à puces stricte (avec des retours à la ligne). Interdiction de tout écraser dans un seul paragraphe.
+2. Garde EXACTEMENT le format de l'outil (ex: "🚆 **A** ➔ Poissy : **4 min**"). Ne rajoute pas le mot "Ligne" si l'outil ne le donne pas.
+3. Compréhension : Si l'utilisateur demande "le prochain train", filtre les résultats pour ne donner que ce qu'il cherche.
+4. Ton : Professionnel, concis et naturel. Termine par une micro-formule avec ta mascotte (ex: "Bon trajet ! 🐾").
 """
 
 # On remonte la température à 0.5 : c'est le réglage parfait pour 
@@ -166,11 +187,7 @@ def ouvrir_assistant():
         """
         <style>
             div[data-testid="stDialog"] div[role="dialog"] { max-width: 580px !important; }
-            .stChatMessage { border-radius: 15px; }
-            
-            /* Le design de ton badge Bêta orange ! */
-            .badge-beta {
-                background-color: #ff9f43; /* Un bel orange moderne */
+5: #ff9f43; /* Un bel orange moderne */
                 color: white;
                 padding: 2px 8px;
                 border-radius: 12px;
