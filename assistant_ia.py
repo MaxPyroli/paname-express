@@ -278,6 +278,16 @@ def ouvrir_assistant():
 
             /* Bouton */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
+
+            /* ✨ STYLE DE LA MENTION LÉGALE ✨ */
+            .disclaimer-pana {
+                text-align: center;
+                font-size: 11px;
+                color: #ffffff !important;
+                opacity: 0.6;
+                margin-top: 8px;
+                font-style: italic;
+            }
         </style>
         """,
         unsafe_allow_html=True
@@ -369,3 +379,9 @@ def ouvrir_assistant():
                         st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !*")
                     else:
                         st.error(f"Oups, Pana a glissé : {erreur_brute}")
+
+    # 7. LA MENTION EN DESSOUS (Placée après le chat_input)
+    st.markdown(
+        "<div class='disclaimer-pana'>Pana est propulsé par Gemini, une IA générative. L'IA peut commettre des erreurs, vérifiez les informations importantes.</div>", 
+        unsafe_allow_html=True
+    )
