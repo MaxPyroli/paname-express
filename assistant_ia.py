@@ -179,27 +179,28 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN GLASS (LISIBLE)
+# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN (LISIBLE)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS GLASSOMORPHISM (CORRIGÉ)
+    # 1. LE STYLE CSS (Thème Dynamique & Bulles)
     st.markdown(
         """
         <style>
-            /* La fenêtre principale (Le Verre neutre) */
+            /* La fenêtre principale (S'adapte au Clair/Sombre magiquement) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(120, 120, 120, 0.15) !important; /* Gris neutre transparent */
-                backdrop-filter: blur(20px) !important; /* Flou plus fort */
+                /* On prend le fond natif (blanc/noir) et on le rend 85% opaque */
+                background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
+                backdrop-filter: blur(20px) !important; 
                 -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important; 
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+                border: 1px solid var(--secondary-background-color) !important; 
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
             }
             
-            /* Titre stylé et ÉCLATANT */
+            /* Titre stylé */
             .titre-container {
                 margin-top: -30px;
                 margin-bottom: 25px;
@@ -214,13 +215,13 @@ def ouvrir_assistant():
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                color: #ff9f43; /* Un orange uni et lumineux, toujours lisible ! */
+                color: #ff9f43; /* Orange toujours visible */
             }
             
             .badge-beta {
-                background: rgba(255, 159, 67, 0.2);
+                background: rgba(255, 159, 67, 0.15);
                 color: #ff9f43;
-                border: 1px solid rgba(255, 159, 67, 0.4);
+                border: 1px solid rgba(255, 159, 67, 0.3);
                 padding: 2px 10px;
                 border-radius: 8px;
                 font-size: 0.7rem;
@@ -229,24 +230,35 @@ def ouvrir_assistant():
                 letter-spacing: 1px;
             }
 
-            /* Le sous-titre qui s'adapte au thème clair/sombre */
             .sous-titre-pana {
-                color: var(--text-color); /* S'adapte magiquement ! */
-                opacity: 0.7; /* Légèrement transparent pour le style */
+                color: var(--text-color);
+                opacity: 0.7;
                 font-size: 0.95em; 
                 font-weight: 500;
             }
 
-            /* Rendre le chat totalement transparent */
-            div[data-testid="stChatMessage"], div[data-testid="stChatMessageContent"] {
+            /* --- LES NOUVELLES BULLES DE CHAT --- */
+            /* 1. On enlève le fond de la ligne entière */
+            div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 border: none !important;
             }
             
+            /* 2. On crée la bulle uniquement autour du texte */
+            div[data-testid="stChatMessageContent"] {
+                background-color: var(--secondary-background-color) !important; /* Gris très clair en mode clair */
+                padding: 16px 20px !important;
+                border-radius: 22px !important;
+                border: 1px solid rgba(150, 150, 150, 0.1) !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+                color: var(--text-color) !important;
+            }
+            
             /* Ajustement de la barre d'entrée texte */
             .stChatInput {
-                background: rgba(120, 120, 120, 0.1) !important;
-                border-radius: 15px !important;
+                background: var(--secondary-background-color) !important;
+                border-radius: 18px !important;
+                border: 1px solid rgba(150, 150, 150, 0.2) !important;
             }
         </style>
         """,
@@ -267,9 +279,7 @@ def ouvrir_assistant():
         """, 
         unsafe_allow_html=True
     )
-
-    # ... (Garde la suite de ton code avec le bouton "Réinitialiser" et le chat) ...
-
+    
     # 3. BOUTON DE RÉINITIALISATION (Plus discret)
     if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
         st.session_state.chat_session = client.chats.create(
