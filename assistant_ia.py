@@ -206,7 +206,7 @@ def ouvrir_assistant():
         <style>
             /* 1. LE FOND GLOBAL : Verre translucide */
             div[data-testid="stDialog"] div[role="dialog"] { 
-                max-width: 600px !important; 
+                max-width: 500px !important; 
                 /* On utilise background-color qui donne un effet de verre parfait */
                 background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
                 backdrop-filter: blur(20px) !important; 
