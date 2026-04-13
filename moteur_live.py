@@ -91,7 +91,9 @@ def afficher_live_content(stop_id, clean_name):
         loader_ph.markdown("""
         <style>
             /* Masquer l'ancienne gare instantanément */
-            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container { display: none !important; }
+            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, .footer-container { display: none !important; }
+            /* Cacher totalement les conteneurs des en-têtes de modes */
+            div[data-testid="stElementContainer"]:has(div[class^="sticky-glass-"]) { display: none !important; }
         </style>
         <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
             <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
@@ -342,13 +344,14 @@ def afficher_live_content(stop_id, clean_name):
             
             st.markdown(f"""
             <style>
-                div[data-testid="stElementContainer"]:has(.sticky-station-title),
-                .element-container:has(.sticky-station-title) {{
+                div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
+                .element-container:has(.sticky-glass-{mode_actuel}) {{
                     position: sticky !important; 
-                    top: 3.8rem !important; 
-                    z-index: 1100 !important; /* Boosté pour rester au-dessus de tout */
-                    background-color: transparent !important; 
+                    top: calc(3.8rem + var(--title-height, 80px) + 20px) !important; 
+                    z-index: 1050 !important; /* Moins fort que le titre (1100), plus fort que les alertes (999) */
                 }}
+                div.sticky-glass-{mode_actuel} {{ margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; background: rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; color: #ffffff !important; font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; }}
+                div.sticky-glass-{mode_actuel} svg {{ fill: #ffffff !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
@@ -598,7 +601,7 @@ def afficher_tableau_live(stop_id, stop_name):
         .element-container:has(.sticky-station-title) {{
             position: sticky !important; 
             top: 3.8rem !important; 
-            z-index: 105 !important;
+            z-index: 1100 !important; /* LE ROI DE LA PAGE 👑 */
             background-color: transparent !important; 
         }}
     </style>
