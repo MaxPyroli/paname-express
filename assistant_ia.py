@@ -235,7 +235,7 @@ def ouvrir_assistant():
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
                 border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
                 opacity: 1 !important; 
                 isolation: isolate !important; /* Force le navigateur à rendre la boîte opaque */
             }
@@ -252,12 +252,12 @@ def ouvrir_assistant():
             /* Forcer la couleur du texte */
             div[data-testid="stChatMessage"] *, 
             div[data-testid="stChatMessageContent"] * {
-                color: var(--text-color) !important;
+                color: #FFFFFF !important;
             }
             
             /* 4. LA BARRE DE SAISIE TEXTE : CARTE 100% OPAQUE */
             .stChatInput, div[data-testid="stChatInput"] {
-                background-color: var(--secondary-background-color) !important; 
+                background-color: var(background-color) !important; 
                 background-image: none !important;
                 border-radius: 20px !important;
                 border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
