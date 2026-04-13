@@ -257,14 +257,26 @@ def ouvrir_assistant():
                 color: white !important;
             }
             
-            /* 4. Barre d'entrée texte (Assortie aux bulles) */
+            /* 4. Barre d'entrée texte (Claire avec texte noir profond) */
             .stChatInput {
-                background-color: rgba(35, 35, 35, 0.9) !important;
+                background-color: rgba(255, 255, 255, 0.9) !important; /* Fond blanc quasi opaque */
                 border-radius: 18px !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
                 margin-top: 10px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
             }
-            .stChatInput textarea { color: white !important; }
+            
+            /* On force le texte en noir pour l'utilisateur qui écrit */
+            .stChatInput textarea { 
+                color: #000000 !important; 
+                -webkit-text-fill-color: #000000 !important; /* Force pour Safari/Chrome */
+            }
+
+            /* On ajuste aussi la couleur du "Placeholder" (le texte d'exemple) */
+            .stChatInput textarea::placeholder {
+                color: rgba(0, 0, 0, 0.4) !important;
+                -webkit-text-fill-color: rgba(0, 0, 0, 0.4) !important;
+            }
 
             /* 5. REPARATION DE LA BOITE D'ERREUR (st.warning) */
             div[data-testid="stAlert"] {
