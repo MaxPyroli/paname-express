@@ -228,28 +228,31 @@ def ouvrir_assistant():
                 opacity: 0.7; font-size: 0.9em; font-weight: 600; 
             }
 
-            /* --- 3. LES BULLES DE CHAT (LIGNE ENTIÈRE 100% OPAQUE) --- */
-            /* On cible le bloc global (Avatar + Texte) pour en faire une carte solide */
+            /* --- 3. LES BULLES DE CHAT (ANTI-TRANSPARENCE ABSOLUE) --- */
+            /* L'astuce du linear-gradient détruit le fond gris natif de Streamlit */
             div[data-testid="stChatMessage"] {
-                background-color: var(--background-color) !important; /* Blanc pur ou Noir pur */
+                background: linear-gradient(var(--background-color), var(--background-color)) !important;
+                background-color: var(--background-color) !important;
                 padding: 15px !important;
                 margin-bottom: 15px !important;
                 border-radius: 20px !important;
                 border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
-                opacity: 1 !important; /* Interdiction formelle d'être transparent */
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
+                opacity: 1 !important; 
+                z-index: 10 !important; /* Force la bulle au premier plan */
             }
             
-            /* On rend le sous-bloc de texte invisible pour éviter les doubles bordures */
+            /* On rend le sous-bloc de texte totalement invisible pour ne garder que la grande carte */
             div[data-testid="stChatMessageContent"] {
-                background-color: transparent !important; 
+                background: transparent !important; 
+                background-color: transparent !important;
                 color: var(--text-color) !important;
                 padding: 0 !important; 
                 border: none !important;
                 box-shadow: none !important;
             }
 
-            /* On force le texte à suivre le thème */
+            /* On force tout le texte à suivre le thème (Noir en clair, Blanc en sombre) */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
