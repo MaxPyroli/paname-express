@@ -215,12 +215,11 @@ def ouvrir_assistant():
                 font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT (COMPACTES) --- */
-            /* Réduction de l'espace global entre les messages */
+            /* --- 3. LES BULLES DE CHAT (COMPACTES MAIS AÉRÉES) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
-                margin-bottom: -15px !important; /* Rapproche les bulles ! */
+                margin-bottom: 15px !important; /* <-- C'est ici ! On enlève le moins (-) */
             }
             
             div[data-testid="stChatMessageContent"] {
@@ -331,4 +330,11 @@ def ouvrir_assistant():
                     
                 except Exception as e:
                     message_placeholder.empty()
-                    st.error(f"Oups, Pana a glissé : {str(e)}")
+                    erreur_brute = str(e)
+                    
+                    if "429" in erreur_brute or "Quota" in erreur_brute:
+                        st.warning("🐾 *Wouf ! Le réseau est saturé ou j'ai atteint ma limite. Laisse-moi me reposer un peu !*")
+                    elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
+                        st.warning("🐾 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste !*")
+                    else:
+                        st.error(f"Oups, Pana a glissé : {erreur_brute}")
