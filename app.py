@@ -344,7 +344,7 @@ elif not st.session_state.search_results:
 # ==========================================
 
 # 1. On récupère ton image (assure-toi d'avoir une image carrée comme "pana.png" ou utilise ton app_icon)
-img_pana_b64 = get_img_as_base64("app_icon.png") # Tu peux changer le nom du fichier ici !
+img_pana_b64 = get_img_as_base64("pana_icon.png") # Tu peux changer le nom du fichier ici !
 
 # 2. On prépare le bout de CSS selon si l'image a été trouvée ou non
 if img_pana_b64:
