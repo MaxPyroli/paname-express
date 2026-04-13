@@ -180,7 +180,7 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE : "CARTES SUR VERRE" (Design Superposé)
+# 🎨 L'INTERFACE : DESIGN SOLIDE (Opacité 100%)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
@@ -200,18 +200,20 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Solid Design 100% Opaque et Fiable)
+    # 1. LE STYLE CSS (Le Bouclier Absolu)
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Solide (Zéro transparence) */
+            /* 1. LE FOND GLOBAL : 100% Opaque, calculé mathématiquement */
+            /* On mélange 8% de la couleur du texte avec le fond pour avoir un gris solide, adieu la transparence ! */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                /* Utilise le fond secondaire natif (Gris clair en mode clair, Gris anthracite en mode sombre) */
-                background-color: var(--secondary-background-color) !important; 
-                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
-                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2) !important;
-                border-radius: 28px !important;
+                background: color-mix(in srgb, var(--text-color) 8%, var(--background-color)) !important;
+                background-color: color-mix(in srgb, var(--text-color) 8%, var(--background-color)) !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+                border-radius: 24px !important;
+                opacity: 1 !important; 
             }
             
             /* 2. LE TITRE */
@@ -224,59 +226,60 @@ def ouvrir_assistant():
             .titre-pana span.nom { color: #ff9f43 !important; }
             .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
-            /* --- 3. LA GRANDE CARTE DU CHAT (Bloc Solide) --- */
-            div[data-testid="stVerticalBlockBorderWrapper"] {
-                /* Utilise le fond principal natif (Blanc pur en clair, Noir pur en sombre) */
-                background-color: var(--background-color) !important; 
-                border-radius: 24px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-                padding: 10px !important;
-            }
-
-            /* On nettoie les bulles internes pour qu'elles se fondent dans la carte */
+            /* --- 3. LES BULLES DE CHAT : 100% OPAQUES --- */
+            /* On cible la ligne entière */
             div[data-testid="stChatMessage"] {
+                background-color: var(--background-color) !important; /* Couleur principale pure (Blanc ou Noir) */
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+                border-radius: 20px !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+                opacity: 1 !important; 
+            }
+            
+            /* On rend le sous-bloc invisible */
+            div[data-testid="stChatMessageContent"] {
+                background: transparent !important; 
                 background-color: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
-                padding: 10px !important;
-                margin-bottom: 5px !important;
+                padding: 0 !important; 
             }
-            div[data-testid="stChatMessageContent"] {
-                background: transparent !important;
-                padding: 0 !important;
-            }
-            
-            /* On force le texte des bulles à s'adapter au thème */
+
+            /* Texte des bulles */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA CARTE DE SAISIE TEXTE (Bloc Solide) */
+            /* 4. LA BARRE DE SAISIE TEXTE */
             .stChatInput {
                 background-color: var(--background-color) !important; 
                 border-radius: 20px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
                 margin-top: 15px !important;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+                opacity: 1 !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
                 color: var(--text-color) !important; 
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
-            .stChatInput textarea::placeholder { color: var(--text-color) !important; opacity: 0.5 !important; }
+            .stChatInput textarea::placeholder { 
+                color: var(--text-color) !important; 
+                opacity: 0.5 !important; 
+            }
 
-            /* Bouton de réinitialisation */
+            /* Bouton */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 2. AFFICHAGE DU TITRE (Sur le verre)
+    # 2. AFFICHAGE DU TITRE
     st.markdown(
         f"""
         <div class="titre-container">
@@ -319,10 +322,8 @@ def ouvrir_assistant():
         )
         st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # ========================================================
-    # ⚠️ LE SECRET EST ICI : border=True CRÉE LA CARTE SOLIDE
-    # ========================================================
-    chat_container = st.container(height=450, border=True)
+    # 5. CONTENEUR DE CHAT (On enlève le border=True qui compliquait tout)
+    chat_container = st.container(height=450, border=False)
     
     with chat_container:
         for message in st.session_state.messages_ia:
