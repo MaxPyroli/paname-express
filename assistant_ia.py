@@ -204,7 +204,7 @@ def ouvrir_assistant():
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli teinté (Utilise le gris secondaire translucide) */
+            /* 1. Fenêtre : Verre dépoli teinté (Gris secondaire translucide) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
                 background: color-mix(in srgb, var(--secondary-background-color) 70%, transparent) !important;
@@ -228,48 +228,49 @@ def ouvrir_assistant():
                 opacity: 0.7; font-size: 0.9em; font-weight: 600; 
             }
 
-            /* --- 3. LES BULLES DE CHAT (ANTI-TRANSPARENCE ABSOLUE) --- */
-            /* L'astuce du linear-gradient détruit le fond gris natif de Streamlit */
+            /* --- 3. LE BULLDOZER ANTI-TRANSPARENCE --- */
+            /* On cible absolument TOUS les éléments de la bulle pour écraser Streamlit */
+            div[data-testid="stChatMessage"], 
+            .stChatMessage,
+            div[data-testid="stChatMessageContent"] {
+                background-color: var(--background-color) !important; /* Le Blanc/Noir PUR */
+                background-image: none !important; /* Détruit les dégradés natifs */
+                opacity: 1 !important; /* Zéro transparence */
+            }
+
+            /* On redessine proprement les bords de la bulle globale */
             div[data-testid="stChatMessage"] {
-                background: linear-gradient(var(--background-color), var(--background-color)) !important;
-                background-color: var(--background-color) !important;
                 padding: 15px !important;
                 margin-bottom: 15px !important;
                 border-radius: 20px !important;
                 border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
-                opacity: 1 !important; 
-                z-index: 10 !important; /* Force la bulle au premier plan */
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
             }
-            
-            /* On rend le sous-bloc de texte totalement invisible pour ne garder que la grande carte */
+
+            /* On nettoie la marge interne pour que ça soit joli */
             div[data-testid="stChatMessageContent"] {
-                background: transparent !important; 
-                background-color: transparent !important;
-                color: var(--text-color) !important;
-                padding: 0 !important; 
+                padding: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
             }
 
-            /* On force tout le texte à suivre le thème (Noir en clair, Blanc en sombre) */
+            /* On force le texte à suivre le thème (Noir en clair, Blanc en sombre) */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte (100% Opaque et assortie) */
+            /* 4. Barre d'entrée texte (100% Opaque) */
             .stChatInput {
-                background-color: var(--background-color) !important; /* Blanc pur ou Noir pur */
+                background-color: var(--background-color) !important; 
                 border-radius: 18px !important;
                 border: 1px solid rgba(128, 128, 128, 0.3) !important;
                 margin-top: 10px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
                 opacity: 1 !important;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
             }
             
-            /* S'assure que la zone de frappe ne rajoute pas de transparence bizarre */
             .stChatInput textarea { 
                 background-color: transparent !important;
                 color: var(--text-color) !important; 
