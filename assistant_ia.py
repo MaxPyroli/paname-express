@@ -158,7 +158,8 @@ RÈGLES D'INTELLIGENCE ET DE FORMATAGE :
 2. COMPRÉHENSION DU CONTEXTE (Horaires et Trafic) :
    - DEMANDE CIBLÉE (ex: "prochain RER A à Gare de Lyon") : Filtre strictement les résultats de l'outil pour ne donner QUE la ligne pertinente.
      Format attendu : "Voici les prochains départs pour le [Ligne] à [Gare] -> dans [X] min et [Y] min."
-   - DEMANDE GÉNÉRALE (ex: "prochains départs à Gare de Lyon") : Affiche un panorama clair des "modes lourds". IGNORE les bus (sauf si l'utilisateur les demande).
+   - Si l'utilisateur demande "les trains", "les métros" ou "les départs", filtre pour ne donner **QUE les modes lourds** (🚆 RER, 🚂 Transilien, 🚇 Métro). Ignore totalement les bus et trams.
+   - N'écris jamais juste "A" ou "1". Ajoute TOUJOURS le préfixe : "RER A", "Ligne 1", "Ligne P", etc.
 
 3. HIÉRARCHIE ET REGROUPEMENT (Pour les demandes générales) :
    - Regroupe toujours les résultats par mode de transport dans cet ordre précis : 🚆 RER/Trains, puis 🚇 Métros, puis 🚡 Câble, puis 🚋 Trams, puis 🚌 Bus.
@@ -184,76 +185,70 @@ config_ia = types.GenerateContentConfig(
 @st.dialog(" ") 
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS (Forçage Dark Glass pour texte blanc)
+    # 1. LE STYLE CSS (Dark Glass Elegant & Compact)
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre principale : Effet Verre Sombre (pour que le blanc ressorte tjs) */
+            /* 1. Fenêtre principale : Retour au verre transparent (Dark Glass) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(15, 15, 15, 0.8) !important; /* Fond sombre et opaque */
-                backdrop-filter: blur(20px) !important; 
-                -webkit-backdrop-filter: blur(20px) !important;
+                background: rgba(25, 25, 25, 0.5) !important; /* Plus transparent ! */
+                backdrop-filter: blur(25px) !important; 
+                -webkit-backdrop-filter: blur(25px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.1) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
                 border-radius: 28px !important;
-                color: white !important; /* Force tout en blanc */
+                color: white !important; 
             }
             
-            /* 2. Titres et Textes (TOUT EN BLANC) */
-            .titre-container { margin-top: -30px; margin-bottom: 25px; }
+            /* 2. Titres */
+            .titre-container { margin-top: -30px; margin-bottom: 15px; } /* Marge réduite */
             
             .titre-pana {
-                font-size: 2.4rem; font-weight: 900;
+                font-size: 2.2rem; font-weight: 900;
                 display: flex; align-items: center; gap: 15px;
-                color: #ff9f43 !important; /* On garde l'orange Pana pour le nom */
+                color: #ff9f43 !important; 
             }
             
             .sous-titre-pana {
-                color: white !important;
-                opacity: 0.9;
-                font-size: 0.95em; font-weight: 500;
-                margin-top: 5px;
+                color: white !important; opacity: 0.9;
+                font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT PRONONCÉES --- */
+            /* --- 3. LES BULLES DE CHAT (COMPACTES) --- */
+            /* Réduction de l'espace global entre les messages */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
-                margin-bottom: 10px !important;
+                padding: 0 !important;
+                margin-bottom: -15px !important; /* Rapproche les bulles ! */
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* Blocs très prononcés (Gris anthracite profond) */
-                background-color: rgba(40, 40, 40, 0.95) !important; 
+                /* Bulles semi-transparentes pour coller au thème Glass */
+                background-color: rgba(45, 45, 45, 0.75) !important; 
                 color: white !important;
-                padding: 18px 22px !important;
+                padding: 12px 18px !important; /* Moins haut, plus compact */
                 border-radius: 20px !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                line-height: 1.4 !important; /* Rapproche les lignes de texte */
             }
 
-            /* Forcer le texte à l'intérieur des messages en blanc */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: white !important;
             }
             
-            /* 4. La barre d'entrée texte (Sombre et nette) */
+            /* 4. Barre d'entrée texte */
             .stChatInput {
-                background-color: rgba(30, 30, 30, 0.9) !important;
+                background-color: rgba(30, 30, 30, 0.7) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                margin-top: 10px !important;
             }
-            .stChatInput textarea {
-                color: white !important;
-            }
+            .stChatInput textarea { color: white !important; }
 
-            /* Bouton réinitialiser */
-            button[kind="tertiary"] {
-                color: #ff9f43 !important;
-                font-weight: 600 !important;
-            }
+            button[kind="tertiary"] { color: #ff9f43 !important; }
         </style>
         """,
         unsafe_allow_html=True
