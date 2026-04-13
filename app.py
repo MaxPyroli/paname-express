@@ -327,18 +327,6 @@ if st.session_state.selected_stop:
 elif not st.session_state.search_results:
     afficher_tuto_bienvenue()
 
-# ========================================================
-#           AFFICHAGE LIVE OU ACCUEIL (TUTO)
-# ========================================================
-
-# 1. Si une gare est sélectionnée -> On affiche le tableau de bord
-if st.session_state.selected_stop:
-    afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
-
-# 2. Sinon -> Tuto de Bienvenue
-elif not st.session_state.search_results:
-    afficher_tuto_bienvenue()
-
 # ==========================================
 # 🐾 LA BULLE FLOTTANTE DE PANA (AVEC IMAGE !)
 # ==========================================
