@@ -202,7 +202,7 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
 
-   <style>
+        <style>
             /* 1. Base : Forme de la fenêtre et flou (Commun aux deux modes) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
