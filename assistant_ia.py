@@ -257,27 +257,28 @@ def ouvrir_assistant():
                 color: white !important;
             }
             
-            /* 4. Barre d'entrée texte (Claire avec texte noir profond) */
+            /* 4. Barre d'entrée texte (S'adapte au mode Clair/Sombre) */
             .stChatInput {
-                background-color: rgba(255, 255, 255, 0.9) !important; /* Fond blanc quasi opaque */
+                /* Utilise le fond secondaire de Streamlit (Gris clair en mode clair, Gris foncé en mode sombre) */
+                background-color: var(--secondary-background-color) !important; 
                 border-radius: 18px !important;
-                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 10px !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
             }
             
-            /* On force le texte en noir pour l'utilisateur qui écrit */
+            /* Le texte s'adapte automatiquement (Noir en clair, Blanc en sombre) */
             .stChatInput textarea { 
-                color: #000000 !important; 
-                -webkit-text-fill-color: #000000 !important; /* Force pour Safari/Chrome */
+                color: var(--text-color) !important; 
+                -webkit-text-fill-color: var(--text-color) !important; 
             }
 
-            /* On ajuste aussi la couleur du "Placeholder" (le texte d'exemple) */
+            /* Le Placeholder (texte d'exemple) s'adapte avec un peu de transparence */
             .stChatInput textarea::placeholder {
-                color: rgba(0, 0, 0, 0.4) !important;
-                -webkit-text-fill-color: rgba(0, 0, 0, 0.4) !important;
+                color: var(--text-color) !important;
+                -webkit-text-fill-color: var(--text-color) !important;
+                opacity: 0.5 !important;
             }
-
             /* 5. REPARATION DE LA BOITE D'ERREUR (st.warning) */
             div[data-testid="stAlert"] {
                 background-color: rgba(45, 45, 45, 0.95) !important;
