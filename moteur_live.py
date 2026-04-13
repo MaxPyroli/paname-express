@@ -73,7 +73,7 @@ def afficher_live_content(stop_id, clean_name):
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }</style>""" if inject_animation else ""
+        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: none; } }</style>""" if inject_animation else ""
 
         html_content = f"{anim_css}<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; margin-bottom: -10px;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         
