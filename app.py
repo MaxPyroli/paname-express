@@ -153,7 +153,7 @@ with st.form("search_form"):
     with col_geo:
         # 📍 Me localiser : L'ajout de texte rend le bouton BEAUCOUP plus lisible.
         # type="primary" le colore pour le mettre en valeur.
-        geo_clicked = st.form_submit_button("📍 Me localiser", type="primary", use_container_width=True)
+        geo_clicked = st.form_submit_button("📍 Me localiser", use_container_width=True)
 
 # Si le bouton "Me localiser" est cliqué, on active le mode géoloc
 if geo_clicked:
@@ -326,3 +326,51 @@ if st.session_state.selected_stop:
 # 2. Sinon -> Tuto de Bienvenue (Construction sécurisée & Couleurs dynamiques)
 elif not st.session_state.search_results:
     afficher_tuto_bienvenue()
+
+# ========================================================
+#           AFFICHAGE LIVE OU ACCUEIL (TUTO)
+# ========================================================
+
+# 1. Si une gare est sélectionnée -> On affiche le tableau de bord
+if st.session_state.selected_stop:
+    afficher_tableau_live(st.session_state.selected_stop, st.session_state.selected_name)
+
+# 2. Sinon -> Tuto de Bienvenue
+elif not st.session_state.search_results:
+    afficher_tuto_bienvenue()
+
+# ==========================================
+# 🐾 LA BULLE FLOTTANTE DE PANA
+# ==========================================
+st.markdown(
+    """
+    <style>
+    /* On cible spécifiquement le bouton "Primary" pour le transformer en bulle */
+    button[kind="primary"] {
+        position: fixed !important;
+        bottom: 40px !important;
+        right: 40px !important;
+        width: 65px !important;
+        height: 65px !important;
+        border-radius: 50% !important; /* Le rend parfaitement rond */
+        font-size: 28px !important;
+        background-color: #ff9f43 !important; /* L'orange Pana */
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(255, 159, 67, 0.4) !important;
+        z-index: 9999 !important; /* Passe au-dessus de TOUT */
+        transition: all 0.3s ease !important;
+    }
+    
+    button[kind="primary"]:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(255, 159, 67, 0.6) !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Le bouton Pana (C'est désormais le SEUL bouton "primary" de l'app)
+if st.button("🐾", type="primary", help="Discuter avec Pana"):
+    ouvrir_assistant()
