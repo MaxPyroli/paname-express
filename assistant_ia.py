@@ -202,37 +202,38 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
 
-    # 1. LE STYLE CSS (Fond clair vitré + Bulles sombres + Texte blanc)
+   # 1. LE STYLE CSS (Design Adaptatif Premium)
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli CLAIR et très transparent */
+            /* 1. Fenêtre : Verre dépoli adaptatif (Clair ou Sombre selon le thème) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(255, 255, 255, 0.15) !important; /* Blanc très transparent */
-                backdrop-filter: blur(30px) !important; 
-                -webkit-backdrop-filter: blur(30px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.4) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+                background: color-mix(in srgb, var(--background-color) 60%, transparent) !important;
+                backdrop-filter: blur(25px) !important; 
+                -webkit-backdrop-filter: blur(25px) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
                 border-radius: 28px !important;
             }
             
-            /* 2. Titres (Texte forcé en blanc) */
+            /* 2. Titres (Couleur adaptative automatique) */
             .titre-container { margin-top: -30px; margin-bottom: 15px; }
             
             .titre-pana {
                 font-size: 2.2rem; font-weight: 900;
                 display: flex; align-items: center; gap: 15px;
-                color: white !important; 
+                color: var(--text-color) !important; 
             }
-            .titre-pana span.nom { color: #ff9f43; } /* "Pana" reste orange */
+            .titre-pana span.nom { color: #ff9f43; } /* "Pana" reste orange pour l'identité */
             
             .sous-titre-pana {
-                color: white !important; opacity: 0.9;
+                color: var(--text-color) !important; 
+                opacity: 0.7;
                 font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT (Sombres et très visibles) --- */
+            /* --- 3. LES BULLES DE CHAT ADAPTATIVES --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
@@ -240,54 +241,36 @@ def ouvrir_assistant():
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* Fond sombre (Gris anthracite) pour faire exploser le texte blanc */
-                background-color: rgba(35, 35, 35, 0.9) !important; 
-                color: white !important;
+                /* Utilise le gris secondaire de Streamlit (Clair en mode clair, Sombre en mode sombre) */
+                background-color: var(--secondary-background-color) !important; 
+                color: var(--text-color) !important;
                 padding: 14px 20px !important; 
-                border-radius: 20px !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
-                box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+                border-radius: 22px !important;
+                border: 1px solid rgba(128, 128, 128, 0.1) !important;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
                 line-height: 1.5 !important; 
             }
 
-            /* Force TOUT le texte des messages en blanc */
+            /* On s'assure que tout le texte dans les bulles suit la couleur du thème */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
-                color: white !important;
+                color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte (S'adapte au mode Clair/Sombre) */
+            /* 4. Barre d'entrée texte (Adaptative) */
             .stChatInput {
-                /* Utilise le fond secondaire de Streamlit (Gris clair en mode clair, Gris foncé en mode sombre) */
-                background-color: var(--secondary-background-color) !important; 
+                background-color: var(--secondary-background-color) !important;
                 border-radius: 18px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 10px !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
             }
-            
-            /* Le texte s'adapte automatiquement (Noir en clair, Blanc en sombre) */
             .stChatInput textarea { 
                 color: var(--text-color) !important; 
-                -webkit-text-fill-color: var(--text-color) !important; 
-            }
-
-            /* Le Placeholder (texte d'exemple) s'adapte avec un peu de transparence */
-            .stChatInput textarea::placeholder {
-                color: var(--text-color) !important;
                 -webkit-text-fill-color: var(--text-color) !important;
-                opacity: 0.5 !important;
             }
-            /* 5. REPARATION DE LA BOITE D'ERREUR (st.warning) */
-            div[data-testid="stAlert"] {
-                background-color: rgba(45, 45, 45, 0.95) !important;
-                border: 1px solid #ff9f43 !important;
-                color: white !important;
-                border-radius: 15px !important;
-            }
-            div[data-testid="stAlert"] p { color: white !important; }
 
+            /* Bouton de réinitialisation */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
         </style>
         """,
