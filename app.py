@@ -161,9 +161,20 @@ if geo_clicked:
 
 # 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
 if st.session_state.geoloc_active:
-    st.info("📡 Recherche de votre position...")
+    
+    # Message d'attente animé personnalisé
+    st.markdown("""
+    <div style="background-color: rgba(52, 152, 219, 0.1); border-left: 4px solid #3498db; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center;">
+        <div class="custom-loader" style="width: 24px; height: 24px; border-width: 3px; margin-right: 15px; flex-shrink: 0;"></div>
+        <div style="color: var(--text-color);">
+            <strong style="color: #3498db; font-size: 1.05em;">Recherche du signal GPS...</strong><br>
+            <span style="font-size: 0.85em; opacity: 0.8;">Veuillez autoriser la localisation si votre navigateur le demande.</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # La magie opère ici : ça demande l'autorisation au navigateur
-    loc = get_geolocation() 
+    loc = get_geolocation()
     
     if loc:
         # 🛡️ LE BOUCLIER ANTI-CRASH (Vérification de l'autorisation)
