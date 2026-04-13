@@ -200,19 +200,17 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Design "Cards on Glass" 100% synchronisé avec Streamlit)
+    # 1. LE STYLE CSS (Solid Design 100% Opaque et Fiable)
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Verre dépoli dynamique (Adieu le @media !) */
+            /* 1. LE FOND GLOBAL : Solide (Zéro transparence) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                /* Utilise le fond secondaire de Streamlit mélangé avec 20% de transparence */
-                background: color-mix(in srgb, var(--secondary-background-color) 80%, transparent) !important;
-                backdrop-filter: blur(20px) !important; 
-                -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+                /* Utilise le fond secondaire natif (Gris clair en mode clair, Gris anthracite en mode sombre) */
+                background-color: var(--secondary-background-color) !important; 
+                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2) !important;
                 border-radius: 28px !important;
             }
             
@@ -226,18 +224,17 @@ def ouvrir_assistant():
             .titre-pana span.nom { color: #ff9f43 !important; }
             .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
-            /* --- 3. LA GRANDE CARTE DU CHAT --- */
+            /* --- 3. LA GRANDE CARTE DU CHAT (Bloc Solide) --- */
             div[data-testid="stVerticalBlockBorderWrapper"] {
-                /* Utilise le fond principal (Blanc pur en clair, Noir pur en sombre) */
+                /* Utilise le fond principal natif (Blanc pur en clair, Noir pur en sombre) */
                 background-color: var(--background-color) !important; 
                 border-radius: 24px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-                opacity: 1 !important; 
                 padding: 10px !important;
             }
 
-            /* On nettoie les bulles internes */
+            /* On nettoie les bulles internes pour qu'elles se fondent dans la carte */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 border: none !important;
@@ -250,21 +247,20 @@ def ouvrir_assistant():
                 padding: 0 !important;
             }
             
-            /* On force le texte des bulles à s'adapter */
+            /* On force le texte des bulles à s'adapter au thème */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA CARTE DE SAISIE TEXTE */
+            /* 4. LA CARTE DE SAISIE TEXTE (Bloc Solide) */
             .stChatInput {
                 background-color: var(--background-color) !important; 
                 border-radius: 20px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 15px !important;
                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
-                opacity: 1 !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
@@ -273,7 +269,7 @@ def ouvrir_assistant():
             }
             .stChatInput textarea::placeholder { color: var(--text-color) !important; opacity: 0.5 !important; }
 
-            /* Bouton */
+            /* Bouton de réinitialisation */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
         </style>
         """,
