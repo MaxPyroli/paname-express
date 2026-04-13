@@ -180,72 +180,89 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE : DESIGN PREMIUM (LISIBLE & PRONONCÉ)
+# 🎨 L'INTERFACE DE LA MODALE (CLAIR/SOMBRE + LOGO PANA)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS (Dark Glass Elegant & Compact)
+    # --- PRÉPARATION DE L'ICÔNE PANA ---
+    import os
+    # Essaie de charger ton image pour le titre
+    try:
+        from utils import get_img_as_base64
+        img_pana_b64 = get_img_as_base64("pana_icon.png")
+        if img_pana_b64:
+            icone_titre = f'<img src="data:image/png;base64,{img_pana_b64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">'
+        else:
+            icone_titre = "🐾"
+    except:
+        icone_titre = "🐾"
+
+    # Avatar pour le chat (Streamlit gère directement le fichier local !)
+    avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
+    avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
+
+    # 1. LE STYLE CSS (Adaptatif Clair/Sombre)
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre principale : Retour au verre transparent (Dark Glass) */
+            /* 1. Fenêtre : S'adapte magiquement (Blanc translucide ou Sombre translucide) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(25, 25, 25, 0.5) !important; /* Plus transparent ! */
+                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
                 backdrop-filter: blur(25px) !important; 
                 -webkit-backdrop-filter: blur(25px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
-                color: white !important; 
             }
             
-            /* 2. Titres */
-            .titre-container { margin-top: -30px; margin-bottom: 15px; } /* Marge réduite */
+            /* 2. Titres (S'adapte à la couleur du texte native) */
+            .titre-container { margin-top: -30px; margin-bottom: 15px; }
             
             .titre-pana {
                 font-size: 2.2rem; font-weight: 900;
                 display: flex; align-items: center; gap: 15px;
-                color: #ff9f43 !important; 
+                color: var(--text-color) !important; 
             }
+            .titre-pana span.nom { color: #ff9f43; } /* Le mot "Pana" reste orange */
             
             .sous-titre-pana {
-                color: white !important; opacity: 0.9;
+                color: var(--text-color) !important; opacity: 0.7;
                 font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT (COMPACTES MAIS AÉRÉES) --- */
+            /* --- 3. LES BULLES DE CHAT (Aérées et adaptatives) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
-                margin-bottom: 15px !important; /* <-- C'est ici ! On enlève le moins (-) */
+                margin-bottom: 15px !important; 
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* Bulles semi-transparentes pour coller au thème Glass */
-                background-color: rgba(45, 45, 45, 0.75) !important; 
-                color: white !important;
-                padding: 12px 18px !important; /* Moins haut, plus compact */
+                background-color: var(--secondary-background-color) !important; 
+                color: var(--text-color) !important;
+                padding: 12px 18px !important; 
                 border-radius: 20px !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                line-height: 1.4 !important; /* Rapproche les lignes de texte */
+                border: 1px solid rgba(128, 128, 128, 0.1) !important;
+                line-height: 1.4 !important; 
             }
 
+            /* Force le texte des messages à s'adapter (Noir/Blanc) */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
-                color: white !important;
+                color: var(--text-color) !important;
             }
             
             /* 4. Barre d'entrée texte */
             .stChatInput {
-                background-color: rgba(30, 30, 30, 0.7) !important;
+                background-color: var(--background-color) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 10px !important;
             }
-            .stChatInput textarea { color: white !important; }
+            .stChatInput textarea { color: var(--text-color) !important; }
 
             button[kind="tertiary"] { color: #ff9f43 !important; }
         </style>
@@ -253,15 +270,16 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
 
-    # 2. AFFICHAGE DU TITRE DESIGN
+    # 2. AFFICHAGE DU TITRE DESIGN (Avec le nouveau logo)
     st.markdown(
-        """
+        f"""
         <div class="titre-container">
             <div class="titre-pana">
-                🐾 Pana <span class="badge-beta" style="
-                    background: rgba(255, 159, 67, 0.2);
+                {icone_titre} <span class="nom">Pana</span> 
+                <span class="badge-beta" style="
+                    background: rgba(255, 159, 67, 0.15);
                     color: #ff9f43;
-                    border: 1px solid rgba(255, 159, 67, 0.4);
+                    border: 1px solid rgba(255, 159, 67, 0.3);
                     padding: 2px 10px;
                     border-radius: 8px;
                     font-size: 0.7rem;
@@ -275,15 +293,15 @@ def ouvrir_assistant():
         """, 
         unsafe_allow_html=True
     )
-    
-    # 3. BOUTON DE RÉINITIALISATION (Plus discret)
+
+    # 3. BOUTON DE RÉINITIALISATION
     if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
             config=config_ia
         )
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Comment puis-je t'aider aujourd'hui ? 🐾"}
+            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}
         ]
         st.rerun()
 
@@ -293,14 +311,16 @@ def ouvrir_assistant():
             model="gemini-2.5-flash-lite", 
             config=config_ia
         )
-        st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}]
+        st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # 5. CONTENEUR DE CHAT (Sans bordure pour l'effet flottant)
+    # 5. CONTENEUR DE CHAT
     chat_container = st.container(height=450, border=False)
     
     with chat_container:
         for message in st.session_state.messages_ia:
-            with st.chat_message(message["role"]):
+            # ✨ NOUVEAU : On utilise l'avatar dynamique (Pana ou Utilisateur)
+            avatar_actuel = avatar_pana if message["role"] == "assistant" else avatar_user
+            with st.chat_message(message["role"], avatar=avatar_actuel):
                 st.markdown(message["content"])
 
     # 6. ENTRÉE UTILISATEUR
@@ -308,13 +328,12 @@ def ouvrir_assistant():
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         
         with chat_container:
-            with st.chat_message("user"):
+            with st.chat_message("user", avatar=avatar_user):
                 st.markdown(prompt)
             
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=avatar_pana):
                 message_placeholder = st.empty()
                 
-                # Animation des points
                 message_placeholder.markdown("""
                 <div class="corgi-loader">🐾 <i>Analyse en cours</i><span>.</span><span>.</span><span>.</span></div>
                 """, unsafe_allow_html=True)
@@ -333,8 +352,8 @@ def ouvrir_assistant():
                     erreur_brute = str(e)
                     
                     if "429" in erreur_brute or "Quota" in erreur_brute:
-                        st.warning("🐾 *Wouf ! Le réseau est saturé ou j'ai atteint ma limite. Laisse-moi me reposer un peu !*")
+                        st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi me reposer un peu !*")
                     elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        st.warning("🐾 *Mes petites pattes tournent dans le vide... Les serveurs de Google font la sieste !*")
+                        st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !*")
                     else:
                         st.error(f"Oups, Pana a glissé : {erreur_brute}")
