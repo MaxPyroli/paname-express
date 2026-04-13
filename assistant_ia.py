@@ -180,7 +180,7 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE (TOTALEMENT ADAPTATIVE)
+# 🎨 L'INTERFACE : "CARTES SUR VERRE" (Design Superposé)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
@@ -200,92 +200,91 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Utilise les variables de thème Streamlit)
+    # 1. LE STYLE CSS (Design "Cards on Glass")
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli teinté (Gris secondaire translucide) */
+            /* 1. LE FOND GLOBAL : Verre dépoli (Glassmorphism) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: color-mix(in srgb, var(--secondary-background-color) 70%, transparent) !important;
-                backdrop-filter: blur(25px) !important; 
-                -webkit-backdrop-filter: blur(25px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important; 
+                background: rgba(150, 150, 150, 0.2) !important; /* Gris très transparent */
+                backdrop-filter: blur(20px) !important; 
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important; 
                 box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
                 border-radius: 28px !important;
             }
+
+            @media (prefers-color-scheme: dark) {
+                div[data-testid="stDialog"] div[role="dialog"] { 
+                    background: rgba(30, 30, 30, 0.4) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                }
+            }
             
-            /* 2. Titres */
-            .titre-container { margin-top: -30px; margin-bottom: 15px; }
+            /* 2. LE TITRE : Flotte directement sur le verre */
+            .titre-container { margin-top: -30px; margin-bottom: 20px; }
             .titre-pana { 
                 font-size: 2.2rem; font-weight: 900; 
                 display: flex; align-items: center; gap: 15px; 
                 color: var(--text-color) !important; 
             }
             .titre-pana span.nom { color: #ff9f43 !important; }
-            .sous-titre-pana { 
-                color: var(--text-color) !important; 
-                opacity: 0.7; font-size: 0.9em; font-weight: 600; 
+            .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
+
+            /* --- 3. LA CARTE DU CHAT : 100% OPAQUE --- */
+            /* La magie opère ici : on cible le conteneur pour en faire une carte */
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                background-color: var(--background-color) !important; /* Blanc ou Noir PUR */
+                border-radius: 24px !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+                opacity: 1 !important; /* Aucune transparence possible ! */
+                padding: 10px !important;
             }
 
-            /* --- 3. LES BULLES DE CHAT (LE BOUCLIER TITANE) --- */
-            /* En ajoutant "html body", on devient plus fort que le code natif de Streamlit */
-            html body div[data-testid="stChatMessage"],
-            html body .stChatMessage {
-                background: var(--background-color) !important; 
-                background-color: var(--background-color) !important;
-                padding: 15px !important;
-                margin-bottom: 15px !important;
-                border-radius: 20px !important;
-                border: 1px solid rgba(128, 128, 128, 0.4) !important;
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
-                opacity: 1 !important;
-            }
-
-            /* On désactive le fond de la sous-boîte pour éviter les conflits */
-            html body div[data-testid="stChatMessageContent"] {
-                background: transparent !important;
+            /* Les bulles à l'intérieur de la carte n'ont plus besoin de couleur, elles prennent celle de la carte */
+            div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
+                padding: 10px !important;
+                margin-bottom: 5px !important;
+            }
+            div[data-testid="stChatMessageContent"] {
+                background: transparent !important;
                 padding: 0 !important;
             }
-
-            /* On s'assure que le texte suit bien le thème */
-            html body div[data-testid="stChatMessageContent"] p, 
-            html body div[data-testid="stChatMessageContent"] li,
-            html body div[data-testid="stChatMessageContent"] strong {
+            div[data-testid="stChatMessageContent"] p, 
+            div[data-testid="stChatMessageContent"] li,
+            div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte (100% Opaque) */
+            /* 4. LA CARTE DE SAISIE TEXTE (La petite carte du bas) */
             .stChatInput {
                 background-color: var(--background-color) !important; 
-                border-radius: 18px !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                margin-top: 10px !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+                border-radius: 20px !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                margin-top: 15px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
                 opacity: 1 !important;
             }
-            
             .stChatInput textarea { 
                 background-color: transparent !important;
                 color: var(--text-color) !important; 
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
-            .stChatInput textarea::placeholder {
-                color: var(--text-color) !important;
-                opacity: 0.5 !important;
-            }
+            .stChatInput textarea::placeholder { opacity: 0.5 !important; }
 
-            /* Bouton réinitialiser */
+            /* Bouton */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 2. AFFICHAGE DU TITRE
+    # 2. AFFICHAGE DU TITRE (Sur le verre)
     st.markdown(
         f"""
         <div class="titre-container">
@@ -309,7 +308,6 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
 
-    # ... (le reste du code pour la session, le container et l'input ne change pas) ...
     # 3. BOUTON DE RÉINITIALISATION
     if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
         st.session_state.chat_session = client.chats.create(
@@ -329,12 +327,13 @@ def ouvrir_assistant():
         )
         st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # 5. CONTENEUR DE CHAT
-    chat_container = st.container(height=450, border=False)
+    # ========================================================
+    # ⚠️ LE SECRET EST ICI : border=True CRÉE LA CARTE SOLIDE
+    # ========================================================
+    chat_container = st.container(height=450, border=True)
     
     with chat_container:
         for message in st.session_state.messages_ia:
-            # ✨ NOUVEAU : On utilise l'avatar dynamique (Pana ou Utilisateur)
             avatar_actuel = avatar_pana if message["role"] == "assistant" else avatar_user
             with st.chat_message(message["role"], avatar=avatar_actuel):
                 st.markdown(message["content"])
