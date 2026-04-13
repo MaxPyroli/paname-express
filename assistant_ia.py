@@ -204,18 +204,18 @@ def ouvrir_assistant():
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli qui suit le thème automatiquement */
+            /* 1. Fenêtre : Verre dépoli teinté (Utilise le gris secondaire) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
+                background: color-mix(in srgb, var(--secondary-background-color) 80%, transparent) !important;
                 backdrop-filter: blur(25px) !important; 
                 -webkit-backdrop-filter: blur(25px) !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
             }
             
-            /* 2. Titres (S'adaptent à la couleur du texte du thème) */
+            /* 2. Titres */
             .titre-container { margin-top: -30px; margin-bottom: 15px; }
             .titre-pana { 
                 font-size: 2.2rem; font-weight: 900; 
@@ -228,7 +228,7 @@ def ouvrir_assistant():
                 opacity: 0.7; font-size: 0.9em; font-weight: 600; 
             }
 
-            /* --- 3. LES BULLES DE CHAT (OPAQUES ET LISIBLES) --- */
+            /* --- 3. LES BULLES DE CHAT (100% OPAQUES ET ÉCLATANTES) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
@@ -236,30 +236,31 @@ def ouvrir_assistant():
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* On utilise le fond secondaire (gris clair en mode clair, gris foncé en mode sombre) */
-                background-color: var(--secondary-background-color) !important; 
+                /* On utilise la couleur PRINCIPALE (Blanc pur en mode clair, Noir pur en mode sombre) */
+                background-color: var(--background-color) !important; 
                 color: var(--text-color) !important;
                 padding: 14px 20px !important; 
                 border-radius: 22px !important;
-                border: 1px solid rgba(128, 128, 128, 0.15) !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
                 line-height: 1.5 !important; 
-                opacity: 1 !important; /* Zéro transparence sur la bulle */
+                opacity: 1 !important; /* Force l'opacité totale */
             }
 
-            /* On force tout le texte (paragraphes, listes) à suivre le thème */
+            /* On force le texte à suivre le thème */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte */
+            /* 4. Barre d'entrée texte (100% Opaque aussi) */
             .stChatInput {
-                background-color: var(--secondary-background-color) !important;
+                background-color: var(--background-color) !important;
                 border-radius: 18px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 10px !important;
+                opacity: 1 !important;
             }
             .stChatInput textarea { 
                 color: var(--text-color) !important; 
