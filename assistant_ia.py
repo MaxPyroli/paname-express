@@ -204,14 +204,13 @@ def ouvrir_assistant():
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Verre translucide */
+            /* 1. LE FOND GLOBAL : Verre translucide neutre (Marche en clair et en sombre) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 500px !important; 
-                /* On utilise background-color qui donne un effet de verre parfait */
-                background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
-                backdrop-filter: blur(20px) !important; 
-                -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                background: rgba(128, 128, 128, 0.15) !important; /* Gris transparent léger */
+                backdrop-filter: blur(25px) !important; 
+                -webkit-backdrop-filter: blur(25px) !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
                 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
                 border-radius: 24px !important;
             }
@@ -224,47 +223,40 @@ def ouvrir_assistant():
                 color: var(--text-color) !important; 
             }
             .titre-pana span.nom { color: #ff9f43 !important; }
-            .sous-titre-pana { color: #FFFFFF !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
+            .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
-            /* --- 3. LES BULLES DE CHAT : CARTES 100% OPAQUES --- */
+            /* --- 3. LES BULLES DE CHAT : VRAIES CARTES OPAQUES --- */
             div[data-testid="stChatMessage"] {
-                /* Le secret est ici : On utilise le fond secondaire qui n'est jamais transparent ! */
-                background-color: var(--secondary-background-color) !important; 
-                background-image: none !important; /* Détruit le fond par défaut de l'assistant */
+                /* Utilise le fond de base (Blanc 100% en clair, Noir 100% en sombre) */
+                background: var(--background-color) !important; 
                 padding: 1rem !important;
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
                 opacity: 1 !important; 
-                isolation: isolate !important; /* Force le navigateur à rendre la boîte opaque */
             }
             
-            /* On rend le sous-bloc invisible */
+            /* On nettoie le sous-bloc pour éviter les conflits */
             div[data-testid="stChatMessageContent"] {
                 background: transparent !important; 
-                background-color: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
                 padding: 0 !important; 
             }
 
-            /* Forcer la couleur du texte */
+            /* Le texte suit le thème automatiquement (Noir en clair, Blanc en sombre) */
             div[data-testid="stChatMessage"] *, 
             div[data-testid="stChatMessageContent"] * {
-                color: #FFFFFF !important;
+                color: var(--text-color) !important;
             }
             
-            /* 4. LA BARRE DE SAISIE TEXTE : CARTE 100% OPAQUE */
+            /* 4. LA BARRE DE SAISIE TEXTE : CARTE ASSORTIE */
             .stChatInput, div[data-testid="stChatInput"] {
-                background-color: var(background-color) !important; 
-                background-image: none !important;
+                background: var(--background-color) !important; /* La coquille est corrigée ici */
                 border-radius: 20px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 15px !important;
                 opacity: 1 !important;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-                isolation: isolate !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
@@ -283,7 +275,7 @@ def ouvrir_assistant():
             .disclaimer-pana {
                 text-align: center;
                 font-size: 11px;
-                color: #ffffff !important;
+                color: var(--text-color) !important; /* S'adapte au thème au lieu d'être toujours blanc */
                 opacity: 0.6;
                 margin-top: 8px;
                 font-style: italic;
