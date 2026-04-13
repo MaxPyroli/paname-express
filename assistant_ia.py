@@ -200,29 +200,23 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Design "Cards on Glass")
+    # 1. LE STYLE CSS (Design "Cards on Glass" 100% synchronisé avec Streamlit)
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Verre dépoli (Glassmorphism) */
+            /* 1. LE FOND GLOBAL : Verre dépoli dynamique (Adieu le @media !) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(150, 150, 150, 0.2) !important; /* Gris très transparent */
+                /* Utilise le fond secondaire de Streamlit mélangé avec 20% de transparence */
+                background: color-mix(in srgb, var(--secondary-background-color) 80%, transparent) !important;
                 backdrop-filter: blur(20px) !important; 
                 -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.3) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
             }
-
-            @media (prefers-color-scheme: dark) {
-                div[data-testid="stDialog"] div[role="dialog"] { 
-                    background: rgba(30, 30, 30, 0.4) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                }
-            }
             
-            /* 2. LE TITRE : Flotte directement sur le verre */
+            /* 2. LE TITRE */
             .titre-container { margin-top: -30px; margin-bottom: 20px; }
             .titre-pana { 
                 font-size: 2.2rem; font-weight: 900; 
@@ -232,18 +226,18 @@ def ouvrir_assistant():
             .titre-pana span.nom { color: #ff9f43 !important; }
             .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
-            /* --- 3. LA CARTE DU CHAT : 100% OPAQUE --- */
-            /* La magie opère ici : on cible le conteneur pour en faire une carte */
+            /* --- 3. LA GRANDE CARTE DU CHAT --- */
             div[data-testid="stVerticalBlockBorderWrapper"] {
-                background-color: var(--background-color) !important; /* Blanc ou Noir PUR */
+                /* Utilise le fond principal (Blanc pur en clair, Noir pur en sombre) */
+                background-color: var(--background-color) !important; 
                 border-radius: 24px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-                opacity: 1 !important; /* Aucune transparence possible ! */
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+                opacity: 1 !important; 
                 padding: 10px !important;
             }
 
-            /* Les bulles à l'intérieur de la carte n'ont plus besoin de couleur, elles prennent celle de la carte */
+            /* On nettoie les bulles internes */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 border: none !important;
@@ -255,19 +249,21 @@ def ouvrir_assistant():
                 background: transparent !important;
                 padding: 0 !important;
             }
+            
+            /* On force le texte des bulles à s'adapter */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA CARTE DE SAISIE TEXTE (La petite carte du bas) */
+            /* 4. LA CARTE DE SAISIE TEXTE */
             .stChatInput {
                 background-color: var(--background-color) !important; 
                 border-radius: 20px !important;
                 border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 margin-top: 15px !important;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
                 opacity: 1 !important;
             }
             .stChatInput textarea { 
@@ -275,7 +271,7 @@ def ouvrir_assistant():
                 color: var(--text-color) !important; 
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
-            .stChatInput textarea::placeholder { opacity: 0.5 !important; }
+            .stChatInput textarea::placeholder { color: var(--text-color) !important; opacity: 0.5 !important; }
 
             /* Bouton */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
