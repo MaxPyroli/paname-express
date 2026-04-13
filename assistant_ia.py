@@ -188,19 +188,21 @@ def ouvrir_assistant():
     st.markdown(
         """
         <style>
-            /* La fenêtre principale (S'adapte au Clair/Sombre magiquement) */
+            /* 1. Le fond de la fenêtre (Verre plus clair et lumineux) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                /* On prend le fond natif (blanc/noir) et on le rend 85% opaque */
-                background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
-                backdrop-filter: blur(20px) !important; 
-                -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid var(--secondary-background-color) !important; 
+                /* On utilise un blanc très légèrement transparent pour le mode clair, 
+                   et Streamlit inversera ça en mode sombre */
+                background-color: var(--secondary-background-color) !important;
+                opacity: 0.95; /* Légère transparence au lieu d'un color-mix capricieux */
+                backdrop-filter: blur(10px) !important; 
+                -webkit-backdrop-filter: blur(10px) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
                 box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
             }
             
-            /* Titre stylé */
+            /* 2. Titre et Sous-titre (Contraste forcé) */
             .titre-container {
                 margin-top: -30px;
                 margin-bottom: 25px;
@@ -215,7 +217,7 @@ def ouvrir_assistant():
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                color: #ff9f43; /* Orange toujours visible */
+                color: #ff9f43 !important; /* Orange pur */
             }
             
             .badge-beta {
@@ -231,34 +233,33 @@ def ouvrir_assistant():
             }
 
             .sous-titre-pana {
-                color: var(--text-color);
-                opacity: 0.7;
+                color: var(--text-color) !important;
+                opacity: 0.85 !important; /* Plus opaque pour être bien lisible */
                 font-size: 0.95em; 
-                font-weight: 500;
+                font-weight: 600; /* Un peu plus gras */
             }
 
-            /* --- LES NOUVELLES BULLES DE CHAT --- */
-            /* 1. On enlève le fond de la ligne entière */
+            /* --- 3. LES BULLES DE CHAT (SOLIDITÉ 100%) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 border: none !important;
             }
             
-            /* 2. On crée la bulle uniquement autour du texte */
             div[data-testid="stChatMessageContent"] {
-                background-color: var(--secondary-background-color) !important; /* Gris très clair en mode clair */
+                /* On force un fond totalement opaque qui contraste avec le texte */
+                background-color: var(--background-color) !important; 
+                color: var(--text-color) !important;
                 padding: 16px 20px !important;
                 border-radius: 22px !important;
-                border: 1px solid rgba(150, 150, 150, 0.1) !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
-                color: var(--text-color) !important;
+                border: 1px solid rgba(128, 128, 128, 0.15) !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; /* Petite ombre pour détacher la bulle */
             }
             
-            /* Ajustement de la barre d'entrée texte */
+            /* 4. La barre d'entrée texte */
             .stChatInput {
-                background: var(--secondary-background-color) !important;
+                background-color: var(--background-color) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(150, 150, 150, 0.2) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
             }
         </style>
         """,
