@@ -179,43 +179,68 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE & LE BADGE
+# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN
 # ==========================================
-@st.dialog("🤖 Pana") 
+@st.dialog(" ") # 1. On met un espace vide pour supprimer le robot et le vieux titre !
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS
+    # 2. LE NOUVEAU STYLE CSS (Design transparent et moderne)
     st.markdown(
         """
         <style>
-            div[data-testid="stDialog"] div[role="dialog"] { max-width: 580px !important; }
-            .badge-beta {
-                background-color: #ff9f43;
-                color: white;
-                padding: 2px 8px;
-                border-radius: 12px;
-                font-size: 0.75em;
+            /* Ajustement de la largeur de la modale */
+            div[data-testid="stDialog"] div[role="dialog"] { 
+                max-width: 600px !important; 
+            }
+            
+            /* Le nouveau grand titre stylé */
+            .titre-pana {
+                font-size: 2.2rem;
                 font-weight: 800;
-                letter-spacing: 0.5px;
-                margin-left: 8px;
-                box-shadow: 0 2px 4px rgba(255, 159, 67, 0.3);
-                vertical-align: middle;
+                margin-top: -25px; /* Remonte le titre pour combler le vide */
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            /* Le nouveau badge BÊTA (Avec un joli dégradé premium) */
+            .badge-beta {
+                background: linear-gradient(135deg, #ff9f43, #ff7f50);
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 800;
+                letter-spacing: 1px;
+                box-shadow: 0 4px 10px rgba(255, 159, 67, 0.3);
+            }
+            
+            /* Transparence totale des bulles de chat (plus de cadres gris/jaunes) */
+            div[data-testid="stChatMessage"] {
+                background-color: transparent !important;
+                border: none !important;
+                padding: 10px 0 !important; /* Un peu d'air entre les messages */
             }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 2. LE SOUS-TITRE AVEC LE BADGE
+    # 3. LE SUPERBE TITRE HTML
     st.markdown(
-        "<p style='color: #888; font-size: 0.9em; margin-top: -10px; margin-bottom: 20px;'>"
-        "Salut ! Je suis Pana. Trafic, itinéraires... Je suis là pour toi ! <span class='badge-beta'>BÊTA</span>"
-        "</p>", 
+        """
+        <div class="titre-pana">
+            🐾 Pana <span class="badge-beta">BÊTA</span>
+        </div>
+        <p style='color: #888; font-size: 1.05em; margin-bottom: 20px; margin-top: 5px;'>
+            Ton assistant trafic et horaires, toujours prêt !
+        </p>
+        """, 
         unsafe_allow_html=True
     )
 
-    # 3. LE BOUTON MAGIQUE
-    if st.button("🔄 Effacer la mémoire", type="tertiary", help="Recommencer la conversation à zéro"):
+    # 4. LE BOUTON MAGIQUE (Renommé pour faire plus propre)
+    if st.button("🔄 Nouvelle conversation", type="tertiary", help="Effacer la mémoire"):
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
             config=config_ia
@@ -225,7 +250,7 @@ def ouvrir_assistant():
         ]
         st.rerun()
 
-    # 4. INITIALISATION DU CERVEAU
+    # 5. INITIALISATION DU CERVEAU
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
@@ -236,13 +261,15 @@ def ouvrir_assistant():
             {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
         ]
 
-    chat_container = st.container(height=500)
+    # 6. LE CONTAINER TRANSPARENT (La magie de border=False)
+    chat_container = st.container(height=450, border=False)
     
     with chat_container:
         for message in st.session_state.messages_ia:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
+    # 7. LA BARRE DE CHAT
     if prompt := st.chat_input("Ex: Prochains départs à Noisy Champs ?"):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         
@@ -253,6 +280,7 @@ def ouvrir_assistant():
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 
+                # L'animation des 3 petits points
                 animation_html = """
                 <style>
                 .corgi-loader { color: #555; }
