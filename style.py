@@ -137,6 +137,14 @@ def appliquer_style_global():
         .replacement-box { border: 2px dashed #e74c3c; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(231, 76, 60, 0.1); }
         .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
         .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+
+        /* 🛡️ CORRECTION Z-INDEX : Force les cartes avec un menu trafic ouvert à passer au premier plan absolu */
+        div[data-testid="stElementContainer"]:has(details.traffic-icon[open]),
+        .rail-card:has(details.traffic-icon[open]), 
+        .bus-card:has(details.traffic-icon[open]) {
+            position: relative !important;
+            z-index: 999999 !important;
+        }
         
         /* CSS ICONES INLINE */
         svg.mode-icon-inline {
