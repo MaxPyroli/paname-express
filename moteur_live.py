@@ -342,10 +342,13 @@ def afficher_live_content(stop_id, clean_name):
             
             st.markdown(f"""
             <style>
-                div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
-                .element-container:has(.sticky-glass-{mode_actuel}) {{ position: sticky !important; top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; z-index: 99 !important; }}
-                div.sticky-glass-{mode_actuel} {{ margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; background: rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; color: #ffffff !important; font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; }}
-                div.sticky-glass-{mode_actuel} svg {{ fill: #ffffff !important; height: 1.3em !important; }}
+                div[data-testid="stElementContainer"]:has(.sticky-station-title),
+                .element-container:has(.sticky-station-title) {{
+                    position: sticky !important; 
+                    top: 3.8rem !important; 
+                    z-index: 1100 !important; /* Boosté pour rester au-dessus de tout */
+                    background-color: transparent !important; 
+                }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
