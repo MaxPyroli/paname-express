@@ -179,89 +179,109 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN
+# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN GLASS
 # ==========================================
-@st.dialog(" ") # 1. On met un espace vide pour supprimer le robot et le vieux titre !
+@st.dialog(" ") # On garde l'espace pour masquer le titre natif et le robot
 def ouvrir_assistant():
     
-    # 2. LE NOUVEAU STYLE CSS (Design transparent et moderne)
+    # 1. LE STYLE CSS GLASSOMORPHISM
     st.markdown(
         """
         <style>
-            /* Ajustement de la largeur de la modale */
+            /* La fenêtre principale (Le Verre) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
+                background: rgba(255, 255, 255, 0.05) !important; /* Très transparent */
+                backdrop-filter: blur(15px) !important; /* L'effet de flou dépoli */
+                -webkit-backdrop-filter: blur(15px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Bordure fine "éclat" */
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+                border-radius: 28px !important;
             }
             
-            /* Le nouveau grand titre stylé */
+            /* Titre stylé avec badge intégré */
+            .titre-container {
+                margin-top: -30px;
+                margin-bottom: 25px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
             .titre-pana {
-                font-size: 2.2rem;
-                font-weight: 800;
-                margin-top: -25px; /* Remonte le titre pour combler le vide */
+                font-size: 2.4rem;
+                font-weight: 900;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 15px;
+                background: linear-gradient(90deg, #2c3e50, #ff9f43);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
             }
             
-            /* Le nouveau badge BÊTA (Avec un joli dégradé premium) */
             .badge-beta {
-                background: linear-gradient(135deg, #ff9f43, #ff7f50);
-                color: white;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
+                background: rgba(255, 159, 67, 0.15);
+                color: #ff9f43;
+                border: 1px solid rgba(255, 159, 67, 0.3);
+                padding: 2px 10px;
+                border-radius: 8px;
+                font-size: 0.7rem;
                 font-weight: 800;
+                text-transform: uppercase;
                 letter-spacing: 1px;
-                box-shadow: 0 4px 10px rgba(255, 159, 67, 0.3);
             }
-            
-            /* Transparence totale des bulles de chat (plus de cadres gris/jaunes) */
-            div[data-testid="stChatMessage"] {
+
+            /* Rendre le chat totalement transparent */
+            div[data-testid="stChatMessage"], div[data-testid="stChatMessageContent"] {
                 background-color: transparent !important;
                 border: none !important;
-                padding: 10px 0 !important; /* Un peu d'air entre les messages */
+            }
+            
+            /* Ajustement de la barre d'entrée texte */
+            .stChatInput {
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-radius: 15px !important;
             }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 3. LE SUPERBE TITRE HTML
+    # 2. AFFICHAGE DU TITRE DÉSIGN
     st.markdown(
         """
-        <div class="titre-pana">
-            🐾 Pana <span class="badge-beta">BÊTA</span>
+        <div class="titre-container">
+            <div class="titre-pana">
+                🐾 Pana <span class="badge-beta">BÊTA</span>
+            </div>
+            <div style='color: #666; font-size: 0.95em; font-weight: 500;'>
+                Assistant intelligent • Trafic & Horaires
+            </div>
         </div>
-        <p style='color: #888; font-size: 1.05em; margin-bottom: 20px; margin-top: 5px;'>
-            Ton assistant trafic et horaires, toujours prêt !
-        </p>
         """, 
         unsafe_allow_html=True
     )
 
-    # 4. LE BOUTON MAGIQUE (Renommé pour faire plus propre)
-    if st.button("🔄 Nouvelle conversation", type="tertiary", help="Effacer la mémoire"):
+    # 3. BOUTON DE RÉINITIALISATION (Plus discret)
+    if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
             config=config_ia
         )
         st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
+            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Comment puis-je t'aider aujourd'hui ? 🐾"}
         ]
         st.rerun()
 
-    # 5. INITIALISATION DU CERVEAU
+    # 4. INITIALISATION / SESSION
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
             config=config_ia
         )
-        
-        st.session_state.messages_ia = [
-            {"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}
-        ]
+        st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ? 🐾"}]
 
-    # 6. LE CONTAINER TRANSPARENT (La magie de border=False)
+    # 5. CONTENEUR DE CHAT (Sans bordure pour l'effet flottant)
     chat_container = st.container(height=450, border=False)
     
     with chat_container:
@@ -269,8 +289,8 @@ def ouvrir_assistant():
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-    # 7. LA BARRE DE CHAT
-    if prompt := st.chat_input("Ex: Prochains départs à Noisy Champs ?"):
+    # 6. ENTRÉE UTILISATEUR
+    if prompt := st.chat_input("Demande-moi un horaire..."):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         
         with chat_container:
@@ -280,18 +300,10 @@ def ouvrir_assistant():
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 
-                # L'animation des 3 petits points
-                animation_html = """
-                <style>
-                .corgi-loader { color: #555; }
-                .corgi-loader span { animation: blink 1.4s infinite both; font-size: 1.2em; font-weight: bold; }
-                .corgi-loader span:nth-child(2) { animation-delay: 0.2s; }
-                .corgi-loader span:nth-child(3) { animation-delay: 0.4s; }
-                @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
-                </style>
-                <div class="corgi-loader">🐾 <i>Pana va chercher l'info</i><span>.</span><span>.</span><span>.</span></div>
-                """
-                message_placeholder.markdown(animation_html, unsafe_allow_html=True)
+                # Animation des points
+                message_placeholder.markdown("""
+                <div class="corgi-loader">🐾 <i>Analyse en cours</i><span>.</span><span>.</span><span>.</span></div>
+                """, unsafe_allow_html=True)
                 
                 try:
                     response = st.session_state.chat_session.send_message(prompt)
@@ -304,11 +316,4 @@ def ouvrir_assistant():
                     
                 except Exception as e:
                     message_placeholder.empty()
-                    
-                    erreur_brute = str(e)
-                    if "429" in erreur_brute or "Quota" in erreur_brute:
-                        st.warning("🐾 *Le réseau est saturé. Laisse-moi reprendre mon souffle !*")
-                    elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        st.warning("🐾 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !*")
-                    else:
-                        st.error(f"Aïe, erreur technique : {erreur_brute}")
+                    st.error(f"Oups, Pana a glissé : {str(e)}")
