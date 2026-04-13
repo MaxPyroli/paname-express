@@ -180,7 +180,7 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE : DESIGN SOLIDE (Opacité 100%)
+# 🎨 L'INTERFACE : "CARDS ON GLASS" (Opaques sur Verre)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
@@ -200,23 +200,23 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Le Bouclier Absolu)
+    # 1. LE STYLE CSS
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : 100% Opaque, calculé mathématiquement */
-            /* On mélange 8% de la couleur du texte avec le fond pour avoir un gris solide, adieu la transparence ! */
+            /* 1. LE FOND GLOBAL : Verre translucide */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: color-mix(in srgb, var(--text-color) 8%, var(--background-color)) !important;
-                background-color: color-mix(in srgb, var(--text-color) 8%, var(--background-color)) !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+                /* On utilise background-color qui donne un effet de verre parfait */
+                background: color-mix(in srgb, var(--background-color) 85%, transparent) !important;
+                backdrop-filter: blur(20px) !important; 
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
                 border-radius: 24px !important;
-                opacity: 1 !important; 
             }
             
-            /* 2. LE TITRE */
+            /* 2. LE TITRE : Sur le verre */
             .titre-container { margin-top: -30px; margin-bottom: 20px; }
             .titre-pana { 
                 font-size: 2.2rem; font-weight: 900; 
@@ -226,16 +226,18 @@ def ouvrir_assistant():
             .titre-pana span.nom { color: #ff9f43 !important; }
             .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
-            /* --- 3. LES BULLES DE CHAT : 100% OPAQUES --- */
-            /* On cible la ligne entière */
+            /* --- 3. LES BULLES DE CHAT : CARTES 100% OPAQUES --- */
             div[data-testid="stChatMessage"] {
-                background-color: var(--background-color) !important; /* Couleur principale pure (Blanc ou Noir) */
-                padding: 15px !important;
-                margin-bottom: 15px !important;
-                border-radius: 20px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+                /* Le secret est ici : On utilise le fond secondaire qui n'est jamais transparent ! */
+                background-color: var(--secondary-background-color) !important; 
+                background-image: none !important; /* Détruit le fond par défaut de l'assistant */
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+                border-radius: 16px !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
                 opacity: 1 !important; 
+                isolation: isolate !important; /* Force le navigateur à rendre la boîte opaque */
             }
             
             /* On rend le sous-bloc invisible */
@@ -247,20 +249,22 @@ def ouvrir_assistant():
                 padding: 0 !important; 
             }
 
-            /* Texte des bulles */
-            div[data-testid="stChatMessageContent"] p, 
-            div[data-testid="stChatMessageContent"] li,
-            div[data-testid="stChatMessageContent"] strong {
+            /* Forcer la couleur du texte */
+            div[data-testid="stChatMessage"] *, 
+            div[data-testid="stChatMessageContent"] * {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA BARRE DE SAISIE TEXTE */
-            .stChatInput {
-                background-color: var(--background-color) !important; 
+            /* 4. LA BARRE DE SAISIE TEXTE : CARTE 100% OPAQUE */
+            .stChatInput, div[data-testid="stChatInput"] {
+                background-color: var(--secondary-background-color) !important; 
+                background-image: none !important;
                 border-radius: 20px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
                 margin-top: 15px !important;
                 opacity: 1 !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+                isolation: isolate !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
@@ -322,7 +326,7 @@ def ouvrir_assistant():
         )
         st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # 5. CONTENEUR DE CHAT (On enlève le border=True qui compliquait tout)
+    # 5. CONTENEUR DE CHAT (On garde border=False)
     chat_container = st.container(height=450, border=False)
     
     with chat_container:
