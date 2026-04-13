@@ -179,27 +179,27 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN GLASS
+# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN GLASS (LISIBLE)
 # ==========================================
-@st.dialog(" ") # On garde l'espace pour masquer le titre natif et le robot
+@st.dialog(" ") 
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS GLASSOMORPHISM
+    # 1. LE STYLE CSS GLASSOMORPHISM (CORRIGÉ)
     st.markdown(
         """
         <style>
-            /* La fenêtre principale (Le Verre) */
+            /* La fenêtre principale (Le Verre neutre) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: rgba(255, 255, 255, 0.05) !important; /* Très transparent */
-                backdrop-filter: blur(15px) !important; /* L'effet de flou dépoli */
-                -webkit-backdrop-filter: blur(15px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Bordure fine "éclat" */
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+                background: rgba(120, 120, 120, 0.15) !important; /* Gris neutre transparent */
+                backdrop-filter: blur(20px) !important; /* Flou plus fort */
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
                 border-radius: 28px !important;
             }
             
-            /* Titre stylé avec badge intégré */
+            /* Titre stylé et ÉCLATANT */
             .titre-container {
                 margin-top: -30px;
                 margin-bottom: 25px;
@@ -214,21 +214,27 @@ def ouvrir_assistant():
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                background: linear-gradient(90deg, #2c3e50, #ff9f43);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
+                color: #ff9f43; /* Un orange uni et lumineux, toujours lisible ! */
             }
             
             .badge-beta {
-                background: rgba(255, 159, 67, 0.15);
+                background: rgba(255, 159, 67, 0.2);
                 color: #ff9f43;
-                border: 1px solid rgba(255, 159, 67, 0.3);
+                border: 1px solid rgba(255, 159, 67, 0.4);
                 padding: 2px 10px;
                 border-radius: 8px;
                 font-size: 0.7rem;
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 1px;
+            }
+
+            /* Le sous-titre qui s'adapte au thème clair/sombre */
+            .sous-titre-pana {
+                color: var(--text-color); /* S'adapte magiquement ! */
+                opacity: 0.7; /* Légèrement transparent pour le style */
+                font-size: 0.95em; 
+                font-weight: 500;
             }
 
             /* Rendre le chat totalement transparent */
@@ -239,7 +245,7 @@ def ouvrir_assistant():
             
             /* Ajustement de la barre d'entrée texte */
             .stChatInput {
-                background: rgba(255, 255, 255, 0.05) !important;
+                background: rgba(120, 120, 120, 0.1) !important;
                 border-radius: 15px !important;
             }
         </style>
@@ -254,13 +260,15 @@ def ouvrir_assistant():
             <div class="titre-pana">
                 🐾 Pana <span class="badge-beta">BÊTA</span>
             </div>
-            <div style='color: #666; font-size: 0.95em; font-weight: 500;'>
+            <div class="sous-titre-pana">
                 Assistant intelligent • Trafic & Horaires
             </div>
         </div>
         """, 
         unsafe_allow_html=True
     )
+
+    # ... (Garde la suite de ton code avec le bouton "Réinitialiser" et le chat) ...
 
     # 3. BOUTON DE RÉINITIALISATION (Plus discret)
     if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
