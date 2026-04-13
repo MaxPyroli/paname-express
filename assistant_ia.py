@@ -204,14 +204,14 @@ def ouvrir_assistant():
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli teinté (Utilise le gris secondaire) */
+            /* 1. Fenêtre : Verre dépoli teinté (Utilise le gris secondaire translucide) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: color-mix(in srgb, var(--secondary-background-color) 80%, transparent) !important;
+                background: color-mix(in srgb, var(--secondary-background-color) 70%, transparent) !important;
                 backdrop-filter: blur(25px) !important; 
                 -webkit-backdrop-filter: blur(25px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
                 border-radius: 28px !important;
             }
             
@@ -228,23 +228,25 @@ def ouvrir_assistant():
                 opacity: 0.7; font-size: 0.9em; font-weight: 600; 
             }
 
-            /* --- 3. LES BULLES DE CHAT (100% OPAQUES ET ÉCLATANTES) --- */
+            /* --- 3. LES BULLES DE CHAT (LIGNE ENTIÈRE 100% OPAQUE) --- */
+            /* On cible le bloc global (Avatar + Texte) pour en faire une carte solide */
             div[data-testid="stChatMessage"] {
-                background-color: transparent !important;
-                padding: 0 !important;
-                margin-bottom: 15px !important; 
+                background-color: var(--background-color) !important; /* Blanc pur ou Noir pur */
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+                border-radius: 20px !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+                opacity: 1 !important; /* Interdiction formelle d'être transparent */
             }
             
+            /* On rend le sous-bloc de texte invisible pour éviter les doubles bordures */
             div[data-testid="stChatMessageContent"] {
-                /* On utilise la couleur PRINCIPALE (Blanc pur en mode clair, Noir pur en mode sombre) */
-                background-color: var(--background-color) !important; 
+                background-color: transparent !important; 
                 color: var(--text-color) !important;
-                padding: 14px 20px !important; 
-                border-radius: 22px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
-                line-height: 1.5 !important; 
-                opacity: 1 !important; /* Force l'opacité totale */
+                padding: 0 !important; 
+                border: none !important;
+                box-shadow: none !important;
             }
 
             /* On force le texte à suivre le thème */
@@ -254,15 +256,19 @@ def ouvrir_assistant():
                 color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte (100% Opaque aussi) */
+            /* 4. Barre d'entrée texte (100% Opaque et assortie) */
             .stChatInput {
-                background-color: var(--background-color) !important;
+                background-color: var(--background-color) !important; /* Blanc pur ou Noir pur */
                 border-radius: 18px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
                 margin-top: 10px !important;
                 opacity: 1 !important;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
             }
+            
+            /* S'assure que la zone de frappe ne rajoute pas de transparence bizarre */
             .stChatInput textarea { 
+                background-color: transparent !important;
                 color: var(--text-color) !important; 
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
