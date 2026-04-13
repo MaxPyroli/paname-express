@@ -68,10 +68,6 @@ def afficher_sidebar():
                 streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
                 st.rerun()
 
-        st.markdown("---") # Petite ligne de séparation
-        if st.button("💬 Parler à l'Assistant IA", use_container_width=True):
-            ouvrir_assistant()
-
         st.markdown("---")
         st.header("🗄️ Informations")
         st.success("🎉 **Bienvenue sur Grand Paname v2.0 !**")
