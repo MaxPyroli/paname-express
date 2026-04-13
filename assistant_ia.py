@@ -180,14 +180,13 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE (CLAIR/SOMBRE + LOGO PANA)
+# 🎨 L'INTERFACE DE LA MODALE (TOTALEMENT ADAPTATIVE)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
     
     # --- PRÉPARATION DE L'ICÔNE PANA ---
     import os
-    # Essaie de charger ton image pour le titre
     try:
         from utils import get_img_as_base64
         img_pana_b64 = get_img_as_base64("pana_icon.png")
@@ -198,103 +197,87 @@ def ouvrir_assistant():
     except:
         icone_titre = "🐾"
 
-    # Avatar pour le chat (Streamlit gère directement le fichier local !)
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
-    avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
+    avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Avec le bon formatage Python)
+    # 1. LE STYLE CSS (Utilise les variables de thème Streamlit)
     st.markdown(
         """
         <style>
-            /* 1. Base : Forme de la fenêtre et flou (Commun aux deux modes) */
+            /* 1. Fenêtre : Verre dépoli qui suit le thème automatiquement */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
+                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
                 backdrop-filter: blur(25px) !important; 
                 -webkit-backdrop-filter: blur(25px) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
                 border-radius: 28px !important;
             }
             
-            /* Titres */
+            /* 2. Titres (S'adaptent à la couleur du texte du thème) */
             .titre-container { margin-top: -30px; margin-bottom: 15px; }
-            .titre-pana { font-size: 2.2rem; font-weight: 900; display: flex; align-items: center; gap: 15px; }
-            .titre-pana span.nom { color: #ff9f43 !important; } /* Pana toujours orange */
-            .sous-titre-pana { opacity: 0.8; font-size: 0.9em; font-weight: 600; margin-top: 2px; }
+            .titre-pana { 
+                font-size: 2.2rem; font-weight: 900; 
+                display: flex; align-items: center; gap: 15px; 
+                color: var(--text-color) !important; 
+            }
+            .titre-pana span.nom { color: #ff9f43 !important; }
+            .sous-titre-pana { 
+                color: var(--text-color) !important; 
+                opacity: 0.7; font-size: 0.9em; font-weight: 600; 
+            }
 
-            /* Espacement des bulles */
+            /* --- 3. LES BULLES DE CHAT (OPAQUES ET LISIBLES) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
                 margin-bottom: 15px !important; 
             }
             
-            /* Format des bulles */
             div[data-testid="stChatMessageContent"] {
+                /* On utilise le fond secondaire (gris clair en mode clair, gris foncé en mode sombre) */
+                background-color: var(--secondary-background-color) !important; 
+                color: var(--text-color) !important;
                 padding: 14px 20px !important; 
                 border-radius: 22px !important;
+                border: 1px solid rgba(128, 128, 128, 0.15) !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
                 line-height: 1.5 !important; 
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+                opacity: 1 !important; /* Zéro transparence sur la bulle */
             }
 
-            /* Barre de saisie */
-            .stChatInput {
-                border-radius: 18px !important;
-                margin-top: 10px !important;
+            /* On force tout le texte (paragraphes, listes) à suivre le thème */
+            div[data-testid="stChatMessageContent"] p, 
+            div[data-testid="stChatMessageContent"] li,
+            div[data-testid="stChatMessageContent"] strong {
+                color: var(--text-color) !important;
             }
             
-            /* Bouton */
+            /* 4. Barre d'entrée texte */
+            .stChatInput {
+                background-color: var(--secondary-background-color) !important;
+                border-radius: 18px !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                margin-top: 10px !important;
+            }
+            .stChatInput textarea { 
+                color: var(--text-color) !important; 
+                -webkit-text-fill-color: var(--text-color) !important; 
+            }
+            .stChatInput textarea::placeholder {
+                color: var(--text-color) !important;
+                opacity: 0.5 !important;
+            }
+
+            /* Bouton réinitialiser */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
-
-            /* ========================================= */
-            /* ☀️ THÈME CLAIR (Vrai Blanc pur)           */
-            /* ========================================= */
-            @media (prefers-color-scheme: light) {
-                /* Fenêtre Verre Clair */
-                div[data-testid="stDialog"] div[role="dialog"] { 
-                    background: rgba(255, 255, 255, 0.6) !important; 
-                    border: 1px solid rgba(255, 255, 255, 0.8) !important;
-                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
-                }
-                /* Bulles 100% Blanches */
-                div[data-testid="stChatMessageContent"], .stChatInput {
-                    background: #ffffff !important; 
-                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-                }
-                /* Textes 100% Noirs */
-                .titre-pana, .sous-titre-pana, 
-                div[data-testid="stChatMessageContent"], div[data-testid="stChatMessageContent"] p {
-                    color: #000000 !important;
-                }
-                .stChatInput textarea { color: #000000 !important; -webkit-text-fill-color: #000000 !important; }
-            }
-
-            /* ========================================= */
-            /* 🌙 THÈME SOMBRE (Vrai Noir profond)       */
-            /* ========================================= */
-            @media (prefers-color-scheme: dark) {
-                /* Fenêtre Verre Sombre */
-                div[data-testid="stDialog"] div[role="dialog"] { 
-                    background: rgba(30, 30, 30, 0.6) !important; 
-                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
-                }
-                /* Bulles 100% Noires/Anthracite */
-                div[data-testid="stChatMessageContent"], .stChatInput {
-                    background: #1a1a1a !important; 
-                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-                }
-                /* Textes 100% Blancs */
-                .titre-pana, .sous-titre-pana, 
-                div[data-testid="stChatMessageContent"], div[data-testid="stChatMessageContent"] p {
-                    color: #ffffff !important;
-                }
-                .stChatInput textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-            }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 2. AFFICHAGE DU TITRE DESIGN (Avec le nouveau logo)
+    # 2. AFFICHAGE DU TITRE
     st.markdown(
         f"""
         <div class="titre-container">
@@ -318,6 +301,7 @@ def ouvrir_assistant():
         unsafe_allow_html=True
     )
 
+    # ... (le reste du code pour la session, le container et l'input ne change pas) ...
     # 3. BOUTON DE RÉINITIALISATION
     if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
         st.session_state.chat_session = client.chats.create(
