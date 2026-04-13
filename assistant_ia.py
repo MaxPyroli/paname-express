@@ -202,37 +202,37 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
 
-    # 1. LE STYLE CSS (Adaptatif Clair/Sombre)
+    # 1. LE STYLE CSS (Fond clair vitré + Bulles sombres + Texte blanc)
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : S'adapte magiquement (Blanc translucide ou Sombre translucide) */
+            /* 1. Fenêtre : Verre dépoli CLAIR et très transparent */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
-                backdrop-filter: blur(25px) !important; 
-                -webkit-backdrop-filter: blur(25px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+                background: rgba(255, 255, 255, 0.15) !important; /* Blanc très transparent */
+                backdrop-filter: blur(30px) !important; 
+                -webkit-backdrop-filter: blur(30px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.4) !important; 
                 box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
                 border-radius: 28px !important;
             }
             
-            /* 2. Titres (S'adapte à la couleur du texte native) */
+            /* 2. Titres (Texte forcé en blanc) */
             .titre-container { margin-top: -30px; margin-bottom: 15px; }
             
             .titre-pana {
                 font-size: 2.2rem; font-weight: 900;
                 display: flex; align-items: center; gap: 15px;
-                color: var(--text-color) !important; 
+                color: white !important; 
             }
-            .titre-pana span.nom { color: #ff9f43; } /* Le mot "Pana" reste orange */
+            .titre-pana span.nom { color: #ff9f43; } /* "Pana" reste orange */
             
             .sous-titre-pana {
-                color: var(--text-color) !important; opacity: 0.7;
+                color: white !important; opacity: 0.9;
                 font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT (Aérées et adaptatives) --- */
+            /* --- 3. LES BULLES DE CHAT (Sombres et très visibles) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
@@ -240,31 +240,42 @@ def ouvrir_assistant():
             }
             
             div[data-testid="stChatMessageContent"] {
-                background-color: var(--secondary-background-color) !important; 
-                color: var(--text-color) !important;
-                padding: 12px 18px !important; 
+                /* Fond sombre (Gris anthracite) pour faire exploser le texte blanc */
+                background-color: rgba(35, 35, 35, 0.9) !important; 
+                color: white !important;
+                padding: 14px 20px !important; 
                 border-radius: 20px !important;
-                border: 1px solid rgba(128, 128, 128, 0.1) !important;
-                line-height: 1.4 !important; 
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+                line-height: 1.5 !important; 
             }
 
-            /* Force le texte des messages à s'adapter (Noir/Blanc) */
+            /* Force TOUT le texte des messages en blanc */
             div[data-testid="stChatMessageContent"] p, 
             div[data-testid="stChatMessageContent"] li,
             div[data-testid="stChatMessageContent"] strong {
-                color: var(--text-color) !important;
+                color: white !important;
             }
             
-            /* 4. Barre d'entrée texte */
+            /* 4. Barre d'entrée texte (Assortie aux bulles) */
             .stChatInput {
-                background-color: var(--background-color) !important;
+                background-color: rgba(35, 35, 35, 0.9) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
                 margin-top: 10px !important;
             }
-            .stChatInput textarea { color: var(--text-color) !important; }
+            .stChatInput textarea { color: white !important; }
 
-            button[kind="tertiary"] { color: #ff9f43 !important; }
+            /* 5. REPARATION DE LA BOITE D'ERREUR (st.warning) */
+            div[data-testid="stAlert"] {
+                background-color: rgba(45, 45, 45, 0.95) !important;
+                border: 1px solid #ff9f43 !important;
+                color: white !important;
+                border-radius: 15px !important;
+            }
+            div[data-testid="stAlert"] p { color: white !important; }
+
+            button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
         </style>
         """,
         unsafe_allow_html=True
