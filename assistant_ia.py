@@ -235,7 +235,7 @@ def ouvrir_assistant():
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
                 border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
                 opacity: 1 !important; 
                 isolation: isolate !important; /* Force le navigateur à rendre la boîte opaque */
             }
