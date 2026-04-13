@@ -179,99 +179,100 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE DE LA MODALE & LE DESIGN (LISIBLE)
+# 🎨 L'INTERFACE DE LA MODALE : DESIGN PREMIUM (LISIBLE & PRONONCÉ)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
     
-    # 1. LE STYLE CSS (Thème Dynamique & Bulles)
+    # 1. LE STYLE CSS (Forçage Dark Glass pour texte blanc)
     st.markdown(
         """
         <style>
-            /* 1. Le fond de la fenêtre (Verre plus clair et lumineux) */
+            /* 1. Fenêtre principale : Effet Verre Sombre (pour que le blanc ressorte tjs) */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
-                /* On utilise un blanc très légèrement transparent pour le mode clair, 
-                   et Streamlit inversera ça en mode sombre */
-                background-color: var(--secondary-background-color) !important;
-                opacity: 0.95; /* Légère transparence au lieu d'un color-mix capricieux */
-                backdrop-filter: blur(10px) !important; 
-                -webkit-backdrop-filter: blur(10px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important; 
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
+                background: rgba(15, 15, 15, 0.8) !important; /* Fond sombre et opaque */
+                backdrop-filter: blur(20px) !important; 
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
                 border-radius: 28px !important;
+                color: white !important; /* Force tout en blanc */
             }
             
-            /* 2. Titre et Sous-titre (Contraste forcé) */
-            .titre-container {
-                margin-top: -30px;
-                margin-bottom: 25px;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
+            /* 2. Titres et Textes (TOUT EN BLANC) */
+            .titre-container { margin-top: -30px; margin-bottom: 25px; }
             
             .titre-pana {
-                font-size: 2.4rem;
-                font-weight: 900;
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                color: #ff9f43 !important; /* Orange pur */
+                font-size: 2.4rem; font-weight: 900;
+                display: flex; align-items: center; gap: 15px;
+                color: #ff9f43 !important; /* On garde l'orange Pana pour le nom */
             }
             
-            .badge-beta {
-                background: rgba(255, 159, 67, 0.15);
-                color: #ff9f43;
-                border: 1px solid rgba(255, 159, 67, 0.3);
-                padding: 2px 10px;
-                border-radius: 8px;
-                font-size: 0.7rem;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-
             .sous-titre-pana {
-                color: var(--text-color) !important;
-                opacity: 0.85 !important; /* Plus opaque pour être bien lisible */
-                font-size: 0.95em; 
-                font-weight: 600; /* Un peu plus gras */
+                color: white !important;
+                opacity: 0.9;
+                font-size: 0.95em; font-weight: 500;
+                margin-top: 5px;
             }
 
-            /* --- 3. LES BULLES DE CHAT (SOLIDITÉ 100%) --- */
+            /* --- 3. LES BULLES DE CHAT PRONONCÉES --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
-                border: none !important;
+                margin-bottom: 10px !important;
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* On force un fond totalement opaque qui contraste avec le texte */
-                background-color: var(--background-color) !important; 
-                color: var(--text-color) !important;
-                padding: 16px 20px !important;
-                border-radius: 22px !important;
-                border: 1px solid rgba(128, 128, 128, 0.15) !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; /* Petite ombre pour détacher la bulle */
+                /* Blocs très prononcés (Gris anthracite profond) */
+                background-color: rgba(40, 40, 40, 0.95) !important; 
+                color: white !important;
+                padding: 18px 22px !important;
+                border-radius: 20px !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+            }
+
+            /* Forcer le texte à l'intérieur des messages en blanc */
+            div[data-testid="stChatMessageContent"] p, 
+            div[data-testid="stChatMessageContent"] li,
+            div[data-testid="stChatMessageContent"] strong {
+                color: white !important;
             }
             
-            /* 4. La barre d'entrée texte */
+            /* 4. La barre d'entrée texte (Sombre et nette) */
             .stChatInput {
-                background-color: var(--background-color) !important;
+                background-color: rgba(30, 30, 30, 0.9) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+            .stChatInput textarea {
+                color: white !important;
+            }
+
+            /* Bouton réinitialiser */
+            button[kind="tertiary"] {
+                color: #ff9f43 !important;
+                font-weight: 600 !important;
             }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # 2. AFFICHAGE DU TITRE DÉSIGN
+    # 2. AFFICHAGE DU TITRE DESIGN
     st.markdown(
         """
         <div class="titre-container">
             <div class="titre-pana">
-                🐾 Pana <span class="badge-beta">BÊTA</span>
+                🐾 Pana <span class="badge-beta" style="
+                    background: rgba(255, 159, 67, 0.2);
+                    color: #ff9f43;
+                    border: 1px solid rgba(255, 159, 67, 0.4);
+                    padding: 2px 10px;
+                    border-radius: 8px;
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                ">BÊTA</span>
             </div>
             <div class="sous-titre-pana">
                 Assistant intelligent • Trafic & Horaires
