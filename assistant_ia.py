@@ -228,36 +228,33 @@ def ouvrir_assistant():
                 opacity: 0.7; font-size: 0.9em; font-weight: 600; 
             }
 
-            /* --- 3. LE BULLDOZER ANTI-TRANSPARENCE --- */
-            /* On cible absolument TOUS les éléments de la bulle pour écraser Streamlit */
-            div[data-testid="stChatMessage"], 
-            .stChatMessage,
-            div[data-testid="stChatMessageContent"] {
-                background-color: var(--background-color) !important; /* Le Blanc/Noir PUR */
-                background-image: none !important; /* Détruit les dégradés natifs */
-                opacity: 1 !important; /* Zéro transparence */
-            }
-
-            /* On redessine proprement les bords de la bulle globale */
-            div[data-testid="stChatMessage"] {
+            /* --- 3. LES BULLES DE CHAT (LE BOUCLIER TITANE) --- */
+            /* En ajoutant "html body", on devient plus fort que le code natif de Streamlit */
+            html body div[data-testid="stChatMessage"],
+            html body .stChatMessage {
+                background: var(--background-color) !important; 
+                background-color: var(--background-color) !important;
                 padding: 15px !important;
                 margin-bottom: 15px !important;
                 border-radius: 20px !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+                border: 1px solid rgba(128, 128, 128, 0.4) !important;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+                opacity: 1 !important;
             }
 
-            /* On nettoie la marge interne pour que ça soit joli */
-            div[data-testid="stChatMessageContent"] {
-                padding: 0 !important;
+            /* On désactive le fond de la sous-boîte pour éviter les conflits */
+            html body div[data-testid="stChatMessageContent"] {
+                background: transparent !important;
+                background-color: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
+                padding: 0 !important;
             }
 
-            /* On force le texte à suivre le thème (Noir en clair, Blanc en sombre) */
-            div[data-testid="stChatMessageContent"] p, 
-            div[data-testid="stChatMessageContent"] li,
-            div[data-testid="stChatMessageContent"] strong {
+            /* On s'assure que le texte suit bien le thème */
+            html body div[data-testid="stChatMessageContent"] p, 
+            html body div[data-testid="stChatMessageContent"] li,
+            html body div[data-testid="stChatMessageContent"] strong {
                 color: var(--text-color) !important;
             }
             
