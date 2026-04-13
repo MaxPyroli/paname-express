@@ -36,7 +36,8 @@ def afficher_sidebar():
             st.query_params.clear()
             st.rerun()
             
-        st.header("⭐ Mes Favoris")
+        # ✨ Titre compacté
+        st.markdown("<h3 style='margin-top: 15px; margin-bottom: 10px; font-size: 1.4rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
         
         if not st.session_state.favorites:
             st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
@@ -68,8 +69,11 @@ def afficher_sidebar():
                 streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
                 st.rerun()
 
-        st.markdown("---")
-        st.header("🗄️ Informations")
+        # ✨ Séparateur compacté
+        st.markdown('<div style="margin: 15px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2);"></div>', unsafe_allow_html=True)
+        
+        # ✨ Titre compacté
+        st.markdown("<h3 style='margin-top: 0; margin-bottom: 10px; font-size: 1.4rem;'>🗄️ Informations</h3>", unsafe_allow_html=True)
         st.success("🎉 **Bienvenue sur Grand Paname v2.0 !**")
         
         st.markdown("""
@@ -94,11 +98,12 @@ def afficher_sidebar():
             </svg>
             Rejoignez le canal !
         </a>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         
-        st.markdown("---")
+        # ✨ Séparateur compacté
+        st.markdown('<div style="margin: 15px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2);"></div>', unsafe_allow_html=True)
+        
         with st.expander("📜 Historique des versions"):
-            # L'astuce CSS invisible pour forcer la hauteur max et l'ascenseur
             st.markdown("""
             <style>
                 div[data-testid="stExpanderDetails"] {
@@ -114,13 +119,10 @@ def afficher_sidebar():
                 if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (Tout en bas de la sidebar)
+        # FOOTER / CRÉDITS
         # ==========================================
-        # On ajoute un espace flexible pour pousser le footer vers le bas s'il y a de la place
-        st.markdown('<div style="flex-grow: 1;"></div>', unsafe_allow_html=True)
-        
         st.markdown("""
-        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(128, 128, 128, 0.2);">
             <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
