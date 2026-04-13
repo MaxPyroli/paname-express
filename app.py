@@ -340,37 +340,55 @@ elif not st.session_state.search_results:
     afficher_tuto_bienvenue()
 
 # ==========================================
-# 🐾 LA BULLE FLOTTANTE DE PANA
+# 🐾 LA BULLE FLOTTANTE DE PANA (AVEC IMAGE !)
 # ==========================================
-st.markdown(
+
+# 1. On récupère ton image (assure-toi d'avoir une image carrée comme "pana.png" ou utilise ton app_icon)
+img_pana_b64 = get_img_as_base64("app_icon.png") # Tu peux changer le nom du fichier ici !
+
+# 2. On prépare le bout de CSS selon si l'image a été trouvée ou non
+if img_pana_b64:
+    fond_css = f"""
+        background-image: url('data:image/png;base64,{img_pana_b64}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-color: transparent !important;
+        color: transparent !important; /* Cache le texte du bouton */
     """
+else:
+    # Plan B de secours si l'image n'est pas trouvée
+    fond_css = """
+        background-color: #ff9f43 !important;
+        color: white !important;
+    """
+
+# 3. L'injection du style CSS
+st.markdown(
+    f"""
     <style>
-    /* On cible spécifiquement le bouton "Primary" pour le transformer en bulle */
-    button[kind="primary"] {
+    button[kind="primary"] {{
         position: fixed !important;
         bottom: 40px !important;
         right: 40px !important;
         width: 65px !important;
         height: 65px !important;
-        border-radius: 50% !important; /* Le rend parfaitement rond */
-        font-size: 28px !important;
-        background-color: #ff9f43 !important; /* L'orange Pana */
-        color: white !important;
+        border-radius: 50% !important;
+        {fond_css}
         border: none !important;
         box-shadow: 0 4px 15px rgba(255, 159, 67, 0.4) !important;
-        z-index: 9999 !important; /* Passe au-dessus de TOUT */
+        z-index: 9999 !important;
         transition: all 0.3s ease !important;
-    }
+    }}
     
-    button[kind="primary"]:hover {
+    button[kind="primary"]:hover {{
         transform: scale(1.1) !important;
         box-shadow: 0 6px 20px rgba(255, 159, 67, 0.6) !important;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Le bouton Pana (C'est désormais le SEUL bouton "primary" de l'app)
-if st.button("🐾", type="primary", help="Discuter avec Pana"):
+# 4. Le bouton (on met un espace invisible pour éviter les bugs Streamlit)
+if st.button(" ", type="primary", help="Discuter avec Pana"):
     ouvrir_assistant()
