@@ -224,7 +224,7 @@ def ouvrir_assistant():
                 color: var(--text-color) !important; 
             }
             .titre-pana span.nom { color: #ff9f43 !important; }
-            .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
+            .sous-titre-pana { color: #FFFFFF !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
 
             /* --- 3. LES BULLES DE CHAT : CARTES 100% OPAQUES --- */
             div[data-testid="stChatMessage"] {
@@ -235,7 +235,7 @@ def ouvrir_assistant():
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
                 border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
                 opacity: 1 !important; 
                 isolation: isolate !important; /* Force le navigateur à rendre la boîte opaque */
             }
