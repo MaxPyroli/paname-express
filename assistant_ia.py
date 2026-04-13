@@ -202,11 +202,11 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" # Tu peux changer l'emoji de l'utilisateur ici
 
-   # 1. LE STYLE CSS (Design Adaptatif Premium)
+   # 1. LE STYLE CSS (Bulles 100% Opaques)
     st.markdown(
         """
         <style>
-            /* 1. Fenêtre : Verre dépoli adaptatif (Clair ou Sombre selon le thème) */
+            /* 1. Fenêtre : Verre dépoli adaptatif */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 600px !important; 
                 background: color-mix(in srgb, var(--background-color) 60%, transparent) !important;
@@ -217,7 +217,7 @@ def ouvrir_assistant():
                 border-radius: 28px !important;
             }
             
-            /* 2. Titres (Couleur adaptative automatique) */
+            /* 2. Titres */
             .titre-container { margin-top: -30px; margin-bottom: 15px; }
             
             .titre-pana {
@@ -225,7 +225,7 @@ def ouvrir_assistant():
                 display: flex; align-items: center; gap: 15px;
                 color: var(--text-color) !important; 
             }
-            .titre-pana span.nom { color: #ff9f43; } /* "Pana" reste orange pour l'identité */
+            .titre-pana span.nom { color: #ff9f43; } 
             
             .sous-titre-pana {
                 color: var(--text-color) !important; 
@@ -233,7 +233,7 @@ def ouvrir_assistant():
                 font-size: 0.9em; font-weight: 500; margin-top: 2px;
             }
 
-            /* --- 3. LES BULLES DE CHAT ADAPTATIVES --- */
+            /* --- 3. LES BULLES DE CHAT (100% SOLIDES) --- */
             div[data-testid="stChatMessage"] {
                 background-color: transparent !important;
                 padding: 0 !important;
@@ -241,14 +241,16 @@ def ouvrir_assistant():
             }
             
             div[data-testid="stChatMessageContent"] {
-                /* Utilise le gris secondaire de Streamlit (Clair en mode clair, Sombre en mode sombre) */
-                background-color: var(--secondary-background-color) !important; 
+                /* Utilisation du fond PRINCIPAL (Blanc pur ou Noir pur) pour zéro transparence */
+                background-color: var(--background-color) !important; 
                 color: var(--text-color) !important;
                 padding: 14px 20px !important; 
                 border-radius: 22px !important;
-                border: 1px solid rgba(128, 128, 128, 0.1) !important;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+                /* Bordure un poil plus marquée pour bien détacher la bulle */
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
                 line-height: 1.5 !important; 
+                opacity: 1 !important; /* Blocage strict de la transparence */
             }
 
             /* On s'assure que tout le texte dans les bulles suit la couleur du thème */
@@ -258,12 +260,13 @@ def ouvrir_assistant():
                 color: var(--text-color) !important;
             }
             
-            /* 4. Barre d'entrée texte (Adaptative) */
+            /* 4. Barre d'entrée texte (100% Solide aussi) */
             .stChatInput {
-                background-color: var(--secondary-background-color) !important;
+                background-color: var(--background-color) !important;
                 border-radius: 18px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid rgba(128, 128, 128, 0.3) !important;
                 margin-top: 10px !important;
+                opacity: 1 !important;
             }
             .stChatInput textarea { 
                 color: var(--text-color) !important; 
