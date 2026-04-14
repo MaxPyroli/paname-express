@@ -265,43 +265,52 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruption and not perturbation:
         return ""
 
-    # ✨ LA CORRECTION EST ICI :
-    # 999 permet de passer devant les autres cartes (qui sont à 0)
-    # MAIS de rester sous le bandeau RER (1050) et le titre Gare (1100) !
+    # ✨ LA SOLUTION DÉFINITIVE (Z-index à 90 via JS forcé)
     css_and_script = """
     <style>
-    /* 1. L'icône fermée reste sagement en dessous */
-    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 90; }
+    /* 1. L'icône par défaut */
+    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
     
-    /* 2. L'icône elle-même passe au premier plan de sa propre carte */
-    details.traffic-icon[open] { z-index: 2000 !important; }
-    
-    /* 🚀 3. LE REGLAGE PARFAIT : 999 au lieu de 9999 */
+    /* 2. Écrase le vieux CSS en cache */
     div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
         position: relative !important;
-        z-index: 999 !important; 
+        z-index: 90 !important; 
     }
 
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
     details.traffic-icon > summary { 
         list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
-        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
-        user-select: none;
+        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em; user-select: none;
     }
     details.traffic-icon > summary:hover { opacity: 0.8; }
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if (!window.trafficScriptLoaded) {
-            window.trafficScriptLoaded = true;
-            document.addEventListener('click', function(e) {
-                const openedDetails = document.querySelectorAll('details.traffic-icon[open]');
-                openedDetails.forEach(details => {
-                    if (!details.contains(e.target)) {
-                        details.removeAttribute('open');
+        if (!window.traficJSV4) {
+            window.traficJSV4 = true;
+            
+            // 🚀 Le bulldozer JS : Force le conteneur à 90 pour glisser sous tes titres (99 et 105)
+            function setZ90() {
+                document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
+                    if (c.querySelector('details.traffic-icon[open]')) {
+                        c.style.setProperty('position', 'relative', 'important');
+                        c.style.setProperty('z-index', '90', 'important');
+                    } else if (c.style.zIndex === '90') {
+                        c.style.removeProperty('z-index');
                     }
                 });
+            }
+
+            document.addEventListener('click', e => {
+                document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
+                    if (!d.contains(e.target)) d.removeAttribute('open');
+                });
+                setTimeout(setZ90, 10);
             });
+
+            document.addEventListener('toggle', e => {
+                if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
+            }, true);
         }
     ">
     """
