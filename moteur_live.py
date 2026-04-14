@@ -343,7 +343,7 @@ def afficher_live_content(stop_id, clean_name):
             
             st.markdown(f"""
             <style>
-                /* +80px pour régler le chevauchement avec les marges du grand titre bleu */
+                /* On ajuste le top (+65px) pour compenser les marges et éviter le chevauchement avec le nom de la gare */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{ 
                     position: sticky !important; 
@@ -353,19 +353,18 @@ def afficher_live_content(stop_id, clean_name):
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
-                    /* Valeur de verre par défaut si JS inactif */
-                    background: var(--gp-glass-bg, rgba(255, 255, 255, 0.95)) !important; 
+                    background: var(--gp-glass-bg) !important; 
                     backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
                     border-radius: 12px !important; 
-                    border: 1px solid color-mix(in srgb, var(--gp-text, #111111) 15%, transparent) !important; 
+                    border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; 
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
-                    color: var(--gp-text, #111111) !important; 
+                    color: var(--gp-text) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
-                    /* ✨ AJOUT DE L'OMBRE SUR LE BANDEAU DE MODE ✨ */
-                    box-shadow: var(--gp-card-shadow, 0 10px 25px rgba(0,0,0,0.15)) !important;
+                    /* Ajout du relief sur le bandeau de mode ! */
+                    box-shadow: var(--gp-card-shadow) !important;
                 }}
                 /* Le SVG force sa couleur sur celle du texte courant ! */
-                div.sticky-glass-{mode_actuel} svg {{ fill: var(--gp-text, #111111) !important; height: 1.3em !important; }}
+                div.sticky-glass-{mode_actuel} svg {{ fill: var(--gp-text) !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
