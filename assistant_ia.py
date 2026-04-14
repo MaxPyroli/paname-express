@@ -180,7 +180,7 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE : "CARDS ON GLASS" (Opaques sur Verre)
+# 🎨 L'INTERFACE : "CARDS ON GLASS" V2 (Thème Dynamique)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
@@ -200,18 +200,20 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS
+    # 1. LE STYLE CSS (Reparti de zéro avec color-mix)
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Verre translucide neutre (Marche en clair et en sombre) */
+            /* 1. LE FOND GLOBAL : Verre translucide dynamique */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 500px !important; 
-                background: rgba(128, 128, 128, 0.15) !important; /* Gris transparent léger */
+                /* 80% de la couleur de fond, 20% transparent */
+                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
                 backdrop-filter: blur(25px) !important; 
                 -webkit-backdrop-filter: blur(25px) !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+                /* Bordure subtile basée sur la couleur du texte (10%) */
+                border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
                 border-radius: 24px !important;
             }
             
@@ -223,40 +225,42 @@ def ouvrir_assistant():
                 color: var(--text-color) !important; 
             }
             .titre-pana span.nom { color: #ff9f43 !important; }
-            .sous-titre-pana { color: var(--text-color) !important; opacity: 0.8; font-size: 0.9em; font-weight: 600; }
+            .sous-titre-pana { 
+                /* Texte semi-transparent basé sur le texte principal */
+                color: color-mix(in srgb, var(--text-color) 60%, transparent) !important; 
+                font-size: 0.9em; font-weight: 600; 
+            }
 
-            /* --- 3. LES BULLES DE CHAT : VRAIES CARTES OPAQUES --- */
+            /* --- 3. LES BULLES DE CHAT : CARTES OPAQUES --- */
             div[data-testid="stChatMessage"] {
-                /* Utilise le fond de base (Blanc 100% en clair, Noir 100% en sombre) */
-                background: var(--background-color) !important; 
+                /* Fond secondaire plein pour la lisibilité */
+                background: var(--secondary-background-color) !important; 
                 padding: 1rem !important;
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-                opacity: 1 !important; 
+                border: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
             }
             
-            /* On nettoie le sous-bloc pour éviter les conflits */
+            /* On nettoie le sous-bloc */
             div[data-testid="stChatMessageContent"] {
                 background: transparent !important; 
                 padding: 0 !important; 
             }
 
-            /* Le texte suit le thème automatiquement (Noir en clair, Blanc en sombre) */
+            /* Le texte suit le thème */
             div[data-testid="stChatMessage"] *, 
             div[data-testid="stChatMessageContent"] * {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA BARRE DE SAISIE TEXTE : CARTE ASSORTIE */
+            /* 4. LA BARRE DE SAISIE TEXTE */
             .stChatInput, div[data-testid="stChatInput"] {
-                background: var(--background-color) !important; /* La coquille est corrigée ici */
+                background: var(--secondary-background-color) !important; 
                 border-radius: 20px !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent) !important;
                 margin-top: 15px !important;
-                opacity: 1 !important;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
@@ -264,19 +268,17 @@ def ouvrir_assistant():
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
             .stChatInput textarea::placeholder { 
-                color: var(--text-color) !important; 
-                opacity: 0.5 !important; 
+                color: color-mix(in srgb, var(--text-color) 40%, transparent) !important; 
             }
 
-            /* Bouton */
+            /* Bouton Reset */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
 
             /* ✨ STYLE DE LA MENTION LÉGALE ✨ */
             .disclaimer-pana {
                 text-align: center;
                 font-size: 11px;
-                color: var(--text-color) !important; /* S'adapte au thème au lieu d'être toujours blanc */
-                opacity: 0.6;
+                color: color-mix(in srgb, var(--text-color) 50%, transparent) !important;
                 margin-top: 8px;
                 font-style: italic;
             }
@@ -328,7 +330,7 @@ def ouvrir_assistant():
         )
         st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # 5. CONTENEUR DE CHAT (On garde border=False)
+    # 5. CONTENEUR DE CHAT
     chat_container = st.container(height=450, border=False)
     
     with chat_container:
@@ -372,7 +374,7 @@ def ouvrir_assistant():
                     else:
                         st.error(f"Oups, Pana a glissé : {erreur_brute}")
 
-    # 7. LA MENTION EN DESSOUS (Placée après le chat_input)
+    # 7. LA MENTION EN DESSOUS
     st.markdown(
         "<div class='disclaimer-pana'>Pana est propulsé par Gemini, une IA générative. L'IA peut commettre des erreurs, vérifiez les informations importantes.</div>", 
         unsafe_allow_html=True
