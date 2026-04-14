@@ -95,19 +95,26 @@ def appliquer_style_global():
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
         
-        /* ✨ TON TITRE EN VERRE EST ICI (Sur une seule ligne) ✨ */
-        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        /* ✨ TON TITRE EN VERRE EST ICI ✨ */
+        .station-title { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
         
-        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.3s; }
-        .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
-        .bus-row > span:last-child, .rail-row > span:last-child { color: #ffffff !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        /* On remplace le bleu nuit par le background secondaire dynamique */
+        .bus-card, .rail-card { background-color: var(--secondary-background-color) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--text-color) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: background-color 0.3s; }
         
-        .service-box { text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444; }
-        .service-end { color: #999; font-style: italic; font-size: 0.9em; }
-
+        /* Les destinations (légèrement atténuées par rapport au texte principal) */
+        .bus-dest, .rail-dest { color: color-mix(in srgb, var(--text-color) 85%, transparent) !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        
+        /* Les lignes de séparation dynamiques */
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important; }
+        
+        /* L'heure d'arrivée en forte visibilité */
+        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        
+        /* Le bloc "Service Terminé" dynamique */
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 60%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 30%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
