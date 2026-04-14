@@ -180,134 +180,17 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE : DESIGN BASIQUE ET SOLIDE (Zéro Flou)
+# 🎨 L'INTERFACE : 100% NATIVE STREAMLIT (ZÉRO CSS)
 # ==========================================
-@st.dialog(" ") 
+
+# On utilise le titre natif de la boîte de dialogue Streamlit
+@st.dialog("🐾 Discuter avec Pana") 
 def ouvrir_assistant():
     
-    # --- PRÉPARATION DE L'ICÔNE PANA ---
-    import os
-    try:
-        from utils import get_img_as_base64
-        img_pana_b64 = get_img_as_base64("pana_icon.png")
-        if img_pana_b64:
-            icone_titre = f'<img src="data:image/png;base64,{img_pana_b64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">'
-        else:
-            icone_titre = "🐾"
-    except:
-        icone_titre = "🐾"
-
-    avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
-    avatar_user = "🧑" 
-
-    # 1. LE STYLE CSS (100% OPAQUE)
-    st.markdown(
-        """
-        <style>
-            /* 1. FOND DE LA FENÊTRE : 100% Opaque */
-            div[data-testid="stDialog"] div[role="dialog"] { 
-                max-width: 500px !important; 
-                background-color: var(--background-color) !important;
-                border: 2px solid var(--secondary-background-color) !important;
-                border-radius: 20px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-            }
-            
-            /* 2. LE TITRE */
-            .titre-container { margin-top: -30px; margin-bottom: 20px; }
-            .titre-pana { 
-                font-size: 2.2rem; font-weight: 900; 
-                display: flex; align-items: center; gap: 15px; 
-                color: var(--text-color) !important; 
-            }
-            .titre-pana span.nom { color: #ff9f43 !important; }
-            .sous-titre-pana { 
-                color: var(--text-color) !important; 
-                opacity: 0.7; 
-                font-size: 0.9em; 
-                font-weight: 600; 
-            }
-
-            /* --- 3. LES BULLES DE CHAT : 100% Opaques --- */
-            div[data-testid="stChatMessage"] {
-                background-color: var(--secondary-background-color) !important; 
-                padding: 1rem !important;
-                margin-bottom: 1rem !important;
-                border-radius: 16px !important;
-                border: none !important;
-            }
-            
-            /* On nettoie le sous-bloc */
-            div[data-testid="stChatMessageContent"] {
-                background-color: transparent !important; 
-                padding: 0 !important; 
-            }
-
-            /* Le texte s'adapte au thème */
-            div[data-testid="stChatMessage"] *, 
-            div[data-testid="stChatMessageContent"] * {
-                color: var(--text-color) !important;
-            }
-            
-            /* 4. LA BARRE DE SAISIE TEXTE : 100% Opaque */
-            .stChatInput, div[data-testid="stChatInput"] {
-                background-color: var(--secondary-background-color) !important; 
-                border-radius: 20px !important;
-                border: none !important;
-                margin-top: 15px !important;
-            }
-            .stChatInput textarea { 
-                background-color: transparent !important;
-                color: var(--text-color) !important; 
-                -webkit-text-fill-color: var(--text-color) !important; 
-            }
-            .stChatInput textarea::placeholder { 
-                color: var(--text-color) !important; 
-                opacity: 0.5 !important; 
-            }
-
-            /* Bouton Reset */
-            button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
-
-            /* ✨ MENTION LÉGALE ✨ */
-            .disclaimer-pana {
-                text-align: center;
-                font-size: 11px;
-                color: var(--text-color) !important;
-                opacity: 0.5;
-                margin-top: 8px;
-                font-style: italic;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # 2. AFFICHAGE DU TITRE
-    st.markdown(
-        f"""
-        <div class="titre-container">
-            <div class="titre-pana">
-                {icone_titre} <span class="nom">Pana</span> 
-                <span class="badge-beta" style="
-                    background-color: #ff9f43;
-                    color: white;
-                    padding: 4px 10px;
-                    border-radius: 8px;
-                    font-size: 0.7rem;
-                    text-transform: uppercase;
-                ">BÊTA</span>
-            </div>
-            <div class="sous-titre-pana">
-                Assistant intelligent • Trafic & Horaires
-            </div>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
-
-    # 3. BOUTON DE RÉINITIALISATION
-    if st.button("🔄 Réinitialiser la discussion", type="tertiary"):
+    st.write("Assistant intelligent • Trafic & Horaires")
+    
+    # 1. BOUTON DE RÉINITIALISATION NATIF
+    if st.button("🔄 Réinitialiser la discussion"):
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
             config=config_ia
@@ -317,7 +200,7 @@ def ouvrir_assistant():
         ]
         st.rerun()
 
-    # 4. INITIALISATION / SESSION
+    # 2. INITIALISATION DE LA SESSION
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = client.chats.create(
             model="gemini-2.5-flash-lite", 
@@ -325,52 +208,43 @@ def ouvrir_assistant():
         )
         st.session_state.messages_ia = [{"role": "assistant", "content": "Salut ! 👋 Je suis Pana. Une info trafic ou un horaire à vérifier ?"}]
 
-    # 5. CONTENEUR DE CHAT
-    chat_container = st.container(height=450, border=False)
+    # 3. CONTENEUR DE CHAT NATIF
+    chat_container = st.container(height=450)
     
     with chat_container:
         for message in st.session_state.messages_ia:
-            avatar_actuel = avatar_pana if message["role"] == "assistant" else avatar_user
+            # Avatars simples (Emoji) pour éviter les bugs d'images
+            avatar_actuel = "🐾" if message["role"] == "assistant" else "🧑"
             with st.chat_message(message["role"], avatar=avatar_actuel):
                 st.markdown(message["content"])
 
-    # 6. ENTRÉE UTILISATEUR
+    # 4. ENTRÉE UTILISATEUR NATIVE
     if prompt := st.chat_input("Demande-moi un horaire..."):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         
         with chat_container:
-            with st.chat_message("user", avatar=avatar_user):
+            # Affiche le message de l'utilisateur
+            with st.chat_message("user", avatar="🧑"):
                 st.markdown(prompt)
             
-            with st.chat_message("assistant", avatar=avatar_pana):
-                message_placeholder = st.empty()
-                
-                message_placeholder.markdown("""
-                <div class="corgi-loader">🐾 <i>Analyse en cours</i><span>.</span><span>.</span><span>.</span></div>
-                """, unsafe_allow_html=True)
-                
-                try:
-                    response = st.session_state.chat_session.send_message(prompt)
-                    reponse_finale = response.text
-                    
-                    message_placeholder.empty()
-                    st.markdown(reponse_finale)
-                    
-                    st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
-                    
-                except Exception as e:
-                    message_placeholder.empty()
-                    erreur_brute = str(e)
-                    
-                    if "429" in erreur_brute or "Quota" in erreur_brute:
-                        st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi me reposer un peu !*")
-                    elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
-                        st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !*")
-                    else:
-                        st.error(f"Oups, Pana a glissé : {erreur_brute}")
+            # Affiche la réponse de Pana avec le spinner natif
+            with st.chat_message("assistant", avatar="🐾"):
+                with st.spinner("Pana cherche l'info..."):
+                    try:
+                        response = st.session_state.chat_session.send_message(prompt)
+                        reponse_finale = response.text
+                        st.markdown(reponse_finale)
+                        
+                        st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
+                        
+                    except Exception as e:
+                        erreur_brute = str(e)
+                        if "429" in erreur_brute or "Quota" in erreur_brute:
+                            st.warning("🐶 *Wouf ! Le réseau est saturé. Laisse-moi me reposer un peu !*")
+                        elif "503" in erreur_brute or "UNAVAILABLE" in erreur_brute:
+                            st.warning("🐶 *Mes petites pattes tournent dans le vide... Les serveurs font la sieste !*")
+                        else:
+                            st.error(f"Oups, Pana a glissé : {erreur_brute}")
 
-    # 7. LA MENTION EN DESSOUS
-    st.markdown(
-        "<div class='disclaimer-pana'>Pana est propulsé par Gemini, une IA générative. L'IA peut commettre des erreurs, vérifiez les informations importantes.</div>", 
-        unsafe_allow_html=True
-    )
+    # 5. MENTION LÉGALE NATIVE
+    st.caption("Pana est propulsé par Gemini, une IA générative. L'IA peut commettre des erreurs, vérifiez les informations importantes.")
