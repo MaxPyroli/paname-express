@@ -172,72 +172,39 @@ def appliquer_style_global():
         .tuto-card { background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease !important; }
         .tuto-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important; border: 1px solid rgba(52, 152, 219, 0.8) !important; background-color: rgba(52, 152, 219, 0.1) !important; cursor: pointer !important; }
         
-        /* ✨ 2. LES CARTES DE DÉPART (Sécurisées avec variables natives) ✨ */
+        /* ✨ 2. LES CARTES DE DÉPART (100% NATIVES ET SOLIDES) ✨ */
         .bus-card, .rail-card { 
-            /* On utilise le fond natif de Streamlit comme roue de secours absolue ! */
-            background-color: var(--gp-card-bg, var(--secondary-background-color)) !important; 
+            background-color: var(--secondary-background-color) !important; 
             padding: 14px !important; 
             margin-bottom: 18px !important; 
             border-radius: 14px !important; 
+            
+            /* La bordure de couleur de la ligne est préservée */
             border-left-width: 6px !important; 
             border-left-style: solid !important; 
-            color: var(--gp-text, var(--text-color)) !important; 
-            box-shadow: var(--gp-card-shadow, 0 8px 25px rgba(0,0,0,0.15)) !important;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s !important;
+            
+            /* MICRO-BORDURE : Détache la carte du fond, surtout en mode sombre */
+            border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
+            
+            color: var(--text-color) !important; 
+            
+            /* OMBRE UNIVERSELLE : Douce en clair, creuse en sombre */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.3) !important;
+            
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
 
         .bus-card:active, .rail-card:active { transform: scale(0.98); }
 
-        .bus-dest, .rail-dest { color: var(--gp-text, var(--text-color)) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--gp-text, var(--text-color)) 12%, transparent) !important; }
-        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--gp-text, var(--text-color)) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent) !important; }
+        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
         
-        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--gp-text, var(--text-color)) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
         
-        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--gp-text, var(--text-color)) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--gp-text, var(--text-color)) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--gp-text, var(--text-color)) 20%, transparent); }
-        .service-end { color: color-mix(in srgb, var(--gp-text, var(--text-color)) 50%, transparent); font-style: italic; font-size: 0.9em; }
-        .time-sep { color: color-mix(in srgb, var(--gp-text, var(--text-color)) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
         
     </style>
-    
-    <img src="x" style="display:none;" onerror="
-        if(!window.themeObserverV9) {
-            window.themeObserverV9 = true;
-            
-            // Espion invisible pour lire la couleur du texte Streamlit
-            let spy = document.getElementById('theme-spy');
-            if(!spy) {
-                spy = document.createElement('div');
-                spy.id = 'theme-spy';
-                spy.style.color = 'var(--text-color)';
-                spy.style.display = 'none';
-                document.body.appendChild(spy);
-            }
-
-            const updateTheme = () => {
-                const rgb = window.getComputedStyle(spy).color.match(/\d+/g);
-                if(rgb && rgb.length >= 3) {
-                    // Si le texte natif est clair (blanc), on est forcément en MODE SOMBRE !
-                    const textBrightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
-                    const root = document.documentElement;
-                    
-                    if(textBrightness > 128) { 
-                        // 🌙 MODE SOMBRE DÉTECTÉ : Injection du Bleu Nuit !
-                        root.style.setProperty('--gp-card-bg', '#041b3b');
-                        root.style.setProperty('--gp-text', '#ffffff');
-                        root.style.setProperty('--gp-card-shadow', '0 15px 35px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)');
-                        root.style.setProperty('--gp-glass-bg', 'rgba(4, 27, 59, 0.85)');
-                    } else { 
-                        // ☀️ MODE CLAIR DÉTECTÉ
-                        root.style.setProperty('--gp-card-bg', '#ffffff');
-                        root.style.setProperty('--gp-text', '#111111');
-                        root.style.setProperty('--gp-card-shadow', '0 12px 35px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)');
-                        root.style.setProperty('--gp-glass-bg', 'rgba(255, 255, 255, 0.85)');
-                    }
-                }
-            };
-            setInterval(updateTheme, 300);
-            updateTheme();
-        }
-    ">
     """, unsafe_allow_html=True)
