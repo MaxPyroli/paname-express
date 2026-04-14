@@ -400,6 +400,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 4. Le bouton (on met un espace invisible pour éviter les bugs Streamlit)
-if st.button(" ", type="primary", help="Discuter avec Pana"):
-    ouvrir_assistant()
+# 4. Le bouton isolé dans un fragment pour éviter de recharger la page entière !
+@st.fragment
+def afficher_bouton_pana():
+    if st.button(" ", type="primary", help="Discuter avec Pana"):
+        ouvrir_assistant()
+
+afficher_bouton_pana()
