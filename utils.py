@@ -265,13 +265,23 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruption and not perturbation:
         return ""
 
-    # ✨ LA MAGIE EST ICI : 
-    # z-index: 90 par défaut (glisse sous les titres)
-    # z-index: 2000 !important quand [open] (passe par-dessus tout pour afficher le menu)
+    # ✨ LA CORRECTION EST ICI :
+    # 999 permet de passer devant les autres cartes (qui sont à 0)
+    # MAIS de rester sous le bandeau RER (1050) et le titre Gare (1100) !
     css_and_script = """
     <style>
+    /* 1. L'icône fermée reste sagement en dessous */
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 90; }
+    
+    /* 2. L'icône elle-même passe au premier plan de sa propre carte */
     details.traffic-icon[open] { z-index: 2000 !important; }
+    
+    /* 🚀 3. LE REGLAGE PARFAIT : 999 au lieu de 9999 */
+    div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
+        position: relative !important;
+        z-index: 999 !important; 
+    }
+
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
     details.traffic-icon > summary { 
         list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
