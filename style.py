@@ -141,7 +141,7 @@ def appliquer_style_global():
         .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         
         /* ============================================================== */
-        /* ✨ CSS ICONES INLINE (LA SOLUTION DÉFINITIVE) ✨               */
+        /* ✨ CSS ICONES INLINE (100% NATIF & INCASSABLE) ✨              */
         /* ============================================================== */
         svg.mode-icon-inline,
         div[class^="sticky-glass-"] svg {
@@ -150,28 +150,13 @@ def appliquer_style_global():
             vertical-align: middle !important;
         }
 
-        /* 🪄 L'ASTUCE : On cible l'intérieur du SVG pour écraser les couleurs codées en dur */
+        /* 🪄 LA MAGIE : On cible l'intérieur (path, rect) ET on utilise la couleur native du texte Streamlit ! */
         svg.mode-icon-inline path, 
         svg.mode-icon-inline rect,
         div[class^="sticky-glass-"] svg path,
         div[class^="sticky-glass-"] svg rect {
+            fill: var(--text-color) !important;
             transition: fill 0.3s ease !important;
-        }
-
-        /* ☀️ EN MODE CLAIR : Les logos prennent ton Bleu Nuit ! */
-        [data-paname-theme="light"] svg.mode-icon-inline path,
-        [data-paname-theme="light"] svg.mode-icon-inline rect,
-        [data-paname-theme="light"] div[class^="sticky-glass-"] svg path,
-        [data-paname-theme="light"] div[class^="sticky-glass-"] svg rect {
-            fill: #041b3b !important;
-        }
-
-        /* 🌙 EN MODE SOMBRE : Les logos deviennent Blanc pur ! */
-        [data-paname-theme="dark"] svg.mode-icon-inline path,
-        [data-paname-theme="dark"] svg.mode-icon-inline rect,
-        [data-paname-theme="dark"] div[class^="sticky-glass-"] svg path,
-        [data-paname-theme="dark"] div[class^="sticky-glass-"] svg rect {
-            fill: #ffffff !important;
         }
 
         .fav-btn-container { width: 100%; }
@@ -232,6 +217,4 @@ def appliquer_style_global():
         .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
         
     </style>
-    
-    <img src="x" style="display:none;" onerror="if(!window.gpThemeDetector){window.gpThemeDetector=true;const applyTheme=()=>{const appNode=document.querySelector('.stApp')||document.body;const textColor=window.getComputedStyle(appNode).color;const rgb=textColor.match(/\\d+/g);if(rgb&&rgb.length>=3){const brightness=Math.round(((parseInt(rgb[0])*299)+(parseInt(rgb[1])*587)+(parseInt(rgb[2])*114))/1000);if(brightness>128){document.documentElement.setAttribute('data-paname-theme','dark');}else{document.documentElement.setAttribute('data-paname-theme','light');}}};applyTheme();document.addEventListener('click',()=>setTimeout(applyTheme,50));setInterval(applyTheme,500);}">
     """, unsafe_allow_html=True)
