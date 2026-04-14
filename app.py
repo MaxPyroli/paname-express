@@ -98,40 +98,6 @@ afficher_titre_app(APP_NAME, APP_VERSION, APP_SUBTITLE, icone_html)
 initialiser_favoris()
 afficher_sidebar()
 
-# --- MODE DÉVELOPPEUR ---
-with st.sidebar:
-    st.markdown("---")
-    st.session_state.dev_mode = st.checkbox("🛠️ Activer le Mode Développeur")
-    
-    if st.session_state.dev_mode:
-        st.subheader("🧪 Labo des Icônes")
-        st.write("Testons si le CSS peut vraiment modifier tes SVGs :")
-        
-        # Le sélecteur de couleur manuel
-        test_color = st.color_picker("Forcer la couleur :", "#ff0000") # Rouge par défaut
-        
-        # Le CSS "Brutal" qui attaque l'INTÉRIEUR des SVGs
-        st.markdown(f"""
-        <style>
-            /* On cible spécifiquement les "chemins" à l'intérieur des SVGs */
-            svg.mode-icon-inline path, 
-            svg.mode-icon-inline rect,
-            svg.mode-icon-inline circle,
-            div[class^="sticky-glass-"] svg path,
-            div[class^="sticky-glass-"] svg rect {{
-                fill: {test_color} !important;
-                color: {test_color} !important;
-            }}
-        </style>
-        """, unsafe_allow_html=True)
-
-if st.session_state.get('dev_mode'):
-    try:
-        from ui_composants import afficher_testeur_de_glassmorphism
-        afficher_testeur_de_glassmorphism()
-    except Exception:
-        pass
-
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
