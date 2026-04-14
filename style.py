@@ -178,7 +178,9 @@ def appliquer_style_global():
             padding: 14px !important; 
             margin-bottom: 18px !important; 
             border-radius: 14px !important; 
-            border-left: 6px solid !important; 
+            /* On sépare la largeur et le style pour laisser l'inline-color de moteur_live passer ! */
+            border-left-width: 6px !important; 
+            border-left-style: solid !important; 
             color: var(--gp-text) !important; 
             box-shadow: var(--gp-card-shadow) !important;
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s !important;
@@ -199,24 +201,24 @@ def appliquer_style_global():
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if(!window.themeObserverV4) {
-            window.themeObserverV4 = true;
+        if(!window.themeObserverV5) {
+            window.themeObserverV5 = true;
             const updateTheme = () => {
                 const bg = window.getComputedStyle(document.body).backgroundColor;
-                const rgb = bg.match(/\\d+/g);
+                const rgb = bg.match(/\d+/g);
                 if(rgb) {
                     const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
                     const root = document.documentElement;
                     if(brightness < 125) { 
-                        // 🌙 MODE SOMBRE (Bleu nuit profond + ombres marquées)
+                        // 🌙 MODE SOMBRE (Bleu nuit profond + ombres PUISSANTES)
                         root.style.setProperty('--gp-card-bg', '#041b3b');
                         root.style.setProperty('--gp-text', '#ffffff');
-                        root.style.setProperty('--gp-card-shadow', '0 10px 30px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)');
+                        root.style.setProperty('--gp-card-shadow', '0 15px 35px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)');
                     } else { 
-                        // ☀️ MODE CLAIR (Cartes claires + ombres douces)
+                        // ☀️ MODE CLAIR (Cartes claires + ombres TRES marquées)
                         root.style.setProperty('--gp-card-bg', '#ffffff');
                         root.style.setProperty('--gp-text', '#111111');
-                        root.style.setProperty('--gp-card-shadow', '0 10px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05)');
+                        root.style.setProperty('--gp-card-shadow', '0 12px 35px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)');
                     }
                 }
             };
