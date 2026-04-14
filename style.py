@@ -94,7 +94,10 @@ def appliquer_style_global():
         .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
-               
+        
+        /* ✨ TON TITRE EN VERRE EST ICI ✨ */
+        .station-title { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
@@ -200,68 +203,45 @@ def appliquer_style_global():
             background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
             cursor: pointer !important;
         }
-        /* 🔵 1. LE TITRE DE LA STATION (On lui redonne ses couleurs) */
-        .station-title { 
-            font-size: 24px !important; 
-            font-weight: 800 !important; 
-            color: #ffffff !important; 
-            text-align: center; 
-            margin: 10px 0 20px 0; 
-            text-transform: uppercase; 
-            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%) !important; 
-            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
-            padding: 14px !important; 
-            border-radius: 12px !important; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; 
-        }
+        /* ============================================================== */
+        /* ✨ LES NOUVELLES VARIABLES DYNAMIQUES (Injectées par le JS) ✨ */
+        /* ============================================================== */
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
         
-        /* 📦 2. LES CARTES DE DÉPART (Dynamiques avec Relief) */
-        .bus-card, .rail-card { 
-            background-color: var(--gp-card-bg) !important; 
-            padding: 14px !important; 
-            margin-bottom: 18px !important; 
-            border-radius: 14px !important; 
-            border-left: 6px solid !important; 
-            color: var(--gp-text) !important; 
-            /* RELIEF : Double ombre pour plus de profondeur */
-            box-shadow: var(--gp-card-shadow) !important;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s !important;
-        }
-
-        .bus-card:active, .rail-card:active { transform: scale(0.98); }
-
-        .bus-dest, .rail-dest { color: var(--gp-text) !important; font-weight: 600 !important; }
-        .bus-row, .rail-row { border-top: 1px solid color-mix(in srgb, var(--gp-text) 12%, transparent) !important; }
+        .bus-card, .rail-card { background-color: var(--gp-card-bg) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--gp-text) !important; box-shadow: var(--gp-card-shadow) !important; transition: background-color 0.3s, box-shadow 0.3s, color 0.3s; }
         
-        .rer-direction { color: #3498db !important; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; margin-top: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;}
-
+        .bus-dest, .rail-dest { color: var(--gp-text) !important; opacity: 0.95; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; }
+        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--gp-text) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--gp-text) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--gp-text) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--gp-text) 20%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--gp-text) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--gp-text) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+        
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if(!window.themeObserverV3) {
-            window.themeObserverV3 = true;
+        if(!window.themeObserverGP) {
+            window.themeObserverGP = true;
             const updateTheme = () => {
                 const bg = window.getComputedStyle(document.body).backgroundColor;
-                const rgb = bg.match(/\\d+/g);
+                const rgb = bg.match(/\d+/g);
                 if(rgb) {
                     const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
-                    const root = document.documentElement;
-                    if(brightness < 125) { 
-                        // 🌙 MODE SOMBRE : On impose ton Bleu Nuit et des ombres fortes
-                        root.style.setProperty('--gp-card-bg', '#041b3b');
-                        root.style.setProperty('--gp-text', '#ffffff');
-                        root.style.setProperty('--gp-card-shadow', '0 10px 30px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)');
-                        root.style.setProperty('--gp-glass-bg', 'rgba(4, 27, 59, 0.8)');
-                    } else { 
-                        // ☀️ MODE CLAIR : Blanc avec relief marqué
-                        root.style.setProperty('--gp-card-bg', '#ffffff');
-                        root.style.setProperty('--gp-text', '#111111');
-                        root.style.setProperty('--gp-card-shadow', '0 10px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05)');
-                        root.style.setProperty('--gp-glass-bg', 'rgba(255, 255, 255, 0.85)');
+                    if(brightness < 125) { // 🌙 MODE SOMBRE
+                        document.documentElement.style.setProperty('--gp-card-bg', '#041b3b');
+                        document.documentElement.style.setProperty('--gp-card-shadow', '0 6px 15px rgba(0,0,0,0.4)');
+                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(4, 27, 59, 0.75)');
+                        document.documentElement.style.setProperty('--gp-text', '#ffffff');
+                    } else { // ☀️ MODE CLAIR
+                        document.documentElement.style.setProperty('--gp-card-bg', '#ffffff');
+                        document.documentElement.style.setProperty('--gp-card-shadow', '0 8px 25px rgba(0,0,0,0.18)');
+                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(255, 255, 255, 0.85)');
+                        document.documentElement.style.setProperty('--gp-text', '#111111');
                     }
                 }
             };
-            setInterval(updateTheme, 600);
+            setInterval(updateTheme, 500);
             updateTheme();
         }
     ">
