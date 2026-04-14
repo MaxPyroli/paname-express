@@ -601,18 +601,17 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
+    # On retire le style="background-color: transparent" qui écrasait tout
     st.markdown(f"""
     <style>
-        div[data-testid="stElementContainer"]:has(.sticky-station-title),
-        .element-container:has(.sticky-station-title) {{
+        div[data-testid="stElementContainer"]:has(.sticky-station-title) {{
             position: sticky !important; 
             top: 3.8rem !important; 
             z-index: 105 !important;
-            background-color: transparent !important; 
         }}
     </style>
     
-    <div class='station-title sticky-station-title' style='margin-top: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.5);'>
+    <div class='station-title sticky-station-title'>
         {clean_name}
     </div>
 
