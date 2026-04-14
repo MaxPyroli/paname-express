@@ -100,21 +100,15 @@ def appliquer_style_global():
         
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
         
-        /* On remplace le bleu nuit par le background secondaire dynamique */
-        .bus-card, .rail-card { background-color: var(--secondary-background-color) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--text-color) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: background-color 0.3s; }
+        .bus-card, .rail-card { background-color: var(--secondary-background-color) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--text-color) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: background-color 0.3s; }
+        .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.9; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; }
+        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
         
-        /* Les destinations (légèrement atténuées par rapport au texte principal) */
-        .bus-dest, .rail-dest { color: color-mix(in srgb, var(--text-color) 85%, transparent) !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        
-        /* Les lignes de séparation dynamiques */
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important; }
-        
-        /* L'heure d'arrivée en forte visibilité */
-        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
-        
-        /* Le bloc "Service Terminé" dynamique */
-        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 60%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 30%, transparent); }
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
         .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+        
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
