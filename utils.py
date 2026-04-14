@@ -379,32 +379,43 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
 
     # --- AFFICHAGE DES BULLETINS ---
-    # Pour les interruptions ROUGES :
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''))
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
+        <details class="traffic-icon" name="trafic">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 999; 
-                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
-                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
-                <div style="margin-top: 6px; font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            <div class="traffic-content-scroll" style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+                        max-height: 250px; overflow-y: auto; overscroll-behavior: contain; padding: 0;
+                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid #e74c3c; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px; position: sticky; top: 0; background: rgb(4, 27, 59); padding: 12px; z-index: 2; margin: 0; border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">❌ TRAFIC INTERROMPU</strong>
+                <div style="padding: 8px 12px 12px 12px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
         """
         
-    # Pour les perturbations ORANGES/BLEUES :
     for pert in perturbations:
-        # ... (Garde ton code de préparation existant) ...
+        texte_brut = pert.get('text', '')
+        type_pert = determiner_type_perturbation(texte_brut, pert.get('header', ''))
+        if type_pert == "TROP_LOIN": continue
+            
+        info_longue = preparer_texte(texte_brut)
+        est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
+        est_futur = "À venir" in type_pert
+        
+        if est_futur: icone_emoji, couleur_hex, couleur_rgb, titre = "ℹ️", "#3498db", "52, 152, 219", f"Information • {type_pert}"
+        elif est_travaux: icone_emoji, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
+        else: icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
+
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
+        <details class="traffic-icon" name="trafic">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 999; 
-                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
-                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
-                <div style="margin-top: 6px; font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            <div class="traffic-content-scroll" style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+                        max-height: 250px; overflow-y: auto; overscroll-behavior: contain; padding: 0;
+                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid {couleur_hex}; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px; position: sticky; top: 0; background: rgb(4, 27, 59); padding: 12px; z-index: 2; margin: 0; border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{icone_emoji} {titre}</strong>
+                <div style="padding: 8px 12px 12px 12px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
         """
