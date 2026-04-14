@@ -95,8 +95,20 @@ def appliquer_style_global():
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
         
-        /* ✨ TON TITRE EN VERRE EST ICI ✨ */
-        .station-title { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* ✨ 1. LE TITRE DE LA STATION (Dégradé Bleu comme avant) ✨ */
+        .station-title { 
+            font-size: 24px !important; 
+            font-weight: 800 !important; 
+            color: #ffffff !important; 
+            text-align: center; 
+            margin: 10px 0 20px 0; 
+            text-transform: uppercase; 
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+            padding: 14px !important; 
+            border-radius: 12px !important; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; 
+        }
         
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
@@ -151,68 +163,34 @@ def appliquer_style_global():
         button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
         button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 
-        .traffic-ticker {
-            overflow: hidden;
-            white-space: nowrap;
-            background: rgba(231, 76, 60, 0.1);
-            border-radius: 8px;
-            padding: 4px 0;
-            margin-top: 4px;
-            border-left: 3px solid #e74c3c;
-        }
-        .ticker-text {
-            display: inline-block;
-            padding-left: 100%;
-            animation: ticker 20s linear infinite;
-            color: #e74c3c;
-            font-weight: bold;
-            font-style: italic;
-            font-size: 0.85em;
-        }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
+        .traffic-ticker { overflow: hidden; white-space: nowrap; background: rgba(231, 76, 60, 0.1); border-radius: 8px; padding: 4px 0; margin-top: 4px; border-left: 3px solid #e74c3c; }
+        .ticker-text { display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #e74c3c; font-weight: bold; font-style: italic; font-size: 0.85em; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        .traffic-warning { color: #f39c12; font-size: 0.8em; font-weight: 500; margin-top: 2px; }
+
+        .tuto-card { background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease !important; }
+        .tuto-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important; border: 1px solid rgba(52, 152, 219, 0.8) !important; background-color: rgba(52, 152, 219, 0.1) !important; cursor: pointer !important; }
+        
+        /* ✨ 2. LES CARTES DE DÉPART (Dynamiques avec Relief) ✨ */
+        .bus-card, .rail-card { 
+            background-color: var(--gp-card-bg) !important; 
+            padding: 14px !important; 
+            margin-bottom: 18px !important; 
+            border-radius: 14px !important; 
+            border-left: 6px solid !important; 
+            color: var(--gp-text) !important; 
+            box-shadow: var(--gp-card-shadow) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s !important;
         }
 
-        /* ⚠️ STYLE PERTURBÉ (MOINS IMPACTANT) */
-        .traffic-warning {
-            color: #f39c12;
-            font-size: 0.8em;
-            font-weight: 500;
-            margin-top: 2px;
-        }
+        .bus-card:active, .rail-card:active { transform: scale(0.98); }
 
-        /* La classe de base */
-        .tuto-card {
-            background-color: var(--secondary-background-color);
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            flex: 1;
-            min-width: 200px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.3s ease !important; /* On force la fluidité */
-        }
-    
-        /* L'effet magique au survol (AVEC !IMPORTANT) */
-        .tuto-card:hover {
-            transform: translateY(-8px) !important;
-            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important;
-            border: 1px solid rgba(52, 152, 219, 0.8) !important;
-            background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
-            cursor: pointer !important;
-        }
-        /* ============================================================== */
-        /* ✨ LES NOUVELLES VARIABLES DYNAMIQUES (Injectées par le JS) ✨ */
-        /* ============================================================== */
-        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
-        
-        .bus-card, .rail-card { background-color: var(--gp-card-bg) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--gp-text) !important; box-shadow: var(--gp-card-shadow) !important; transition: background-color 0.3s, box-shadow 0.3s, color 0.3s; }
-        
-        .bus-dest, .rail-dest { color: var(--gp-text) !important; opacity: 0.95; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; }
+        .bus-dest, .rail-dest { color: var(--gp-text) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--gp-text) 12%, transparent) !important; }
         .bus-row > span:last-child, .rail-row > span:last-child { color: var(--gp-text) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
         
         .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--gp-text) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--gp-text) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--gp-text) 20%, transparent); }
         .service-end { color: color-mix(in srgb, var(--gp-text) 50%, transparent); font-style: italic; font-size: 0.9em; }
@@ -221,27 +199,28 @@ def appliquer_style_global():
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if(!window.themeObserverGP) {
-            window.themeObserverGP = true;
+        if(!window.themeObserverV4) {
+            window.themeObserverV4 = true;
             const updateTheme = () => {
                 const bg = window.getComputedStyle(document.body).backgroundColor;
-                const rgb = bg.match(/\d+/g);
+                const rgb = bg.match(/\\d+/g);
                 if(rgb) {
                     const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
-                    if(brightness < 125) { // 🌙 MODE SOMBRE
-                        document.documentElement.style.setProperty('--gp-card-bg', '#041b3b');
-                        document.documentElement.style.setProperty('--gp-card-shadow', '0 6px 15px rgba(0,0,0,0.4)');
-                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(4, 27, 59, 0.75)');
-                        document.documentElement.style.setProperty('--gp-text', '#ffffff');
-                    } else { // ☀️ MODE CLAIR
-                        document.documentElement.style.setProperty('--gp-card-bg', '#ffffff');
-                        document.documentElement.style.setProperty('--gp-card-shadow', '0 8px 25px rgba(0,0,0,0.18)');
-                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(255, 255, 255, 0.85)');
-                        document.documentElement.style.setProperty('--gp-text', '#111111');
+                    const root = document.documentElement;
+                    if(brightness < 125) { 
+                        // 🌙 MODE SOMBRE (Bleu nuit profond + ombres marquées)
+                        root.style.setProperty('--gp-card-bg', '#041b3b');
+                        root.style.setProperty('--gp-text', '#ffffff');
+                        root.style.setProperty('--gp-card-shadow', '0 10px 30px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)');
+                    } else { 
+                        // ☀️ MODE CLAIR (Cartes claires + ombres douces)
+                        root.style.setProperty('--gp-card-bg', '#ffffff');
+                        root.style.setProperty('--gp-text', '#111111');
+                        root.style.setProperty('--gp-card-shadow', '0 10px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05)');
                     }
                 }
             };
-            setInterval(updateTheme, 500);
+            setInterval(updateTheme, 600);
             updateTheme();
         }
     ">
