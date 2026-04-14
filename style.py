@@ -172,24 +172,25 @@ def appliquer_style_global():
         .tuto-card { background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease !important; }
         .tuto-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important; border: 1px solid rgba(52, 152, 219, 0.8) !important; background-color: rgba(52, 152, 219, 0.1) !important; cursor: pointer !important; }
         
-        /* ✨ 2. LES CARTES DE DÉPART (100% NATIVES ET SOLIDES) ✨ */
+        /* ✨ 2. LES CARTES DE DÉPART (Ombres Colorées "Glow") ✨ */
         .bus-card, .rail-card { 
             background-color: var(--secondary-background-color) !important; 
             padding: 14px !important; 
             margin-bottom: 18px !important; 
             border-radius: 14px !important; 
             
-            /* 1. MICRO-BORDURE UNIVERSELLE (Détache la carte du fond sombre) */
-            border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
-            
-            /* 2. LA BORDURE COULEUR (Écrite APRÈS, elle écrase le côté gauche !) */
+            /* On sécurise ta bordure de couleur (sans écraser le reste) */
             border-left-width: 6px !important; 
             border-left-style: solid !important; 
+            border-top: none !important;
+            border-right: none !important;
+            border-bottom: none !important;
             
             color: var(--text-color) !important; 
             
-            /* OMBRE XL : Plus large et plus dense pour exister en mode sombre */
-            box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.5) !important;
+            /* OMBRE COLORÉE : Utilise la couleur de la ligne injectée en Python ! */
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--line-color, var(--text-color)) 20%, transparent), 
+                        0 4px 8px color-mix(in srgb, var(--line-color, var(--text-color)) 15%, transparent) !important;
             
             transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
