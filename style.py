@@ -225,7 +225,7 @@ def appliquer_style_global():
             color: var(--gp-text) !important; 
             /* RELIEF : Double ombre pour plus de profondeur */
             box-shadow: var(--gp-card-shadow) !important;
-            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s !important;
         }
 
         .bus-card:active, .rail-card:active { transform: scale(0.98); }
@@ -233,7 +233,7 @@ def appliquer_style_global():
         .bus-dest, .rail-dest { color: var(--gp-text) !important; font-weight: 600 !important; }
         .bus-row, .rail-row { border-top: 1px solid color-mix(in srgb, var(--gp-text) 12%, transparent) !important; }
         
-        .rer-direction { color: #3498db !important; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; }
+        .rer-direction { color: #3498db !important; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; margin-top: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;}
 
     </style>
     
@@ -265,3 +265,4 @@ def appliquer_style_global():
             updateTheme();
         }
     ">
+    """, unsafe_allow_html=True)
