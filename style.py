@@ -148,15 +148,19 @@ def appliquer_style_global():
             height: 1.5em !important;
             width: auto !important;
             vertical-align: middle !important;
+            color: var(--text-color) !important; /* L'icône prend la couleur de base du texte */
         }
 
-        /* 🪄 LA MAGIE : On cible l'intérieur (path, rect) ET on utilise la couleur native du texte Streamlit ! */
+        /* 🪄 L'ASTUCE : currentColor force le dessin à copier la couleur du texte (sans bug de variable !) */
         svg.mode-icon-inline path, 
         svg.mode-icon-inline rect,
+        svg.mode-icon-inline circle,
+        svg.mode-icon-inline polygon,
         div[class^="sticky-glass-"] svg path,
-        div[class^="sticky-glass-"] svg rect {
-            fill: var(--text-color) !important;
-            transition: fill 0.3s ease !important;
+        div[class^="sticky-glass-"] svg rect,
+        div[class^="sticky-glass-"] svg circle,
+        div[class^="sticky-glass-"] svg polygon {
+            fill: currentColor !important;
         }
 
         .fav-btn-container { width: 100%; }
