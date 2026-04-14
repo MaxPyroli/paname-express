@@ -98,6 +98,18 @@ afficher_titre_app(APP_NAME, APP_VERSION, APP_SUBTITLE, icone_html)
 initialiser_favoris()
 afficher_sidebar()
 
+# --- MODE DÉVELOPPEUR ---
+with st.sidebar:
+    st.markdown("---")
+    if st.checkbox("🛠️ Tester le Glassmorphism"):
+        from ui_composants import afficher_testeur_de_glassmorphism
+        st.session_state.dev_mode = True
+    else:
+        st.session_state.dev_mode = False
+
+if st.session_state.get('dev_mode'):
+    afficher_testeur_de_glassmorphism()
+
 # --- GESTION DE LA RECHERCHE ---
 if 'selected_stop' not in st.session_state:
     st.session_state.selected_stop = None
