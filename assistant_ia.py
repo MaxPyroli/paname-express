@@ -180,7 +180,7 @@ config_ia = types.GenerateContentConfig(
 )
 
 # ==========================================
-# 🎨 L'INTERFACE : "CARDS ON GLASS" V2 (Thème Dynamique)
+# 🎨 L'INTERFACE : DESIGN BASIQUE ET SOLIDE (Zéro Flou)
 # ==========================================
 @st.dialog(" ") 
 def ouvrir_assistant():
@@ -200,24 +200,20 @@ def ouvrir_assistant():
     avatar_pana = "pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"
     avatar_user = "🧑" 
 
-    # 1. LE STYLE CSS (Reparti de zéro avec color-mix)
+    # 1. LE STYLE CSS (100% OPAQUE)
     st.markdown(
         """
         <style>
-            /* 1. LE FOND GLOBAL : Verre translucide dynamique */
+            /* 1. FOND DE LA FENÊTRE : 100% Opaque */
             div[data-testid="stDialog"] div[role="dialog"] { 
                 max-width: 500px !important; 
-                /* 80% de la couleur de fond, 20% transparent */
-                background: color-mix(in srgb, var(--background-color) 80%, transparent) !important;
-                backdrop-filter: blur(25px) !important; 
-                -webkit-backdrop-filter: blur(25px) !important;
-                /* Bordure subtile basée sur la couleur du texte (10%) */
-                border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
-                border-radius: 24px !important;
+                background-color: var(--background-color) !important;
+                border: 2px solid var(--secondary-background-color) !important;
+                border-radius: 20px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
             }
             
-            /* 2. LE TITRE : Sur le verre */
+            /* 2. LE TITRE */
             .titre-container { margin-top: -30px; margin-bottom: 20px; }
             .titre-pana { 
                 font-size: 2.2rem; font-weight: 900; 
@@ -226,41 +222,39 @@ def ouvrir_assistant():
             }
             .titre-pana span.nom { color: #ff9f43 !important; }
             .sous-titre-pana { 
-                /* Texte semi-transparent basé sur le texte principal */
-                color: color-mix(in srgb, var(--text-color) 60%, transparent) !important; 
-                font-size: 0.9em; font-weight: 600; 
+                color: var(--text-color) !important; 
+                opacity: 0.7; 
+                font-size: 0.9em; 
+                font-weight: 600; 
             }
 
-            /* --- 3. LES BULLES DE CHAT : CARTES OPAQUES --- */
+            /* --- 3. LES BULLES DE CHAT : 100% Opaques --- */
             div[data-testid="stChatMessage"] {
-                /* Fond secondaire plein pour la lisibilité */
-                background: var(--secondary-background-color) !important; 
+                background-color: var(--secondary-background-color) !important; 
                 padding: 1rem !important;
                 margin-bottom: 1rem !important;
                 border-radius: 16px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+                border: none !important;
             }
             
             /* On nettoie le sous-bloc */
             div[data-testid="stChatMessageContent"] {
-                background: transparent !important; 
+                background-color: transparent !important; 
                 padding: 0 !important; 
             }
 
-            /* Le texte suit le thème */
+            /* Le texte s'adapte au thème */
             div[data-testid="stChatMessage"] *, 
             div[data-testid="stChatMessageContent"] * {
                 color: var(--text-color) !important;
             }
             
-            /* 4. LA BARRE DE SAISIE TEXTE */
+            /* 4. LA BARRE DE SAISIE TEXTE : 100% Opaque */
             .stChatInput, div[data-testid="stChatInput"] {
-                background: var(--secondary-background-color) !important; 
+                background-color: var(--secondary-background-color) !important; 
                 border-radius: 20px !important;
-                border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent) !important;
+                border: none !important;
                 margin-top: 15px !important;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
             }
             .stChatInput textarea { 
                 background-color: transparent !important;
@@ -268,17 +262,19 @@ def ouvrir_assistant():
                 -webkit-text-fill-color: var(--text-color) !important; 
             }
             .stChatInput textarea::placeholder { 
-                color: color-mix(in srgb, var(--text-color) 40%, transparent) !important; 
+                color: var(--text-color) !important; 
+                opacity: 0.5 !important; 
             }
 
             /* Bouton Reset */
             button[kind="tertiary"] { color: #ff9f43 !important; font-weight: bold !important; }
 
-            /* ✨ STYLE DE LA MENTION LÉGALE ✨ */
+            /* ✨ MENTION LÉGALE ✨ */
             .disclaimer-pana {
                 text-align: center;
                 font-size: 11px;
-                color: color-mix(in srgb, var(--text-color) 50%, transparent) !important;
+                color: var(--text-color) !important;
+                opacity: 0.5;
                 margin-top: 8px;
                 font-style: italic;
             }
@@ -294,10 +290,9 @@ def ouvrir_assistant():
             <div class="titre-pana">
                 {icone_titre} <span class="nom">Pana</span> 
                 <span class="badge-beta" style="
-                    background: rgba(255, 159, 67, 0.15);
-                    color: #ff9f43;
-                    border: 1px solid rgba(255, 159, 67, 0.3);
-                    padding: 2px 10px;
+                    background-color: #ff9f43;
+                    color: white;
+                    padding: 4px 10px;
                     border-radius: 8px;
                     font-size: 0.7rem;
                     text-transform: uppercase;
