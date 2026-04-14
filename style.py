@@ -98,17 +98,6 @@ def appliquer_style_global():
         /* ✨ TON TITRE EN VERRE EST ICI ✨ */
         .station-title { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
-        
-        .bus-card, .rail-card { background-color: var(--secondary-background-color) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--text-color) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: background-color 0.3s; }
-        .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.9; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; }
-        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
-        
-        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
-        .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
-        .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
-        
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
@@ -214,5 +203,46 @@ def appliquer_style_global():
             background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
             cursor: pointer !important;
         }
+        /* ============================================================== */
+        /* ✨ LES NOUVELLES VARIABLES DYNAMIQUES (Injectées par le JS) ✨ */
+        /* ============================================================== */
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--gp-text) 20%, transparent); padding-bottom: 4px; margin-bottom: 0px; }
+        
+        .bus-card, .rail-card { background-color: var(--gp-card-bg) !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: var(--gp-text) !important; box-shadow: var(--gp-card-shadow) !important; transition: background-color 0.3s, box-shadow 0.3s, color 0.3s; }
+        
+        .bus-dest, .rail-dest { color: var(--gp-text) !important; opacity: 0.95; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; }
+        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--gp-text) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }
+        
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--gp-text) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--gp-text) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--gp-text) 20%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--gp-text) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--gp-text) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+        
     </style>
+    
+    <img src="x" style="display:none;" onerror="
+        if(!window.themeObserverGP) {
+            window.themeObserverGP = true;
+            const updateTheme = () => {
+                const bg = window.getComputedStyle(document.body).backgroundColor;
+                const rgb = bg.match(/\d+/g);
+                if(rgb) {
+                    const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
+                    if(brightness < 125) { // 🌙 MODE SOMBRE
+                        document.documentElement.style.setProperty('--gp-card-bg', '#041b3b');
+                        document.documentElement.style.setProperty('--gp-card-shadow', '0 6px 15px rgba(0,0,0,0.4)');
+                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(4, 27, 59, 0.75)');
+                        document.documentElement.style.setProperty('--gp-text', '#ffffff');
+                    } else { // ☀️ MODE CLAIR
+                        document.documentElement.style.setProperty('--gp-card-bg', '#ffffff');
+                        document.documentElement.style.setProperty('--gp-card-shadow', '0 8px 25px rgba(0,0,0,0.18)');
+                        document.documentElement.style.setProperty('--gp-glass-bg', 'rgba(255, 255, 255, 0.85)');
+                        document.documentElement.style.setProperty('--gp-text', '#111111');
+                    }
+                }
+            };
+            setInterval(updateTheme, 500);
+            updateTheme();
+        }
+    ">
     """, unsafe_allow_html=True)
