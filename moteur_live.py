@@ -348,17 +348,16 @@ def afficher_live_content(stop_id, clean_name):
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
-                    /* Fond en verre adaptatif */
-                    background: color-mix(in srgb, var(--secondary-background-color) 70%, transparent) !important; 
+                    background: var(--gp-glass-bg) !important; 
                     backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
                     border-radius: 12px !important; 
-                    border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; 
+                    border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent) !important; 
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
-                    color: var(--text-color) !important; 
+                    color: var(--gp-text) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                 }}
                 /* Le SVG force sa couleur sur celle du texte courant ! */
-                div.sticky-glass-{mode_actuel} svg {{ fill: var(--text-color) !important; height: 1.3em !important; }}
+                div.sticky-glass-{mode_actuel} svg {{ fill: var(--gp-text) !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
