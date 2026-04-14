@@ -346,7 +346,7 @@ def afficher_live_content(stop_id, clean_name):
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{ 
                     position: sticky !important; 
-                    top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; 
+                    top: calc(3.8rem + var(--title-height, 80px) + 55px) !important; 
                     z-index: 99 !important; 
                 }}
                 
