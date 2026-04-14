@@ -336,16 +336,29 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
+            # L'astuce est de rendre le spacer "transparent" pour qu'il ne pollue pas le mode clair
             st.markdown(f"""
-            <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div>
+            <div style="background-color: transparent; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div>
             """, unsafe_allow_html=True)
             
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
                 .element-container:has(.sticky-glass-{mode_actuel}) {{ position: sticky !important; top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; z-index: 99 !important; }}
-                div.sticky-glass-{mode_actuel} {{ margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; background: rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; color: #ffffff !important; font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; }}
-                div.sticky-glass-{mode_actuel} svg {{ fill: #ffffff !important; height: 1.3em !important; }}
+                
+                div.sticky-glass-{mode_actuel} {{ 
+                    margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
+                    /* Fond en verre adaptatif */
+                    background: color-mix(in srgb, var(--secondary-background-color) 70%, transparent) !important; 
+                    backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
+                    border-radius: 12px !important; 
+                    border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; 
+                    display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
+                    color: var(--text-color) !important; 
+                    font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
+                }}
+                /* Le SVG force sa couleur sur celle du texte courant ! */
+                div.sticky-glass-{mode_actuel} svg {{ fill: var(--text-color) !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
