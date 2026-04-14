@@ -140,12 +140,36 @@ def appliquer_style_global():
         .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
         .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         
-        /* CSS ICONES INLINE */
+        /* ============================================================== */
+        /* ✨ CSS ICONES INLINE (AVEC DÉTECTION DE THÈME) ✨              */
+        /* ============================================================== */
         svg.mode-icon-inline {
             height: 1.5em !important;
             width: auto !important;
             vertical-align: middle !important;
-            color: var(--text-color) !important; 
+            transition: fill 0.3s ease, color 0.3s ease !important;
+        }
+
+        /* ☀️ EN MODE CLAIR : Les logos prennent ton Bleu Nuit ! */
+        [data-paname-theme="light"] svg.mode-icon-inline,
+        [data-paname-theme="light"] .sticky-glass-RER svg,
+        [data-paname-theme="light"] .sticky-glass-METRO svg,
+        [data-paname-theme="light"] .sticky-glass-BUS svg,
+        [data-paname-theme="light"] .sticky-glass-TRAM svg,
+        [data-paname-theme="light"] .sticky-glass-TRAIN svg {
+            fill: #041b3b !important;
+            color: #041b3b !important;
+        }
+
+        /* 🌙 EN MODE SOMBRE : Les logos deviennent Blanc pur ! */
+        [data-paname-theme="dark"] svg.mode-icon-inline,
+        [data-paname-theme="dark"] .sticky-glass-RER svg,
+        [data-paname-theme="dark"] .sticky-glass-METRO svg,
+        [data-paname-theme="dark"] .sticky-glass-BUS svg,
+        [data-paname-theme="dark"] .sticky-glass-TRAM svg,
+        [data-paname-theme="dark"] .sticky-glass-TRAIN svg {
+            fill: #ffffff !important;
+            color: #ffffff !important;
         }
 
         .fav-btn-container { width: 100%; }
@@ -179,7 +203,7 @@ def appliquer_style_global():
             margin-bottom: 18px !important; 
             border-radius: 14px !important; 
             
-            /* On sécurise ta bordure de couleur (sans écraser le reste) */
+            /* On sécurise ta bordure de couleur */
             border-left-width: 6px !important; 
             border-left-style: solid !important; 
             border-top: none !important;
@@ -188,7 +212,7 @@ def appliquer_style_global():
             
             color: var(--text-color) !important; 
             
-            /* OMBRE COLORÉE : Utilise la couleur de la ligne injectée en Python ! */
+            /* OMBRE COLORÉE */
             box-shadow: 0 8px 20px color-mix(in srgb, var(--line-color, var(--text-color)) 20%, transparent), 
                         0 4px 8px color-mix(in srgb, var(--line-color, var(--text-color)) 15%, transparent) !important;
             
@@ -208,4 +232,32 @@ def appliquer_style_global():
         .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
         
     </style>
+    
+    <img src="x" style="display:none;" onerror="
+        if(!window.gpThemeDetector) {
+            window.gpThemeDetector = true;
+            
+            const applyTheme = () => {
+                const appNode = document.querySelector('.stApp') || document.body;
+                const textColor = window.getComputedStyle(appNode).color;
+                
+                const rgb = textColor.match(/\d+/g);
+                if(rgb && rgb.length >= 3) {
+                    const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
+                    
+                    // Si la police de Streamlit est blanche/claire -> MODE SOMBRE
+                    if (brightness > 128) {
+                        document.documentElement.setAttribute('data-paname-theme', 'dark');
+                    } else {
+                        // Sinon -> MODE CLAIR
+                        document.documentElement.setAttribute('data-paname-theme', 'light');
+                    }
+                }
+            };
+
+            applyTheme();
+            document.addEventListener('click', () => setTimeout(applyTheme, 50));
+            setInterval(applyTheme, 500);
+        }
+    ">
     """, unsafe_allow_html=True)
