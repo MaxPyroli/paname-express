@@ -179,17 +179,17 @@ def appliquer_style_global():
             margin-bottom: 18px !important; 
             border-radius: 14px !important; 
             
-            /* La bordure de couleur de la ligne est préservée */
+            /* 1. MICRO-BORDURE UNIVERSELLE (Détache la carte du fond sombre) */
+            border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+            
+            /* 2. LA BORDURE COULEUR (Écrite APRÈS, elle écrase le côté gauche !) */
             border-left-width: 6px !important; 
             border-left-style: solid !important; 
             
-            /* MICRO-BORDURE : Détache la carte du fond, surtout en mode sombre */
-            border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent) !important;
-            
             color: var(--text-color) !important; 
             
-            /* OMBRE UNIVERSELLE : Douce en clair, creuse en sombre */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.3) !important;
+            /* OMBRE XL : Plus large et plus dense pour exister en mode sombre */
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.5) !important;
             
             transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
