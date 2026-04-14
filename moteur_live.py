@@ -343,8 +343,13 @@ def afficher_live_content(stop_id, clean_name):
             
             st.markdown(f"""
             <style>
+                /* On ajuste le top (+65px) pour compenser les marges et éviter le chevauchement avec le nom de la gare */
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
-                .element-container:has(.sticky-glass-{mode_actuel}) {{ position: sticky !important; top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; z-index: 99 !important; }}
+                .element-container:has(.sticky-glass-{mode_actuel}) {{ 
+                    position: sticky !important; 
+                    top: calc(3.8rem + var(--title-height, 60px) + 65px) !important; 
+                    z-index: 99 !important; 
+                }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
@@ -355,6 +360,8 @@ def afficher_live_content(stop_id, clean_name):
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--gp-text) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
+                    /* Ajout du relief sur le bandeau de mode ! */
+                    box-shadow: var(--gp-card-shadow) !important;
                 }}
                 /* Le SVG force sa couleur sur celle du texte courant ! */
                 div.sticky-glass-{mode_actuel} svg {{ fill: var(--gp-text) !important; height: 1.3em !important; }}
