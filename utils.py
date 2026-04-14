@@ -255,7 +255,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id, nom_ligne=""):
-    """Retourne le HTML du bandeau trafic (Propre, dynamique et sans chevauchement)."""
+    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id, nom_ligne)
@@ -265,13 +265,10 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruption and not perturbation:
         return ""
 
-    # ✨ LA SOLUTION DÉFINITIVE (Z-index à 90 via JS forcé)
     css_and_script = """
     <style>
-    /* 1. L'icône par défaut */
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
     
-    /* 2. Écrase le vieux CSS en cache */
     div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
         position: relative !important;
         z-index: 90 !important; 
@@ -283,13 +280,18 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em; user-select: none;
     }
     details.traffic-icon > summary:hover { opacity: 0.8; }
+    
+    /* On customise la barre de défilement pour qu'elle soit jolie ! */
+    .traffic-content-scroll::-webkit-scrollbar { width: 6px; }
+    .traffic-content-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
     </style>
     
     <img src="x" style="display:none;" onerror="
         if (!window.traficJSV4) {
             window.traficJSV4 = true;
             
-            // 🚀 Le bulldozer JS : Force le conteneur à 90 pour glisser sous tes titres (99 et 105)
             function setZ90() {
                 document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
                     if (c.querySelector('details.traffic-icon[open]')) {
@@ -382,10 +384,11 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         html_output += f"""
         <details class="traffic-icon" name="trafic">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+            <div class="traffic-content-scroll" style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+                        max-height: 250px; overflow-y: auto; overscroll-behavior: contain;
                         background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px; position: sticky; top: 0; background: rgba(4, 27, 59, 0.95); padding-bottom: 5px; z-index: 2;">❌ TRAFIC INTERROMPU</strong>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
@@ -407,10 +410,11 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         html_output += f"""
         <details class="traffic-icon" name="trafic">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+            <div class="traffic-content-scroll" style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; 
+                        max-height: 250px; overflow-y: auto; overscroll-behavior: contain;
                         background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
+                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px; position: sticky; top: 0; background: rgba(4, 27, 59, 0.95); padding-bottom: 5px; z-index: 2;">{icone_emoji} {titre}</strong>
                 <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
             </div>
         </details>
