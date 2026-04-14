@@ -352,19 +352,15 @@ def afficher_live_content(stop_id, clean_name):
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
-                    
                     background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
                     backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
                     border-radius: 12px !important; 
-                    
-                    border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; 
-                    
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                     
-                    /* OMBRE XL POUR LE RELIEF ABSOLU */
-                    box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.5) !important;
+                    /* Ombre douce adaptative pour le bandeau de mode */
+                    box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ fill: var(--text-color) !important; height: 1.3em !important; }}
             </style>
@@ -406,7 +402,7 @@ def afficher_live_content(stop_id, clean_name):
                     p3 = [d for d in proches if d not in p1 and d not in p2]
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
+                    card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
@@ -439,7 +435,7 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
                     
                 elif mode_actuel in ["RER", "TRAIN"]:
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
+                    card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
@@ -487,7 +483,7 @@ def afficher_live_content(stop_id, clean_name):
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
                     st.markdown(f"""
-<div class="bus-card" style="border-left-color: #{color}; position: relative;">
+<div class="bus-card" style="--line-color: #{color}; border-left-color: var(--line-color); position: relative;">
 <div style="display:flex; align-items:center; margin-bottom:10px;">
 <span class="line-badge" style="background-color:#{color};">{code}</span>
 </div>
@@ -495,7 +491,6 @@ def afficher_live_content(stop_id, clean_name):
 {rows_html}
 </div>
 """, unsafe_allow_html=True)
-
                 else:
                     dest_data = {}
                     for d in proches:
@@ -549,7 +544,7 @@ def afficher_live_content(stop_id, clean_name):
                             else:
                                 rows_html += row_content                    
 
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
     
     # 6. FOOTER
     with containers["AUTRE"]:
