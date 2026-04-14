@@ -74,7 +74,7 @@ def afficher_tuto_bienvenue():
     st.markdown(html_content, unsafe_allow_html=True)
 
 def afficher_testeur_de_glassmorphism():
-    """Un laboratoire intégré pour dompter les variables de thème Streamlit."""
+    """Un laboratoire intégré avec un VRAI fond pour voir le flou."""
     st.divider()
     st.subheader("🧪 Banc d'Essai : Couleurs & Glassmorphism")
     
@@ -82,49 +82,54 @@ def afficher_testeur_de_glassmorphism():
     
     with col_c:
         st.write("**Réglages CSS :**")
-        # Choix de la variable native
         var_fond = st.selectbox(
             "Variable de fond :",
             ["--background-color", "--secondary-background-color"],
-            help="Les variables que Streamlit change automatiquement selon le thème."
+            help="Les variables que Streamlit change selon le thème."
         )
         
-        # Réglages visuels
-        alpha = st.slider("Opacité (Alpha) :", 0.0, 1.0, 0.8)
+        alpha = st.slider("Opacité (Alpha) :", 0.0, 1.0, 0.5) # Mis à 0.5 par défaut
         blur = st.slider("Flou (Blur) :", 0, 30, 15)
         
-        # Pour tester l'impact sur le texte
         texte_custom = st.text_input("Texte de test :", "C'est lisible ?")
 
     with col_v:
-        # On construit le CSS en temps réel
-        # Note : On utilise color-mix pour appliquer l'opacité sur une variable CSS
+        # ✨ LA MAGIE EST ICI : On a ajouté un conteneur parent avec un dégradé très coloré !
         css_preview = f"""
         <div style="
-            background: color-mix(in srgb, var({var_fond}) {int(alpha*100)}%, transparent);
-            backdrop-filter: blur({blur}px);
-            -webkit-backdrop-filter: blur({blur}px);
-            border: 1px solid rgba(128, 128, 128, 0.3);
-            border-radius: 20px;
+            background: linear-gradient(45deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
             padding: 40px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         ">
-            <h2 style="color: var(--text-color); margin-bottom: 10px;">Aperçu Réel</h2>
-            <p style="color: var(--text-color); font-size: 1.2em; font-weight: bold;">
-                {texte_custom}
-            </p>
-            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 8px; font-family: monospace; font-size: 0.8em; color: var(--text-color);">
-                background: var({var_fond}) à {int(alpha*100)}%<br>
-                blur: {blur}px
+            <div style="
+                background: color-mix(in srgb, var({var_fond}) {int(alpha*100)}%, transparent);
+                backdrop-filter: blur({blur}px);
+                -webkit-backdrop-filter: blur({blur}px);
+                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                width: 100%;
+            ">
+                <h2 style="color: var(--text-color); margin-bottom: 10px;">Aperçu Réel</h2>
+                <p style="color: var(--text-color); font-size: 1.2em; font-weight: bold;">
+                    {texte_custom}
+                </p>
+                <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-family: monospace; font-size: 0.8em; color: white;">
+                    background: var({var_fond}) à {int(alpha*100)}%<br>
+                    blur: {blur}px
+                </div>
             </div>
         </div>
         """
         st.markdown(css_preview, unsafe_allow_html=True)
     
     st.info("""
-    **Comment tester :** 1. Change l'opacité et le flou ci-dessus.
-    2. Va dans les **Paramètres de Streamlit** (en haut à droite > Settings > Theme).
-    3. Bascule entre **Light** et **Dark**. 
-    4. Observe comment `var(--text-color)` et le fond s'adaptent instantanément !
+    **Maintenant que le fond est coloré :**
+    Joue avec l'opacité (essaie 0.5) et le flou. Puis change le thème de ton application en mode sombre. Tu vas voir comment le fond de la carte s'adapte et comment la lisibilité du texte change !
     """)
