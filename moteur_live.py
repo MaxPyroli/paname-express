@@ -353,20 +353,18 @@ def afficher_live_content(stop_id, clean_name):
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
                     
-                    /* Fond vitré utilisant 85% de la couleur secondaire de Streamlit */
                     background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
                     backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
                     border-radius: 12px !important; 
                     
-                    /* Micro-bordure pour détacher du fond */
                     border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; 
                     
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                     
-                    /* OMBRE UNIVERSELLE POUR LE RELIEF */
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.3) !important;
+                    /* OMBRE XL POUR LE RELIEF ABSOLU */
+                    box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.5) !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ fill: var(--text-color) !important; height: 1.3em !important; }}
             </style>
