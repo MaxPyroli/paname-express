@@ -233,29 +233,5 @@ def appliquer_style_global():
         
     </style>
     
-    <img src="x" style="display:none;" onerror="
-        if(!window.gpThemeDetector) {
-            window.gpThemeDetector = true;
-            
-            const applyTheme = () => {
-                const appNode = document.querySelector('.stApp') || document.body;
-                const textColor = window.getComputedStyle(appNode).color;
-                
-                const rgb = textColor.match(/\d+/g);
-                if(rgb && rgb.length >= 3) {
-                    const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
-                    
-                    if (brightness > 128) {
-                        document.documentElement.setAttribute('data-paname-theme', 'dark');
-                    } else {
-                        document.documentElement.setAttribute('data-paname-theme', 'light');
-                    }
-                }
-            };
-
-            applyTheme();
-            document.addEventListener('click', () => setTimeout(applyTheme, 50));
-            setInterval(applyTheme, 500);
-        }
-    ">
+    <img src="x" style="display:none;" onerror="if(!window.gpThemeDetector){window.gpThemeDetector=true;const applyTheme=()=>{const appNode=document.querySelector('.stApp')||document.body;const textColor=window.getComputedStyle(appNode).color;const rgb=textColor.match(/\\d+/g);if(rgb&&rgb.length>=3){const brightness=Math.round(((parseInt(rgb[0])*299)+(parseInt(rgb[1])*587)+(parseInt(rgb[2])*114))/1000);if(brightness>128){document.documentElement.setAttribute('data-paname-theme','dark');}else{document.documentElement.setAttribute('data-paname-theme','light');}}};applyTheme();document.addEventListener('click',()=>setTimeout(applyTheme,50));setInterval(applyTheme,500);}">
     """, unsafe_allow_html=True)
