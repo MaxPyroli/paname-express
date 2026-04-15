@@ -389,8 +389,8 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
-                <div style="margin-top: 4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 15px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 15px), transparent 100%);">
-                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 220px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 15px;">{info_longue}</div>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 160px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
                 </div>
             </div>
         </details>
@@ -416,8 +416,8 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
-                <div style="margin-top: 4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 15px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 15px), transparent 100%);">
-                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 220px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 15px;">{info_longue}</div>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 160px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
                 </div>
             </div>
         </details>
