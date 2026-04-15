@@ -182,18 +182,18 @@ def appliquer_style_global():
         .ticker-text { display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #e74c3c; font-weight: bold; font-style: italic; font-size: 0.85em; }
         @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-        /* ⚠️ STYLE PERTURBÉ : Limite de taille et Scrollbar pour les longs messages (RER D 😅) */
-        .traffic-warning, div[class*="trafic"], div[class*="traffic"] { 
+        /* ⚠️ STYLE PERTURBÉ : Limite de taille et Scrollbar (RER D) */
+        .traffic-warning { 
             color: #f39c12; font-size: 0.8em; font-weight: 500; margin-top: 2px; 
-            max-height: 70px !important; /* La hauteur maximum avant d'activer le défilement */
-            overflow-y: auto !important; /* Active la molette/le glissement du doigt */
-            padding-right: 5px; 
+            display: block !important; /* Indispensable pour que le scroll fonctionne ! */
+            max-height: 60px !important; 
+            overflow-y: auto !important; 
+            padding-right: 5px;
         }
         
-        /* Personnalisation de la petite barre de défilement pour qu'elle soit discrète */
-        .traffic-warning::-webkit-scrollbar, div[class*="trafic"]::-webkit-scrollbar { width: 4px; }
-        .traffic-warning::-webkit-scrollbar-thumb, div[class*="trafic"]::-webkit-scrollbar-thumb { 
-            background: color-mix(in srgb, var(--text-color) 20%, transparent); 
+        .traffic-warning::-webkit-scrollbar { width: 4px; }
+        .traffic-warning::-webkit-scrollbar-thumb { 
+            background: rgba(128, 128, 128, 0.4); 
             border-radius: 4px; 
         }
 
@@ -224,18 +224,16 @@ def appliquer_style_global():
         .bus-card:active, .rail-card:active { transform: scale(0.98); }
 
         .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        /* 📏 Lignes de séparation entre les départs */
+        /* 📏 Lignes de séparation classiques et espacement compact d'origine */
         .bus-row, .rail-row { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding-top: 10px !important; padding-bottom: 10px !important; 
-            /* On met la ligne en DESSOUS et un peu plus visible */
-            border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; 
-            border-top: none !important; 
+            padding-top: 8px !important; padding-bottom: 2px !important; 
+            border-top: 1px solid rgba(128, 128, 128, 0.25) !important; 
+            border-bottom: none !important;
         }
-        /* On retire la ligne sous le tout dernier départ pour faire propre */
-        .bus-row:last-child, .rail-row:last-child { border-bottom: none !important; }
-        
-        .bus-row > span:last-child, .rail-row > span:last-child { color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; }        
+        .bus-row > span:last-child, .rail-row > span:last-child { 
+            color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; 
+        }        
         .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
         
         .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
