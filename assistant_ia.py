@@ -346,7 +346,7 @@ def ouvrir_assistant():
     # --- 4. LE RESTE RESTE 100% NATIF ---
     if st.button("🔄 Réinitialiser la discussion"):
         st.session_state.chat_session = client.chats.create(
-            model="gemini-3.1-flash-lite-preview", 
+            model="gemini-2.5-flash-lite", 
             config=config_ia
         )
         st.session_state.messages_ia = [
