@@ -362,7 +362,8 @@ def afficher_live_content(stop_id, clean_name):
                     /* Ombre douce adaptative pour le bandeau de mode */
                     box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
                 }}
-                div.sticky-glass-{mode_actuel} svg {{ fill: var(--text-color) !important; height: 1.3em !important; }}
+                /* On utilise currentColor au lieu de la variable pour forcer l'héritage parfait ! */
+                div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
