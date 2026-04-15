@@ -219,6 +219,25 @@ def appliquer_style_global():
         .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
         .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
         .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+
+        /* ✨ HIGHLIGHT DES DATES POUR PANA (Encadrés Stylisés) ✨ */
+        [data-testid="stChatMessageContent"] code {
+            background-color: color-mix(in srgb, #f39c12 15%, transparent) !important;
+            color: #d35400 !important; /* Orange foncé pour le mode clair */
+            border: 1px solid color-mix(in srgb, #f39c12 40%, transparent) !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+            font-weight: 800 !important;
+            font-size: 0.9em !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+
+        /* Adaptation de l'encadré pour le mode sombre ! */
+        [data-paname-theme="dark"] [data-testid="stChatMessageContent"] code {
+            color: #f1c40f !important; /* Jaune éclatant dans l'obscurité */
+            background-color: color-mix(in srgb, #f1c40f 15%, transparent) !important;
+            border: 1px solid color-mix(in srgb, #f1c40f 30%, transparent) !important;
+        }
         
     </style>
     """, unsafe_allow_html=True)
