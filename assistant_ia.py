@@ -247,6 +247,7 @@ RÈGLES D'INTELLIGENCE ET DE FORMATAGE :
      * 🔴 Trafic interrompu -> "**Le trafic sur le [Ligne] est interrompu 🔴**"
    - Ensuite, saute une ligne et détaille CHAQUE perturbation sous forme de liste courte et synthétique.
    - Utilise des emojis en début de puce (🚧 pour les travaux, ⚠️ pour les incidents/retards, 🛑 pour les trains supprimés/coupures).
+   - 🗓️ DATES ET HEURES : Mets TOUTES les dates, heures et périodes entre backticks (`) pour qu'elles s'affichent sous forme de badge visuel (ex: `du 12 au 14 mars` à partir de `23h30`).
    - Sois extrêmement concis : l'utilisateur doit pouvoir lire l'information en 3 secondes.
 
 3. COMPRÉHENSION DU CONTEXTE ET DES BUS :
