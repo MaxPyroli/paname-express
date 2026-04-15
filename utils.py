@@ -255,7 +255,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id, nom_ligne=""):
-    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur)."""
+    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur, sans bégaiements)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id, nom_ligne)
@@ -291,7 +291,6 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     <img src="x" style="display:none;" onerror="
         if (!window.traficJSV4) {
             window.traficJSV4 = true;
-            
             function setZ90() {
                 document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
                     if (c.querySelector('details.traffic-icon[open]')) {
@@ -302,14 +301,12 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
                     }
                 });
             }
-
             document.addEventListener('click', e => {
                 document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
                     if (!d.contains(e.target)) d.removeAttribute('open');
                 });
                 setTimeout(setZ90, 10);
             });
-
             document.addEventListener('toggle', e => {
                 if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
             }, true);
@@ -350,8 +347,8 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi :"
         ]
 
-        # 🪄 On nettoie le titre pour pouvoir le comparer facilement
-        header_clean = str(header_alerte).lower().strip(' .:-') if header_alerte else ""
+        # 🪄 NORMALISATION DU TITRE (On retire les doubles espaces pour comparer purement le texte)
+        header_clean = re.sub(r'\s+', ' ', str(header_alerte).lower()).strip(' .:-')
 
         lignes = t.split('\n')
         lignes_finales = []
@@ -361,8 +358,10 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none": continue
             if any(z in l_clean.lower() for z in lignes_a_zapper): continue
             
-            # 🪄 L'ANTI-BÉGAIEMENT : Si la ligne est une copie exacte du titre, on la dégage !
-            if header_clean and l_clean.lower().strip(' .:-') == header_clean:
+            # 🪄 L'ANTI-BÉGAIEMENT AMÉLIORÉ (Fuzzy match puissant)
+            l_norm = re.sub(r'\s+', ' ', l_clean.lower()).strip(' .:-')
+            # Si la ligne ressemble de très près au titre, on l'efface direct !
+            if header_clean and len(l_norm) > 15 and (l_norm in header_clean or header_clean in l_norm):
                 continue
                 
             est_doublon = False
@@ -381,18 +380,18 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             if secours.lower() == "none" or not secours: return "Information non disponible."
             return secours
         return '<br>'.join(lignes_finales)
+
     interruptions = [a for a in alertes if a['severity'] >= 40]
     perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
 
     # --- AFFICHAGE DES BULLETINS ---
     # Pour les interruptions ROUGES :
     for inter in interruptions:
-        # 🪄 On ajoute le header ici !
         info_longue = preparer_texte(inter.get('text', ''), inter.get('header', ''))
         html_output += f"""
         <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 300px; z-index: 999; 
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 380px; max-width: 90vw; z-index: 999; 
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
@@ -408,7 +407,6 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         type_pert = determiner_type_perturbation(texte_brut, pert.get('header', ''))
         if type_pert == "TROP_LOIN": continue
             
-        # 🪄 Et on ajoute le header ici aussi !
         info_longue = preparer_texte(texte_brut, pert.get('header', ''))
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
@@ -420,7 +418,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         html_output += f"""
         <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 300px; z-index: 999; 
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 380px; max-width: 90vw; z-index: 999; 
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: var(--gp-card-shadow);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
