@@ -283,7 +283,7 @@ def ouvrir_assistant():
             with st.chat_message(message["role"], avatar=avatar_actuel):
                 st.markdown(message["content"])
 
-    if prompt := st.chat_input("Demande-moi un horaire..."):
+    if prompt := st.chat_input("Demande-moi un horaire ou une info trafic..."):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         with chat_container:
             with st.chat_message("user", avatar="🧑"):
