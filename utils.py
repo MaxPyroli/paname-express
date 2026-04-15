@@ -394,7 +394,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 380px; max-width: 90vw; z-index: 999; 
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; 
-                        box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(231, 76, 60, 0.25);">
+                        box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 15px rgba(231, 76, 60, 0.25);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
                 <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
                     <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
@@ -422,7 +422,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 380px; max-width: 90vw; z-index: 999; 
                         background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; 
-                        box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba({couleur_rgb}, 0.25);">
+                        box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 15px rgba({couleur_rgb}, 0.25);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
                 <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
                     <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
