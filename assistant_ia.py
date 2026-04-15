@@ -142,6 +142,91 @@ def outil_prochains_departs_ia(nom_station: str) -> str:
         return f"Erreur technique Python : {str(e)}"
 
 # ==========================================
+# 🧰 OUTIL 3 : HORAIRES PRÉCIS (Derniers trains / Heure fixe)
+# ==========================================
+def outil_horaires_theoriques_ia(nom_station: str, heure_recherche: str) -> str:
+    """
+    🚨 OUTIL POUR LES HORAIRES SPÉCIFIQUES ET DERNIERS DÉPARTS 🚨
+    Utilise cet outil si l'utilisateur demande l'horaire pour une heure précise, 
+    ou le DERNIER train / bus de la journée.
+    L'argument 'heure_recherche' doit être au format "HH:MM" (ex: "23:30", "01:15", "06:00").
+    """
+    import urllib.parse
+    from datetime import datetime, timedelta
+    
+    try:
+        from zoneinfo import ZoneInfo
+        paris_tz = ZoneInfo("Europe/Paris")
+    except Exception:
+        import pytz
+        paris_tz = pytz.timezone('Europe/Paris')
+
+    try:
+        print(f"🦊 Pana cherche les horaires à {nom_station} pour {heure_recherche}")
+        nom_station_propre = urllib.parse.quote(nom_station)
+        
+        # 1. Trouver la station
+        recherche_data = demander_api(f"places?q={nom_station_propre}")
+        if not recherche_data or not recherche_data.get('places'):
+            return f"Je n'ai pas trouvé la gare '{nom_station}'."
+            
+        stop_id = recherche_data['places'][0]['id']
+        nom_trouve = recherche_data['places'][0].get('name', nom_station)
+        
+        # 2. Calculer le moment exact
+        now = datetime.now(paris_tz)
+        heure_clean = heure_recherche.replace('h', ':').replace('H', ':')
+        h_str, m_str = heure_clean.split(':')
+        h, m = int(h_str), int(m_str)
+        
+        search_date = now.replace(hour=h, minute=m, second=0)
+        
+        # Gestion minuit/nuit (Si on demande 1h du matin et qu'il est 20h, c'est pour la nuit qui arrive)
+        if h < 4 and now.hour > 4:
+            search_date += timedelta(days=1)
+        elif h > 20 and now.hour < 4:
+            search_date -= timedelta(days=1)
+            
+        dt_str = search_date.strftime('%Y%m%dT%H%M%S')
+        
+        # 3. Interroger l'API pour les départs à cette heure-là
+        data = demander_api(f"stop_areas/{stop_id}/departures?from_datetime={dt_str}&count=30")
+        if not data or not data.get('departures'):
+            return f"Aucun départ trouvé à {nom_trouve} à partir de {heure_recherche}."
+
+        departs_trouves = []
+        directions_vues = {}
+        
+        for d in data['departures']:
+            info = d['display_informations']
+            ligne = str(info.get('code', '?'))
+            dest = info.get('direction', 'Inconnue').split('(')[0].strip()
+            
+            time_raw = d['stop_date_time']['departure_date_time']
+            dep_time = datetime.strptime(time_raw, '%Y%m%dT%H%M%S').replace(tzinfo=paris_tz)
+            heure_depart_str = dep_time.strftime('%Hh%M')
+            
+            cle = (ligne, dest)
+            if cle not in directions_vues:
+                directions_vues[cle] = []
+            
+            if len(directions_vues[cle]) < 3: # On regroupe les 3 prochains
+                directions_vues[cle].append(heure_depart_str)
+                
+        for (ligne, dest), heures in directions_vues.items():
+            heures_str = ", ".join(heures)
+            departs_trouves.append(f"- **{ligne}** ➔ {dest} : **{heures_str}**")
+            
+        if not departs_trouves:
+            return "Aucun départ prévu."
+            
+        return f"Horaires prévus à {nom_trouve} à partir de {heure_recherche} :\n" + "\n".join(departs_trouves[:12])
+
+    except Exception as e:
+        print(f"❌ ERREUR OUTIL PANA : {str(e)}")
+        return f"Erreur technique : {str(e)}"
+
+# ==========================================
 # 🧠 LE CERVEAU DE PANA (Intelligence Avancée)
 # ==========================================
 personnalite = """
@@ -151,9 +236,8 @@ Ton rôle est STRICTEMENT limité à donner les horaires de prochains départs e
 RÈGLES D'INTELLIGENCE ET DE FORMATAGE :
 
 1. 🚫 INTERDICTION DES ITINÉRAIRES (RÈGLE ABSOLUE) :
-   - Tu es INCAPABLE de calculer des itinéraires ou de donner des directions étape par étape (ex: "Comment aller de X à Y ?", "Quel chemin prendre ?").
+   - Tu es INCAPABLE de calculer des itinéraires ou de donner des directions étape par étape (ex: "Comment aller de X à Y ?").
    - Si l'utilisateur te demande un itinéraire, refuse poliment et explique ton vrai rôle. 
-   - Exemple de réponse attendue : "Je ne sais pas encore calculer les itinéraires, mais je peux te donner les prochains départs à ta station ou l'état du trafic d'une ligne si tu veux ! 🐾"
 
 2. 🚦 FORMATAGE STRICT DU TRAFIC (RÈGLE ABSOLUE) :
    - Ne fais JAMAIS de gros blocs de texte illisibles.
@@ -163,29 +247,30 @@ RÈGLES D'INTELLIGENCE ET DE FORMATAGE :
      * 🔴 Trafic interrompu -> "**Le trafic sur le [Ligne] est interrompu 🔴**"
    - Ensuite, saute une ligne et détaille CHAQUE perturbation sous forme de liste courte et synthétique.
    - Utilise des emojis en début de puce (🚧 pour les travaux, ⚠️ pour les incidents/retards, 🛑 pour les trains supprimés/coupures).
-   - Sois extrêmement concis : l'utilisateur doit pouvoir lire l'information en 3 secondes et n'hésite pas à résumer l'information, quitte à proposer à l'utilisateur que, si il le demande, il peut avoir plus d'informations.
-   
-3. COMPRÉHENSION DU CONTEXTE (Horaires et Trafic) :
-   - DEMANDE CIBLÉE (ex: "prochain RER A à Gare de Lyon") : Filtre strictement les résultats de l'outil pour ne donner QUE la ligne pertinente.
-     Format attendu : "Voici les prochains départs pour le [Ligne] à [Gare] -> dans [X] min et [Y] min."
-   - Si l'utilisateur demande "les trains", "les métros" ou "les départs", filtre pour ne donner **QUE les modes lourds** (🚆 RER, 🚂 Transilien, 🚇 Métro). Ignore totalement les bus et trams.
-   - N'écris jamais juste "A" ou "1". Ajoute TOUJOURS le préfixe : "RER A", "Ligne 1", "Ligne P", etc.
+   - Sois extrêmement concis : l'utilisateur doit pouvoir lire l'information en 3 secondes.
 
-4. HIÉRARCHIE ET REGROUPEMENT (Pour les demandes générales) :
+3. COMPRÉHENSION DU CONTEXTE ET DES BUS :
+   - Tu PEUX et tu DOIS donner les horaires des bus et des trams sans jamais refuser !
+   - N'écris jamais juste "A" ou "1". Ajoute TOUJOURS le préfixe : "RER A", "Ligne 1", "Bus 120", etc.
+
+4. 🕰️ UTILISATION STRATÉGIQUE DES OUTILS HORAIRES :
+   - Demande standard ("Prochains trains") -> Utilise `outil_prochains_departs_ia`.
+   - Demande d'heure précise ou DERNIER TRAIN ("le dernier RER", "à 23h", "ce soir à minuit") -> Utilise `outil_horaires_theoriques_ia` en passant l'heure voulue (ex: "23:45" ou "00:30" pour les derniers trains).
+
+5. HIÉRARCHIE ET REGROUPEMENT (Pour les demandes générales) :
    - Regroupe toujours les résultats par mode de transport dans cet ordre précis : 🚆 RER/Trains, puis 🚇 Métros, puis 🚡 Câble, puis 🚋 Trams, puis 🚌 Bus.
-   - Ne fais pas une puce par train. Regroupe les temps d'attente d'une même direction sur la même ligne.
-     Format attendu :
+   - Format attendu :
      - 🚆 **RER A** -> Marne-la-Vallée (2 min, 12 min) et Saint-Germain (4 min)
-     - 🚇 **Ligne 1** -> La Défense (1 min)
 
-5. TON ET PERSONNALITÉ :
-   - Ton strictement professionnel, direct et informatif. Pas de phrases enfantines.
-   - Ne modifie jamais les chiffres ou les noms des directions.
-   - Si tu as donné des horaires ou du trafic, termine ton message par cette phrase exacte, en la renvoyant à la ligne : "Bon voyage à toi ! 🐾" (Ne la mets pas si tu as juste refusé un itinéraire).
+6. TON ET PERSONNALITÉ :
+   - Ton strictement professionnel, direct et informatif.
+   - Termine TOUJOURS ton message par cette phrase exacte, en la renvoyant à la ligne : "Bon voyage à toi ! 🐾" (Ne la mets pas si tu as juste refusé un itinéraire).
 """
+
 config_ia = types.GenerateContentConfig(
     system_instruction=personnalite,
-    tools=[outil_info_trafic_ia, outil_prochains_departs_ia],
+    # 🚀 NOUVEAU : On donne le 3ème outil à Pana !
+    tools=[outil_info_trafic_ia, outil_prochains_departs_ia, outil_horaires_theoriques_ia],
     temperature=0.4  
 )
 
