@@ -371,16 +371,34 @@ def ouvrir_assistant():
     if prompt := st.chat_input("Demande-moi un horaire ou une info trafic..."):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         with chat_container:
-            with st.chat_message("user", avatar="🧑"):
+            with st.chat_message("user", avatar="app_icon.png"):
                 st.markdown(prompt)
+            
             with st.chat_message("assistant", avatar="pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"):
-                with st.spinner("Pana cherche l'info..."):
-                    try:
-                        response = st.session_state.chat_session.send_message(prompt)
-                        reponse_finale = response.text
-                        st.markdown(reponse_finale)
-                        st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
-                    except Exception as e:
-                        st.error(f"Oups, Pana a glissé : {str(e)}")
+                # 1. On crée une "boîte magique" vide
+                message_placeholder = st.empty()
+                
+                # 2. On y met l'animation de chargement
+                message_placeholder.markdown("""
+                <div style="display: flex; align-items: center; gap: 12px; color: #3498db; font-style: italic; font-weight: 500; padding: 10px 0;">
+                    <div class="custom-loader" style="width: 18px; height: 18px; border-width: 3px; border-left-color: #f1c40f;"></div>
+                    Pana fouille pour trouver l'info... 🐾
+                </div>
+                """, unsafe_allow_html=True)
+                
+                try:
+                    # 3. L'IA réfléchit et on attend sa réponse...
+                    response = st.session_state.chat_session.send_message(prompt)
+                    reponse_finale = response.text
+                    
+                    # 4. PAF ! On écrase l'animation avec la réponse finale
+                    message_placeholder.markdown(reponse_finale)
+                    
+                    # 5. On sauvegarde dans l'historique
+                    st.session_state.messages_ia.append({"role": "assistant", "content": reponse_finale})
+                    
+                except Exception as e:
+                    # Si ça plante, on écrase l'animation avec le message d'erreur
+                    message_placeholder.error(f"Oups, Pana a glissé : {str(e)}")
 
     st.caption("*Pana est propulsé par Gemini, une IA, et peut se tromper. Vérifiez les informations importantes.*")
