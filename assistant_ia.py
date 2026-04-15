@@ -298,4 +298,4 @@ def ouvrir_assistant():
                     except Exception as e:
                         st.error(f"Oups, Pana a glissé : {str(e)}")
 
-    st.caption("Pana est propulsé par Gemini, une IA, et peut se tromper. Vérifiez les informations importantes.")
+    st.caption("*Pana est propulsé par Gemini, une IA, et peut se tromper. Vérifiez les informations importantes.*")
