@@ -11,13 +11,12 @@ from streamlit_js_eval import streamlit_js_eval, get_geolocation
 import streamlit.components.v1 as components
 
 from pwa import rendre_installable
-from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret, synthetiser_alerte, afficher_bandeau_trafic
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
-from style import appliquer_style_global
-from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+from ui import appliquer_style_global
+from settings import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE, API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from sidebar import initialiser_favoris, afficher_sidebar
-from ui_composants import afficher_titre_app, afficher_tuto_bienvenue
+from ui import afficher_titre_app, afficher_tuto_bienvenue
 from easter_eggs import afficher_popup_feur, afficher_cheval_express
 from moteur_live import afficher_tableau_live
 from assistant_ia import ouvrir_assistant
