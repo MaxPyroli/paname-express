@@ -3,7 +3,7 @@ import json
 import time
 import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
-from config import APP_VERSION, APP_CODENAME
+from settings import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
 from assistant_ia import ouvrir_assistant
 
