@@ -87,7 +87,7 @@ def get_svg_inline(file_path):
 #              INTERFACE GLOBALE
 # ==========================================
 # --- RECUPERATION DE L'ICONE DU TITRE ---
-img_app_b64 = get_img_as_base64("app_icon.png")
+img_app_b64 = get_img_as_base64("assets/app_icon.png")
 if img_app_b64:
     icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
 else:
@@ -343,7 +343,7 @@ elif not st.session_state.search_results:
 # ==========================================
 
 # 1. On récupère ton image (assure-toi d'avoir une image carrée comme "pana.png" ou utilise ton app_icon)
-img_pana_b64 = get_img_as_base64("pana_icon.png") # Tu peux changer le nom du fichier ici !
+img_pana_b64 = get_img_as_base64("assets/pana_icon.png") # Tu peux changer le nom du fichier ici !
 
 # 2. On prépare le bout de CSS selon si l'image a été trouvée ou non
 if img_pana_b64:
