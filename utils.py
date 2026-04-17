@@ -269,9 +269,14 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     <style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
     
+    /* 🪄 L'ASTUCE EST LÀ : L'icône ouverte passe devant les autres "juste de 1" (96 bat le 95 par défaut) */
+    details.traffic-icon[open] {
+        z-index: 96 !important;
+    }
+    
     div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
         position: relative !important;
-        z-index: 90 !important; 
+        z-index: 99 !important; 
     }
 
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
