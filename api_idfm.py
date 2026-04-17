@@ -1,7 +1,7 @@
 import requests
 import streamlit as st
 import re
-from constants import API_KEY, BASE_URL
+from settings import API_KEY, BASE_URL
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
