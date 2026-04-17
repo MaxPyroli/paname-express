@@ -1,27 +1,45 @@
 import streamlit as st
 import json
 import time
+import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 from config import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
 from assistant_ia import ouvrir_assistant
 
 def initialiser_favoris():
-    """Charge les favoris depuis le navigateur au démarrage."""
+    """Charge les favoris depuis le navigateur au démarrage et gère la sauvegarde infaillible."""
     if 'favorites' not in st.session_state:
         st.session_state.favorites = []
     if 'favs_loaded' not in st.session_state:
         st.session_state.favs_loaded = False
 
     if not st.session_state.favs_loaded:
-        favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs_init")
-        if favs_from_browser:
-            try:
-                st.session_state.favorites = json.loads(favs_from_browser)
-                st.session_state.favs_loaded = True
-                st.rerun()
-            except:
-                pass
+        favs_from_browser = streamlit_js_eval(js_expressions="window.localStorage.getItem('gp_favs');", key="get_favs_init")
+        
+        # Tant que c'est "None", le navigateur n'a pas répondu.
+        # Dès qu'il répond (même avec du vide), on passe à la suite !
+        if favs_from_browser is not None:
+            st.session_state.favs_loaded = True
+            if favs_from_browser:
+                try:
+                    st.session_state.favorites = json.loads(favs_from_browser)
+                except:
+                    pass
+            st.rerun()
+            
+    # 🪄 L'INJECTION MAGIQUE INVISIBLE QUI SAUVEGARDE VRAIMENT 🪄
+    if st.session_state.get('trigger_save_favs', False):
+        json_data = json.dumps(st.session_state.favorites)
+        # On sécurise la chaîne de caractères pour le JavaScript
+        safe_json = json_data.replace('\\', '\\\\').replace('`', '\\`')
+        
+        # On injecte un micro-script invisible qui va écrire dans le navigateur au moment de l'affichage
+        components.html(
+            f"<script>window.localStorage.setItem('gp_favs', `{safe_json}`);</script>", 
+            height=0, width=0
+        )
+        st.session_state.trigger_save_favs = False
 
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
@@ -59,14 +77,13 @@ def afficher_sidebar():
                 with col_del:
                     if st.button("🗑️", key=f"del_fav_{fav['id']}", use_container_width=True):
                         st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                        json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-                        streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')")
+                        st.session_state.trigger_save_favs = True # On déclenche la sauvegarde
                         st.rerun()
 
             st.write("")
             if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
                 st.session_state.favorites = []
-                streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                st.session_state.trigger_save_favs = True # On déclenche la sauvegarde
                 st.rerun()
 
         # ✨ Séparateur compacté
