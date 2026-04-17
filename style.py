@@ -43,7 +43,7 @@ def charger_police_locale(file_path, font_name):
 
 def appliquer_style_global():
     # 1. On charge la police
-    charger_police_locale("GrandParis.otf", "Grand Paris")
+    charger_police_locale("assets/GrandParis.otf", "Grand Paris")
     
     # 2. On injecte tout le CSS (sans f-string, donc sans risque de crash)
     st.markdown("""
