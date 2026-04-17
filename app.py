@@ -9,18 +9,18 @@ import base64
 import json
 from streamlit_js_eval import streamlit_js_eval, get_geolocation
 import streamlit.components.v1 as components
-from pwa import rendre_installable
 
+from pwa import rendre_installable
 from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret, synthetiser_alerte, afficher_bandeau_trafic
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
 from style import appliquer_style_global
 from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
 from sidebar import initialiser_favoris, afficher_sidebar
-
 from ui_composants import afficher_titre_app, afficher_tuto_bienvenue
 from easter_eggs import afficher_popup_feur, afficher_cheval_express
 from moteur_live import afficher_tableau_live
+from assistant_ia import ouvrir_assistant
 
 # Initialisation des variables de session
 if 'search_key' not in st.session_state:
@@ -153,7 +153,7 @@ with st.form("search_form"):
     with col_geo:
         # 📍 Me localiser : L'ajout de texte rend le bouton BEAUCOUP plus lisible.
         # type="primary" le colore pour le mettre en valeur.
-        geo_clicked = st.form_submit_button("📍 Me localiser", type="primary", use_container_width=True)
+        geo_clicked = st.form_submit_button("📍 Me localiser", use_container_width=True)
 
 # Si le bouton "Me localiser" est cliqué, on active le mode géoloc
 if geo_clicked:
@@ -161,9 +161,20 @@ if geo_clicked:
 
 # 2. LOGIQUE DE GÉOLOCALISATION (Si le bouton 📍 a été cliqué)
 if st.session_state.geoloc_active:
-    st.info("📡 Recherche de votre position...")
+    
+    # Message d'attente animé personnalisé
+    st.markdown("""
+    <div style="background-color: rgba(52, 152, 219, 0.1); border-left: 4px solid #3498db; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center;">
+        <div class="custom-loader" style="width: 24px; height: 24px; border-width: 3px; margin-right: 15px; flex-shrink: 0;"></div>
+        <div style="color: var(--text-color);">
+            <strong style="color: #3498db; font-size: 1.05em;">Recherche du signal GPS...</strong><br>
+            <span style="font-size: 0.85em; opacity: 0.8;">Veuillez autoriser la localisation si votre navigateur le demande.</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # La magie opère ici : ça demande l'autorisation au navigateur
-    loc = get_geolocation() 
+    loc = get_geolocation()
     
     if loc:
         # 🛡️ LE BOUCLIER ANTI-CRASH (Vérification de l'autorisation)
@@ -326,3 +337,61 @@ if st.session_state.selected_stop:
 # 2. Sinon -> Tuto de Bienvenue (Construction sécurisée & Couleurs dynamiques)
 elif not st.session_state.search_results:
     afficher_tuto_bienvenue()
+
+# ==========================================
+# 🐾 LA BULLE FLOTTANTE DE PANA (AVEC IMAGE !)
+# ==========================================
+
+# 1. On récupère ton image (assure-toi d'avoir une image carrée comme "pana.png" ou utilise ton app_icon)
+img_pana_b64 = get_img_as_base64("pana_icon.png") # Tu peux changer le nom du fichier ici !
+
+# 2. On prépare le bout de CSS selon si l'image a été trouvée ou non
+if img_pana_b64:
+    fond_css = f"""
+        background-image: url('data:image/png;base64,{img_pana_b64}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-color: transparent !important;
+        color: transparent !important; /* Cache le texte du bouton */
+    """
+else:
+    # Plan B de secours si l'image n'est pas trouvée
+    fond_css = """
+        background-color: #ff9f43 !important;
+        color: white !important;
+    """
+
+# 3. L'injection du style CSS
+st.markdown(
+    f"""
+    <style>
+    button[kind="primary"] {{
+        position: fixed !important;
+        bottom: 40px !important;
+        right: 40px !important;
+        width: 65px !important;
+        height: 65px !important;
+        border-radius: 50% !important;
+        {fond_css}
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(255, 159, 67, 0.4) !important;
+        z-index: 9999 !important;
+        transition: all 0.3s ease !important;
+    }}
+    
+    button[kind="primary"]:hover {{
+        transform: scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(255, 159, 67, 0.6) !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# 4. Le bouton isolé dans un fragment pour éviter de recharger la page entière !
+@st.fragment
+def afficher_bouton_pana():
+    if st.button(" ", type="primary", help="Discuter avec Pana"):
+        ouvrir_assistant()
+
+afficher_bouton_pana()

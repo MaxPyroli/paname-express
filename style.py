@@ -95,19 +95,21 @@ def appliquer_style_global():
         
         .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
         
-        /* ✨ TON TITRE EN VERRE EST ICI (Sur une seule ligne) ✨ */
-        .station-title { font-size: 24px; font-weight: 800; color: #fff; text-align: center; margin: 10px 0 20px 0; text-transform: uppercase; background: linear-gradient(90deg, rgba(30, 60, 114, 0.85) 0%, rgba(42, 82, 152, 0.85) 100%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        /* ✨ 1. LE TITRE DE LA STATION (Dégradé Bleu comme avant) ✨ */
+        .station-title { 
+            font-size: 24px !important; 
+            font-weight: 800 !important; 
+            color: #ffffff !important; 
+            text-align: center; 
+            margin: 10px 0 20px 0; 
+            text-transform: uppercase; 
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+            padding: 14px !important; 
+            border-radius: 12px !important; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; 
+        }
         
-        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 0px; }
-        
-        .bus-card, .rail-card { background-color: #041b3b !important; padding: 12px; margin-bottom: 15px; border-radius: 12px; border-left-width: 5px !important; border-left-style: solid !important; color: #ffffff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.3s; }
-        .bus-dest, .rail-dest { color: #e0e0e0 !important; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
-        .bus-row, .rail-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; padding-bottom: 2px; border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
-        .bus-row > span:last-child, .rail-row > span:last-child { color: #ffffff !important; white-space: nowrap; flex-shrink: 0; text-align: right; }
-        
-        .service-box { text-align: left; padding: 10px 12px; color: #888; font-style: italic; font-size: 0.95em; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid #444; }
-        .service-end { color: #999; font-style: italic; font-size: 0.9em; }
-
         .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
         .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
         .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
@@ -138,12 +140,27 @@ def appliquer_style_global():
         .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
         .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         
-        /* CSS ICONES INLINE */
-        svg.mode-icon-inline {
+        /* ============================================================== */
+        /* ✨ CSS ICONES INLINE (100% NATIF & INCASSABLE) ✨              */
+        /* ============================================================== */
+        svg.mode-icon-inline,
+        div[class^="sticky-glass-"] svg {
             height: 1.5em !important;
             width: auto !important;
             vertical-align: middle !important;
-            color: var(--text-color) !important; 
+            color: var(--text-color) !important; /* L'icône prend la couleur de base du texte */
+        }
+
+        /* 🪄 L'ASTUCE : currentColor force le dessin à copier la couleur du texte (sans bug de variable !) */
+        svg.mode-icon-inline path, 
+        svg.mode-icon-inline rect,
+        svg.mode-icon-inline circle,
+        svg.mode-icon-inline polygon,
+        div[class^="sticky-glass-"] svg path,
+        div[class^="sticky-glass-"] svg rect,
+        div[class^="sticky-glass-"] svg circle,
+        div[class^="sticky-glass-"] svg polygon {
+            fill: currentColor !important;
         }
 
         .fav-btn-container { width: 100%; }
@@ -161,57 +178,86 @@ def appliquer_style_global():
         button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
         button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 
-        .traffic-ticker {
-            overflow: hidden;
-            white-space: nowrap;
-            background: rgba(231, 76, 60, 0.1);
-            border-radius: 8px;
-            padding: 4px 0;
-            margin-top: 4px;
-            border-left: 3px solid #e74c3c;
+        .traffic-ticker { overflow: hidden; white-space: nowrap; background: rgba(231, 76, 60, 0.1); border-radius: 8px; padding: 4px 0; margin-top: 4px; border-left: 3px solid #e74c3c; }
+        .ticker-text { display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #e74c3c; font-weight: bold; font-style: italic; font-size: 0.85em; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* ⚠️ STYLE PERTURBÉ : Limite de taille et Scrollbar (RER D) */
+        .traffic-warning { 
+            color: #f39c12; font-size: 0.8em; font-weight: 500; margin-top: 2px; 
+            display: block !important; /* Indispensable pour que le scroll fonctionne ! */
+            max-height: 60px !important; 
+            overflow-y: auto !important; 
+            padding-right: 5px;
         }
-        .ticker-text {
-            display: inline-block;
-            padding-left: 100%;
-            animation: ticker 20s linear infinite;
-            color: #e74c3c;
-            font-weight: bold;
-            font-style: italic;
-            font-size: 0.85em;
-        }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
+        
+        .traffic-warning::-webkit-scrollbar { width: 4px; }
+        .traffic-warning::-webkit-scrollbar-thumb { 
+            background: rgba(128, 128, 128, 0.4); 
+            border-radius: 4px; 
         }
 
-        /* ⚠️ STYLE PERTURBÉ (MOINS IMPACTANT) */
-        .traffic-warning {
-            color: #f39c12;
-            font-size: 0.8em;
-            font-weight: 500;
-            margin-top: 2px;
+        .tuto-card { background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease !important; }
+        .tuto-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important; border: 1px solid rgba(52, 152, 219, 0.8) !important; background-color: rgba(52, 152, 219, 0.1) !important; cursor: pointer !important; }
+        
+        /* ✨ 2. LES CARTES DE DÉPART (Ombres Colorées "Glow") ✨ */
+        .bus-card, .rail-card { 
+            background-color: var(--secondary-background-color) !important; 
+            padding: 14px !important; 
+            margin-bottom: 18px !important; 
+            border-radius: 14px !important; 
+            
+            border-left-width: 6px !important; 
+            border-left-style: solid !important; 
+            border-top: none !important;
+            border-right: none !important;
+            border-bottom: none !important;
+            
+            color: var(--text-color) !important; 
+            
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--line-color, var(--text-color)) 20%, transparent), 
+                        0 4px 8px color-mix(in srgb, var(--line-color, var(--text-color)) 15%, transparent) !important;
+            
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
 
-        /* La classe de base */
-        .tuto-card {
-            background-color: var(--secondary-background-color);
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            flex: 1;
-            min-width: 200px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.3s ease !important; /* On force la fluidité */
+        .bus-card:active, .rail-card:active { transform: scale(0.98); }
+
+        .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        /* 📏 Lignes de séparation classiques et espacement compact d'origine */
+        .bus-row, .rail-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding-top: 8px !important; padding-bottom: 2px !important; 
+            border-top: 1px solid rgba(128, 128, 128, 0.25) !important; 
+            border-bottom: none !important;
         }
-    
-        /* L'effet magique au survol (AVEC !IMPORTANT) */
-        .tuto-card:hover {
-            transform: translateY(-8px) !important;
-            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important;
-            border: 1px solid rgba(52, 152, 219, 0.8) !important;
-            background-color: rgba(52, 152, 219, 0.1) !important; /* Petit fond bleuté au survol */
-            cursor: pointer !important;
+        .bus-row > span:last-child, .rail-row > span:last-child { 
+            color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; 
+        }        
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
+        
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+
+        /* ✨ HIGHLIGHT DES DATES POUR PANA (Encadrés Stylisés) ✨ */
+        [data-testid="stChatMessageContent"] code {
+            background-color: color-mix(in srgb, #f39c12 15%, transparent) !important;
+            color: #d35400 !important; /* Orange foncé pour le mode clair */
+            border: 1px solid color-mix(in srgb, #f39c12 40%, transparent) !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+            font-weight: 800 !important;
+            font-size: 0.9em !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }
+
+        /* Adaptation de l'encadré pour le mode sombre ! */
+        [data-paname-theme="dark"] [data-testid="stChatMessageContent"] code {
+            color: #f1c40f !important; /* Jaune éclatant dans l'obscurité */
+            background-color: color-mix(in srgb, #f1c40f 15%, transparent) !important;
+            border: 1px solid color-mix(in srgb, #f1c40f 30%, transparent) !important;
+        }
+        
     </style>
     """, unsafe_allow_html=True)

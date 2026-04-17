@@ -1,26 +1,45 @@
 import streamlit as st
 import json
 import time
+import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 from config import APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
+from assistant_ia import ouvrir_assistant
 
 def initialiser_favoris():
-    """Charge les favoris depuis le navigateur au démarrage."""
+    """Charge les favoris depuis le navigateur au démarrage et gère la sauvegarde infaillible."""
     if 'favorites' not in st.session_state:
         st.session_state.favorites = []
     if 'favs_loaded' not in st.session_state:
         st.session_state.favs_loaded = False
 
     if not st.session_state.favs_loaded:
-        favs_from_browser = streamlit_js_eval(js_expressions="localStorage.getItem('gp_favs')", key="get_favs_init")
-        if favs_from_browser:
-            try:
-                st.session_state.favorites = json.loads(favs_from_browser)
-                st.session_state.favs_loaded = True
-                st.rerun()
-            except:
-                pass
+        favs_from_browser = streamlit_js_eval(js_expressions="window.localStorage.getItem('gp_favs');", key="get_favs_init")
+        
+        # Tant que c'est "None", le navigateur n'a pas répondu.
+        # Dès qu'il répond (même avec du vide), on passe à la suite !
+        if favs_from_browser is not None:
+            st.session_state.favs_loaded = True
+            if favs_from_browser:
+                try:
+                    st.session_state.favorites = json.loads(favs_from_browser)
+                except:
+                    pass
+            st.rerun()
+            
+    # 🪄 L'INJECTION MAGIQUE INVISIBLE QUI SAUVEGARDE VRAIMENT 🪄
+    if st.session_state.get('trigger_save_favs', False):
+        json_data = json.dumps(st.session_state.favorites)
+        # On sécurise la chaîne de caractères pour le JavaScript
+        safe_json = json_data.replace('\\', '\\\\').replace('`', '\\`')
+        
+        # On injecte un micro-script invisible qui va écrire dans le navigateur au moment de l'affichage
+        components.html(
+            f"<script>window.localStorage.setItem('gp_favs', `{safe_json}`);</script>", 
+            height=0, width=0
+        )
+        st.session_state.trigger_save_favs = False
 
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
@@ -35,7 +54,8 @@ def afficher_sidebar():
             st.query_params.clear()
             st.rerun()
             
-        st.header("⭐ Mes Favoris")
+        # ✨ Titre compacté
+        st.markdown("<h3 style='margin-top: 15px; margin-bottom: 10px; font-size: 1.4rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
         
         if not st.session_state.favorites:
             st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
@@ -57,18 +77,20 @@ def afficher_sidebar():
                 with col_del:
                     if st.button("🗑️", key=f"del_fav_{fav['id']}", use_container_width=True):
                         st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                        json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-                        streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')")
+                        st.session_state.trigger_save_favs = True # On déclenche la sauvegarde
                         st.rerun()
 
             st.write("")
             if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
                 st.session_state.favorites = []
-                streamlit_js_eval(js_expressions="localStorage.removeItem('gp_favs')")
+                st.session_state.trigger_save_favs = True # On déclenche la sauvegarde
                 st.rerun()
 
-        st.markdown("---")
-        st.header("🗄️ Informations")
+        # ✨ Séparateur compacté
+        st.markdown('<div style="margin: 15px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2);"></div>', unsafe_allow_html=True)
+        
+        # ✨ Titre compacté
+        st.markdown("<h3 style='margin-top: 0; margin-bottom: 10px; font-size: 1.4rem;'>🗄️ Informations</h3>", unsafe_allow_html=True)
         st.success("🎉 **Bienvenue sur Grand Paname v2.0 !**")
         
         st.markdown("""
@@ -93,11 +115,12 @@ def afficher_sidebar():
             </svg>
             Rejoignez le canal !
         </a>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
         
-        st.markdown("---")
+        # ✨ Séparateur compacté
+        st.markdown('<div style="margin: 15px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.2);"></div>', unsafe_allow_html=True)
+        
         with st.expander("📜 Historique des versions"):
-            # L'astuce CSS invisible pour forcer la hauteur max et l'ascenseur
             st.markdown("""
             <style>
                 div[data-testid="stExpanderDetails"] {
@@ -113,13 +136,10 @@ def afficher_sidebar():
                 if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (Tout en bas de la sidebar)
+        # FOOTER / CRÉDITS
         # ==========================================
-        # On ajoute un espace flexible pour pousser le footer vers le bas s'il y a de la place
-        st.markdown('<div style="flex-grow: 1;"></div>', unsafe_allow_html=True)
-        
         st.markdown("""
-        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(128, 128, 128, 0.2);">
             <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
@@ -130,9 +150,9 @@ def afficher_sidebar():
                 ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
             </div>
             <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
-                <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Signaler un bug</a>
+                <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;" target="_blank">Signaler un bug</a>
                 <span style="color: #444;">•</span>
-                <a href="contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
+                <a href="mailto:contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
             </div>
             <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
                 © 2026 Grand Paname. Données : API IDFM.

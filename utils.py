@@ -255,7 +255,7 @@ def determiner_type_perturbation(texte, header):
     return "En cours"
 
 def afficher_bandeau_trafic(line_id, nom_ligne=""):
-    """Retourne le HTML du bandeau trafic (Propre, stable, avec tous les filtres)."""
+    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur, sans bégaiements)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id, nom_ligne)
@@ -265,56 +265,70 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruption and not perturbation:
         return ""
 
-    css = """<style>
-    details.traffic-box > summary::-webkit-details-marker { display: none; }
-    details.traffic-box .chevron { display: inline-block; transition: transform 0.3s ease; }
-    details.traffic-box[open] .chevron { transform: rotate(180deg); }
-    </style>"""
-
-    # CSS propre et Hack JS pour Streamlit
     css_and_script = """
     <style>
-    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
+    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
+    
+    /* 🪄 L'ASTUCE EST LÀ : L'icône ouverte passe devant les autres "juste de 1" (96 bat le 95 par défaut) */
+    details.traffic-icon[open] {
+        z-index: 96 !important;
+    }
+    
+    div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
+        position: relative !important;
+        z-index: 99 !important; 
+    }
+
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
     details.traffic-icon > summary { 
         list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
-        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
-        user-select: none;
+        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em; user-select: none;
     }
     details.traffic-icon > summary:hover { opacity: 0.8; }
+    
+    /* On customise la barre de défilement pour qu'elle soit jolie ! */
+    .traffic-content-scroll::-webkit-scrollbar { width: 6px; }
+    .traffic-content-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if (!window.trafficScriptLoaded) {
-            window.trafficScriptLoaded = true;
-            document.addEventListener('click', function(e) {
-                const openedDetails = document.querySelectorAll('details.traffic-icon[open]');
-                openedDetails.forEach(details => {
-                    // Si on clique en dehors du menu, on le ferme
-                    if (!details.contains(e.target)) {
-                        details.removeAttribute('open');
+        if (!window.traficJSV4) {
+            window.traficJSV4 = true;
+            function setZ90() {
+                document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
+                    if (c.querySelector('details.traffic-icon[open]')) {
+                        c.style.setProperty('position', 'relative', 'important');
+                        c.style.setProperty('z-index', '90', 'important');
+                    } else if (c.style.zIndex === '90') {
+                        c.style.removeProperty('z-index');
                     }
                 });
+            }
+            document.addEventListener('click', e => {
+                document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
+                    if (!d.contains(e.target)) d.removeAttribute('open');
+                });
+                setTimeout(setZ90, 10);
             });
+            document.addEventListener('toggle', e => {
+                if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
+            }, true);
         }
     ">
     """
 
     html_output = css_and_script + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
 
-    # 🌬️ LE MOTEUR INTÉGRÉ (100% blindé)
-    def preparer_texte(texte_brut):
+    # --- NETTOYAGE DU TEXTE ---
+    def preparer_texte(texte_brut, header_alerte=""):
         if not texte_brut or str(texte_brut).strip().lower() == "none": 
             return "Information non disponible."
-        
-        # On force en string au cas où l'API envoie un format bizarre
         t = str(texte_brut)
-        
-        # 1. On remplace les balises de structure par des sauts de ligne
         t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', t)
         t = re.sub(r'<[^>]+>', '', t)
         
-        # 2. GOMMAGE EXTRÊME : On détruit les bégaiements IDFM / RATP
         bouts_a_effacer = [
             r"(?i)bus \d+\s*:\s*travaux\s*[-:]?\s*",
             r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
@@ -326,49 +340,39 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         for bout in bouts_a_effacer:
             t = re.sub(bout, '', t)
             
-        # 🛡️ Sécurité anti-crash sur ta fonction existante
         try:
             t_propre = nettoyer_texte_details(t)
             if t_propre: t = t_propre
-        except:
-            pass # Si ça plante, on garde le texte tel quel
+        except: pass
 
-        # 3. Phrases entières à zapper complètement
         lignes_a_zapper = [
-            "les horaires du calculateur",
-            "un service de bus de remplacement",
-            "détails et calendrier", 
-            "autre autre",
-            "consultez le fil x",
-            "consultez le compte x",
-            "plus d'informations sur cette perturbation",
-            "nous vous prions de bien vouloir",
-            "pour la gêne occasionnée",
-            "fi :"
+            "les horaires du calculateur", "un service de bus de remplacement",
+            "détails et calendrier", "autre autre", "consultez le fil x",
+            "consultez le compte x", "plus d'informations sur cette perturbation",
+            "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi :"
         ]
+
+        # 🪄 NORMALISATION DU TITRE (On retire les doubles espaces pour comparer purement le texte)
+        header_clean = re.sub(r'\s+', ' ', str(header_alerte).lower()).strip(' .:-')
 
         lignes = t.split('\n')
         lignes_finales = []
-        
         for l in lignes:
             l_clean = l.strip()
-            # Nettoyage de la ponctuation résiduelle en début de phrase
             l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
+            if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none": continue
+            if any(z in l_clean.lower() for z in lignes_a_zapper): continue
             
-            if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none":
+            # 🪄 L'ANTI-BÉGAIEMENT AMÉLIORÉ (Fuzzy match puissant)
+            l_norm = re.sub(r'\s+', ' ', l_clean.lower()).strip(' .:-')
+            # Si la ligne ressemble de très près au titre, on l'efface direct !
+            if header_clean and len(l_norm) > 15 and (l_norm in header_clean or header_clean in l_norm):
                 continue
                 
-            if any(z in l_clean.lower() for z in lignes_a_zapper):
-                continue
-                
-            # 4. ANTI-DOUBLONS INTELLIGENT
             est_doublon = False
             for i, existante in enumerate(lignes_finales):
-                if l_clean.lower() in existante.lower():
-                    est_doublon = True
-                    break
-                elif existante.lower() in l_clean.lower():
-                    lignes_finales[i] = l_clean
+                if l_clean.lower() in existante.lower() or existante.lower() in l_clean.lower():
+                    lignes_finales[i] = l_clean if len(l_clean) > len(existante) else existante
                     est_doublon = True
                     break
             
@@ -376,78 +380,56 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
                 l_clean = l_clean[0].upper() + l_clean[1:]
                 lignes_finales.append(l_clean)
         
-        # 5. SÉCURITÉ ANTI-VIDE ABSOLUE
         if not lignes_finales:
             secours = str(texte_brut).replace('\n', ' ').strip()
-            if secours.lower() == "none" or not secours:
-                return "Information non disponible."
+            if secours.lower() == "none" or not secours: return "Information non disponible."
             return secours
-            
         return '<br>'.join(lignes_finales)
 
-    # --- ASSEMBLAGE DES ICÔNES INDÉPENDANTES (MENUS FLOTTANTS) ---
-    
     interruptions = [a for a in alertes if a['severity'] >= 40]
     perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
 
-    if not interruptions and not perturbations:
-        return ""
-
-    # CSS propre sans l'écran invisible qui bloquait les autres clics
-    css = """<style>
-    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
-    details.traffic-icon > summary::-webkit-details-marker { display: none; }
-    details.traffic-icon > summary { 
-        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
-        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em;
-    }
-    details.traffic-icon > summary:hover { opacity: 0.8; }
-    </style>"""
-
-    html_output = css + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
-
-    # On empile les alertes ROUGES
+    # --- AFFICHAGE DES BULLETINS ---
+    # Pour les interruptions ROUGES :
     for inter in interruptions:
-        info_longue = preparer_texte(inter.get('text', ''))
+        info_longue = preparer_texte(inter.get('text', ''), inter.get('header', ''))
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 99999;">
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 99999; 
-                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong><br>
-                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
+                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(231, 76, 60, 0.25);">
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+                </div>
             </div>
         </details>
         """
         
-    # On empile les alertes ORANGES / BLEUES
     for pert in perturbations:
         texte_brut = pert.get('text', '')
-        header_brut = pert.get('header', '')
-        type_pert = determiner_type_perturbation(texte_brut, header_brut)
-        
+        type_pert = determiner_type_perturbation(texte_brut, pert.get('header', ''))
         if type_pert == "TROP_LOIN": continue
             
-        info_longue = preparer_texte(texte_brut)
+        info_longue = preparer_texte(texte_brut, pert.get('header', ''))
         est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
         est_futur = "À venir" in type_pert
         
-        if est_futur:
-            icone_emoji, couleur_hex, couleur_rgb, titre = "ℹ️", "#3498db", "52, 152, 219", f"Information • {type_pert}"
-        elif est_travaux:
-            icone_emoji, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
-        else:
-            icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
+        if est_futur: icone_emoji, couleur_hex, couleur_rgb, titre = "ℹ️", "#3498db", "52, 152, 219", f"Information • {type_pert}"
+        elif est_travaux: icone_emoji, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
+        else: icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 99999;">
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; min-width: 280px; z-index: 99999; 
-                        background: rgba(4, 27, 59, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-                        border: 1px solid rgba(255,255,255,0.15); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong><br>
-                <div style="margin-top: 6px; font-size: 0.85em; color: #ddd; line-height: 1.5; white-space: normal;">{info_longue}</div>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
+                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba({couleur_rgb}, 0.25);">
+                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+                </div>
             </div>
         </details>
         """

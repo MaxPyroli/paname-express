@@ -35,10 +35,8 @@ def toggle_favorite(stop_id, stop_name):
             'full_name': stop_name
         })
         
-    # On sauvegarde directement dans le cache du navigateur de l'utilisateur
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_fav_{time.time()}")
-
+    # 🪄 LE SECRET EST LÀ : On dit à l'application de sauvegarder au prochain affichage !
+    st.session_state.trigger_save_favs = True
 # ==========================================
 # FRAGMENT LIVE (AUTO-REFRESH)
 # ==========================================
@@ -73,7 +71,7 @@ def afficher_live_content(stop_id, clean_name):
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }</style>""" if inject_animation else ""
+        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: none; } }</style>""" if inject_animation else ""
 
         html_content = f"{anim_css}<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; margin-bottom: -10px;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         
@@ -336,16 +334,34 @@ def afficher_live_content(stop_id, clean_name):
         has_data = True
         
         with containers[mode_actuel]:
+            # L'astuce est de rendre le spacer "transparent" pour qu'il ne pollue pas le mode clair
             st.markdown(f"""
-            <div style="background-color: #041b3b; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div>
+            <div style="background-color: transparent; height: 54px; width: 100%; border-radius: 12px; box-sizing: border-box;"></div>
             """, unsafe_allow_html=True)
             
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
-                .element-container:has(.sticky-glass-{mode_actuel}) {{ position: sticky !important; top: calc(3.8rem + var(--title-height, 80px) + 40px) !important; z-index: 99 !important; }}
-                div.sticky-glass-{mode_actuel} {{ margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; background: rgba(255, 255, 255, 0.08) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; color: #ffffff !important; font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; }}
-                div.sticky-glass-{mode_actuel} svg {{ fill: #ffffff !important; height: 1.3em !important; }}
+                .element-container:has(.sticky-glass-{mode_actuel}) {{ 
+                    position: sticky !important; 
+                    top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
+                    z-index: 99 !important; 
+                }}
+                
+                div.sticky-glass-{mode_actuel} {{ 
+                    margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
+                    background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
+                    backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
+                    border-radius: 12px !important; 
+                    display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
+                    color: var(--text-color) !important; 
+                    font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
+                    
+                    /* Ombre douce adaptative pour le bandeau de mode */
+                    box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                }}
+                /* On utilise currentColor au lieu de la variable pour forcer l'héritage parfait ! */
+                div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
             <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
             """, unsafe_allow_html=True)
@@ -385,7 +401,7 @@ def afficher_live_content(stop_id, clean_name):
                     p3 = [d for d in proches if d not in p1 and d not in p2]
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
+                    card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     
                     def render_group(titre, items):
                         h = f"<div class='rer-direction'>{titre}</div>"
@@ -418,7 +434,7 @@ def afficher_live_content(stop_id, clean_name):
                     st.markdown(card_html, unsafe_allow_html=True)
                     
                 elif mode_actuel in ["RER", "TRAIN"]:
-                    card_html = f"""<div class="rail-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
+                    card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:10px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
                     if not proches or (len(proches)==1 and proches[0]['tri']==3000): card_html += f"""<div class="service-box">😴 Service terminé</div>"""
                     else:
                         proches.sort(key=lambda x: x['tri'])
@@ -466,7 +482,7 @@ def afficher_live_content(stop_id, clean_name):
                          rows_html = '<div class="service-box">😴 Service terminé</div>'
 
                     st.markdown(f"""
-<div class="bus-card" style="border-left-color: #{color}; position: relative;">
+<div class="bus-card" style="--line-color: #{color}; border-left-color: var(--line-color); position: relative;">
 <div style="display:flex; align-items:center; margin-bottom:10px;">
 <span class="line-badge" style="background-color:#{color};">{code}</span>
 </div>
@@ -474,7 +490,6 @@ def afficher_live_content(stop_id, clean_name):
 {rows_html}
 </div>
 """, unsafe_allow_html=True)
-
                 else:
                     dest_data = {}
                     for d in proches:
@@ -528,7 +543,7 @@ def afficher_live_content(stop_id, clean_name):
                             else:
                                 rows_html += row_content                    
 
-                    st.markdown(f"""<div class="bus-card" style="border-left-color: #{color};"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div class="bus-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>{rows_html}</div>""", unsafe_allow_html=True)
     
     # 6. FOOTER
     with containers["AUTRE"]:
@@ -589,18 +604,17 @@ def afficher_live_content(stop_id, clean_name):
 def afficher_tableau_live(stop_id, stop_name):
     clean_name = stop_name.split('(')[0].strip()
     
+    # On retire le style="background-color: transparent" qui écrasait tout
     st.markdown(f"""
     <style>
-        div[data-testid="stElementContainer"]:has(.sticky-station-title),
-        .element-container:has(.sticky-station-title) {{
+        div[data-testid="stElementContainer"]:has(.sticky-station-title) {{
             position: sticky !important; 
             top: 3.8rem !important; 
             z-index: 105 !important;
-            background-color: transparent !important; 
         }}
     </style>
     
-    <div class='station-title sticky-station-title' style='margin-top: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.5);'>
+    <div class='station-title sticky-station-title'>
         {clean_name}
     </div>
 
