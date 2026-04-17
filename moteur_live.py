@@ -35,10 +35,8 @@ def toggle_favorite(stop_id, stop_name):
             'full_name': stop_name
         })
         
-    # On sauvegarde directement dans le cache du navigateur de l'utilisateur
-    json_data = json.dumps(st.session_state.favorites).replace("'", "\\'")
-    streamlit_js_eval(js_expressions=f"localStorage.setItem('gp_favs', '{json_data}')", key=f"save_fav_{time.time()}")
-
+    # 🪄 LE SECRET EST LÀ : On dit à l'application de sauvegarder au prochain affichage !
+    st.session_state.trigger_save_favs = True
 # ==========================================
 # FRAGMENT LIVE (AUTO-REFRESH)
 # ==========================================
