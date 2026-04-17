@@ -287,7 +287,7 @@ def ouvrir_assistant():
     import os
     try:
         from utils import get_img_as_base64
-        img_pana_b64 = get_img_as_base64("pana_icon.png")
+        img_pana_b64 = get_img_as_base64("assets/pana_icon.png")
         if img_pana_b64:
             icone_titre = f'<img src="data:image/png;base64,{img_pana_b64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">'
         else:
@@ -365,7 +365,7 @@ def ouvrir_assistant():
     
     with chat_container:
         for message in st.session_state.messages_ia:
-            avatar_actuel = "pana_icon.png" if message["role"] == "assistant" and os.path.exists("pana_icon.png") else ("🐾" if message["role"] == "assistant" else "🧑")
+            avatar_actuel = "assets/pana_icon.png" if message["role"] == "assistant" and os.path.exists("assets/pana_icon.png") else ("🐾" if message["role"] == "assistant" else "🧑")
             with st.chat_message(message["role"], avatar=avatar_actuel):
                 st.markdown(message["content"])
 
@@ -375,7 +375,7 @@ def ouvrir_assistant():
             with st.chat_message("user", avatar="app_icon.png"):
                 st.markdown(prompt)
             
-            with st.chat_message("assistant", avatar="pana_icon.png" if os.path.exists("pana_icon.png") else "🐾"):
+            with st.chat_message("assistant", avatar="assets/pana_icon.png" if os.path.exists("assets/pana_icon.png") else "🐾"):
                 # 1. On crée une "boîte magique" vide
                 message_placeholder = st.empty()
                 
