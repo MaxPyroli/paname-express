@@ -9,7 +9,7 @@ from streamlit_js_eval import streamlit_js_eval
 from api_idfm import demander_api, demander_lignes_arret, demander_coordonnees_arret
 from utils import normaliser_mode, clean_code_line, format_html_time, afficher_bandeau_trafic, generer_icones_html
 from easter_eggs import afficher_cheval_express
-from constants import GEOGRAPHIE_RER
+from settings import GEOGRAPHIE_RER
 
 ICONES_TITRE = generer_icones_html()
 
