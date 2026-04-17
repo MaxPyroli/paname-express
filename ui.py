@@ -1,0 +1,405 @@
+import streamlit as st
+import os
+import base64
+
+def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
+    """Affiche le grand titre principal de l'application."""
+    st.markdown(f"""
+    <style>
+    .titre-geant-custom {{
+        font-size: clamp(2rem, 11.5vw, 4rem) !important;
+        font-weight: 900 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.1 !important;
+        letter-spacing: -1.5px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important; 
+        white-space: normal !important; 
+    }}
+    .badge-geant-custom {{
+        font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
+        padding: 4px 12px !important;
+        display: inline-block !important;
+    }}
+    .sous-titre-geant-custom {{
+        color: #aaa !important;
+        font-style: italic !important;
+        font-size: clamp(1rem, 4vw, 1.15rem) !important;
+    }}
+    </style>
+
+    <div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
+        <div class="titre-geant-custom">
+            {icone_html}<span>{app_name}</span>
+        </div>
+        <div style="margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <span class='version-badge badge-geant-custom'>{app_version}</span>
+            <span class="sous-titre-geant-custom">{app_subtitle}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def afficher_tuto_bienvenue():
+    """Affiche les 3 cartes de tutoriel sur la page d'accueil."""
+    html_content = "".join([
+        '<div style="text-align: center; margin-top: 40px; margin-bottom: 40px; animation: float 3s ease-in-out infinite;">',
+            '<span style="font-size: 50px;">👋</span>',
+        '</div>',
+        '<div style="text-align: center; margin-bottom: 30px;">',
+            '<h3 style="color: var(--text-color); margin-bottom: 10px;">Bienvenue sur Grand Paname</h3>',
+            '<p style="font-size: 1.1em; opacity: 0.8; color: var(--text-color);">Votre compagnon de voyage en Île-de-France.</p>',
+        '</div>',
+        '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; width: 100%;">',
+            # CARTE 1
+            '<div class="tuto-card">',
+                '<div style="font-size: 24px; margin-bottom: 10px;">🔍</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Recherchez</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Entrez le nom de votre arrêt et sélectionnez-le dans la liste déroulante</div>',
+            '</div>',
+            # CARTE 2
+            '<div class="tuto-card">',
+                '<div style="font-size: 24px; margin-bottom: 10px;">⚡</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Temps Réel</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Vos prochains départs et votre info trafic sont actualisés en temps réel</div>',
+            '</div>',
+            # CARTE 3
+            '<div class="tuto-card">',
+                '<div style="font-size: 24px; margin-bottom: 10px;">⭐</div>',
+                '<div style="font-weight: bold; color: var(--text-color); margin-bottom: 5px;">Favoris</div>',
+                '<div style="font-size: 0.9em; opacity: 0.7; color: var(--text-color);">Cliquez sur l\'étoile pour sauvegarder votre arrêt et le retrouver lors de votre prochain trajet</div>',
+            '</div>',
+        '</div>'
+    ])
+    st.markdown(html_content, unsafe_allow_html=True)
+
+def afficher_testeur_de_glassmorphism():
+    """Un laboratoire intégré avec un VRAI fond pour voir le flou et le code CSS exact."""
+    st.divider()
+    st.subheader("🧪 Banc d'Essai : Couleurs & Glassmorphism")
+    
+    col_c, col_v = st.columns([0.4, 0.6])
+    
+    with col_c:
+        st.write("**Réglages CSS :**")
+        var_fond = st.selectbox(
+            "Variable de fond :",
+            ["--background-color", "--secondary-background-color"],
+            help="Les variables que Streamlit change selon le thème."
+        )
+        
+        alpha = st.slider("Opacité (Alpha) :", 0.0, 1.0, 0.5) 
+        blur = st.slider("Flou (Blur) :", 0, 30, 15)
+        
+        texte_custom = st.text_input("Texte de test :", "C'est lisible ?")
+
+    with col_v:
+        # Le vrai code CSS qu'on va générer et afficher
+        pourcentage = int(alpha * 100)
+        code_css_valide = f"""background: color-mix(in srgb, var({var_fond}) {pourcentage}%, transparent) !important;
+backdrop-filter: blur({blur}px) !important;
+-webkit-backdrop-filter: blur({blur}px) !important;"""
+
+        css_preview = f"""
+        <div style="
+            background: linear-gradient(45deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        ">
+            <div style="
+                background: color-mix(in srgb, var({var_fond}) {pourcentage}%, transparent);
+                backdrop-filter: blur({blur}px);
+                -webkit-backdrop-filter: blur({blur}px);
+                border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                width: 100%;
+            ">
+                <h2 style="color: var(--text-color); margin-bottom: 10px; font-weight: 800;">Aperçu Réel</h2>
+                <p style="color: var(--text-color); font-size: 1.2em; font-weight: bold;">
+                    {texte_custom}
+                </p>
+                
+                <div style="margin-top: 25px; text-align: left; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 0.7em; color: #aaa; margin-bottom: 5px; text-transform: uppercase; font-weight: bold;">Code CSS à copier :</div>
+                    <pre style="margin: 0; padding: 0; background: transparent; border: none; overflow-x: auto;">
+<code style="color: #4ade80; font-family: monospace; font-size: 0.85em; white-space: pre-wrap;">{code_css_valide}</code>
+                    </pre>
+                </div>
+
+            </div>
+        </div>
+        """
+        st.markdown(css_preview, unsafe_allow_html=True)
+    
+    st.info("""
+    💡 **Astuce :** Trouve le réglage parfait où le texte reste lisible en mode **Clair ET Sombre**, puis copie le code vert directement dans tes fichiers `style.py` ou `assistant_ia.py` !
+    """)
+
+def charger_police_locale(file_path, font_name):
+    if not os.path.exists(file_path):
+        return
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        ext = file_path.split('.')[-1].lower()
+        format_str = "opentype" if ext == "otf" else "truetype"
+        # ICI : Le CSS pour déclarer la police (avec les doubles accolades {{ }})
+        css = f"""
+            <style>
+            @font-face {{
+                font-family: '{font_name}';
+                src: url('data:font/{ext};base64,{b64}') format('{format_str}');
+            }}
+            html, body, [class*="css"] {{ font-family: '{font_name}', sans-serif; }}
+            h1, h2, h3, h4, h5, h6, p, a, li, button, input, label, textarea, div, td, th {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            .station-title, .rail-dest, .bus-dest, .version-badge, .last-dep-label {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            .stMarkdown, .stButton, .stTextInput, .stSelectbox, .stExpander {{
+                font-family: '{font_name}', sans-serif !important;
+            }}
+            button[data-testid="stSidebarCollapsedControl"] *,
+            button[data-testid="stSidebarExpandedControl"] * {{
+                font-family: "Material Symbols Rounded", sans-serif !important;
+                font-weight: normal !important; font-style: normal !important;
+                letter-spacing: normal !important; text-transform: none !important;
+                white-space: nowrap !important; direction: ltr !important;
+            }}
+            </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except Exception:
+        pass
+
+def appliquer_style_global():
+    # 1. On charge la police
+    charger_police_locale("assets/GrandParis.otf", "Grand Paris")
+    
+    # 2. On injecte tout le CSS (sans f-string, donc sans risque de crash)
+    st.markdown("""
+    <style>
+        /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
+        div[data-testid="InputInstructions"] { display: none !important; }
+        [data-testid="stHeaderAction"] { display: none !important; }
+        div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
+        div.element-container { opacity: 1 !important; filter: none !important; }
+        div[data-testid="stSpinner"] { display: none !important; }
+        .stApp > header { visibility: hidden !important; }
+        
+        /* ------------------------------------------- */
+        /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
+        /* ------------------------------------------- */
+        [data-testid="stDeckGlJsonChart"], 
+        [data-testid="stDeckGlJsonChart"] > div,
+        [data-testid="stDeckGlJsonChart"] canvas {
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(128, 128, 128, 0.2) !important;
+            pointer-events: none !important;
+        }
+        /* ------------------------------------------- */
+
+        /* Animation Clignotement (Blink) */
+        @keyframes blink-live { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        .live-icon { display: inline-block; animation: blink-live 1.5s infinite step-start; margin: 0 4px; vertical-align: middle; font-size: 0.6em; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .blink { animation: blinker 1s linear infinite; font-weight: bold; }
+        @keyframes yellow-pulse { 0% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); } 50% { border-color: #fff; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); } 100% { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } } 
+        .cable-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
+
+        h1 { display: flex !important; align-items: center !important; flex-wrap: wrap !important; gap: 15px !important; margin-bottom: 0.5rem !important; font-size: 3.5rem !important; line-height: 1.1 !important; }
+        .custom-loader { border: 2px solid rgba(255, 255, 255, 0.1); border-left-color: #3498db; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .text-red { color: #e74c3c; font-weight: bold; }
+        .text-orange { color: #f39c12; font-weight: bold; }
+        .text-green { color: #2ecc71; font-weight: bold; }
+        .text-blue { color: #3498db; font-weight: bold; }
+        
+        .line-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: 900; color: white; text-align: center; min-width: 35px; margin-right: 12px; font-size: 16px; text-shadow: 0px 1px 2px rgba(0,0,0,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.2); flex-shrink: 0; }
+        .footer-container { display: flex; align-items: center; margin-bottom: 8px; }
+        .footer-icon { display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important; margin-right: 10px; font-size: 14px; color: var(--text-color); opacity: 0.7; white-space: nowrap !important; }
+        .footer-badge { font-size: 12px !important; padding: 2px 8px !important; min-width: 30px !important; margin-right: 5px !important; }
+        .time-sep { color: #888; margin: 0 8px; font-weight: lighter; }
+        
+        .section-header { display: flex !important; align-items: center !important; margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(128, 128, 128, 0.5); font-size: 20px; font-weight: bold; color: var(--text-color); letter-spacing: 1px; }
+        
+        /* ✨ 1. LE TITRE DE LA STATION (Dégradé Bleu comme avant) ✨ */
+        .station-title { 
+            font-size: 24px !important; 
+            font-weight: 800 !important; 
+            color: #ffffff !important; 
+            text-align: center; 
+            margin: 10px 0 20px 0; 
+            text-transform: uppercase; 
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+            padding: 14px !important; 
+            border-radius: 12px !important; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; 
+        }
+        
+        .last-dep-box { border: 2px solid #f1c40f; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(241, 196, 15, 0.1); animation: yellow-pulse 2s infinite; }
+        .last-dep-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #f1c40f; margin-bottom: 4px; letter-spacing: 1px; }
+        .last-dep-box .rail-row, .last-dep-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+        .last-dep-small-frame { border: 1px solid #f1c40f; border-radius: 4px; padding: 1px 5px; color: #f1c40f; font-weight: bold; }
+        .last-dep-text-only { color: #f1c40f; font-weight: bold; }
+
+        .version-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.4em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-left: 0 !important; }
+        .verified-badge { color: #3498db; font-size: 0.8em; margin-left: 5px; }
+
+        @media (max-width: 480px) {
+            .block-container { padding-top: 1rem !important; }
+            .station-title, .station-title-pole { font-size: 20px; }
+            h1 { font-size: 35px !important; gap: 10px !important; margin-top: 0 !important; }
+            .version-badge { font-size: 0.45em !important; }
+            .bus-row { flex-direction: column !important; align-items: flex-start !important; padding-top: 10px !important; padding-bottom: 10px !important; }
+            .bus-dest { width: 100% !important; white-space: normal !important; margin-bottom: 6px !important; font-size: 16px !important; margin-right: 0 !important; }
+            .bus-row > span:last-child { width: 100% !important; text-align: left !important; font-size: 0.9em !important; color: #ccc !important; }
+            .rail-row { padding-top: 8px !important; padding-bottom: 8px !important; }
+            .rail-dest { max-width: 65% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+            .time-sep { display: inline-block !important; margin: 0 5px !important; color: #666 !important; font-weight: lighter !important; }
+        }
+        
+        div[data-testid="column"] { display: flex; align-items: center; }
+        div[data-testid="column"] button { border: none; background: transparent; font-size: 1.5rem; padding: 0; }
+        div[data-testid="column"] button:hover { color: #f1c40f; border: none; background: transparent; }
+        
+        .replacement-box { border: 2px dashed #e74c3c; border-radius: 10px; padding: 8px 10px; margin-top: 8px; margin-bottom: 8px; background-color: rgba(231, 76, 60, 0.1); }
+        .replacement-label { display: block; font-size: 0.75em; text-transform: uppercase; font-weight: bold; color: #e74c3c; margin-bottom: 4px; letter-spacing: 1px; }
+        .replacement-box .rail-row, .replacement-box .bus-row { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
+        
+        /* ============================================================== */
+        /* ✨ CSS ICONES INLINE (100% NATIF & INCASSABLE) ✨              */
+        /* ============================================================== */
+        svg.mode-icon-inline,
+        div[class^="sticky-glass-"] svg {
+            height: 1.5em !important;
+            width: auto !important;
+            vertical-align: middle !important;
+            color: var(--text-color) !important; /* L'icône prend la couleur de base du texte */
+        }
+
+        /* 🪄 L'ASTUCE : currentColor force le dessin à copier la couleur du texte (sans bug de variable !) */
+        svg.mode-icon-inline path, 
+        svg.mode-icon-inline rect,
+        svg.mode-icon-inline circle,
+        svg.mode-icon-inline polygon,
+        div[class^="sticky-glass-"] svg path,
+        div[class^="sticky-glass-"] svg rect,
+        div[class^="sticky-glass-"] svg circle,
+        div[class^="sticky-glass-"] svg polygon {
+            fill: currentColor !important;
+        }
+
+        .fav-btn-container { width: 100%; }
+        .fav-btn-container button { background-color: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; color: #f1c40f !important; font-size: 16px !important; font-weight: 600 !important; height: 45px !important; border-radius: 8px !important; transition: background-color 0.2s, transform 0.1s !important; }
+        .fav-btn-container button:hover { background-color: rgba(241, 196, 15, 0.15) !important; border-color: #f1c40f !important; }
+        div[data-testid="column"]:has(.fav-btn-container) { display: flex; align-items: center; justify-content: flex-end; }
+        
+        div[data-testid="InputInstructions"], [data-testid="stHeaderAction"], .stApp > header { display: none !important; }
+        iframe[title="streamlit_js_eval.streamlit_js_eval"], div:has(> iframe[title="streamlit_js_eval.streamlit_js_eval"]) { display: none !important; height: 0 !important; }
+
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) { flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; gap: 5px !important; width: 100% !important; }
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:first-child { flex: 1 1 auto !important; width: auto !important; min-width: 0px !important; overflow: hidden !important; }
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:not(:has([data-testid="stVerticalBlockBorderWrapper"])) > [data-testid="column"]:last-child { flex: 0 0 42px !important; width: 42px !important; min-width: 42px !important; max-width: 42px !important; }
+        button[key^="btn_fav_"] { width: 100% !important; height: 42px !important; text-align: left !important; padding-left: 10px !important; }
+        button[key^="btn_fav_"] p, button[key^="btn_fav_"] div { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; display: block !important; width: 100% !important; }
+        button[key^="del_fav_"] { width: 100% !important; height: 42px !important; padding: 0 !important; margin: 0 !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(231, 76, 60, 0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+
+        .traffic-ticker { overflow: hidden; white-space: nowrap; background: rgba(231, 76, 60, 0.1); border-radius: 8px; padding: 4px 0; margin-top: 4px; border-left: 3px solid #e74c3c; }
+        .ticker-text { display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; color: #e74c3c; font-weight: bold; font-style: italic; font-size: 0.85em; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* ⚠️ STYLE PERTURBÉ : Limite de taille et Scrollbar (RER D) */
+        .traffic-warning { 
+            color: #f39c12; font-size: 0.8em; font-weight: 500; margin-top: 2px; 
+            display: block !important; /* Indispensable pour que le scroll fonctionne ! */
+            max-height: 60px !important; 
+            overflow-y: auto !important; 
+            padding-right: 5px;
+        }
+        
+        .traffic-warning::-webkit-scrollbar { width: 4px; }
+        .traffic-warning::-webkit-scrollbar-thumb { 
+            background: rgba(128, 128, 128, 0.4); 
+            border-radius: 4px; 
+        }
+
+        .tuto-card { background-color: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease !important; }
+        .tuto-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3) !important; border: 1px solid rgba(52, 152, 219, 0.8) !important; background-color: rgba(52, 152, 219, 0.1) !important; cursor: pointer !important; }
+        
+        /* ✨ 2. LES CARTES DE DÉPART (Ombres Colorées "Glow") ✨ */
+        .bus-card, .rail-card { 
+            background-color: var(--secondary-background-color) !important; 
+            padding: 14px !important; 
+            margin-bottom: 18px !important; 
+            border-radius: 14px !important; 
+            
+            border-left-width: 6px !important; 
+            border-left-style: solid !important; 
+            border-top: none !important;
+            border-right: none !important;
+            border-bottom: none !important;
+            
+            color: var(--text-color) !important; 
+            
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--line-color, var(--text-color)) 20%, transparent), 
+                        0 4px 8px color-mix(in srgb, var(--line-color, var(--text-color)) 15%, transparent) !important;
+            
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        }
+
+        .bus-card:active, .rail-card:active { transform: scale(0.98); }
+
+        .bus-dest, .rail-dest { color: var(--text-color) !important; opacity: 0.95; font-size: 15px; font-weight: 600 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; flex: 1; }
+        /* 📏 Lignes de séparation classiques et espacement compact d'origine */
+        .bus-row, .rail-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding-top: 8px !important; padding-bottom: 2px !important; 
+            border-top: 1px solid rgba(128, 128, 128, 0.25) !important; 
+            border-bottom: none !important;
+        }
+        .bus-row > span:last-child, .rail-row > span:last-child { 
+            color: var(--text-color) !important; font-weight: 500; white-space: nowrap; flex-shrink: 0; text-align: right; 
+        }        
+        .rer-direction { margin-top: 12px; font-size: 13px; font-weight: bold; color: #3498db !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent) !important; padding-bottom: 4px; margin-bottom: 0px; }
+        
+        .service-box { text-align: left; padding: 10px 12px; color: color-mix(in srgb, var(--text-color) 70%, transparent); font-style: italic; font-size: 0.95em; background: color-mix(in srgb, var(--text-color) 5%, transparent); border-radius: 8px; margin-top: 5px; margin-bottom: 5px; border-left: 3px solid color-mix(in srgb, var(--text-color) 20%, transparent); }
+        .service-end { color: color-mix(in srgb, var(--text-color) 50%, transparent); font-style: italic; font-size: 0.9em; }
+        .time-sep { color: color-mix(in srgb, var(--text-color) 40%, transparent); margin: 0 8px; font-weight: lighter; }
+
+        /* ✨ HIGHLIGHT DES DATES POUR PANA (Encadrés Stylisés) ✨ */
+        [data-testid="stChatMessageContent"] code {
+            background-color: color-mix(in srgb, #f39c12 15%, transparent) !important;
+            color: #d35400 !important; /* Orange foncé pour le mode clair */
+            border: 1px solid color-mix(in srgb, #f39c12 40%, transparent) !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+            font-weight: 800 !important;
+            font-size: 0.9em !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+
+        /* Adaptation de l'encadré pour le mode sombre ! */
+        [data-paname-theme="dark"] [data-testid="stChatMessageContent"] code {
+            color: #f1c40f !important; /* Jaune éclatant dans l'obscurité */
+            background-color: color-mix(in srgb, #f1c40f 15%, transparent) !important;
+            border: 1px solid color-mix(in srgb, #f1c40f 30%, transparent) !important;
+        }
+        
+    </style>
+    """, unsafe_allow_html=True)
