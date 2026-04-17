@@ -33,7 +33,7 @@ ICONES_TITRE = generer_icones_html()
 # ==========================================
 
 try:
-    icon_image = Image.open("app_icon.png")
+    icon_image = Image.open("assets/app_icon.png")
 except FileNotFoundError:
     icon_image = "🚆"
 
