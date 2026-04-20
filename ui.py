@@ -486,6 +486,22 @@ def appliquer_style_global():
             background-color: color-mix(in srgb, #f1c40f 15%, transparent) !important;
             border: 1px solid color-mix(in srgb, #f1c40f 30%, transparent) !important;
         }
+        /* 🪄 STYLE MAGIQUE POUR LE BOUTON SUIVRE/SUIVI (JAUNE DORÉ) */
+        div[data-testid="stElementContainer"]:has(.marker-suivre-btn) + div[data-testid="stElementContainer"] button {
+            border: 1px solid rgba(241, 196, 15, 0.4) !important;
+            background-color: rgba(241, 196, 15, 0.1) !important;
+            color: #f1c40f !important; /* Jaune doré */
+            font-weight: 600 !important;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+        
+        div[data-testid="stElementContainer"]:has(.marker-suivre-btn) + div[data-testid="stElementContainer"] button:hover {
+            background-color: rgba(241, 196, 15, 0.15) !important;
+            border: 1px solid rgba(241, 196, 15, 0.8) !important;
+            transform: translateY(-4px) !important; /* Le petit saut ! */
+            box-shadow: 0 8px 20px rgba(241, 196, 15, 0.3) !important; /* L'ombre jaune */
+            color: #f39c12 !important; /* Un jaune légèrement plus vif au survol */
+        }
         
     </style>
     """, unsafe_allow_html=True)
