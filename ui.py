@@ -200,16 +200,30 @@ def appliquer_style_global():
         /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
         div[data-testid="InputInstructions"] { display: none !important; }
         
-        /* 🪄 DESTRUCTION DU MENU ROUGE ET CHARGEMENTS STREAMLIT */
+        /* 🪄 DESTRUCTION DU MENU STREAMLIT (SANS TUER LA SIDEBAR !) */
         [data-testid="stToolbar"], 
         [data-testid="stStatusWidget"], 
+        [data-testid="stDecoration"], 
         [data-testid="stHeaderAction"],
-        .stApp > header { 
+        #MainMenu { 
             display: none !important; 
             visibility: hidden !important; 
             opacity: 0 !important;
             pointer-events: none !important;
         }
+
+        /* On rend l'en-tête transparent au lieu de le supprimer, pour sauver le bouton ! */
+        header[data-testid="stHeader"] { 
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        /* Supprime les "squelettes" gris qui clignotent pendant les chargements */
+        [data-testid="stSkeleton"] { display: none !important; }
+
+        div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
+        div.element-container { opacity: 1 !important; filter: none !important; }
+        div[data-testid="stSpinner"] { display: none !important; }
         
         /* ------------------------------------------- */
         /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
