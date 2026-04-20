@@ -10,7 +10,7 @@ from utils import get_img_as_base64, get_svg_inline, nettoyer_texte_details, det
 from api_idfm import demander_info_trafic
 
 def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
-    """Affiche le grand titre principal de l'application."""
+    """Affiche le grand titre principal et gère le mini-titre au scroll."""
     st.markdown(f"""
     <style>
     .titre-geant-custom {{
@@ -35,9 +35,42 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
         font-style: italic !important;
         font-size: clamp(1rem, 4vw, 1.15rem) !important;
     }}
+    
+    /* 🪄 STYLE DU MINI-EN-TÊTE FLOTTANT */
+    #mini-header-scrolled {{
+        position: fixed; 
+        top: 15px; /* S'aligne parfaitement avec le bouton sidebar */
+        left: 0; 
+        width: 100%; 
+        display: flex; 
+        justify-content: center; 
+        pointer-events: none; /* Ne bloque pas les clics sur la page ! */
+        z-index: 100; /* Passe au-dessus du contenu mais sous la sidebar */
+        
+        /* État initial : Invisible et légèrement plus haut */
+        opacity: 0; 
+        transform: translateY(-15px);
+        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }}
+    
+    .mini-header-content {{
+        font-family: 'Grand Paris', sans-serif !important; 
+        font-weight: 800; 
+        font-size: 1.25rem; 
+        color: var(--text-color); 
+        display: flex; 
+        align-items: center; 
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3); /* Légère ombre pour la lisibilité */
+    }}
     </style>
 
-    <div style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
+    <div id="mini-header-scrolled">
+        <div class="mini-header-content">
+            {icone_html} {app_name}
+        </div>
+    </div>
+
+    <div id="titre-geant-container" style="margin-top: 10px; margin-bottom: 25px; text-align: left;">
         <div class="titre-geant-custom">
             {icone_html}<span>{app_name}</span>
         </div>
@@ -46,8 +79,32 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
             <span class="sous-titre-geant-custom">{app_subtitle}</span>
         </div>
     </div>
+    
+    <img src="x" style="display:none;" onerror="
+        if (!window.scrollCheckInit) {{
+            window.scrollCheckInit = true;
+            
+            // On vérifie la position toutes les 100ms (Hyper robuste dans Streamlit)
+            setInterval(() => {{
+                const bigTitle = window.parent.document.getElementById('titre-geant-container');
+                const miniHeader = window.parent.document.getElementById('mini-header-scrolled');
+                
+                if (bigTitle && miniHeader) {{
+                    const rect = bigTitle.getBoundingClientRect();
+                    
+                    // Si le grand titre sort de l'écran par le haut (< 50px)
+                    if (rect.bottom < 50) {{
+                        miniHeader.style.opacity = '1';
+                        miniHeader.style.transform = 'translateY(0)';
+                    }} else {{
+                        miniHeader.style.opacity = '0';
+                        miniHeader.style.transform = 'translateY(-15px)';
+                    }}
+                }}
+            }}, 100);
+        }}
+    ">
     """, unsafe_allow_html=True)
-
 
 def afficher_tuto_bienvenue():
     """Affiche les 3 cartes de tutoriel sur la page d'accueil."""
