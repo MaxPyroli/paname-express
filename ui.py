@@ -206,9 +206,13 @@ def appliquer_style_global():
             display: none !important; 
         }
         
-        /* On s'assure que l'en-tête est transparent pour ne pas faire de bande blanche/noire */
+        /* 🪄 EFFET GLASSMORPHISM SUR L'EN-TÊTE */
         header[data-testid="stHeader"] { 
-            background-color: transparent !important;
+            background: color-mix(in srgb, var(--background-color) 40%, transparent) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            box-shadow: none !important;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
         }
         
         /* On garde le reste des optimisations de fluidité */
