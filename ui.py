@@ -265,18 +265,29 @@ def appliquer_style_global():
             display: none !important; 
         }
         
-        /* 🪄 EFFET GLASSMORPHISM PROGRESSIF SUR L'EN-TÊTE */
+        /* 🪄 EFFET GLASSMORPHISM ÉTENDU SUR L'EN-TÊTE */
         header[data-testid="stHeader"] { 
-            background: color-mix(in srgb, var(--background-color) 40%, transparent) !important;
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
+            background: color-mix(in srgb, var(--background-color) 45%, transparent) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
             
-            /* Le secret du flou progressif : un masque transparent vers le bas */
-            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%) !important;
-            mask-image: linear-gradient(to bottom, black 50%, transparent 100%) !important;
+            /* 1. On allonge l'en-tête à 120px pour qu'il descende derrière le titre sticky */
+            height: 120px !important; 
+            
+            /* 2. Le masque reste totalement opaque jusqu'à 60%, puis fond en douceur */
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
             
             box-shadow: none !important;
-            border-bottom: none !important; /* ⚠️ On retire la bordure pour que le fondu soit parfait */
+            border-bottom: none !important;
+            
+            /* 3. SUPER IMPORTANT : Empêche l'en-tête géant de bloquer tes clics sur l'application */
+            pointer-events: none !important; 
+        }
+        
+        /* 4. Mais on réactive les clics UNIQUEMENT pour le bouton de la barre latérale ! */
+        header[data-testid="stHeader"] * {
+            pointer-events: auto !important;
         }
         
         /* On garde le reste des optimisations de fluidité */
