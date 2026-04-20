@@ -89,35 +89,25 @@ def afficher_live_content(stop_id, clean_name):
         
         header_placeholder.markdown(html_content, unsafe_allow_html=True)
 
-    # On remplit la boîte avec le mode "chargement" et le bouclier CSS
-    loader_ph.markdown("""
-    <style>
-        /* 🪄 MASQUAGE BRUTAL DES ANCIENS CONTENEURS STREAMLIT */
-        div[data-testid="stElementContainer"]:has(.rail-card),
-        div[data-testid="stElementContainer"]:has(.bus-card),
-        div[data-testid="stElementContainer"]:has([class*="sticky-glass-"]),
-        div[data-testid="stElementContainer"]:has(.footer-container),
-        div[data-testid="stElementContainer"]:has(.service-box) { 
-            display: none !important; 
-            opacity: 0 !important;
-        }
-    </style>
-    <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-        <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
-        <h3 style="color: #3498db; margin: 0; font-size: 1.2rem;">Connexion à la gare...</h3>
-        <p style="color: #888; font-size: 0.9em; margin-top: 5px;">Récupération des horaires en temps réel</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # 🛑 IL FAUT ABSOLUMENT CETTE LIGNE AVANT LE 'IF' :
+    loader_ph = st.empty()
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
         update_header(is_loading=True, inject_animation=True)
         
-        # On remplit la boîte avec le mode "chargement" uniquement si nécessaire
+        # On remplit la boîte avec le mode "chargement" et le bouclier CSS
         loader_ph.markdown("""
         <style>
-            /* Masquer l'ancienne gare instantanément */
-            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container { display: none !important; }
+            /* 🪄 MASQUAGE BRUTAL DES ANCIENS CONTENEURS STREAMLIT */
+            div[data-testid="stElementContainer"]:has(.rail-card),
+            div[data-testid="stElementContainer"]:has(.bus-card),
+            div[data-testid="stElementContainer"]:has([class*="sticky-glass-"]),
+            div[data-testid="stElementContainer"]:has(.footer-container),
+            div[data-testid="stElementContainer"]:has(.service-box) { 
+                display: none !important; 
+                opacity: 0 !important;
+            }
         </style>
         <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
             <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
@@ -125,7 +115,7 @@ def afficher_live_content(stop_id, clean_name):
             <p style="color: #888; font-size: 0.9em; margin-top: 5px;">Récupération des horaires en temps réel</p>
         </div>
         """, unsafe_allow_html=True)
-        time.sleep(0.05)
+        time.sleep(0.05) # <-- Assure-toi de garder ce sleep aussi s'il y était !
     else:
         update_header(is_loading=True)
 
