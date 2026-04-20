@@ -57,13 +57,13 @@ def afficher_live_content(stop_id, clean_name):
     
     is_fav = any(f['id'] == stop_id for f in st.session_state.favorites)
     with col_fav:
-    # 🪄 Le marqueur invisible complet
-    st.markdown("<div class='marker-suivre-btn'></div>", unsafe_allow_html=True)
-    
-    label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
-    if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
-        toggle_favorite(stop_id, clean_name)
-        st.rerun()
+        # 🪄 Le marqueur invisible complet
+        st.markdown("<div class='marker-suivre-btn'></div>", unsafe_allow_html=True)
+        
+        label_btn = "⭐ Suivi" if is_fav else "☆ Suivre"
+        if st.button(label_btn, key=f"fav_btn_{stop_id}", use_container_width=True):
+            toggle_favorite(stop_id, clean_name)
+            st.rerun()
         
     # ⚠️ SURTOUT RIEN APRÈS ! (On a supprimé le st.markdown('</div>') qui traînait)
 
