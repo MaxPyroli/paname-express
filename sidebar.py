@@ -63,8 +63,11 @@ def afficher_sidebar():
             for fav in st.session_state.favorites[:]:
                 col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
                 
+                # 🪄 CORRECTION 1 : On force un formatage propre (Ex: "Massy - Palaiseau")
+                nom_joli = fav['name'].title()
+                
                 with col_nav:
-                    if st.button(f"📍 {fav['name']}", key=f"btn_fav_{fav['id']}", use_container_width=True):
+                    if st.button(f"📍 {nom_joli}", key=f"btn_fav_{fav['id']}", use_container_width=True):
                         st.session_state.selected_stop = fav['id']
                         st.session_state.selected_name = fav['full_name']
                         st.session_state.search_results = {}
@@ -81,7 +84,9 @@ def afficher_sidebar():
                         st.rerun()
 
             st.write("")
-            if st.button("💥 Tout effacer", use_container_width=True, type="primary"):
+            
+            # 🪄 CORRECTION 2 : On a retiré type="primary" pour qu'il redevienne un bouton normal !
+            if st.button("💥 Tout effacer", use_container_width=True):
                 st.session_state.favorites = []
                 st.session_state.trigger_save_favs = True # On déclenche la sauvegarde
                 st.rerun()
