@@ -149,7 +149,7 @@ def afficher_sidebar():
         # ==========================================
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>🗄️ Informations</h3>", unsafe_allow_html=True)
-            st.success(f"🎉 **Bienvenue sur {APP_NAME} {APP_VERSION} !**") 
+            st.success(f"🎉 **Bienvenue sur Grand Paname {APP_VERSION} !**") 
             
             st.markdown("""
             <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
