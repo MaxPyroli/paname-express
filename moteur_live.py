@@ -71,43 +71,25 @@ def afficher_live_content(stop_id, clean_name):
         loader_html = "<span class='custom-loader' style='width: 12px; height: 12px; border-width: 2px; border-left-color: #f1c40f; margin-right: 6px;'></span>" if is_loading else ""
         loading_text = "<span style='color: #f1c40f; font-size: 0.9em; font-style: italic; font-weight: bold;'>Actualisation...</span>" if is_loading else ""
 
-        # 🪄 NOUVELLE ANIMATION FLUIDE ET MODERNE
-        anim_css = """
-        <style>
-        @keyframes smoothEnter {
-            0% { opacity: 0; transform: translateY(25px); filter: blur(5px); }
-            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-        .rail-card, .bus-card, div[class*="sticky-glass-"], .footer-container { 
-            animation: smoothEnter 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important; 
-            opacity: 0; /* Reste invisible avant l'animation */
-        }
-        </style>
-        """ if inject_animation else ""
+        anim_css = """<style>.rail-card, .bus-card { animation: fadeInSlide 0.4s ease-out forwards !important; } @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: none; } }</style>""" if inject_animation else ""
 
         html_content = f"{anim_css}<div style='display: flex; align-items: center; color: #888; font-size: 0.85rem; height: 45px; line-height: 45px; overflow: hidden; font-weight: 500; margin-bottom: -10px;'>Dernière mise à jour : {st.session_state.last_update_time} • LIVE <span class='live-icon'>🟢</span><div style='margin-left: 15px; display: flex; align-items: center; opacity: {'1' if is_loading else '0'}; transition: opacity 0.3s;'>{loader_html}{loading_text}</div></div>"
         
         header_placeholder.markdown(html_content, unsafe_allow_html=True)
 
-    # 🛑 IL FAUT ABSOLUMENT CETTE LIGNE AVANT LE 'IF' :
+    # 🛑 LE SECRET ABSOLU EST ICI : CRÉATION INCONDITIONNELLE
+    # On crée la boîte TOUT LE TEMPS pour que les numéros des éléments suivants ne bougent jamais !
     loader_ph = st.empty()
 
     if est_nouvelle_gare:
         st.session_state.last_update_time = "--:--:--"
         update_header(is_loading=True, inject_animation=True)
         
-        # On remplit la boîte avec le mode "chargement" et le bouclier CSS
+        # On remplit la boîte avec le mode "chargement" uniquement si nécessaire
         loader_ph.markdown("""
         <style>
-            /* 🪄 MASQUAGE BRUTAL DES ANCIENS CONTENEURS STREAMLIT */
-            div[data-testid="stElementContainer"]:has(.rail-card),
-            div[data-testid="stElementContainer"]:has(.bus-card),
-            div[data-testid="stElementContainer"]:has([class*="sticky-glass-"]),
-            div[data-testid="stElementContainer"]:has(.footer-container),
-            div[data-testid="stElementContainer"]:has(.service-box) { 
-                display: none !important; 
-                opacity: 0 !important;
-            }
+            /* Masquer l'ancienne gare instantanément */
+            .rail-card, .bus-card, .bus-row, .service-box, .replacement-box, div[class^="sticky-glass-"], .footer-container { display: none !important; }
         </style>
         <div style="height: 35vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(4, 27, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
             <div class="custom-loader" style="width: 35px; height: 35px; border-width: 4px; border-left-color: #3498db; margin-bottom: 15px;"></div>
@@ -115,7 +97,7 @@ def afficher_live_content(stop_id, clean_name):
             <p style="color: #888; font-size: 0.9em; margin-top: 5px;">Récupération des horaires en temps réel</p>
         </div>
         """, unsafe_allow_html=True)
-        time.sleep(0.05) # <-- Assure-toi de garder ce sleep aussi s'il y était !
+        time.sleep(0.05)
     else:
         update_header(is_loading=True)
 
