@@ -5,6 +5,7 @@ import json
 from utils import get_img_as_base64
 import datetime as dt
 import random
+from utils import get_img_as_base64, get_svg_inline, nettoyer_texte_details, determiner_type_perturbation
 
 
 def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
