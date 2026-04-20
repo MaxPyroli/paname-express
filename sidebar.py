@@ -18,7 +18,6 @@ def initialiser_favoris():
         favs_from_browser = streamlit_js_eval(js_expressions="window.localStorage.getItem('gp_favs');", key="get_favs_init")
         
         # Tant que c'est "None", le navigateur n'a pas répondu.
-        # Dès qu'il répond (même avec du vide), on passe à la suite !
         if favs_from_browser is not None:
             st.session_state.favs_loaded = True
             if favs_from_browser:
@@ -31,10 +30,8 @@ def initialiser_favoris():
     # 🪄 L'INJECTION MAGIQUE INVISIBLE QUI SAUVEGARDE VRAIMENT 🪄
     if st.session_state.get('trigger_save_favs', False):
         json_data = json.dumps(st.session_state.favorites)
-        # On sécurise la chaîne de caractères pour le JavaScript
         safe_json = json_data.replace('\\', '\\\\').replace('`', '\\`')
         
-        # On injecte un micro-script invisible qui va écrire dans le navigateur au moment de l'affichage
         components.html(
             f"<script>window.localStorage.setItem('gp_favs', `{safe_json}`);</script>", 
             height=0, width=0
@@ -49,23 +46,52 @@ def afficher_sidebar():
         # 🪄 INJECTION CSS SPÉCIFIQUE À LA SIDEBAR
         st.markdown("""
         <style>
-            /* Bouton "Tout effacer" customisé (Alerte / Rouge) */
-            button[key="btn_clear_all"] {
+            /* 1. Ombres et style des Cartes (Cards) */
+            [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+                background-color: var(--secondary-background-color) !important;
+                border-color: rgba(128, 128, 128, 0.15) !important;
+                transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+            }
+            [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]:hover {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+            }
+
+            /* 2. Boutons Poubelle (Ciblés par leur position dans la colonne de droite) */
+            [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child button {
+                width: 100% !important; 
+                height: 42px !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                border: 1px solid rgba(231, 76, 60, 0.3) !important; 
+                background: rgba(231, 76, 60, 0.1) !important; 
+                display: flex !important; align-items: center !important; justify-content: center !important;
+                transition: all 0.2s ease !important;
+            }
+            [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child button:hover {
+                background: rgba(231, 76, 60, 0.25) !important;
+                border: 1px solid #e74c3c !important;
+                transform: scale(1.05) !important;
+            }
+
+            /* 3. Bouton "Tout effacer" customisé via le marqueur adjacent */
+            div[data-testid="stElementContainer"]:has(.marker-clear-btn) + div[data-testid="stElementContainer"] button {
                 border: 1px solid rgba(231, 76, 60, 0.4) !important;
                 background-color: rgba(231, 76, 60, 0.1) !important;
                 color: #e74c3c !important;
+                font-weight: bold !important;
                 transition: all 0.3s ease !important;
                 margin-top: 5px !important;
             }
-            button[key="btn_clear_all"]:hover {
-                background-color: rgba(231, 76, 60, 0.25) !important;
-                border: 1px solid #e74c3c !important;
+            div[data-testid="stElementContainer"]:has(.marker-clear-btn) + div[data-testid="stElementContainer"] button:hover {
+                background-color: rgba(231, 76, 60, 0.15) !important;
+                border: 1px solid rgba(231, 76, 60, 0.8) !important;
+                transform: translateY(-4px) !important; /* L'effet de bond au survol ! */
+                box-shadow: 0 8px 20px rgba(231, 76, 60, 0.25) !important;
             }
             
             /* Réduction globale de l'espacement dans la sidebar */
-            [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-                gap: 0.6rem !important;
-            }
+            [data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 0.6rem !important; }
         </style>
         """, unsafe_allow_html=True)
         
@@ -83,7 +109,10 @@ def afficher_sidebar():
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
             
-            if not st.session_state.favorites:
+            # 🪄 L'ÉTAT DE CHARGEMENT EST ICI 🪄
+            if not st.session_state.get('favs_loaded', False):
+                st.info("🔄 Chargement des favoris...")
+            elif not st.session_state.favorites:
                 st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
             else:
                 for fav in st.session_state.favorites[:]:
@@ -108,8 +137,9 @@ def afficher_sidebar():
                             st.session_state.trigger_save_favs = True
                             st.rerun()
 
-                # Le fameux bouton de suppression avec sa clé CSS
-                if st.button("💥 Tout effacer", key="btn_clear_all", use_container_width=True):
+                # 🪄 LE MARQUEUR INVISIBLE POUR CIBLER LE BOUTON ROUGE 🪄
+                st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
+                if st.button("💥 Tout effacer", use_container_width=True):
                     st.session_state.favorites = []
                     st.session_state.trigger_save_favs = True
                     st.rerun()
@@ -119,7 +149,7 @@ def afficher_sidebar():
         # ==========================================
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>🗄️ Informations</h3>", unsafe_allow_html=True)
-            st.success("🎉 **Bienvenue sur Grand Paname v2.3 !**") # Mis à jour pour v2.3 !
+            st.success(f"🎉 **Bienvenue sur {APP_NAME} {APP_VERSION} !**") 
             
             st.markdown("""
             <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
