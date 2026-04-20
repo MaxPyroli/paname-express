@@ -526,3 +526,216 @@ def afficher_cheval_express():
 </div>
 """
         st.markdown(html_poisson, unsafe_allow_html=True)
+
+def generer_icones_html():
+    mapping_files = {
+        "RER":   "img/rer.svg",
+        "TRAIN": "img/train.svg",
+        "METRO": "img/metro.svg",
+        "TRAM":  "img/tram.svg",
+        "CABLE": "img/cable.svg",
+        "BUS":   "img/bus.svg",
+        "AUTRE": "img/autre.svg"
+    }
+    labels = {
+        "RER": "RER", "TRAIN": "TRAIN", "METRO": "MÉTRO", 
+        "TRAM": "TRAMWAY", "CABLE": "CÂBLE", "BUS": "BUS", "AUTRE": "AUTRE"
+    }
+    fallbacks = {
+        "RER": "🚆", "TRAIN": "🚆", "METRO": "🚇", 
+        "TRAM": "🚋", "CABLE": "🚠", "BUS": "🚌", "AUTRE": "🌙"
+    }
+    resultat = {}
+    for mode, label in labels.items():
+        filepath = mapping_files.get(mode)
+        svg_html = get_svg_inline(filepath) if filepath else None
+        if svg_html:
+            html = f'<span style="display:inline-flex; align-items:center;">{svg_html}<span style="margin-left:8px;">{label}</span></span>'
+            resultat[mode] = html
+        else:
+            emoji = fallbacks.get(mode, "❓")
+            resultat[mode] = f"{emoji} {label}"
+    return resultat
+
+def afficher_bandeau_trafic(line_id, nom_ligne=""):
+    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur, sans bégaiements)."""
+    if not line_id: return ""
+    
+    alertes = demander_info_trafic(line_id, nom_ligne)
+    interruption = next((a for a in alertes if a['severity'] >= 40), None)
+    perturbation = next((a for a in alertes if 10 <= a['severity'] < 40), None)
+
+    if not interruption and not perturbation:
+        return ""
+
+    css_and_script = """
+    <style>
+    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
+    
+    /* 🪄 L'ASTUCE EST LÀ : L'icône ouverte passe devant les autres "juste de 1" (96 bat le 95 par défaut) */
+    details.traffic-icon[open] {
+        z-index: 96 !important;
+    }
+    
+    div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
+        position: relative !important;
+        z-index: 99 !important; 
+    }
+
+    details.traffic-icon > summary::-webkit-details-marker { display: none; }
+    details.traffic-icon > summary { 
+        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em; user-select: none;
+    }
+    details.traffic-icon > summary:hover { opacity: 0.8; }
+    
+    /* On customise la barre de défilement pour qu'elle soit jolie ! */
+    .traffic-content-scroll::-webkit-scrollbar { width: 6px; }
+    .traffic-content-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+    .traffic-content-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+    </style>
+    
+    <img src="x" style="display:none;" onerror="
+        if (!window.traficJSV4) {
+            window.traficJSV4 = true;
+            function setZ90() {
+                document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
+                    if (c.querySelector('details.traffic-icon[open]')) {
+                        c.style.setProperty('position', 'relative', 'important');
+                        c.style.setProperty('z-index', '90', 'important');
+                    } else if (c.style.zIndex === '90') {
+                        c.style.removeProperty('z-index');
+                    }
+                });
+            }
+            document.addEventListener('click', e => {
+                document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
+                    if (!d.contains(e.target)) d.removeAttribute('open');
+                });
+                setTimeout(setZ90, 10);
+            });
+            document.addEventListener('toggle', e => {
+                if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
+            }, true);
+        }
+    ">
+    """
+
+    html_output = css_and_script + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
+
+    # --- NETTOYAGE DU TEXTE ---
+    def preparer_texte(texte_brut, header_alerte=""):
+        if not texte_brut or str(texte_brut).strip().lower() == "none": 
+            return "Information non disponible."
+        t = str(texte_brut)
+        t = re.sub(r'(?i)<br\s*/?>|</p>|</li>', '\n', t)
+        t = re.sub(r'<[^>]+>', '', t)
+        
+        bouts_a_effacer = [
+            r"(?i)bus \d+\s*:\s*travaux\s*[-:]?\s*",
+            r"(?i)arrêt\(s\) non desservi\(s\)\s*[-:]?\s*",
+            r"(?i)motif\s*:\s*travaux sur le réseau ferroviaire\.?",
+            r"(?i)métro \d+\s*:\s*travaux de modernisation\s*[-:]?\s*(autre)?\s*(autre)?\s*",
+            r"(?i)trafic perturbé\s*[-:]?\s*",
+            r"(?i)trafic interrompu\s*[-:]?\s*"
+        ]
+        for bout in bouts_a_effacer:
+            t = re.sub(bout, '', t)
+            
+        try:
+            t_propre = nettoyer_texte_details(t)
+            if t_propre: t = t_propre
+        except: pass
+
+        lignes_a_zapper = [
+            "les horaires du calculateur", "un service de bus de remplacement",
+            "détails et calendrier", "autre autre", "consultez le fil x",
+            "consultez le compte x", "plus d'informations sur cette perturbation",
+            "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi :"
+        ]
+
+        # 🪄 NORMALISATION DU TITRE (On retire les doubles espaces pour comparer purement le texte)
+        header_clean = re.sub(r'\s+', ' ', str(header_alerte).lower()).strip(' .:-')
+
+        lignes = t.split('\n')
+        lignes_finales = []
+        for l in lignes:
+            l_clean = l.strip()
+            l_clean = re.sub(r'^[-:.,;]\s*', '', l_clean)
+            if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none": continue
+            if any(z in l_clean.lower() for z in lignes_a_zapper): continue
+            
+            # 🪄 L'ANTI-BÉGAIEMENT AMÉLIORÉ (Fuzzy match puissant)
+            l_norm = re.sub(r'\s+', ' ', l_clean.lower()).strip(' .:-')
+            # Si la ligne ressemble de très près au titre, on l'efface direct !
+            if header_clean and len(l_norm) > 15 and (l_norm in header_clean or header_clean in l_norm):
+                continue
+                
+            est_doublon = False
+            for i, existante in enumerate(lignes_finales):
+                if l_clean.lower() in existante.lower() or existante.lower() in l_clean.lower():
+                    lignes_finales[i] = l_clean if len(l_clean) > len(existante) else existante
+                    est_doublon = True
+                    break
+            
+            if not est_doublon:
+                l_clean = l_clean[0].upper() + l_clean[1:]
+                lignes_finales.append(l_clean)
+        
+        if not lignes_finales:
+            secours = str(texte_brut).replace('\n', ' ').strip()
+            if secours.lower() == "none" or not secours: return "Information non disponible."
+            return secours
+        return '<br>'.join(lignes_finales)
+
+    interruptions = [a for a in alertes if a['severity'] >= 40]
+    perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
+
+    # --- AFFICHAGE DES BULLETINS ---
+    # Pour les interruptions ROUGES :
+    for inter in interruptions:
+        info_longue = preparer_texte(inter.get('text', ''), inter.get('header', ''))
+        html_output += f"""
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
+            <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
+                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(231, 76, 60, 0.25);">
+                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+                </div>
+            </div>
+        </details>
+        """
+        
+    for pert in perturbations:
+        texte_brut = pert.get('text', '')
+        type_pert = determiner_type_perturbation(texte_brut, pert.get('header', ''))
+        if type_pert == "TROP_LOIN": continue
+            
+        info_longue = preparer_texte(texte_brut, pert.get('header', ''))
+        est_travaux = "travaux" in texte_brut.lower() or "travaux" in type_pert.lower()
+        est_futur = "À venir" in type_pert
+        
+        if est_futur: icone_emoji, couleur_hex, couleur_rgb, titre = "ℹ️", "#3498db", "52, 152, 219", f"Information • {type_pert}"
+        elif est_travaux: icone_emoji, couleur_hex, couleur_rgb, titre = "🚧", "#f39c12", "243, 156, 18", f"TRAVAUX • {type_pert}"
+        else: icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
+
+        html_output += f"""
+        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
+            <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
+                        background: var(--gp-card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba({couleur_rgb}, 0.25);">
+                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
+                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
+                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+                </div>
+            </div>
+        </details>
+        """
+
+    html_output += '</div>'
+    return html_output.replace('\n', '')
