@@ -8,6 +8,7 @@ import datetime as dt
 import random
 from utils import get_img_as_base64, get_svg_inline, nettoyer_texte_details, determiner_type_perturbation
 from api_idfm import demander_info_trafic
+import streamlit.components.v1 as components
 
 def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     """Affiche le grand titre principal et injecte le mini-titre dans l'en-tête natif."""
@@ -40,7 +41,7 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     </style>
     """, unsafe_allow_html=True)
 
-    # 🧱 2. LE HTML (Grand titre + Modèle caché pour le script)
+    # 🧱 2. LE HTML (Grand titre + Modèle caché)
     st.markdown(f"""
     <div id="mini-header-template" style="display: none;">
         {icone_html} <span style="margin-left: 8px;">{app_name}</span>
@@ -57,12 +58,48 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     </div>
     """, unsafe_allow_html=True)
     
-    # 🧠 3. LE CHEVAL DE TROIE JAVASCRIPT
-    # Il trouve l'en-tête natif (stHeader) et y injecte dynamiquement notre titre parfaitement centré.
-    js_code = "if(!window.GPMiniH){window.GPMiniH=true;setInterval(()=>{const d=window.parent.document;const h=d.querySelector('header[data-testid=\"stHeader\"]');const b=d.getElementById('titre-geant-container');let m=d.getElementById('gp-native-mini-header');if(h){if(!m&&b){m=d.createElement('div');m.id='gp-native-mini-header';m.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%, -80%);opacity:0;transition:all 0.3s cubic-bezier(0.2,0.8,0.2,1);display:flex;align-items:center;font-family:\"Grand Paris\",sans-serif;font-weight:900;font-size:1.25rem;color:var(--text-color);pointer-events:none;white-space:nowrap;text-shadow:0 2px 10px rgba(0,0,0,0.3);';const t=d.getElementById('mini-header-template');if(t){m.innerHTML=t.innerHTML;h.appendChild(m);}}if(m){if(b){if(b.getBoundingClientRect().bottom<60){m.style.opacity='1';m.style.transform='translate(-50%,-50%)';}else{m.style.opacity='0';m.style.transform='translate(-50%,-80%)';}}else{m.style.opacity='0';}}}},100);}"
-    
-    st.markdown(f'<img src="x" style="display:none;" onerror="{js_code}">', unsafe_allow_html=True)
-
+    # 🧠 3. LE SCRIPT PROPRE ET INJECTÉ SÉCURISÉMENT
+    js_code = """
+    <script>
+    if(!window.parent.GPMiniH){
+        window.parent.GPMiniH=true;
+        setInterval(()=>{
+            const d=window.parent.document;
+            const h=d.querySelector('header[data-testid="stHeader"]');
+            const b=d.getElementById('titre-geant-container');
+            let m=d.getElementById('gp-native-mini-header');
+            
+            if(h){
+                if(!m&&b){
+                    m=d.createElement('div');
+                    m.id='gp-native-mini-header';
+                    m.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%, -80%);opacity:0;transition:all 0.3s cubic-bezier(0.2,0.8,0.2,1);display:flex;align-items:center;font-family:"Grand Paris",sans-serif;font-weight:900;font-size:1.25rem;color:var(--text-color);pointer-events:none;white-space:nowrap;text-shadow:0 2px 10px rgba(0,0,0,0.3);';
+                    const t=d.getElementById('mini-header-template');
+                    if(t){
+                        m.innerHTML=t.innerHTML;
+                        h.appendChild(m);
+                    }
+                }
+                if(m){
+                    if(b){
+                        if(b.getBoundingClientRect().bottom<60){
+                            m.style.opacity='1';
+                            m.style.transform='translate(-50%,-50%)';
+                        }else{
+                            m.style.opacity='0';
+                            m.style.transform='translate(-50%,-80%)';
+                        }
+                    }else{
+                        m.style.opacity='0';
+                    }
+                }
+            }
+        }, 100);
+    }
+    </script>
+    """
+    # L'arme fatale :
+    components.html(js_code, height=0, width=0)
 def afficher_tuto_bienvenue():
     """Affiche les 3 cartes de tutoriel sur la page d'accueil."""
     html_content = "".join([
