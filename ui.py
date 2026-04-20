@@ -199,11 +199,17 @@ def appliquer_style_global():
     <style>
         /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
         div[data-testid="InputInstructions"] { display: none !important; }
-        [data-testid="stHeaderAction"] { display: none !important; }
-        div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
-        div.element-container { opacity: 1 !important; filter: none !important; }
-        div[data-testid="stSpinner"] { display: none !important; }
-        .stApp > header { visibility: hidden !important; }
+        
+        /* 🪄 DESTRUCTION DU MENU ROUGE ET CHARGEMENTS STREAMLIT */
+        [data-testid="stToolbar"], 
+        [data-testid="stStatusWidget"], 
+        [data-testid="stHeaderAction"],
+        .stApp > header { 
+            display: none !important; 
+            visibility: hidden !important; 
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
         
         /* ------------------------------------------- */
         /* ✨ NOUVEAU : BORDS ARRONDIS SUR LA CARTE  */
