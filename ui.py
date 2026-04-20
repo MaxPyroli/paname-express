@@ -12,7 +12,7 @@ from api_idfm import demander_info_trafic
 def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     """Affiche le grand titre principal et gère le mini-titre au scroll."""
     
-    # 🎨 1. LE CSS (Totalement isolé, plus besoin de doubles accolades !)
+    # 🎨 1. LE CSS (Avec le Z-Index ULTIME)
     st.markdown("""
     <style>
     .titre-geant-custom {
@@ -47,7 +47,8 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
         display: flex; 
         justify-content: center; 
         pointer-events: none; 
-        z-index: 100; 
+        /* 🪄 LE SECRET EST ICI : Un million pour passer au-dessus de l'en-tête natif */
+        z-index: 999999 !important; 
         opacity: 0; 
         transform: translateY(-15px);
         transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -65,7 +66,7 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     </style>
     """, unsafe_allow_html=True)
 
-    # 🧱 2. LE HTML (Sécurisé pour injecter les variables Python)
+    # 🧱 2. LE HTML
     st.markdown(f"""
     <div id="mini-header-scrolled">
         <div class="mini-header-content">
@@ -84,8 +85,8 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     </div>
     """, unsafe_allow_html=True)
     
-    # 🧠 3. LE SCRIPT ESPION (Sur une seule ligne, invisible)
-    js_code = "if(!window.scrollCheckInit){window.scrollCheckInit=true;setInterval(()=>{const b=window.parent.document.getElementById('titre-geant-container');const m=window.parent.document.getElementById('mini-header-scrolled');if(b&&m){const r=b.getBoundingClientRect();if(r.bottom<50){m.style.opacity='1';m.style.transform='translateY(0)';}else{m.style.opacity='0';m.style.transform='translateY(-15px)';}}},100);}"
+    # 🧠 3. LE SCRIPT ESPION (Avec évasion de la prison Streamlit !)
+    js_code = "if(!window.scrollCheckInit){window.scrollCheckInit=true;setInterval(()=>{const doc=document;const b=doc.getElementById('titre-geant-container');const m=doc.getElementById('mini-header-scrolled');if(m&&m.parentNode!==doc.body){doc.body.appendChild(m);}if(b&&m){const r=b.getBoundingClientRect();if(r.bottom<50){m.style.opacity='1';m.style.transform='translateY(0)';}else{m.style.opacity='0';m.style.transform='translateY(-15px)';}}},100);}"
     
     st.markdown(f'<img src="x" style="display:none;" onerror="{js_code}">', unsafe_allow_html=True)
 
