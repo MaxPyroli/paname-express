@@ -206,13 +206,18 @@ def appliquer_style_global():
             display: none !important; 
         }
         
-        /* 🪄 EFFET GLASSMORPHISM SUR L'EN-TÊTE */
+        /* 🪄 EFFET GLASSMORPHISM PROGRESSIF SUR L'EN-TÊTE */
         header[data-testid="stHeader"] { 
             background: color-mix(in srgb, var(--background-color) 40%, transparent) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            
+            /* Le secret du flou progressif : un masque transparent vers le bas */
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%) !important;
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%) !important;
+            
             box-shadow: none !important;
-            border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
+            border-bottom: none !important; /* ⚠️ On retire la bordure pour que le fondu soit parfait */
         }
         
         /* On garde le reste des optimisations de fluidité */
