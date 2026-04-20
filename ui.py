@@ -2,11 +2,12 @@ import streamlit as st
 import os
 import base64
 import json
+import re
 from utils import get_img_as_base64
 import datetime as dt
 import random
 from utils import get_img_as_base64, get_svg_inline, nettoyer_texte_details, determiner_type_perturbation
-
+from api_idfm import demander_info_trafic
 
 def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     """Affiche le grand titre principal de l'application."""
