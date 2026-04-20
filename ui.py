@@ -197,30 +197,21 @@ def appliquer_style_global():
     # 2. On injecte tout le CSS (sans f-string, donc sans risque de crash)
     st.markdown("""
     <style>
-        /* --- CSS NINJA : SUPPRESSIONS VISUELLES --- */
+        /* --- CSS NINJA : VERSION SÉCURISÉE --- */
         div[data-testid="InputInstructions"] { display: none !important; }
         
-        /* 🪄 DESTRUCTION DU MENU STREAMLIT (SANS TUER LA SIDEBAR !) */
-        [data-testid="stToolbar"], 
-        [data-testid="stStatusWidget"], 
-        [data-testid="stDecoration"], 
-        [data-testid="stHeaderAction"],
+        /* On cache les boutons "Deploy", "Share" et le menu "trois points" sans toucher au bouton Sidebar */
+        [data-testid="stHeaderAction"], 
         #MainMenu { 
             display: none !important; 
-            visibility: hidden !important; 
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-
-        /* On rend l'en-tête transparent au lieu de le supprimer, pour sauver le bouton ! */
-        header[data-testid="stHeader"] { 
-            background: transparent !important;
-            box-shadow: none !important;
         }
         
-        /* Supprime les "squelettes" gris qui clignotent pendant les chargements */
-        [data-testid="stSkeleton"] { display: none !important; }
-
+        /* On s'assure que l'en-tête est transparent pour ne pas faire de bande blanche/noire */
+        header[data-testid="stHeader"] { 
+            background-color: transparent !important;
+        }
+        
+        /* On garde le reste des optimisations de fluidité */
         div[data-testid="stFragment"] { opacity: 1 !important; transform: none !important; transition: none !important; filter: none !important; }
         div.element-container { opacity: 1 !important; filter: none !important; }
         div[data-testid="stSpinner"] { display: none !important; }
