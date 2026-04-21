@@ -264,7 +264,7 @@ def afficher_sidebar():
                             const train = doc.createElement('img');
                             train.src = '{train_img_src}';
                             
-                            train.style.cssText = 'position:fixed; bottom: 15vh; left: 0; transform: translateX(-100%); height: 130px; z-index: 999999; pointer-events: none; transition: transform 0.5s linear, left 0.5s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
+                            train.style.cssText = 'position:fixed; bottom: 15vh; left: 0; transform: translateX(-100%); height: 130px; z-index: 999999; pointer-events: none; transition: transform 1s linear, left 1s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
                             
                             doc.body.appendChild(train);
                             train.getBoundingClientRect(); 
@@ -272,7 +272,7 @@ def afficher_sidebar():
                             train.style.left = '100vw';
                             train.style.transform = 'translateX(0)';
                             
-                            setTimeout(() => train.remove(), 600);
+                            setTimeout(() => train.remove(), 1000);
                         }}
                     }});
                 }}
