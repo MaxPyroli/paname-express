@@ -194,11 +194,11 @@ def afficher_sidebar():
                     if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (TEST EASTER EGG SÉCURISÉ)
+        # FOOTER / CRÉDITS (TEST EASTER EGG BLINDÉ)
         # ==========================================
         st.markdown(f"""
         <div style="text-align: center; margin-top: 15px; padding-top: 15px;">
-            <div style="margin-bottom: 12px; cursor: pointer; user-select: none; display: inline-block; transition: transform 0.1s;" onclick="this.style.transform='scale(0.9)'; setTimeout(() => this.style.transform='scale(1)', 100); if(!this.cc) this.cc = 0; this.cc++; if(this.cc >= 7) {{ this.cc = 0; alert('🎉 BINGO ! Les 7 clics fonctionnent parfaitement !'); }}">
+            <div id="easter-egg-badge" style="margin-bottom: 12px; cursor: pointer; user-select: none; display: inline-block; transition: transform 0.1s;">
                 <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block; transform-origin: center;">
                     {APP_VERSION} <span style="font-weight: 500; opacity: 0.85; margin-left: 4px;"> {APP_CODENAME}</span>
                 </span>
@@ -214,3 +214,39 @@ def afficher_sidebar():
             <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">© 2026 Grand Paname. Données : API IDFM.</div>
         </div>
         """, unsafe_allow_html=True)
+        
+        # 🧠 LE SCRIPT INJECTÉ QUI CONTOURNE LA SÉCURITÉ DE STREAMLIT
+        js_test_ee = """
+        <script>
+        // On cherche le badge en boucle toutes les 100ms jusqu'à ce qu'il apparaisse
+        const checkExist = setInterval(function() {
+            const doc = window.parent.document;
+            const badge = doc.getElementById('easter-egg-badge');
+            
+            if (badge) {
+                clearInterval(checkExist); // On l'a trouvé, on arrête de chercher
+                
+                // On s'assure de ne l'activer qu'une seule fois
+                if (!badge.hasAttribute('data-ee-bound')) {
+                    badge.setAttribute('data-ee-bound', 'true');
+                    let clickCount = 0;
+                    
+                    // On attache manuellement l'action du clic
+                    badge.addEventListener('click', function() {
+                        // 1. L'effet visuel de rebond
+                        badge.style.transform = 'scale(0.9)';
+                        setTimeout(() => badge.style.transform = 'scale(1)', 100);
+                        
+                        // 2. Le compteur de clics
+                        clickCount++;
+                        if (clickCount >= 7) {
+                            clickCount = 0; // On remet à zéro
+                            alert('🎉 BINGO ! La connexion avec le JavaScript est parfaite !');
+                        }
+                    });
+                }
+            }
+        }, 100);
+        </script>
+        """
+        components.html(js_test_ee, height=0, width=0)
