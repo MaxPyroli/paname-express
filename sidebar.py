@@ -194,15 +194,20 @@ def afficher_sidebar():
                     if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (Avec le badge 3D !)
+        # FOOTER / CRÉDITS (AVEC EASTER EGG ANDROID !)
         # ==========================================
+        
+        # 🧠 Le cerveau de l'Easter Egg (Compressé pour être invisible)
+        js_easter_egg = "if(!window.parent.initEE){window.parent.initEE=true;window.parent.gpCC=0;window.parent.triggerEE=function(e){window.parent.gpCC++;e.style.transition='transform 0.1s';e.style.transform='scale(0.9)';setTimeout(()=>e.style.transform='scale(1)',150);if(window.parent.gpCC>=7){window.parent.gpCC=0;e.style.transition='transform 0.6s cubic-bezier(0.34,1.56,0.64,1)';e.style.transform='rotate(360deg) scale(1.3)';setTimeout(()=>e.style.transform='rotate(0deg) scale(1)',800);const d=window.parent.document;const t=d.createElement('div');const emojis=['🚇','🚅','🚋','🐀','🥖','🥐'];t.innerHTML=emojis[Math.floor(Math.random()*emojis.length)];t.style.cssText='position:fixed;bottom:'+(Math.random()*60+20)+'vh;left:-150px;font-size:6rem;z-index:999999;transition:left 2s cubic-bezier(0.2,0,0.8,1);filter:drop-shadow(0 10px 10px rgba(0,0,0,0.2));pointer-events:none;';d.body.appendChild(t);setTimeout(()=>t.style.left='120vw',50);setTimeout(()=>t.remove(),2500);}}}"
+
         st.markdown(f"""
 <div style="text-align: center; margin-top: 15px; padding-top: 15px;">
-    <div style="margin-bottom: 12px;">
-        <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block;">
+    <div style="margin-bottom: 12px; cursor: pointer; user-select: none; display: inline-block;" onclick="if(window.parent.triggerEE) window.parent.triggerEE(this.children[0]);">
+        <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block; transform-origin: center;">
             {APP_VERSION} <span style="font-weight: 500; opacity: 0.85; margin-left: 4px;"> {APP_CODENAME}</span>
         </span>
     </div>
+    
     <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
         🚀 Propulsé par <strong>Grand Paname</strong>
     </div>
@@ -220,5 +225,7 @@ def afficher_sidebar():
     <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
         © 2026 Grand Paname. Données : API IDFM.
     </div>
+    
+    <img src="x" style="display:none;" onerror="{js_easter_egg}">
 </div>
 """, unsafe_allow_html=True)
