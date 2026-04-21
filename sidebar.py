@@ -188,29 +188,28 @@ def afficher_sidebar():
         # FOOTER / CRÉDITS (Avec le badge 3D !)
         # ==========================================
         st.markdown(f"""
-        <div style="text-align: center; margin-top: 15px; padding-top: 15px;">
-            <div style="margin-bottom: 12px;">
-                <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block;">
-                    {APP_VERSION} <span style="font-weight: 500; opacity: 0.85; margin-left: 4px;"> {APP_CODENAME}</span>
-                </span>
-            </div>
-            
-            <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
-                🚀 Propulsé par <strong>Grand Paname</strong>
-            </div>
-            <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">
-                Fait avec ❤️ par un Francilien
-            </div>
-            <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
-                ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
-            </div>
-            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
-                <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;" target="_blank">Signaler un bug</a>
-                <span style="color: #444;">•</span>
-                <a href="mailto:contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
-            </div>
-            <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
-                © 2026 Grand Paname. Données : API IDFM.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="text-align: center; margin-top: 15px; padding-top: 15px;">
+    <div style="margin-bottom: 12px;">
+        <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block;">
+            {APP_VERSION} <span style="font-weight: 500; opacity: 0.85; margin-left: 4px;"> {APP_CODENAME}</span>
+        </span>
+    </div>
+    <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
+        🚀 Propulsé par <strong>Grand Paname</strong>
+    </div>
+    <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">
+        Fait avec ❤️ par un Francilien
+    </div>
+    <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
+        ✨ Réalisé avec <span style="background: -webkit-linear-gradient(45deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Gemini</span>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.8rem;">
+        <a href="https://tally.so/r/A7qJxe" style="color: #3498db; text-decoration: none; transition: color 0.2s;" target="_blank">Signaler un bug</a>
+        <span style="color: #444;">•</span>
+        <a href="mailto:contact@grandpaname.fun" style="color: #3498db; text-decoration: none; transition: color 0.2s;">Contact</a>
+    </div>
+    <div style="font-size: 0.65rem; color: #444; margin-top: 15px;">
+        © 2026 Grand Paname. Données : API IDFM.
+    </div>
+</div>
+""", unsafe_allow_html=True)
