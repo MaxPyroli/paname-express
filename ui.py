@@ -58,51 +58,53 @@ def afficher_titre_app(app_name, app_version, app_subtitle, icone_html):
     </div>
     """, unsafe_allow_html=True)
     
-    # 🧠 3. LE SCRIPT (Modifié pour l'alignement à gauche et la taille)
+    # 🧠 3. LE SCRIPT ANTI-FANTÔMES 👻
     js_code = """
     <script>
-    if(!window.parent.GPMiniH){
-        window.parent.GPMiniH=true;
-        setInterval(()=>{
-            const d=window.parent.document;
-            const h=d.querySelector('header[data-testid="stHeader"]');
-            const b=d.getElementById('titre-geant-container');
-            let m=d.getElementById('gp-native-mini-header');
+    if(window.parent.gpMiniInterval) {
+        clearInterval(window.parent.gpMiniInterval);
+    }
+    
+    window.parent.gpMiniInterval = setInterval(() => {
+        const d = window.parent.document;
+        const h = d.querySelector('header[data-testid="stHeader"]');
+        
+        // 🪄 ASTUCE PRO : On prend toujours le DERNIER élément généré pour ignorer les fantômes de Streamlit
+        const bList = d.querySelectorAll('#titre-geant-container');
+        const b = bList.length > 0 ? bList[bList.length - 1] : null;
+        
+        let m = d.getElementById('gp-native-mini-header');
+        
+        if(h) {
+            // Création de la coquille vide dans l'en-tête s'il n'existe pas
+            if(!m) {
+                m = d.createElement('div');
+                m.id = 'gp-native-mini-header';
+                m.style.cssText = 'position:absolute;left:60px;top:50%;transform:translateY(-80%);opacity:0;transition:all 0.3s cubic-bezier(0.2,0.8,0.2,1);display:flex;align-items:center;font-family:"Grand Paris",sans-serif;font-weight:900;font-size:1.6rem;color:var(--text-color);pointer-events:none;white-space:nowrap;text-shadow:0 2px 10px rgba(0,0,0,0.3);';
+                h.appendChild(m);
+            }
             
-            if(h){
-                if(!m&&b){
-                    m=d.createElement('div');
-                    m.id='gp-native-mini-header';
-                    
-                    /* 🪄 LES CHANGEMENTS SONT ICI : 
-                       - left: 55px (Laisse la place au bouton sidebar)
-                       - transform: translateY (On enlève le centrage X)
-                       - font-size: 1.6rem (Plus gros) 
-                    */
-                    m.style.cssText='position:absolute;left:60px;top:50%;transform:translateY(-80%);opacity:0;transition:all 0.3s cubic-bezier(0.2,0.8,0.2,1);display:flex;align-items:center;font-family:"Grand Paris",sans-serif;font-weight:900;font-size:1.6rem;color:var(--text-color);pointer-events:none;white-space:nowrap;text-shadow:0 2px 10px rgba(0,0,0,0.3);';
-                    
-                    const t=d.getElementById('mini-header-template');
-                    if(t){
-                        m.innerHTML=t.innerHTML;
-                        h.appendChild(m);
-                    }
-                }
-                if(m){
-                    if(b){
-                        if(b.getBoundingClientRect().bottom<60){
-                            m.style.opacity='1';
-                            m.style.transform='translateY(-50%)'; /* Glisse pile au milieu verticalement */
-                        }else{
-                            m.style.opacity='0';
-                            m.style.transform='translateY(-80%)'; /* Remonte quand il se cache */
-                        }
-                    }else{
-                        m.style.opacity='0';
-                    }
+            // Mise à jour du contenu (Au cas où Streamlit aurait changé le modèle)
+            const tList = d.querySelectorAll('#mini-header-template');
+            const t = tList.length > 0 ? tList[tList.length - 1] : null;
+            if(t && m.innerHTML !== t.innerHTML) {
+                m.innerHTML = t.innerHTML;
+            }
+            
+            // Logique d'affichage basée sur la position exacte
+            if(m && b) {
+                const rect = b.getBoundingClientRect();
+                // 🎯 Dès que le BAS du grand titre passe sous les 70px (il entre dans le flou)
+                if(rect.bottom < 70) {
+                    m.style.opacity = '1';
+                    m.style.transform = 'translateY(-50%)'; 
+                } else {
+                    m.style.opacity = '0';
+                    m.style.transform = 'translateY(-80%)'; 
                 }
             }
-        }, 100);
-    }
+        }
+    }, 100);
     </script>
     """
     import streamlit.components.v1 as components
