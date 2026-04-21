@@ -42,22 +42,26 @@ def afficher_sidebar():
         # 🪄 INJECTION CSS SPÉCIFIQUE À LA SIDEBAR
         st.markdown("""
         <style>
-            /* 1. NOUVEAU : Réduire l'espace en haut de la sidebar */
+            /* 1. CORRECTION : Destruction totale de l'espace en haut de la sidebar */
             [data-testid="stSidebarUserContent"] {
-                padding-top: 1.5rem !important; 
+                padding-top: 0rem !important; 
             }
 
-            /* 2. NOUVEAU : Épingler le bouton de fermeture avec effet Glassmorphism */
+            /* 2. CORRECTION : Flou PROGRESSIF sur le bouton de fermeture */
             [data-testid="stSidebarHeader"] {
                 position: sticky !important;
                 top: 0 !important;
                 z-index: 999 !important;
-                background-color: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important;
-                backdrop-filter: blur(8px) !important;
-                -webkit-backdrop-filter: blur(8px) !important;
+                background-color: color-mix(in srgb, var(--background-color) 50%, transparent) !important;
+                backdrop-filter: blur(12px) !important;
+                -webkit-backdrop-filter: blur(12px) !important;
+                
+                /* Le fameux masque pour un fondu en douceur vers le bas ! */
+                -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
+                mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
             }
 
-            /* 3. Ombres et style des Cartes (Cards) */
+            /* Ombres et style des Cartes (Cards) */
             [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
                 background-color: var(--secondary-background-color) !important;
@@ -68,7 +72,7 @@ def afficher_sidebar():
                 box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
             }
 
-            /* 4. Boutons Poubelle */
+            /* Boutons Poubelle */
             [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child button {
                 width: 100% !important; 
                 height: 42px !important; 
@@ -85,7 +89,7 @@ def afficher_sidebar():
                 transform: scale(1.05) !important;
             }
 
-            /* 5. Bouton "Tout effacer" customisé via le marqueur adjacent */
+            /* Bouton "Tout effacer" customisé via le marqueur adjacent */
             div[data-testid="stElementContainer"]:has(.marker-clear-btn) + div[data-testid="stElementContainer"] button {
                 border: 1px solid rgba(231, 76, 60, 0.4) !important;
                 background-color: rgba(231, 76, 60, 0.1) !important;
@@ -106,7 +110,7 @@ def afficher_sidebar():
         </style>
         """, unsafe_allow_html=True)
         
-        # 🏠 Bouton Accueil (Remonte tout en haut grâce à la suppression de st.caption)
+        # 🏠 Bouton Accueil
         if st.button("🏠 Retour à l'accueil", use_container_width=True):
             st.session_state.selected_stop = None
             st.session_state.selected_name = None
@@ -127,7 +131,6 @@ def afficher_sidebar():
             else:
                 for fav in st.session_state.favorites[:]:
                     col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
-                    
                     nom_joli = fav['name'].title()
                     
                     with col_nav:
@@ -147,7 +150,6 @@ def afficher_sidebar():
                             st.session_state.trigger_save_favs = True
                             st.rerun()
 
-                # Le marqueur invisible
                 st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
                 if st.button("💥 Tout effacer", use_container_width=True):
                     st.session_state.favorites = []
@@ -183,13 +185,16 @@ def afficher_sidebar():
                     if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (Avec la version !)
+        # FOOTER / CRÉDITS (Avec le badge 3D !)
         # ==========================================
         st.markdown(f"""
-        <div style="text-align: center; margin-top: 10px; padding-top: 15px;">
-            <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-color); margin-bottom: 8px;">
-                {APP_VERSION} - {APP_CODENAME}
+        <div style="text-align: center; margin-top: 15px; padding-top: 15px;">
+            <div style="margin-bottom: 12px;">
+                <span style="background: linear-gradient(135deg, #8172df, #5e4bb6); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(94, 75, 182, 0.25); display: inline-block;">
+                    {APP_VERSION} <span style="font-weight: 500; opacity: 0.85; margin-left: 4px;"> {APP_CODENAME}</span>
+                </span>
             </div>
+            
             <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
