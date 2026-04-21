@@ -10,15 +10,11 @@ import json
 from streamlit_js_eval import streamlit_js_eval, get_geolocation
 import streamlit.components.v1 as components
 
-from pwa import rendre_installable
-from constants import API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
-from utils import get_img_as_base64, generer_icones_html, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret, synthetiser_alerte, afficher_bandeau_trafic
+from utils import get_img_as_base64, normaliser_mode, clean_code_line, format_html_time, get_all_changelogs, analyser_importance_arret, synthetiser_alerte
 from api_idfm import demander_api, demander_lignes_arret, demander_arrets_proches, demander_coordonnees_arret, demander_info_trafic
-from style import appliquer_style_global
-from config import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE
+from settings import APP_NAME, APP_VERSION, APP_CODENAME, APP_SUBTITLE, API_KEY, BASE_URL, HIERARCHIE, GEOGRAPHIE_RER
 from sidebar import initialiser_favoris, afficher_sidebar
-from ui_composants import afficher_titre_app, afficher_tuto_bienvenue
-from easter_eggs import afficher_popup_feur, afficher_cheval_express
+from ui import afficher_titre_app, afficher_tuto_bienvenue, rendre_installable, appliquer_style_global, afficher_popup_feur, afficher_cheval_express, generer_icones_html, afficher_bandeau_trafic
 from moteur_live import afficher_tableau_live
 from assistant_ia import ouvrir_assistant
 
@@ -33,7 +29,7 @@ ICONES_TITRE = generer_icones_html()
 # ==========================================
 
 try:
-    icon_image = Image.open("app_icon.png")
+    icon_image = Image.open("assets/app_icon.png")
 except FileNotFoundError:
     icon_image = "🚆"
 
@@ -87,7 +83,7 @@ def get_svg_inline(file_path):
 #              INTERFACE GLOBALE
 # ==========================================
 # --- RECUPERATION DE L'ICONE DU TITRE ---
-img_app_b64 = get_img_as_base64("app_icon.png")
+img_app_b64 = get_img_as_base64("assets/app_icon.png")
 if img_app_b64:
     icone_html = f'<img src="data:image/png;base64,{img_app_b64}" style="height: 1em; vertical-align: -0.1em; margin-right: 8px;">'
 else:
@@ -343,7 +339,7 @@ elif not st.session_state.search_results:
 # ==========================================
 
 # 1. On récupère ton image (assure-toi d'avoir une image carrée comme "pana.png" ou utilise ton app_icon)
-img_pana_b64 = get_img_as_base64("pana_icon.png") # Tu peux changer le nom du fichier ici !
+img_pana_b64 = get_img_as_base64("assets/pana_icon.png") # Tu peux changer le nom du fichier ici !
 
 # 2. On prépare le bout de CSS selon si l'image a été trouvée ou non
 if img_pana_b64:
