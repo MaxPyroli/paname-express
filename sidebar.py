@@ -3,7 +3,7 @@ import json
 import time
 import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
-from settings import APP_VERSION, APP_CODENAME
+from settings import APP_NAME, APP_VERSION, APP_CODENAME
 from utils import get_all_changelogs
 from assistant_ia import ouvrir_assistant
 
@@ -17,7 +17,6 @@ def initialiser_favoris():
     if not st.session_state.favs_loaded:
         favs_from_browser = streamlit_js_eval(js_expressions="window.localStorage.getItem('gp_favs');", key="get_favs_init")
         
-        # Tant que c'est "None", le navigateur n'a pas répondu.
         if favs_from_browser is not None:
             st.session_state.favs_loaded = True
             if favs_from_browser:
@@ -27,7 +26,6 @@ def initialiser_favoris():
                     pass
             st.rerun()
             
-    # 🪄 L'INJECTION MAGIQUE INVISIBLE QUI SAUVEGARDE VRAIMENT 🪄
     if st.session_state.get('trigger_save_favs', False):
         json_data = json.dumps(st.session_state.favorites)
         safe_json = json_data.replace('\\', '\\\\').replace('`', '\\`')
@@ -41,12 +39,25 @@ def initialiser_favoris():
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
     with st.sidebar:
-        st.caption(f"{APP_VERSION} - {APP_CODENAME}")
-        
         # 🪄 INJECTION CSS SPÉCIFIQUE À LA SIDEBAR
         st.markdown("""
         <style>
-            /* 1. Ombres et style des Cartes (Cards) */
+            /* 1. NOUVEAU : Réduire l'espace en haut de la sidebar */
+            [data-testid="stSidebarUserContent"] {
+                padding-top: 1.5rem !important; 
+            }
+
+            /* 2. NOUVEAU : Épingler le bouton de fermeture avec effet Glassmorphism */
+            [data-testid="stSidebarHeader"] {
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 999 !important;
+                background-color: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+            }
+
+            /* 3. Ombres et style des Cartes (Cards) */
             [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
                 background-color: var(--secondary-background-color) !important;
@@ -57,7 +68,7 @@ def afficher_sidebar():
                 box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
             }
 
-            /* 2. Boutons Poubelle (Ciblés par leur position dans la colonne de droite) */
+            /* 4. Boutons Poubelle */
             [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child button {
                 width: 100% !important; 
                 height: 42px !important; 
@@ -74,7 +85,7 @@ def afficher_sidebar():
                 transform: scale(1.05) !important;
             }
 
-            /* 3. Bouton "Tout effacer" customisé via le marqueur adjacent */
+            /* 5. Bouton "Tout effacer" customisé via le marqueur adjacent */
             div[data-testid="stElementContainer"]:has(.marker-clear-btn) + div[data-testid="stElementContainer"] button {
                 border: 1px solid rgba(231, 76, 60, 0.4) !important;
                 background-color: rgba(231, 76, 60, 0.1) !important;
@@ -86,7 +97,7 @@ def afficher_sidebar():
             div[data-testid="stElementContainer"]:has(.marker-clear-btn) + div[data-testid="stElementContainer"] button:hover {
                 background-color: rgba(231, 76, 60, 0.15) !important;
                 border: 1px solid rgba(231, 76, 60, 0.8) !important;
-                transform: translateY(-4px) !important; /* L'effet de bond au survol ! */
+                transform: translateY(-4px) !important; 
                 box-shadow: 0 8px 20px rgba(231, 76, 60, 0.25) !important;
             }
             
@@ -95,7 +106,7 @@ def afficher_sidebar():
         </style>
         """, unsafe_allow_html=True)
         
-        # 🏠 Bouton Accueil
+        # 🏠 Bouton Accueil (Remonte tout en haut grâce à la suppression de st.caption)
         if st.button("🏠 Retour à l'accueil", use_container_width=True):
             st.session_state.selected_stop = None
             st.session_state.selected_name = None
@@ -109,7 +120,6 @@ def afficher_sidebar():
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
             
-            # 🪄 L'ÉTAT DE CHARGEMENT EST ICI 🪄
             if not st.session_state.get('favs_loaded', False):
                 st.info("🔄 Chargement des favoris...")
             elif not st.session_state.favorites:
@@ -137,7 +147,7 @@ def afficher_sidebar():
                             st.session_state.trigger_save_favs = True
                             st.rerun()
 
-                # 🪄 LE MARQUEUR INVISIBLE POUR CIBLER LE BOUTON ROUGE 🪄
+                # Le marqueur invisible
                 st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
                 if st.button("💥 Tout effacer", use_container_width=True):
                     st.session_state.favorites = []
@@ -149,7 +159,7 @@ def afficher_sidebar():
         # ==========================================
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>🗄️ Informations</h3>", unsafe_allow_html=True)
-            st.success(f"🎉 **Bienvenue sur Grand Paname {APP_VERSION} !**") 
+            st.success(f"🎉 **Bienvenue sur {APP_NAME} {APP_VERSION} !**") 
             
             st.markdown("""
             <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
@@ -173,10 +183,13 @@ def afficher_sidebar():
                     if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS
+        # FOOTER / CRÉDITS (Avec la version !)
         # ==========================================
-        st.markdown("""
+        st.markdown(f"""
         <div style="text-align: center; margin-top: 10px; padding-top: 15px;">
+            <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-color); margin-bottom: 8px;">
+                {APP_VERSION} - {APP_CODENAME}
+            </div>
             <div style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">
                 🚀 Propulsé par <strong>Grand Paname</strong>
             </div>
