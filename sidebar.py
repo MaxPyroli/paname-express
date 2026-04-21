@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import time
+import base64
 import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 from settings import APP_NAME, APP_VERSION, APP_CODENAME
