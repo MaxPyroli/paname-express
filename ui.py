@@ -272,8 +272,8 @@ def appliquer_style_global():
             -webkit-backdrop-filter: blur(16px) !important;
             
             /* Le flou reste à 100% jusqu'aux 3/4, puis s'évapore très vite sur la fin */
-            -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%) !important;
-            mask-image: linear-gradient(to bottom, black 75%, transparent 100%) !important;
+            -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%) !important;
+            mask-image: linear-gradient(to bottom, black 65%, transparent 100%) !important;
             
             box-shadow: none !important;
             border-bottom: none !important;
