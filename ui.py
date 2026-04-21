@@ -265,15 +265,15 @@ def appliquer_style_global():
             display: none !important; 
         }
         
-        /* 🪄 EFFET GLASSMORPHISM PROGRESSIF SUR L'EN-TÊTE (Version 75%) */
+        /* 🪄 EFFET GLASSMORPHISM PROGRESSIF SUR L'EN-TÊTE (Version Douce) */
         header[data-testid="stHeader"] { 
-            background: color-mix(in srgb, var(--background-color) 45%, transparent) !important;
-            backdrop-filter: blur(16px) !important;
-            -webkit-backdrop-filter: blur(16px) !important;
+            background: color-mix(in srgb, var(--background-color) 50%, transparent) !important;
+            backdrop-filter: blur(12px) !important; /* Un flou un peu moins agressif */
+            -webkit-backdrop-filter: blur(12px) !important;
             
-            /* Le flou reste à 100% jusqu'aux 3/4, puis s'évapore très vite sur la fin */
-            -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%) !important;
-            mask-image: linear-gradient(to bottom, black 65%, transparent 100%) !important;
+            /* 🪄 On commence à dissiper le flou dès 40% de la hauteur pour un fondu parfait */
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%) !important;
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%) !important;
             
             box-shadow: none !important;
             border-bottom: none !important;
