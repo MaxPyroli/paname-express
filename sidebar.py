@@ -226,7 +226,7 @@ def afficher_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # 2. LE SCRIPT DE LA MORT QUI TUE (Animation du RER corrigée !)
+        # 2. LE SCRIPT "TGV MODE" (Vitesse augmentée + Klaxon synthétisé)
         js_easter_egg = f"""
         <script>
         const checkExist = setInterval(function() {{
@@ -240,33 +240,52 @@ def afficher_sidebar():
                     badge.setAttribute('data-ee-bound', 'true');
                     let clickCount = 0;
                     
+                    // 🎺 Fonction pour générer le klaxon deux-tons (Hi-Lo)
+                    const playHorn = () => {{
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const playTone = (freq, start, duration) => {{
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'sawtooth'; // Son riche proche d'un klaxon
+                            osc.frequency.value = freq;
+                            gain.gain.setValueAtTime(0.1, start);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(start);
+                            osc.stop(start + duration);
+                        }};
+                        // Klaxon SNCF classique : Fa# / Ré#
+                        playTone(370, ctx.currentTime, 0.4);
+                        playTone(311, ctx.currentTime + 0.4, 0.5);
+                    }};
+
                     badge.addEventListener('click', function() {{
-                        // Effet de rebond sur le badge
                         badge.style.transform = 'scale(0.9)';
                         setTimeout(() => badge.style.transform = 'scale(1)', 100);
                         
                         clickCount++;
                         if (clickCount >= 7) {{
-                            clickCount = 0; // Remise à zéro
+                            clickCount = 0;
                             
+                            // 1. On lance le son
+                            playHorn();
+                            
+                            // 2. On crée le train
                             const train = doc.createElement('img');
                             train.src = '{train_img_src}';
                             
-                            // 🪄 LA MAGIE EST ICI : 
-                            // left: 0 + translateX(-100%) = Le train est caché à 100% sur la gauche, peu importe sa taille !
-                            train.style.cssText = 'position:fixed; bottom: 15vh; left: 0; transform: translateX(-100%); height: 120px; z-index: 999999; pointer-events: none; transition: transform 1.5s linear, left 1.5s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
+                            // ⚡️ VITESSE : 0.5s pour traverser tout l'écran !
+                            train.style.cssText = 'position:fixed; bottom: 15vh; left: 0; transform: translateX(-100%); height: 130px; z-index: 999999; pointer-events: none; transition: transform 0.5s linear, left 0.5s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
                             
                             doc.body.appendChild(train);
+                            train.getBoundingClientRect(); // Force le rendu
                             
-                            // Forcer le navigateur à valider la position de départ avant d'animer
-                            train.getBoundingClientRect();
-                            
-                            // 🚀 DÉPART ! (Il file jusqu'à ce que sa queue sorte de l'écran à droite)
+                            // 🚀 DÉPART IMMÉDIAT
                             train.style.left = '100vw';
                             train.style.transform = 'translateX(0)';
                             
-                            // On détruit l'élément une fois l'animation terminée (1.5s + marge)
-                            setTimeout(() => train.remove(), 1600);
+                            setTimeout(() => train.remove(), 600);
                         }}
                     }});
                 }}
@@ -274,4 +293,5 @@ def afficher_sidebar():
         }}, 100);
         </script>
         """
+        import streamlit.components.v1 as components
         components.html(js_easter_egg, height=0, width=0)
