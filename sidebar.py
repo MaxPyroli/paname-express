@@ -107,6 +107,15 @@ def afficher_sidebar():
             
             /* Réduction globale de l'espacement dans la sidebar */
             [data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 0.6rem !important; }
+            
+            /* 6. L'effet magique sur le bouton WhatsApp (Vert Néon) */
+            .whatsapp-btn:hover {
+                background-color: rgba(37, 211, 102, 0.25) !important;
+                border: 1px solid rgba(37, 211, 102, 0.8) !important;
+                transform: translateY(-4px) !important; 
+                box-shadow: 0 8px 20px rgba(37, 211, 102, 0.35) !important;
+                color: #20b858 !important;
+            }
         </style>
         """, unsafe_allow_html=True)
         
@@ -164,7 +173,7 @@ def afficher_sidebar():
             st.success(f"🎉 **Bienvenue sur {APP_NAME} {APP_VERSION} !**") 
             
             st.markdown("""
-            <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" style="
+            <a href="https://whatsapp.com/channel/0029VbCSkQt5vKA7MojdZH3N" target="_blank" class="whatsapp-btn" style="
                 display: flex; align-items: center; justify-content: center; width: 100%;
                 background-color: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.5);
                 padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: 600;
