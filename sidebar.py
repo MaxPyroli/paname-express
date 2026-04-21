@@ -195,8 +195,18 @@ def afficher_sidebar():
                     if i < len(notes_history) - 1: st.divider()
         
         # ==========================================
-        # FOOTER / CRÉDITS (TEST EASTER EGG BLINDÉ)
+        # FOOTER / CRÉDITS (AVEC LE VRAI RER NG ! 🚄)
         # ==========================================
+        
+        # 1. Astuce anti-Streamlit : On charge l'image en Base64 pour être sûr qu'elle s'affiche
+        try:
+            with open("img/rerng.png", "rb") as img_file:
+                b64_string = base64.b64encode(img_file.read()).decode()
+                train_img_src = f"data:image/png;base64,{b64_string}"
+        except FileNotFoundError:
+            train_img_src = ""
+            st.error("⚠️ L'image img/rerng.png est introuvable !")
+
         st.markdown(f"""
         <div style="text-align: center; margin-top: 15px; padding-top: 15px;">
             <div id="easter-egg-badge" style="margin-bottom: 12px; cursor: pointer; user-select: none; display: inline-block; transition: transform 0.1s;">
@@ -216,38 +226,52 @@ def afficher_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # 🧠 LE SCRIPT INJECTÉ QUI CONTOURNE LA SÉCURITÉ DE STREAMLIT
-        js_test_ee = """
+        # 2. LE SCRIPT DE LA MORT QUI TUE (Animation du RER)
+        js_easter_egg = f"""
         <script>
-        // On cherche le badge en boucle toutes les 100ms jusqu'à ce qu'il apparaisse
-        const checkExist = setInterval(function() {
+        const checkExist = setInterval(function() {{
             const doc = window.parent.document;
             const badge = doc.getElementById('easter-egg-badge');
             
-            if (badge) {
-                clearInterval(checkExist); // On l'a trouvé, on arrête de chercher
+            if (badge) {{
+                clearInterval(checkExist);
                 
-                // On s'assure de ne l'activer qu'une seule fois
-                if (!badge.hasAttribute('data-ee-bound')) {
+                if (!badge.hasAttribute('data-ee-bound')) {{
                     badge.setAttribute('data-ee-bound', 'true');
                     let clickCount = 0;
                     
-                    // On attache manuellement l'action du clic
-                    badge.addEventListener('click', function() {
-                        // 1. L'effet visuel de rebond
+                    badge.addEventListener('click', function() {{
+                        // Effet de rebond sur le badge
                         badge.style.transform = 'scale(0.9)';
                         setTimeout(() => badge.style.transform = 'scale(1)', 100);
                         
-                        // 2. Le compteur de clics
                         clickCount++;
-                        if (clickCount >= 7) {
-                            clickCount = 0; // On remet à zéro
-                            alert('🎉 BINGO ! La connexion avec le JavaScript est parfaite !');
-                        }
-                    });
-                }
-            }
-        }, 100);
+                        if (clickCount >= 7) {{
+                            clickCount = 0; // Remise à zéro
+                            
+                            // 🚆 CRÉATION DU TRAIN
+                            const train = doc.createElement('img');
+                            train.src = '{train_img_src}';
+                            
+                            // Style initial (Caché à gauche)
+                            // transition: left 0.8s linear -> VITESSE MAX (0.8 seconde pour traverser !)
+                            train.style.cssText = 'position:fixed; bottom: 15vh; left: -50vw; height: 120px; z-index: 999999; pointer-events: none; transition: left 0.8s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
+                            
+                            doc.body.appendChild(train);
+                            
+                            // On force le navigateur à prendre en compte la position de départ
+                            train.getBoundingClientRect();
+                            
+                            // 🚀 DÉPART DU TRAIN ! (Il file tout à droite)
+                            train.style.left = '120vw';
+                            
+                            // On détruit l'élément une fois qu'il est sorti de l'écran pour garder le navigateur propre
+                            setTimeout(() => train.remove(), 1000);
+                        }}
+                    }});
+                }}
+            }}
+        }}, 100);
         </script>
         """
-        components.html(js_test_ee, height=0, width=0)
+        components.html(js_easter_egg, height=0, width=0)
