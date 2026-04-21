@@ -226,7 +226,7 @@ def afficher_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # 2. LE SCRIPT DE LA MORT QUI TUE (Animation du RER)
+        # 2. LE SCRIPT DE LA MORT QUI TUE (Animation du RER corrigée !)
         js_easter_egg = f"""
         <script>
         const checkExist = setInterval(function() {{
@@ -249,24 +249,24 @@ def afficher_sidebar():
                         if (clickCount >= 7) {{
                             clickCount = 0; // Remise à zéro
                             
-                            // 🚆 CRÉATION DU TRAIN
                             const train = doc.createElement('img');
                             train.src = '{train_img_src}';
                             
-                            // Style initial (Caché à gauche)
-                            // transition: left 0.8s linear -> VITESSE MAX (0.8 seconde pour traverser !)
-                            train.style.cssText = 'position:fixed; bottom: 15vh; left: -50vw; height: 120px; z-index: 999999; pointer-events: none; transition: left 0.8s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
+                            // 🪄 LA MAGIE EST ICI : 
+                            // left: 0 + translateX(-100%) = Le train est caché à 100% sur la gauche, peu importe sa taille !
+                            train.style.cssText = 'position:fixed; bottom: 15vh; left: 0; transform: translateX(-100%); height: 120px; z-index: 999999; pointer-events: none; transition: transform 1.5s linear, left 1.5s linear; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));';
                             
                             doc.body.appendChild(train);
                             
-                            // On force le navigateur à prendre en compte la position de départ
+                            // Forcer le navigateur à valider la position de départ avant d'animer
                             train.getBoundingClientRect();
                             
-                            // 🚀 DÉPART DU TRAIN ! (Il file tout à droite)
-                            train.style.left = '120vw';
+                            // 🚀 DÉPART ! (Il file jusqu'à ce que sa queue sorte de l'écran à droite)
+                            train.style.left = '100vw';
+                            train.style.transform = 'translateX(0)';
                             
-                            // On détruit l'élément une fois qu'il est sorti de l'écran pour garder le navigateur propre
-                            setTimeout(() => train.remove(), 1000);
+                            // On détruit l'élément une fois l'animation terminée (1.5s + marge)
+                            setTimeout(() => train.remove(), 1600);
                         }}
                     }});
                 }}
