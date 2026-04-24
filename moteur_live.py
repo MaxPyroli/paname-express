@@ -431,9 +431,33 @@ def afficher_live_content(stop_id, clean_name):
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
-                    p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
-                    p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
-                    p3 = [d for d in proches if d not in p1 and d not in p2]
+                    p1 = []
+                    p2 = []
+                    p3 = []
+                    
+                    for d in proches:
+                        dir_topo = d.get('direction', '')
+                        dest_upper = d['dest'].upper()
+                        
+                        # 🧠 1. NOUVEAU SYSTÈME : L'algorithme a-t-il déduit une vraie direction ?
+                        if dir_topo and not dir_topo.startswith("Direction") and dir_topo != "Terminus ici":
+                            # On range la direction topologique dans la bonne colonne
+                            if dir_topo == geo['labels'][0]:
+                                p1.append(d)
+                            elif dir_topo == geo['labels'][1]:
+                                p2.append(d)
+                            else:
+                                p3.append(d)
+                                
+                        # 🗝️ 2. ANCIEN SYSTÈME : Secours par mots-clés (pour les lignes pas encore topologiques)
+                        else:
+                            if any(k in dest_upper for k in local_mots_1):
+                                p1.append(d)
+                            elif any(k in dest_upper for k in local_mots_2):
+                                p2.append(d)
+                            else:
+                                p3.append(d)
+                                
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
                     card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
