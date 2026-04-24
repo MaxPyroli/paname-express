@@ -298,7 +298,20 @@ def afficher_live_content(stop_id, clean_name):
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'is_replacement': is_replacement})
+                
+                # 🪄 ON CALCULE LA VRAIE DIRECTION ICI !
+                # (On lui passe le code de la ligne, la gare actuelle, et la destination du train)
+                direction_topologique = calculer_direction_relative(code, clean_name, dest)
+                
+                # On glisse cette nouvelle info dans la valise du train
+                buckets[mode][cle].append({
+                    'dest': dest, 
+                    'direction': direction_topologique,  # ⬅️ LA NOUVEAUTÉ EST LÀ
+                    'html': html_time, 
+                    'tri': val_tri, 
+                    'is_last': is_last, 
+                    'is_replacement': is_replacement
+                })
     
     # 3. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
