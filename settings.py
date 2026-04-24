@@ -145,5 +145,16 @@ TOPOLOGIE_LIGNES = {
             # 5. Axe "Nuit/Travaux" : St-Germain <-> Marne-la-Vallée (Au cas où !)
             ["GERMAIN", "PECQ", "VESINET", "CHATOU", "RUEIL", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "LOGNES", "TORCY", "BUSSY", "EUROPE", "CHESSY"]
         ]
+
+    "B": {
+        "nom_aller": "⇧ NORD (Aéroport CDG / Mitry)",
+        "nom_retour": "⇩ SUD (St-Rémy / Robinson)",
+        "routes": [
+            # 1. Axe : St-Rémy <-> Mitry
+            ["REMY", "COURCELLE", "GIF", "BURES", "ORSAY", "LOZERE", "PALAISEAU", "MASSY", "VERRIERES", "FONTAINE", "CROIX", "BOURG", "BAGNEUX", "ARCUEIL", "LAPLACE", "GENTILLY", "CITE UNIVERSITAIRE", "DENFERT", "ROYAL", "LUXEMBOURG", "MICHEL", "CHATELET", "NORD", "PLAINE", "COURNEUVE", "BOURGET", "DRANCY", "BLANC", "AULNAY", "SEVRAN LIVRY", "VERT GALANT", "VILLEPARISIS", "MITRY"],
+            
+            # 2. Axe : Robinson <-> Aéroport CDG
+            ["ROBINSON", "FONTENAY", "SCEAUX", "BOURG", "BAGNEUX", "ARCUEIL", "LAPLACE", "GENTILLY", "CITE UNIVERSITAIRE", "DENFERT", "ROYAL", "LUXEMBOURG", "MICHEL", "CHATELET", "NORD", "PLAINE", "COURNEUVE", "BOURGET", "DRANCY", "BLANC", "AULNAY", "SEVRAN BEAUDOTTES", "VILLEPINTE", "PARC", "GAULLE"]
+        ]
     }
 }
