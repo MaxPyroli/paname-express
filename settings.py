@@ -124,3 +124,17 @@ GEOGRAPHIE_RER = {
         "term_2": ["MASSY"]
     }
 }
+
+TOPOLOGIE_LIGNES = {
+    "A": {
+        "nom_aller": "⇨ EST (Boissy / Marne-la-Vallée)",
+        "nom_retour": "⇦ OUEST (Cergy / Poissy / St-Germain)",
+        "routes": [
+            # Route 1 : Saint-Germain -> Boissy
+            ["SAINT-GERMAIN-EN-LAYE", "LE PECQ", "RUEIL", "NANTERRE", "DEFENSE", "CHATELET", "NATION", "VINCENNES", "FONTENAY", "NOGENT", "JOINVILLE", "SAINT-MAUR", "CHAMPIGNY", "LA VARENNE", "SUCY", "BOISSY"],
+            
+            # Route 2 : Cergy -> Marne-la-Vallée
+            ["CERGY", "NEUVILLE", "CONFLANS", "SARTROUVILLE", "DEFENSE", "CHATELET", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "TORCY", "CHESSY"]
+        ]
+    }
+}
