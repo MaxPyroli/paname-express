@@ -202,5 +202,113 @@ TOPOLOGIE_LIGNES = {
             # 2. Branche Tournan
             ["NANTERRE", "DEFENSE", "MAILLOT", "HAUSSMANN", "MAGENTA", "ROSA PARKS", "PANTIN", "NOISY", "ROSNY BOIS PERRIER", "ROSNY SOUS BOIS", "VAL DE FONTENAY", "NOGENT", "BOULLEREAUX", "VILLIERS", "YVRIS", "EMERAINVILLE", "ROISSY", "OZOIR", "GRETZ", "TOURNAN"]
         ]
+    },
+
+    "H": {
+        "nom_aller": "⇧ NORD (Pontoise / Persan / Creil)",
+        "nom_retour": "⇩ PARIS NORD",
+        "routes": [
+            # 1. Branche Pontoise
+            ["NORD", "DENIS", "EPINAY", "ENGHIEN", "CHAMP DE COURSES", "ERMONT EAUBONNE", "CERNAY", "FRANCONVILLE", "MONTIGNY", "PIERRELAYE", "LIESSE", "AUMONE", "PONTOISE"],
+            # 2. Branche Persan via Valmondois
+            ["NORD", "DENIS", "EPINAY", "ENGHIEN", "CHAMP DE COURSES", "ERMONT EAUBONNE", "ERMONT HALTE", "GROS NOYER", "SAINT-PRIX", "VAUCELLES", "TAVERNY", "BESSANCOURT", "FREPILLON", "MERY", "MERIEL", "VALMONDOIS", "ISLE-ADAM", "CHAMPAGNE", "PERSAN"],
+            # 3. Branche Persan / Creil via Montsoult
+            ["NORD", "DENIS", "EPINAY", "DEUIL", "GROSLAY", "SARCELLES", "ECOUEN", "DOMONT", "BOUFFEMONT", "MONTSOULT", "PRESLES", "NOINTEL", "PERSAN", "BRUYERES", "BORAN", "PRECY", "ESSERENT", "CREIL"],
+            # 4. Branche Luzarches
+            ["NORD", "DENIS", "EPINAY", "DEUIL", "GROSLAY", "SARCELLES", "ECOUEN", "DOMONT", "BOUFFEMONT", "MONTSOULT", "VILLAINES", "VIARMES", "SEUGY", "LUZARCHES"]
+        ]
+    },
+
+    "J": {
+        "nom_aller": "⇦ OUEST (Mantes / Gisors / Ermont)",
+        "nom_retour": "⇨ PARIS ST-LAZARE",
+        "routes": [
+            # 1. Groupe IV : Ermont
+            ["LAZARE", "ASNIERES", "BOIS COLOMBES", "COLOMBES", "STADE", "ARGENTEUIL", "SANNOIS", "ERMONT"],
+            # 2. Groupe VI : Gisors
+            ["LAZARE", "ARGENTEUIL", "VAL D'ARGENTEUIL", "CORMEILLES", "FRETTE", "HERBLAY", "CONFLANS SAINTE-HONORINE", "ERAGNY", "AUMONE", "PONTOISE", "OSNY", "BOISSY L'AILLERIE", "MONTGEROULT", "US", "SANTEUIL", "CHARS", "VILLETERTRE", "LIANCOURT", "CHAUMONT", "TRIE", "GISORS"],
+            # 3. Groupe VI : Mantes via Conflans
+            ["LAZARE", "ARGENTEUIL", "VAL D'ARGENTEUIL", "CORMEILLES", "FRETTE", "HERBLAY", "CONFLANS SAINTE-HONORINE", "FIN D'OISE", "MAURECOURT", "ANDRESY", "CHANTELOUP", "TRIEL", "VAUX", "THUN", "MEULAN", "JUZIERS", "GARGENVILLE", "ISSOU", "LIMAY", "MANTES STATION", "MANTES LA JOLIE"],
+            # 4. Groupe V : Mantes / Vernon via Poissy
+            ["LAZARE", "HOUILLES", "SARTROUVILLE", "MAISONS LAFFITTE", "POISSY", "VILLENNES", "VERNOUILLET", "CLAIRIERES", "MUREAUX", "AUBERGENVILLE", "EPONE", "MANTES STATION", "MANTES LA JOLIE", "ROSNY", "BONNIERES", "BREVAL", "BUEIL", "EVREUX", "VERNON"]
+        ]
+    },
+
+    "K": {
+        "nom_aller": "⇧ NORD (Crépy-en-Valois)",
+        "nom_retour": "⇩ PARIS NORD",
+        "routes": [
+            ["NORD", "AULNAY", "MITRY", "COMPANS", "THIEUX", "DAMMARTIN", "PLESSIS", "NANTEUIL", "ORMOY", "CREPY"]
+        ]
+    },
+
+    "L": {
+        "nom_aller": "⇦ OUEST (Versailles / St-Nom / Cergy)",
+        "nom_retour": "⇨ PARIS ST-LAZARE",
+        "routes": [
+            # 1. Versailles Rive Droite
+            ["LAZARE", "CARDINET", "CLICHY", "ASNIERES", "BECON", "COURBEVOIE", "DEFENSE", "PUTEAUX", "SURESNES", "VAL D'OR", "CLOUD", "SEVRES", "CHAVILLE RIVE DROITE", "VIROFLAY RIVE DROITE", "MONTREUIL", "VERSAILLES RIVE DROITE"],
+            # 2. Saint-Nom la Bretèche
+            ["LAZARE", "CARDINET", "CLICHY", "ASNIERES", "BECON", "COURBEVOIE", "DEFENSE", "PUTEAUX", "SURESNES", "VAL D'OR", "CLOUD", "GARCHES", "VAUCRESSON", "CELLE", "BOUGIVAL", "LOUVECIENNES", "MARLY", "ETANG", "NOM LA BRETECHE"],
+            # 3. Cergy le Haut
+            ["LAZARE", "CARDINET", "CLICHY", "ASNIERES", "BECON", "VALLEES", "GARENNE", "NANTERRE UNIVERSITE", "HOUILLES", "SARTROUVILLE", "MAISONS LAFFITTE", "ACHERES VILLE", "FIN D'OISE", "NEUVILLE", "CERGY PREFECTURE", "SAINT-CHRISTOPHE", "CERGY LE HAUT"]
+        ]
+    },
+
+    "N": {
+        "nom_aller": "⇦ OUEST (Rambouillet / Dreux / Mantes)",
+        "nom_retour": "⇨ PARIS MONTPARNASSE",
+        "routes": [
+            # 1. Dreux
+            ["MONTPARNASSE", "VANVES", "CLAMART", "MEUDON", "BELLEVUE", "SEVRES RIVE GAUCHE", "CHAVILLE RIVE GAUCHE", "VIROFLAY RIVE GAUCHE", "VERSAILLES CHANTIERS", "CYR", "FONTENAY", "VILLEPREUX", "PLAISIR", "VILLIERS", "MONTFORT", "GARANCIERES", "ORGERUS", "TACOIGNIERES", "HOUDAN", "MARCHEZAIS", "DREUX"],
+            # 2. Mantes-la-Jolie
+            ["MONTPARNASSE", "VANVES", "CLAMART", "MEUDON", "BELLEVUE", "SEVRES RIVE GAUCHE", "CHAVILLE RIVE GAUCHE", "VIROFLAY RIVE GAUCHE", "VERSAILLES CHANTIERS", "CYR", "FONTENAY", "VILLEPREUX", "PLAISIR", "BEYNES", "MAREIL", "MAULE", "NEZEL", "EPONE", "MANTES LA JOLIE"],
+            # 3. Rambouillet
+            ["MONTPARNASSE", "VANVES", "CLAMART", "MEUDON", "BELLEVUE", "SEVRES RIVE GAUCHE", "CHAVILLE RIVE GAUCHE", "VIROFLAY RIVE GAUCHE", "VERSAILLES CHANTIERS", "CYR", "QUENTIN", "TRAPPES", "VERRIERE", "COIGNIERES", "ESSARTS", "PERRAY", "RAMBOUILLET"]
+        ]
+    },
+
+    "P": {
+        "nom_aller": "⇨ EST (Meaux / Provins / Coulommiers)",
+        "nom_retour": "⇦ PARIS EST",
+        "routes": [
+            # 1. Meaux / Château Thierry
+            ["EST", "CHELLES", "VAIRES", "LAGNY", "ESBLY", "MEAUX", "TRILPORT", "CHANGIS", "FERTE SOUS JOUARRE", "NANTEUIL", "NOGENT L'ARTAUD", "CHEZY", "CHATEAU THIERRY"],
+            # 2. Coulommiers
+            ["EST", "TOURNAN", "MARLES", "MORTCERF", "GUERARD", "FAREMOUTIERS", "MOUROUX", "COULOMMIERS"],
+            # 3. Provins
+            ["EST", "TOURNAN", "MARLES", "MORTCERF", "VERNEUIL", "MORMANT", "NANGIS", "LONGUEVILLE", "SAINTE-COLOMBE", "CHAMPBENOIST", "PROVINS"],
+            # 4. La Ferté Milon (Navette depuis Meaux)
+            ["MEAUX", "TRILPORT", "ISLES", "LIZY", "CROUY", "MAREUIL", "FERTE MILON"]
+        ]
+    },
+
+    "R": {
+        "nom_aller": "⇩ SUD (Montereau / Montargis)",
+        "nom_retour": "⇧ PARIS GARE DE LYON",
+        "routes": [
+            # 1. Montereau via Moret
+            ["LYON", "MELUN", "BOIS LE ROI", "FONTAINEBLEAU", "THOMERY", "MORET", "SAINT-MAMMES", "MONTEREAU"],
+            # 2. Montargis
+            ["LYON", "MELUN", "BOIS LE ROI", "FONTAINEBLEAU", "THOMERY", "MORET", "MONTIGNY", "BOURRON", "NEMOURS", "BAGNEAUX", "SOUPPES", "DORDIVES", "FERRIERES", "MONTARGIS"],
+            # 3. Navette Melun-Montereau via Héricy
+            ["MELUN", "LIVRY", "CHARTRETTES", "FONTAINE LE PORT", "HERICY", "VULAINES", "CHAMPAGNE", "VERNOU", "PAROISSE", "MONTEREAU"]
+        ]
+    },
+
+    "U": {
+        "nom_aller": "⇩ SUD (La Verrière)",
+        "nom_retour": "⇧ NORD (La Défense)",
+        "routes": [
+            ["DEFENSE", "PUTEAUX", "SURESNES", "CLOUD", "SEVRES", "CHAVILLE", "VERSAILLES CHANTIERS", "CYR", "QUENTIN", "TRAPPES", "VERRIERE"]
+        ]
+    },
+
+    "V": {
+        "nom_aller": "⇦ OUEST (Versailles-Chantiers)",
+        "nom_retour": "⇨ EST (Massy-Palaiseau)",
+        "routes": [
+            ["VERSAILLES CHANTIERS", "PETIT JOUY", "JOUY", "VAUBOYEN", "BIEVRES", "IGNY", "MASSY PALAISEAU"]
+        ]
     }
 }
