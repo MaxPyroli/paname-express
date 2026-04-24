@@ -398,7 +398,7 @@ def afficher_live_content(stop_id, clean_name):
                 /* On utilise currentColor au lieu de la variable pour forcer l'héritage parfait ! */
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
-            <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
+<div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE.get(mode_actuel, "AUTRE")}</div>
             """, unsafe_allow_html=True)
             
             c1_vu = False
