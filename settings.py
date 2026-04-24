@@ -127,14 +127,23 @@ GEOGRAPHIE_RER = {
 
 TOPOLOGIE_LIGNES = {
     "A": {
-        "nom_aller": "⇨ EST (Boissy / Marne-la-Vallée)",
+        "nom_aller": "⇨ EST (Marne-la-Vallée / Boissy)",
         "nom_retour": "⇦ OUEST (Cergy / Poissy / St-Germain)",
         "routes": [
-            # Route 1 : Saint-Germain -> Boissy
-            ["SAINT-GERMAIN-EN-LAYE", "LE PECQ", "RUEIL", "NANTERRE", "DEFENSE", "CHATELET", "NATION", "VINCENNES", "FONTENAY", "NOGENT", "JOINVILLE", "SAINT-MAUR", "CHAMPIGNY", "LA VARENNE", "SUCY", "BOISSY"],
+            # 1. Axe classique : St-Germain <-> Boissy
+            ["GERMAIN", "PECQ", "VESINET", "CHATOU", "RUEIL", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "FONTENAY-SOUS", "NOGENT", "JOINVILLE", "MAUR", "CHAMPIGNY", "VARENNE", "SUCY", "BOISSY"],
             
-            # Route 2 : Cergy -> Marne-la-Vallée
-            ["CERGY", "NEUVILLE", "CONFLANS", "SARTROUVILLE", "DEFENSE", "CHATELET", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "TORCY", "CHESSY"]
+            # 2. Axe classique : Cergy <-> Marne-la-Vallée
+            ["CERGY", "NEUVILLE", "CONFLANS", "ACHERES", "MAISONS", "SARTROUVILLE", "HOUILLES", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "LOGNES", "TORCY", "BUSSY", "EUROPE", "CHESSY", "MARNE"],
+            
+            # 3. Axe classique : Poissy <-> Marne-la-Vallée
+            ["POISSY", "ACHERES", "MAISONS", "SARTROUVILLE", "HOUILLES", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "LOGNES", "TORCY", "BUSSY", "EUROPE", "CHESSY", "MARNE"],
+            
+            # 4. Axe "Nuit/Travaux" : Cergy <-> Boissy (Au cas où !)
+            ["CERGY", "NEUVILLE", "CONFLANS", "ACHERES", "MAISONS", "SARTROUVILLE", "HOUILLES", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "FONTENAY-SOUS", "NOGENT", "JOINVILLE", "MAUR", "CHAMPIGNY", "VARENNE", "SUCY", "BOISSY"],
+            
+            # 5. Axe "Nuit/Travaux" : St-Germain <-> Marne-la-Vallée (Au cas où !)
+            ["GERMAIN", "PECQ", "VESINET", "CHATOU", "RUEIL", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "LOGNES", "TORCY", "BUSSY", "EUROPE", "CHESSY", "MARNE"]
         ]
     }
 }
