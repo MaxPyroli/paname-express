@@ -431,26 +431,18 @@ def afficher_live_content(stop_id, clean_name):
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
-                    p1 = []
-                    p2 = []
-                    p3 = []
+                    p1 = []; p2 = []; p3 = []
                     
                     for d in proches:
-                        dir_topo = d.get('direction', '')
+                        idx_dir = d.get('direction_index') # On récupère l'index (0 ou 1)
                         dest_upper = d['dest'].upper()
                         
-                        # 🧠 1. NOUVEAU SYSTÈME : L'algorithme a-t-il déduit une vraie direction ?
-                        if dir_topo and not dir_topo.startswith("Direction") and dir_topo != "Terminus ici":
-                            # On range la direction topologique dans la bonne colonne
-                            if dir_topo == geo['labels'][0]:
-                                p1.append(d)
-                            elif dir_topo == geo['labels'][1]:
-                                p2.append(d)
-                            else:
-                                p3.append(d)
-                                
-                        # 🗝️ 2. ANCIEN SYSTÈME : Secours par mots-clés (pour les lignes pas encore topologiques)
+                        if idx_dir == 0:
+                            p1.append(d) # Direction Ouest / Nord
+                        elif idx_dir == 1:
+                            p2.append(d) # Direction Est / Sud
                         else:
+                            # 🛡️ SECOURS : Si la topo a échoué, on utilise tes mots-clés
                             if any(k in dest_upper for k in local_mots_1):
                                 p1.append(d)
                             elif any(k in dest_upper for k in local_mots_2):
