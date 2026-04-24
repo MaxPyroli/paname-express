@@ -7,7 +7,7 @@ import json
 from streamlit_js_eval import streamlit_js_eval
 
 from api_idfm import demander_api, demander_lignes_arret, demander_coordonnees_arret
-from utils import normaliser_mode, clean_code_line, format_html_time
+from utils import normaliser_mode, clean_code_line, format_html_time, calculer_direction_relative
 from ui import afficher_cheval_express, afficher_bandeau_trafic, generer_icones_html
 from settings import GEOGRAPHIE_RER
 
