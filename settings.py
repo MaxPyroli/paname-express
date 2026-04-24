@@ -145,6 +145,7 @@ TOPOLOGIE_LIGNES = {
             # 5. Axe "Nuit/Travaux" : St-Germain <-> Marne-la-Vallée (Au cas où !)
             ["GERMAIN", "PECQ", "VESINET", "CHATOU", "RUEIL", "NANTERRE", "DEFENSE", "GAULLE", "AUBER", "CHATELET", "LYON", "NATION", "VINCENNES", "VAL DE FONTENAY", "NEUILLY", "BRY", "NOISY", "LOGNES", "TORCY", "BUSSY", "EUROPE", "CHESSY"]
         ]
+    }, # <--- LA CORRECTION EST ICI : on ferme le dictionnaire de la ligne A avec "},"
 
     "B": {
         "nom_aller": "⇧ NORD (Aéroport CDG / Mitry)",
@@ -156,5 +157,5 @@ TOPOLOGIE_LIGNES = {
             # 2. Axe : Robinson <-> Aéroport CDG
             ["ROBINSON", "FONTENAY", "SCEAUX", "BOURG", "BAGNEUX", "ARCUEIL", "LAPLACE", "GENTILLY", "CITE UNIVERSITAIRE", "DENFERT", "ROYAL", "LUXEMBOURG", "MICHEL", "CHATELET", "NORD", "PLAINE", "COURNEUVE", "BOURGET", "DRANCY", "BLANC", "AULNAY", "SEVRAN BEAUDOTTES", "VILLEPINTE", "PARC", "GAULLE"]
         ]
-    },
+    }
 }
