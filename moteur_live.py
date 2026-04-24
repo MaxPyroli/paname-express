@@ -306,7 +306,7 @@ def afficher_live_content(stop_id, clean_name):
                 # On glisse cette nouvelle info dans la valise du train
                 buckets[mode][cle].append({
                     'dest': dest, 
-                    'direction': direction_topologique,  # ⬅️ LA NOUVEAUTÉ EST LÀ
+                    'direction_index': direction_topologique,  # ⬅️ LA NOUVEAUTÉ EST LÀ
                     'html': html_time, 
                     'tri': val_tri, 
                     'is_last': is_last, 
