@@ -318,12 +318,17 @@ def afficher_live_content(stop_id, clean_name):
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
             if code_t in ["TER", "R"]: continue
+            
+            # 🪄 LE CORRECTIF ANTI-DOUBLON (Recherche globale)
             exists_in_buckets = False
-            if mode_t in buckets:
-                for (b_mode, b_code, b_color) in buckets[mode_t]:
+            for m_recherche in buckets:
+                for (b_mode, b_code, b_color) in buckets[m_recherche]:
                     if b_code == code_t:
                         exists_in_buckets = True
                         break
+                if exists_in_buckets:
+                    break
+                    
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
