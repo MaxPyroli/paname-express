@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 import pytz
 from api_idfm import demander_lignes_arret, demander_info_trafic
+from settings import TOPOLOGIE_LIGNES
 
 def get_img_as_base64(file_path):
     if not os.path.exists(file_path):
@@ -223,3 +224,29 @@ def determiner_type_perturbation(texte, header):
     
     if header and len(header) < 30: return header
     return "En cours"
+
+def calculer_direction_relative(ligne_id, ma_gare, terminus_train):
+    """
+    Déduit la direction globale (Aller/Retour) en comparant la position
+    de la gare actuelle et du terminus sur le plan de la ligne.
+    """
+    ligne_data = TOPOLOGIE_LIGNES.get(ligne_id)
+    if not ligne_data:
+        return f"Direction {terminus_train}"
+        
+    ma_gare = ma_gare.upper()
+    terminus_train = terminus_train.upper()
+
+    for route in ligne_data["routes"]:
+        index_depart = next((i for i, gare in enumerate(route) if gare in ma_gare), -1)
+        index_terminus = next((i for i, gare in enumerate(route) if gare in terminus_train), -1)
+        
+        if index_depart != -1 and index_terminus != -1:
+            if index_terminus > index_depart:
+                return ligne_data["nom_aller"]
+            elif index_terminus < index_depart:
+                return ligne_data["nom_retour"]
+            else:
+                return "Terminus ici"
+
+    return f"Direction {terminus_train}"
