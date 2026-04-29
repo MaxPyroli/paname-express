@@ -382,14 +382,12 @@ def afficher_live_content(stop_id, clean_name):
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
-                .element-container:has(.sticky-glass-{mode_actuel}) {{ 
+                .element-container:has(.sticky-glass-{mode_actuel}) { 
                     position: sticky !important; 
                     top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
-                    z-index: 99 !important; 
-                    
-                    /* 🪄 Force le calque pour protéger le fond */
-                    transform: translateZ(0) !important; 
-                }}
+                    z-index: 100 !important; /* Juste en dessous des bulles info */
+                    isolation: isolate !important; /* Protège le rendu du flou */
+                }
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
