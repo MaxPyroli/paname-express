@@ -386,6 +386,9 @@ def afficher_live_content(stop_id, clean_name):
                     position: sticky !important; 
                     top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
                     z-index: 99 !important; 
+                    
+                    /* 🪄 Force le calque pour protéger le fond */
+                    transform: translateZ(0) !important; 
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
@@ -397,10 +400,12 @@ def afficher_live_content(stop_id, clean_name):
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                     
-                    /* Ombre douce adaptative pour le bandeau de mode */
                     box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    
+                    /* 🪄 CORRECTIF DU BUG DU FOND QUI DISPARAÎT */
+                    transform: translateZ(0) !important;
+                    will-change: transform, backdrop-filter !important;
                 }}
-                /* On utilise currentColor au lieu de la variable pour forcer l'héritage parfait ! */
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
 <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE.get(mode_actuel, "AUTRE")}</div>
