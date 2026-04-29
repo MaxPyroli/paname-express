@@ -669,9 +669,11 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     <style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
     
-    /* 🪄 On donne un z-index massif (110) à la bulle ouverte */
-    details.traffic-icon[open] {
-        z-index: 110 !important;
+    /* On donne un z-index de 150 à la bulle ouverte */
+    details.traffic-icon[open],
+    div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
+        position: relative !important;
+        z-index: 150 !important; 
     }
     
     /* On élève aussi le conteneur parent pour qu'il passe par-dessus les bandeaux "TRAIN", "BUS", etc. */
@@ -784,7 +786,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
             <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
-                        background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                        background: color-mix(in srgb, var(--secondary-background-color) 90%, transparent) !important;
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(231, 76, 60, 0.25);">
                 <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
                 <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
@@ -811,7 +813,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
             <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
             <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
-                        background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+                        background: color-mix(in srgb, var(--secondary-background-color) 90%, transparent) !important; 
                         border: 1px solid color-mix(in srgb, var(--gp-text) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba({couleur_rgb}, 0.25);">
                 <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
                 <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
