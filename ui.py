@@ -669,14 +669,15 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     <style>
     details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
     
-    /* 🪄 L'ASTUCE EST LÀ : L'icône ouverte passe devant les autres "juste de 1" (96 bat le 95 par défaut) */
+    /* 🪄 On donne un z-index massif (110) à la bulle ouverte */
     details.traffic-icon[open] {
-        z-index: 96 !important;
+        z-index: 110 !important;
     }
     
+    /* On élève aussi le conteneur parent pour qu'il passe par-dessus les bandeaux "TRAIN", "BUS", etc. */
     div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
         position: relative !important;
-        z-index: 99 !important; 
+        z-index: 110 !important; 
     }
 
     details.traffic-icon > summary::-webkit-details-marker { display: none; }
@@ -694,31 +695,17 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if (!window.traficJSV4) {
-            window.traficJSV4 = true;
-            function setZ90() {
-                document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
-                    if (c.querySelector('details.traffic-icon[open]')) {
-                        c.style.setProperty('position', 'relative', 'important');
-                        c.style.setProperty('z-index', '90', 'important');
-                    } else if (c.style.zIndex === '90') {
-                        c.style.removeProperty('z-index');
-                    }
-                });
-            }
+        if (!window.traficJSV5) {
+            window.traficJSV5 = true;
+            // Ce script sert uniquement à fermer la bulle si on clique à côté !
             document.addEventListener('click', e => {
                 document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
                     if (!d.contains(e.target)) d.removeAttribute('open');
                 });
-                setTimeout(setZ90, 10);
             });
-            document.addEventListener('toggle', e => {
-                if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
-            }, true);
         }
     ">
     """
-
     html_output = css_and_script + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
 
     # --- NETTOYAGE DU TEXTE ---
