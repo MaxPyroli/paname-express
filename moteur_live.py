@@ -382,12 +382,12 @@ def afficher_live_content(stop_id, clean_name):
             st.markdown(f"""
             <style>
                 div[data-testid="stElementContainer"]:has(.sticky-glass-{mode_actuel}),
-                .element-container:has(.sticky-glass-{mode_actuel}) { 
+                .element-container:has(.sticky-glass-{mode_actuel}) {{ 
                     position: sticky !important; 
                     top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
-                    z-index: 100 !important; /* Juste en dessous des bulles info */
-                    isolation: isolate !important; /* Protège le rendu du flou */
-                }
+                    z-index: 100 !important; 
+                    isolation: isolate !important; 
+                }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
@@ -400,13 +400,12 @@ def afficher_live_content(stop_id, clean_name):
                     
                     box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
                     
-                    /* 🪄 CORRECTIF DU BUG DU FOND QUI DISPARAÎT */
                     transform: translateZ(0) !important;
                     will-change: transform, backdrop-filter !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
-<div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE.get(mode_actuel, "AUTRE")}</div>
+            <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE.get(mode_actuel, "AUTRE")}</div>
             """, unsafe_allow_html=True)
             
             c1_vu = False
