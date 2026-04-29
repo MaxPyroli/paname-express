@@ -668,11 +668,11 @@ def afficher_tableau_live(stop_id, stop_name):
     # On retire le style="background-color: transparent" qui écrasait tout
     st.markdown(f"""
     <style>
-        div[data-testid="stElementContainer"]:has(.sticky-station-title) {{
+        div[data-testid="stElementContainer"]:has(.sticky-station-title) {
             position: sticky !important; 
             top: 3.8rem !important; 
-            z-index: 105 !important;
-        }}
+            z-index: 200 !important; /* On le met tout en haut */
+        }
     </style>
     
     <div class='station-title sticky-station-title'>
