@@ -386,7 +386,6 @@ def afficher_live_content(stop_id, clean_name):
                     position: sticky !important; 
                     top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
                     z-index: 100 !important; 
-                    isolation: isolate !important; 
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
@@ -399,9 +398,6 @@ def afficher_live_content(stop_id, clean_name):
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                     
                     box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
-                    
-                    transform: translateZ(0) !important;
-                    will-change: transform, backdrop-filter !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
