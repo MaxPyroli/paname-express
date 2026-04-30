@@ -389,14 +389,11 @@ def afficher_live_content(stop_id, clean_name):
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
-                    margin-top: -62px !important; 
-                    height: 54px !important; 
-                    width: 100% !important; 
-                    box-sizing: border-box !important; 
+                    margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
                     
-                    /* 🪄 LA COULEUR UNIVERSELLE : Gris neutre semi-transparent qui marche partout ! */
-                    background-color: rgba(128, 128, 128, 0.25) !important; 
-                    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                    /* On remet la bonne couleur avec un secours si le navigateur bug */
+                    background-color: var(--secondary-background-color) !important;
+                    background-color: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
                     
                     backdrop-filter: blur(16px) !important; 
                     -webkit-backdrop-filter: blur(16px) !important; 
@@ -404,8 +401,13 @@ def afficher_live_content(stop_id, clean_name):
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
-                    
                     box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+                    
+                    /* 🛡️ BOUCLIER ANTI-BUG : Oblige le navigateur à garder le flou */
+                    -webkit-transform: translate3d(0,0,0) !important;
+                    transform: translate3d(0,0,0) !important;
+                    -webkit-backface-visibility: hidden !important;
+                    backface-visibility: hidden !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
