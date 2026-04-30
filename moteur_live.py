@@ -389,15 +389,23 @@ def afficher_live_content(stop_id, clean_name):
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
-                    margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
-                    background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
-                    backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
+                    margin-top: -62px !important; 
+                    height: 54px !important; 
+                    width: 100% !important; 
+                    box-sizing: border-box !important; 
+                    
+                    /* 🪄 LA COULEUR UNIVERSELLE : Gris neutre semi-transparent qui marche partout ! */
+                    background-color: rgba(128, 128, 128, 0.25) !important; 
+                    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                    
+                    backdrop-filter: blur(16px) !important; 
+                    -webkit-backdrop-filter: blur(16px) !important; 
                     border-radius: 12px !important; 
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
                     
-                    box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
                 }}
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
