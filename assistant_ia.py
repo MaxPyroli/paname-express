@@ -1,6 +1,7 @@
 import streamlit as st
 import urllib.parse
 import re
+import os
 
 # 1. LA NOUVELLE BIBLIOTHÈQUE GOOGLE
 from google import genai
@@ -372,7 +373,7 @@ def ouvrir_assistant():
     if prompt := st.chat_input("Demande-moi un horaire ou une info trafic..."):
         st.session_state.messages_ia.append({"role": "user", "content": prompt})
         with chat_container:
-            with st.chat_message("user", avatar="app_icon.png"):
+            with st.chat_message("user", avatar="assets/app_icon.png" if os.path.exists("assets/app_icon.png") else "👤"):
                 st.markdown(prompt)
             
             with st.chat_message("assistant", avatar="assets/pana_icon.png" if os.path.exists("assets/pana_icon.png") else "🐾"):

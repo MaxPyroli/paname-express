@@ -7,7 +7,7 @@ import json
 from streamlit_js_eval import streamlit_js_eval
 
 from api_idfm import demander_api, demander_lignes_arret, demander_coordonnees_arret
-from utils import normaliser_mode, clean_code_line, format_html_time
+from utils import normaliser_mode, clean_code_line, format_html_time, calculer_direction_relative
 from ui import afficher_cheval_express, afficher_bandeau_trafic, generer_icones_html
 from settings import GEOGRAPHIE_RER
 
@@ -298,19 +298,37 @@ def afficher_live_content(stop_id, clean_name):
             cle = (mode, code, color)
             if mode in buckets:
                 if cle not in buckets[mode]: buckets[mode][cle] = []
-                buckets[mode][cle].append({'dest': dest, 'html': html_time, 'tri': val_tri, 'is_last': is_last, 'is_replacement': is_replacement})
+                
+                # 🪄 ON CALCULE LA VRAIE DIRECTION ICI !
+                # (On lui passe le code de la ligne, la gare actuelle, et la destination du train)
+                direction_topologique = calculer_direction_relative(code, clean_name, dest)
+                
+                # On glisse cette nouvelle info dans la valise du train
+                buckets[mode][cle].append({
+                    'dest': dest, 
+                    'direction_index': direction_topologique,  # ⬅️ LA NOUVEAUTÉ EST LÀ
+                    'html': html_time, 
+                    'tri': val_tri, 
+                    'is_last': is_last, 
+                    'is_replacement': is_replacement
+                })
     
     # 3. GHOST LINES
     MODES_NOBLES = ["RER", "TRAIN", "METRO", "CABLE", "TRAM"]
     for (mode_t, code_t), info_t in all_lines_at_stop.items():
         if mode_t in MODES_NOBLES:
             if code_t in ["TER", "R"]: continue
+            
+            # 🪄 LE CORRECTIF ANTI-DOUBLON (Recherche globale)
             exists_in_buckets = False
-            if mode_t in buckets:
-                for (b_mode, b_code, b_color) in buckets[mode_t]:
+            for m_recherche in buckets:
+                for (b_mode, b_code, b_color) in buckets[m_recherche]:
                     if b_code == code_t:
                         exists_in_buckets = True
                         break
+                if exists_in_buckets:
+                    break
+                    
             if not exists_in_buckets:
                 cle_ghost = (mode_t, code_t, info_t['color'])
                 if mode_t not in buckets: buckets[mode_t] = {}
@@ -367,25 +385,33 @@ def afficher_live_content(stop_id, clean_name):
                 .element-container:has(.sticky-glass-{mode_actuel}) {{ 
                     position: sticky !important; 
                     top: calc(3.8rem + var(--title-height, 60px) + 75px) !important; 
-                    z-index: 99 !important; 
+                    z-index: 100 !important; 
                 }}
                 
                 div.sticky-glass-{mode_actuel} {{ 
                     margin-top: -62px !important; height: 54px !important; width: 100% !important; box-sizing: border-box !important; 
-                    background: color-mix(in srgb, var(--secondary-background-color) 85%, transparent) !important; 
-                    backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
+                    
+                    /* 🔒 On verrouille la position au-dessus de tout le reste */
+                    position: relative !important;
+                    z-index: 100 !important;
+                    
+                    /* 🎨 On descend à 60% d'opacité pour que le flou soit BIEN visible */
+                    background: color-mix(in srgb, var(--secondary-background-color) 60%, transparent) !important; 
+                    backdrop-filter: blur(16px) !important; 
+                    -webkit-backdrop-filter: blur(16px) !important; 
+                    
                     border-radius: 12px !important; 
                     display: flex !important; align-items: center !important; padding: 0 16px !important; gap: 12px !important; 
                     color: var(--text-color) !important; 
                     font-size: 1.15rem !important; font-weight: 800 !important; letter-spacing: 0.5px !important; 
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
                     
-                    /* Ombre douce adaptative pour le bandeau de mode */
-                    box-shadow: 0 8px 20px color-mix(in srgb, var(--text-color) 15%, transparent) !important;
+                    -webkit-transform: translate3d(0,0,0) !important;
+                    transform: translate3d(0,0,0) !important;
                 }}
-                /* On utilise currentColor au lieu de la variable pour forcer l'héritage parfait ! */
                 div.sticky-glass-{mode_actuel} svg {{ color: var(--text-color) !important; fill: currentColor !important; height: 1.3em !important; }}
             </style>
-            <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE[mode_actuel]}</div>
+            <div class='sticky-glass-{mode_actuel}'>{ICONES_TITRE.get(mode_actuel, "AUTRE")}</div>
             """, unsafe_allow_html=True)
             
             c1_vu = False
@@ -418,9 +444,25 @@ def afficher_live_content(stop_id, clean_name):
                             if "GARE DE LYON" in local_mots_2: local_mots_2.remove("GARE DE LYON")
                             if "GARE DE LYON" not in local_mots_1: local_mots_1.append("GARE DE LYON")
 
-                    p1 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_1)]
-                    p2 = [d for d in proches if any(k in d['dest'].upper() for k in local_mots_2)]
-                    p3 = [d for d in proches if d not in p1 and d not in p2]
+                    p1 = []; p2 = []; p3 = []
+                    
+                    for d in proches:
+                        idx_dir = d.get('direction_index') # On récupère l'index (0 ou 1)
+                        dest_upper = d['dest'].upper()
+                        
+                        if idx_dir == 0:
+                            p1.append(d) # Direction Ouest / Nord
+                        elif idx_dir == 1:
+                            p2.append(d) # Direction Est / Sud
+                        else:
+                            # 🛡️ SECOURS : Si la topo a échoué, on utilise tes mots-clés
+                            if any(k in dest_upper for k in local_mots_1):
+                                p1.append(d)
+                            elif any(k in dest_upper for k in local_mots_2):
+                                p2.append(d)
+                            else:
+                                p3.append(d)
+                                
                     real_p3 = [x for x in p3 if x['tri'] < 3000]
 
                     card_html = f"""<div class="rail-card" style="--line-color: #{color}; border-left-color: var(--line-color);"><div style="display:flex; align-items:center; margin-bottom:5px;"><span class="line-badge" style="background-color:#{color};">{code}</span>{bandeau_html}</div>"""
@@ -632,7 +674,7 @@ def afficher_tableau_live(stop_id, stop_name):
         div[data-testid="stElementContainer"]:has(.sticky-station-title) {{
             position: sticky !important; 
             top: 3.8rem !important; 
-            z-index: 105 !important;
+            z-index: 200 !important;
         }}
     </style>
     

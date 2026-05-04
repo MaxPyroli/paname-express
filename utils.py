@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 import pytz
 from api_idfm import demander_lignes_arret, demander_info_trafic
+from settings import TOPOLOGIE_LIGNES
 
 def get_img_as_base64(file_path):
     if not os.path.exists(file_path):
@@ -223,3 +224,24 @@ def determiner_type_perturbation(texte, header):
     
     if header and len(header) < 30: return header
     return "En cours"
+
+# Dans utils.py
+
+def calculer_direction_relative(ligne_id, ma_gare, terminus_train):
+    from settings import TOPOLOGIE_LIGNES
+    ligne_data = TOPOLOGIE_LIGNES.get(ligne_id)
+    if not ligne_data:
+        return None # On ne sait pas
+        
+    ma_gare = ma_gare.upper()
+    terminus_train = terminus_train.upper()
+
+    for route in ligne_data["routes"]:
+        idx_dep = next((i for i, g in enumerate(route) if g in ma_gare), -1)
+        idx_term = next((i for i, g in enumerate(route) if g in terminus_train), -1)
+        
+        if idx_dep != -1 and idx_term != -1:
+            # 0 = Retour (Ouest/Nord), 1 = Aller (Est/Sud)
+            return 1 if idx_term > idx_dep else 0
+
+    return None
