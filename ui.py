@@ -658,7 +658,7 @@ def generer_icones_html():
     return resultat
 
 def afficher_bandeau_trafic(line_id, nom_ligne=""):
-    """Retourne le HTML du bandeau trafic (Dynamique, limité en hauteur, sans bégaiements)."""
+    """Retourne le HTML du bandeau trafic (Code 100% réécrit, solide et infaillible)."""
     if not line_id: return ""
     
     alertes = demander_info_trafic(line_id, nom_ligne)
@@ -668,63 +668,60 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     if not interruption and not perturbation:
         return ""
 
+    # 🛑 FINI LE GLASSMORPHISM BUGGÉ. On passe sur un design Solide, Moderne et 100% fiable.
     css_and_script = """
     <style>
-    details.traffic-icon { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; z-index: 50; }
+    .traffic-wrap { display: inline-block; position: relative; margin-left: 8px; vertical-align: middle; }
+    .traffic-wrap details { position: relative; }
     
-    /* 🪄 L'ASTUCE EST LÀ : L'icône ouverte passe tout devant ! */
-    details.traffic-icon[open] {
-        z-index: 9999 !important;
+    /* Le bouton de l'icône */
+    .traffic-wrap summary { 
+        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; font-size: 1.1em; border-radius: 8px; transition: transform 0.2s;
+    }
+    .traffic-wrap summary::-webkit-details-marker { display: none; }
+    .traffic-wrap summary:hover { transform: scale(1.1); }
+    
+    /* 🧱 LA BULLE : FOND SOLIDE basé sur le thème Streamlit. Fini la transparence ! */
+    .traffic-popup {
+        position: absolute; top: calc(100% + 12px); left: 0; width: 320px; max-width: 85vw;
+        background-color: var(--background-color) !important; /* Le fond de l'app (noir/blanc) */
+        border-radius: 12px; padding: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important; /* Grosse ombre pour détacher la bulle */
+        z-index: 999999 !important;
     }
     
-    div[data-testid="stElementContainer"]:has(details.traffic-icon[open]) {
-        position: relative !important;
-        z-index: 9999 !important; 
+    /* Force les calques parents de Streamlit à laisser sortir la bulle */
+    div[data-testid="stElementContainer"]:has(details[open]),
+    .rail-card:has(details[open]), .bus-card:has(details[open]) {
+        z-index: 999999 !important;
+        overflow: visible !important;
     }
 
-    details.traffic-icon > summary::-webkit-details-marker { display: none; }
-    details.traffic-icon > summary { 
-        list-style: none; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;
-        width: 28px; height: 28px; transition: all 0.2s; font-size: 1.1em; user-select: none;
-    }
-    details.traffic-icon > summary:hover { opacity: 0.8; }
+    /* L'intérieur de la bulle */
+    .traffic-header { font-size: 1em; font-weight: 800; display: flex; align-items: center; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; }
+    .traffic-scroll { font-size: 0.9em; line-height: 1.5; color: var(--text-color); max-height: 220px; overflow-y: auto; padding-right: 8px; }
     
-    /* On customise la barre de défilement pour qu'elle soit jolie ! */
-    .traffic-content-scroll::-webkit-scrollbar { width: 6px; }
-    .traffic-content-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
-    .traffic-content-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
-    .traffic-content-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+    /* La barre de scroll */
+    .traffic-scroll::-webkit-scrollbar { width: 6px; }
+    .traffic-scroll::-webkit-scrollbar-track { background: var(--secondary-background-color); border-radius: 4px; }
+    .traffic-scroll::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 4px; }
     </style>
     
     <img src="x" style="display:none;" onerror="
-        if (!window.traficJSV4) {
-            window.traficJSV4 = true;
-            function setZ90() {
-                document.querySelectorAll('div[data-testid=stElementContainer]').forEach(c => {
-                    if (c.querySelector('details.traffic-icon[open]')) {
-                        c.style.setProperty('position', 'relative', 'important');
-                        c.style.setProperty('z-index', '90', 'important');
-                    } else if (c.style.zIndex === '90') {
-                        c.style.removeProperty('z-index');
-                    }
-                });
-            }
+        if (!window.traficFixV6) {
+            window.traficFixV6 = true;
             document.addEventListener('click', e => {
-                document.querySelectorAll('details.traffic-icon[open]').forEach(d => {
+                document.querySelectorAll('.traffic-wrap details[open]').forEach(d => {
                     if (!d.contains(e.target)) d.removeAttribute('open');
                 });
-                setTimeout(setZ90, 10);
             });
-            document.addEventListener('toggle', e => {
-                if (e.target && e.target.classList && e.target.classList.contains('traffic-icon')) setZ90();
-            }, true);
         }
     ">
     """
 
     html_output = css_and_script + '<div style="display: inline-flex; gap: 6px; vertical-align: middle;">'
 
-    # --- NETTOYAGE DU TEXTE ---
     def preparer_texte(texte_brut, header_alerte=""):
         if not texte_brut or str(texte_brut).strip().lower() == "none": 
             return "Information non disponible."
@@ -755,7 +752,6 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             "nous vous prions de bien vouloir", "pour la gêne occasionnée", "fi :"
         ]
 
-        # 🪄 NORMALISATION DU TITRE (On retire les doubles espaces pour comparer purement le texte)
         header_clean = re.sub(r'\s+', ' ', str(header_alerte).lower()).strip(' .:-')
 
         lignes = t.split('\n')
@@ -766,9 +762,7 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
             if not l_clean or len(l_clean) < 3 or l_clean.lower() == "none": continue
             if any(z in l_clean.lower() for z in lignes_a_zapper): continue
             
-            # 🪄 L'ANTI-BÉGAIEMENT AMÉLIORÉ (Fuzzy match puissant)
             l_norm = re.sub(r'\s+', ' ', l_clean.lower()).strip(' .:-')
-            # Si la ligne ressemble de très près au titre, on l'efface direct !
             if header_clean and len(l_norm) > 15 and (l_norm in header_clean or header_clean in l_norm):
                 continue
                 
@@ -792,23 +786,18 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
     interruptions = [a for a in alertes if a['severity'] >= 40]
     perturbations = [a for a in alertes if 10 <= a['severity'] < 40]
 
-    # --- AFFICHAGE DES BULLETINS ---
-    # Pour les interruptions ROUGES :
     for inter in interruptions:
         info_longue = preparer_texte(inter.get('text', ''), inter.get('header', ''))
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
-            <summary style="background: rgba(231, 76, 60, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px;" title="Trafic Interrompu">❌</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
-                        background: rgba(128, 128, 128, 0.25) !important; 
-                        backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
-                        border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(231, 76, 60, 0.25);">
-                <strong style="color: #e74c3c; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">❌ TRAFIC INTERROMPU</strong>
-                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
-                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+        <div class="traffic-wrap">
+            <details>
+                <summary style="background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.5);" title="Trafic Interrompu">❌</summary>
+                <div class="traffic-popup" style="border: 2px solid rgba(231, 76, 60, 0.4) !important; border-left: 6px solid #e74c3c !important;">
+                    <div class="traffic-header" style="color: #e74c3c; border-bottom: 1px solid rgba(231, 76, 60, 0.2);">❌ TRAFIC INTERROMPU</div>
+                    <div class="traffic-scroll">{info_longue}</div>
                 </div>
-            </div>
-        </details>
+            </details>
+        </div>
         """
         
     for pert in perturbations:
@@ -825,18 +814,15 @@ def afficher_bandeau_trafic(line_id, nom_ligne=""):
         else: icone_emoji, couleur_hex, couleur_rgb, titre = "⚠️", "#f39c12", "243, 156, 18", f"Trafic perturbé • {type_pert}"
 
         html_output += f"""
-        <details class="traffic-icon" name="trafic" style="position: relative; z-index: 95;">
-            <summary style="background: rgba({couleur_rgb}, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba({couleur_rgb}, 0.5); border-radius: 8px;" title="{titre}">{icone_emoji}</summary>
-            <div style="position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 85vw; z-index: 9999; 
-                        background: rgba(128, 128, 128, 0.25) !important; 
-                        backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; 
-                        border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); border-left: 4px solid {couleur_hex}; padding: 12px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 0 25px rgba({couleur_rgb}, 0.25);">
-                <strong style="color: {couleur_hex}; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">{icone_emoji} {titre}</strong>
-                <div style="margin-top: 4px; margin-bottom: -4px; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 6px), transparent 100%);">
-                    <div class="traffic-content-scroll" style="font-size: 0.85em; color: var(--gp-text); opacity: 0.9; line-height: 1.5; white-space: normal; max-height: 200px; overflow-y: auto; padding-right: 5px; padding-top: 8px; padding-bottom: 4px;">{info_longue}</div>
+        <div class="traffic-wrap">
+            <details>
+                <summary style="background: rgba({couleur_rgb}, 0.15); border: 1px solid rgba({couleur_rgb}, 0.5);" title="{titre}">{icone_emoji}</summary>
+                <div class="traffic-popup" style="border: 2px solid rgba({couleur_rgb}, 0.4) !important; border-left: 6px solid {couleur_hex} !important;">
+                    <div class="traffic-header" style="color: {couleur_hex}; border-bottom: 1px solid rgba({couleur_rgb}, 0.2);">{icone_emoji} {titre}</div>
+                    <div class="traffic-scroll">{info_longue}</div>
                 </div>
-            </div>
-        </details>
+            </details>
+        </div>
         """
 
     html_output += '</div>'
