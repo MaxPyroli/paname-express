@@ -132,13 +132,20 @@ def afficher_sidebar():
         # 🗂️ CARTE 1 : MES FAVORIS
         # ==========================================
         with st.container(border=True):
-            st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
-            
-            # 💡 Ligne d'instruction
+            # 🪄 CSS NINJA : Cache instantanément les boutons "DEL_" sans que l'écran ne clignote
             st.markdown(
-                "<div style='font-size: 0.85em; color: color-mix(in srgb, var(--text-color) 60%, transparent); margin-bottom: 15px; font-style: italic;'>"
-                "💡 Maintenez appuyé (ou clic droit) sur un favori pour le supprimer."
-                "</div>", 
+                """
+                <style>
+                div[data-testid="stElementContainer"]:has(.marker-hide-del),
+                div[data-testid="stElementContainer"]:has(.marker-hide-del) + div[data-testid="stElementContainer"] {
+                    display: none !important;
+                }
+                </style>
+                <h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>
+                <div style='font-size: 0.85em; color: color-mix(in srgb, var(--text-color) 60%, transparent); margin-bottom: 15px; font-style: italic;'>
+                💡 Maintenez appuyé (ou clic droit) sur un favori pour le supprimer.
+                </div>
+                """, 
                 unsafe_allow_html=True
             )
 
@@ -184,11 +191,14 @@ def afficher_sidebar():
                             st.session_state.search_results = {}
                             st.session_state.last_query = ""
                             st.session_state.search_key += 1
+                            st.session_state.fav_confirm_delete = None
                             st.query_params["gare"] = fav['id']
                             st.session_state.fermer_sidebar = True 
                             st.rerun()
                         
-                        # 2. Le bouton CACHÉ pour déclencher la suppression (détecté par le JS)
+                        # 2. Le bouton CACHÉ pour déclencher la suppression
+                        # Le marqueur magique prévient le CSS de cacher le bouton juste en dessous !
+                        st.markdown("<div class='marker-hide-del'></div>", unsafe_allow_html=True)
                         if st.button(del_label, key=f"hide_del_{fav['id']}"):
                             st.session_state.fav_confirm_delete = fav['id']
                             st.rerun()
@@ -208,30 +218,14 @@ def afficher_sidebar():
                     const d = window.parent.document;
                     const favMap = {json.dumps(fav_js_map)};
                     
-                    # On pousse la carte fraîche dans l'environnement global du navigateur
                     window.parent.__gpFavMap = favMap;
                     
-                    # Masquage immédiat et répété des boutons DEL secrets
-                    function cacherBoutons() {{
-                        d.querySelectorAll('button').forEach(btn => {{
-                            const text = btn.innerText.trim();
-                            if (text.startsWith("DEL_")) {{
-                                const container = btn.closest('div[data-testid="stElementContainer"]');
-                                if (container) container.style.display = 'none';
-                            }}
-                        }});
-                    }}
-                    
-                    cacherBoutons();
-                    setTimeout(cacherBoutons, 150);
-                    setTimeout(cacherBoutons, 400);
-                    
-                    # On installe le capteur de radar unique UNIQUEMENT s'il n'existe pas encore
                     if (!window.parent.__gpFavsDelegationSetup) {{
                         window.parent.__gpFavsDelegationSetup = true;
                         
                         const declencherActionSuppr = (e, targetBtn) => {{
-                            const text = targetBtn.innerText.trim();
+                            // textContent est indispensable ici pour lire le texte même si le bouton est caché !
+                            const text = targetBtn.textContent.trim(); 
                             const currentMap = window.parent.__gpFavMap || {{}};
                             
                             let delLabel = null;
@@ -243,7 +237,7 @@ def afficher_sidebar():
                             }}
                             
                             if (delLabel) {{
-                                const delBtn = Array.from(d.querySelectorAll('button')).find(b => b.innerText.trim() === delLabel);
+                                const delBtn = Array.from(d.querySelectorAll('button')).find(b => b.textContent.trim() === delLabel);
                                 if (delBtn) {{
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -252,13 +246,11 @@ def afficher_sidebar():
                             }}
                         }};
                         
-                        // 🖱️ Radar Clic droit global (PC)
                         d.addEventListener('contextmenu', (e) => {{
                             const btn = e.target.closest('button[kind="secondary"]');
                             if (btn) declencherActionSuppr(e, btn);
                         }});
                         
-                        // 👆 Radar Appui long global (Mobile)
                         let pressTimer;
                         let currentBtn = null;
                         
