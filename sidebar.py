@@ -135,14 +135,14 @@ def afficher_sidebar():
             st.session_state.mode_edition_fav = False
 
         with st.container(border=True):
-            # En-tête : Titre + Bouton Modifier alignés
-            col_titre, col_edit = st.columns([0.65, 0.35])
+            # En-tête : Titre + Petit Bouton Émoji alignés
+            col_titre, col_edit = st.columns([0.8, 0.2])
             with col_titre:
                 st.markdown("<h3 style='margin-top: 5px; margin-bottom: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
                 if st.session_state.get('favorites'):
-                    texte_btn = "✅ Fin" if st.session_state.mode_edition_fav else "✏️ Modifier"
+                    texte_btn = "✅" if st.session_state.mode_edition_fav else "✏️"
                     if st.button(texte_btn, use_container_width=True, key="btn_toggle_edit"):
                         st.session_state.mode_edition_fav = not st.session_state.mode_edition_fav
                         st.session_state.fav_confirm_delete = None
@@ -206,16 +206,6 @@ def afficher_sidebar():
                             st.query_params["gare"] = fav['id']
                             st.session_state.fermer_sidebar = True 
                             st.rerun()
-                
-                # Le bouton TOUT EFFACER est relégué uniquement au mode édition !
-                if st.session_state.mode_edition_fav:
-                    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-                    if st.button("💥 Tout effacer", use_container_width=True):
-                        st.session_state.favorites = []
-                        st.session_state.trigger_save_favs = True
-                        st.session_state.fav_confirm_delete = None
-                        st.session_state.mode_edition_fav = False
-                        st.rerun()
                 
         # ==========================================
         # 🗂️ CARTE 2 : INFORMATIONS
