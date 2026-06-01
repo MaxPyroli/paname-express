@@ -135,15 +135,53 @@ def afficher_sidebar():
             st.session_state.mode_edition_fav = False
 
         with st.container(border=True):
-            # En-tête : Titre + Petit Bouton Émoji + Espace vide à droite
-            col_titre, col_edit, _ = st.columns([0.45, 0.2, 0.35])
+            # 🪄 CSS NINJA : Aligne parfaitement le titre et le bouton, sans déformation !
+            st.markdown(
+                """
+                <style>
+                /* On force la ligne à rester horizontale quoi qu'il arrive */
+                div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    gap: 12px !important;
+                    flex-wrap: nowrap !important; /* Interdit de plier ! */
+                }
+                /* On dit aux colonnes de prendre JUSTE la taille dont elles ont besoin */
+                div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) > div[data-testid="column"] {
+                    width: auto !important;
+                    flex: 0 1 auto !important;
+                    min-width: 0 !important;
+                }
+                /* On rend le bouton d'édition compact et élégant */
+                div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) button {
+                    height: 32px !important;
+                    min-height: 32px !important;
+                    padding: 0px 14px !important;
+                    border-radius: 8px !important;
+                    background-color: transparent !important;
+                    border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
+                    transition: all 0.2s ease !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) button:hover {
+                    border-color: #f1c40f !important;
+                    background-color: rgba(241, 196, 15, 0.1) !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
+            # En-tête : Titre + Petit Bouton Émoji (on utilise de fausses colonnes que le CSS va réparer)
+            col_titre, col_edit = st.columns(2)
+            
             with col_titre:
-                st.markdown("<h3 style='margin-top: 5px; margin-bottom: 0px; font-size: 1.2rem; white-space: nowrap;'>⭐ Favoris</h3>", unsafe_allow_html=True)
+                # Le marqueur secret qui active le CSS juste pour cette ligne-là
+                st.markdown("<div class='marker-fav-header' style='display: none;'></div><h3 style='margin-top: 0px; margin-bottom: 0px; font-size: 1.2rem; white-space: nowrap;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
                 if st.session_state.get('favorites'):
                     texte_btn = "✅" if st.session_state.mode_edition_fav else "✏️"
-                    if st.button(texte_btn, use_container_width=True, key="btn_toggle_edit"):
+                    # Attention : On a ENLEVÉ "use_container_width=True" pour que le bouton prenne sa taille naturelle
+                    if st.button(texte_btn, key="btn_toggle_edit"):
                         st.session_state.mode_edition_fav = not st.session_state.mode_edition_fav
                         st.session_state.fav_confirm_delete = None
                         st.rerun()
@@ -173,7 +211,6 @@ def afficher_sidebar():
                                     st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
                                     st.session_state.trigger_save_favs = True
                                     st.session_state.fav_confirm_delete = None
-                                    # Si on a supprimé le dernier favori, on quitte le mode édition
                                     if not st.session_state.favorites:
                                         st.session_state.mode_edition_fav = False
                                     st.rerun()
