@@ -157,6 +157,12 @@ def afficher_sidebar():
                 fav_js_map = {}
                 for fav in st.session_state.favorites:
                     
+                    # ✅ CORRECTION 1 : On déclare TOUJOURS la gare dans la mémoire JS (Même en mode confirmation)
+                    nom_joli = fav['name'].title()
+                    btn_label = f"📍 {nom_joli}"
+                    del_label = f"DEL_{fav['id']}"
+                    fav_js_map[btn_label] = del_label
+                    
                     # ---------------------------------------------------------
                     # 🗑️ MODE CONFIRMATION (Bouton transformé après appui long)
                     # ---------------------------------------------------------
@@ -179,11 +185,6 @@ def afficher_sidebar():
                     # 📍 MODE NORMAL (Bouton de navigation classique)
                     # ---------------------------------------------------------
                     else:
-                        nom_joli = fav['name'].title()
-                        btn_label = f"📍 {nom_joli}"
-                        del_label = f"DEL_{fav['id']}"
-                        fav_js_map[btn_label] = del_label
-                        
                         # 1. Le VRAI bouton visible de navigation
                         if st.button(btn_label, key=f"go_fav_{fav['id']}", use_container_width=True):
                             st.session_state.selected_stop = fav['id']
@@ -197,7 +198,6 @@ def afficher_sidebar():
                             st.rerun()
                         
                         # 2. Le bouton CACHÉ pour déclencher la suppression
-                        # Le marqueur magique prévient le CSS de cacher le bouton juste en dessous !
                         st.markdown("<div class='marker-hide-del'></div>", unsafe_allow_html=True)
                         if st.button(del_label, key=f"hide_del_{fav['id']}"):
                             st.session_state.fav_confirm_delete = fav['id']
@@ -211,20 +211,21 @@ def afficher_sidebar():
                     st.session_state.fav_confirm_delete = None
                     st.rerun()
                 
-                # 🪄 Le script de Délégation Globale (Insensible aux caprices de Streamlit)
+                # 🪄 Le script de Délégation Globale Infaillible
+                import time
                 js_code = f"""
                 <script>
                 (function() {{
                     const d = window.parent.document;
-                    const favMap = {json.dumps(fav_js_map)};
                     
+                    // ✅ CORRECTION 2 : Le timestamp empêche le cache Streamlit de bloquer le script ! ({time.time()})
+                    const favMap = {json.dumps(fav_js_map)};
                     window.parent.__gpFavMap = favMap;
                     
                     if (!window.parent.__gpFavsDelegationSetup) {{
                         window.parent.__gpFavsDelegationSetup = true;
                         
                         const declencherActionSuppr = (e, targetBtn) => {{
-                            // textContent est indispensable ici pour lire le texte même si le bouton est caché !
                             const text = targetBtn.textContent.trim(); 
                             const currentMap = window.parent.__gpFavMap || {{}};
                             
@@ -273,7 +274,7 @@ def afficher_sidebar():
                 """
                 import streamlit.components.v1 as components
                 components.html(js_code, height=0, width=0)
-
+                
         # ==========================================
         # 🗂️ CARTE 2 : INFORMATIONS
         # ==========================================
