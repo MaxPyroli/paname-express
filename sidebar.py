@@ -37,6 +37,25 @@ def initialiser_favoris():
         )
         st.session_state.trigger_save_favs = False
 
+@st.dialog("⚠️ Supprimer le favori ?")
+def afficher_dialog_suppression():
+    fav = st.session_state.get('fav_to_delete')
+    if not fav:
+        st.rerun()
+        
+    st.markdown(f"Voulez-vous vraiment retirer **{fav['name']}** de vos favoris ?")
+    
+    col1, col2 = st.columns(2)
+    if col1.button("❌ Annuler", use_container_width=True):
+        del st.session_state['fav_to_delete']
+        st.rerun()
+        
+    if col2.button("🗑️ Supprimer", type="primary", use_container_width=True):
+        st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+        st.session_state.trigger_save_favs = True
+        del st.session_state['fav_to_delete']
+        st.rerun()
+
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
     with st.sidebar:
@@ -134,37 +153,113 @@ def afficher_sidebar():
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
             
+            # 💡 La nouvelle ligne d'instruction
+            st.markdown(
+                "<div style='font-size: 0.85em; color: color-mix(in srgb, var(--text-color) 60%, transparent); margin-bottom: 15px; font-style: italic;'>"
+                "💡 Maintenez appuyé (ou clic droit) sur un favori pour le supprimer."
+                "</div>", 
+                unsafe_allow_html=True
+            )
+
             if not st.session_state.get('favs_loaded', False):
                 st.info("🔄 Chargement des favoris...")
             elif not st.session_state.favorites:
                 st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
             else:
-                for fav in st.session_state.favorites[:]:
-                    col_nav, col_del = st.columns([0.8, 0.2], gap="small", vertical_alignment="center")
+                fav_js_map = {}
+                for fav in st.session_state.favorites:
                     nom_joli = fav['name'].title()
+                    btn_label = f"📍 {nom_joli}"
+                    del_label = f"DEL_{fav['id']}"
+                    fav_js_map[btn_label] = del_label
                     
-                    with col_nav:
-                        if st.button(f"📍 {nom_joli}", key=f"btn_fav_{fav['id']}", use_container_width=True):
-                            st.session_state.selected_stop = fav['id']
-                            st.session_state.selected_name = fav['full_name']
-                            st.session_state.search_results = {}
-                            st.session_state.last_query = ""
-                            st.session_state.search_key += 1
-                            st.query_params["gare"] = fav['id']
-                            st.session_state.fermer_sidebar = True 
-                            st.rerun()
-
-                    with col_del:
-                        if st.button("🗑️", key=f"del_fav_{fav['id']}", use_container_width=True):
-                            st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                            st.session_state.trigger_save_favs = True
-                            st.rerun()
-
+                    # 1. Le VRAI bouton visible de navigation (prend toute la largeur)
+                    if st.button(btn_label, key=f"go_fav_{fav['id']}", use_container_width=True):
+                        st.session_state.selected_stop = fav['id']
+                        st.session_state.selected_name = fav['full_name']
+                        st.session_state.search_results = {}
+                        st.session_state.last_query = ""
+                        st.session_state.search_key += 1
+                        st.query_params["gare"] = fav['id']
+                        st.session_state.fermer_sidebar = True 
+                        st.rerun()
+                    
+                    # 2. Le bouton CACHÉ pour la suppression
+                    if st.button(del_label, key=f"hide_del_{fav['id']}"):
+                        st.session_state.fav_to_delete = fav
+                        afficher_dialog_suppression()
+                
+                # Le bouton TOUT EFFACER qu'on garde à la fin
                 st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
                 if st.button("💥 Tout effacer", use_container_width=True):
                     st.session_state.favorites = []
                     st.session_state.trigger_save_favs = True
                     st.rerun()
+                
+                # 🪄 Le script Javascript Magique pour l'appui long
+                js_code = f"""
+                <script>
+                (function() {{
+                    const d = window.parent.document;
+                    const favMap = {json.dumps(fav_js_map)};
+                    
+                    function applyLongPress() {{
+                        const buttons = Array.from(d.querySelectorAll('button[kind="secondary"]'));
+                        let hiddenBtns = {{}};
+                        
+                        // A. On repère les boutons DEL et on les cache
+                        buttons.forEach(btn => {{
+                            const text = btn.innerText.trim();
+                            if (text.startsWith("DEL_")) {{
+                                const container = btn.closest('div[data-testid="stElementContainer"]');
+                                if (container) container.style.display = 'none';
+                                hiddenBtns[text] = btn;
+                            }}
+                        }});
+                        
+                        // B. On relie nos événements d'appui long
+                        buttons.forEach(btn => {{
+                            const text = btn.innerText;
+                            
+                            for (const [btnLabel, delLabel] of Object.entries(favMap)) {{
+                                if (text.includes(btnLabel)) {{
+                                    const delBtn = hiddenBtns[delLabel];
+                                    
+                                    if (delBtn && !btn.dataset.lpSetup) {{
+                                        btn.dataset.lpSetup = "true";
+                                        
+                                        const triggerDel = (e) => {{
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            delBtn.click();
+                                        }};
+                                        
+                                        // 🖱️ Clic droit
+                                        btn.addEventListener('contextmenu', triggerDel);
+                                        
+                                        // 👆 Appui long
+                                        let pressTimer;
+                                        btn.addEventListener('touchstart', (e) => {{
+                                            pressTimer = window.setTimeout(() => {{
+                                                triggerDel(e);
+                                            }}, 600);
+                                        }});
+                                        btn.addEventListener('touchend', () => clearTimeout(pressTimer));
+                                        btn.addEventListener('touchmove', () => clearTimeout(pressTimer));
+                                    }}
+                                    break;
+                                }}
+                            }}
+                        }});
+                    }}
+                    
+                    applyLongPress();
+                    setTimeout(applyLongPress, 500);
+                }})();
+                </script>
+                """
+                import streamlit.components.v1 as components
+                components.html(js_code, height=0, width=0)
 
         # ==========================================
         # 🗂️ CARTE 2 : INFORMATIONS
