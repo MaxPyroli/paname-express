@@ -210,10 +210,10 @@ def afficher_sidebar():
                     st.session_state.fav_confirm_delete = None
                     st.rerun()
                 
-                # 🪄 Le script Javascript Infaillible (Attachement Direct)
+                # 🪄 Le script Javascript Blindé contre le recyclage de Streamlit
                 import time
                 js_code = f"""
-                <script>
+                <script id="fav-script-{time.time()}">
                 (function() {{
                     const d = window.parent.document;
                     const favMap = {json.dumps(fav_js_map)};
@@ -225,39 +225,47 @@ def afficher_sidebar():
                             const text = btn.textContent || "";
                             
                             for (const [btnLabel, delLabel] of Object.entries(favMap)) {{
-                                // On vérifie qu'on est sur le bouton normal et pas déjà configuré
-                                if (text.includes(btnLabel) && !text.includes("DEL_") && !btn.dataset.gpLp) {{
-                                    btn.dataset.gpLp = "true";
+                                if (text.includes(btnLabel) && !text.includes("DEL_")) {{
                                     
-                                    const trigger = (e) => {{
-                                        e.preventDefault();
-                                        e.stopPropagation();
+                                    // 💡 L'ASTUCE EST LÀ : On écrase la cible secrète à chaque passage.
+                                    // Comme ça, même si Streamlit recycle le bouton pour une autre gare, 
+                                    // l'étiquette est mise à jour avec le bon identifiant de suppression !
+                                    btn.dataset.gpTargetId = delLabel;
+                                    
+                                    // On ne pose l'écouteur de clic qu'une seule fois
+                                    if (!btn.dataset.gpLp) {{
+                                        btn.dataset.gpLp = "true";
                                         
-                                        // 🔎 On cherche le bouton DEL à l'instant précis du clic !
-                                        const allBtns = Array.from(d.querySelectorAll('button'));
-                                        const delBtn = allBtns.find(b => (b.textContent || "").includes(delLabel));
+                                        const trigger = (e) => {{
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            
+                                            // On récupère la cible fraîchement mise à jour
+                                            const currentTarget = btn.dataset.gpTargetId;
+                                            const allBtns = Array.from(d.querySelectorAll('button'));
+                                            const delBtn = allBtns.find(b => (b.textContent || "").includes(currentTarget));
+                                            
+                                            if (delBtn) {{
+                                                delBtn.click();
+                                            }}
+                                        }};
                                         
-                                        if (delBtn) {{
-                                            delBtn.click();
-                                        }}
-                                    }};
-                                    
-                                    // 🖱️ Clic Droit
-                                    btn.addEventListener('contextmenu', trigger);
-                                    
-                                    // 👆 Appui Long
-                                    let timer;
-                                    btn.addEventListener('touchstart', (e) => {{
-                                        timer = setTimeout(() => trigger(e), 600);
-                                    }});
-                                    btn.addEventListener('touchend', () => clearTimeout(timer));
-                                    btn.addEventListener('touchmove', () => clearTimeout(timer));
+                                        // 🖱️ Clic Droit
+                                        btn.addEventListener('contextmenu', trigger);
+                                        
+                                        // 👆 Appui Long
+                                        let timer;
+                                        btn.addEventListener('touchstart', (e) => {{
+                                            timer = setTimeout(() => trigger(e), 600);
+                                        }});
+                                        btn.addEventListener('touchend', () => clearTimeout(timer));
+                                        btn.addEventListener('touchmove', () => clearTimeout(timer));
+                                    }}
                                 }}
                             }}
                         }});
                     }}
                     
-                    // L'ID change à chaque rechargement pour forcer l'exécution ({time.time()})
                     setupLongPress();
                     setTimeout(setupLongPress, 150);
                     setTimeout(setupLongPress, 400);
