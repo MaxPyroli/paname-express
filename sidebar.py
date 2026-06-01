@@ -201,65 +201,81 @@ def afficher_sidebar():
                     st.session_state.fav_confirm_delete = None
                     st.rerun()
                 
-                # 🪄 Le script Javascript Magique pour l'appui long
+                # 🪄 Le script de Délégation Globale (Insensible aux caprices de Streamlit)
                 js_code = f"""
                 <script>
                 (function() {{
                     const d = window.parent.document;
                     const favMap = {json.dumps(fav_js_map)};
                     
-                    function applyLongPress() {{
-                        const buttons = Array.from(d.querySelectorAll('button[kind="secondary"]'));
-                        let hiddenBtns = {{}};
-                        
-                        // A. On cache les boutons de suppression invisibles
-                        buttons.forEach(btn => {{
+                    # On pousse la carte fraîche dans l'environnement global du navigateur
+                    window.parent.__gpFavMap = favMap;
+                    
+                    # Masquage immédiat et répété des boutons DEL secrets
+                    function cacherBoutons() {{
+                        d.querySelectorAll('button').forEach(btn => {{
                             const text = btn.innerText.trim();
                             if (text.startsWith("DEL_")) {{
                                 const container = btn.closest('div[data-testid="stElementContainer"]');
                                 if (container) container.style.display = 'none';
-                                hiddenBtns[text] = btn;
-                            }}
-                        }});
-                        
-                        // B. On écoute l'appui long sur les boutons normaux
-                        buttons.forEach(btn => {{
-                            const text = btn.innerText;
-                            
-                            for (const [btnLabel, delLabel] of Object.entries(favMap)) {{
-                                if (text.includes(btnLabel)) {{
-                                    const delBtn = hiddenBtns[delLabel];
-                                    
-                                    if (delBtn && !btn.dataset.lpSetup) {{
-                                        btn.dataset.lpSetup = "true";
-                                        
-                                        const triggerDel = (e) => {{
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            delBtn.click();
-                                        }};
-                                        
-                                        // 🖱️ Clic droit
-                                        btn.addEventListener('contextmenu', triggerDel);
-                                        
-                                        // 👆 Appui long (600ms)
-                                        let pressTimer;
-                                        btn.addEventListener('touchstart', (e) => {{
-                                            pressTimer = window.setTimeout(() => {{
-                                                triggerDel(e);
-                                            }}, 600);
-                                        }});
-                                        btn.addEventListener('touchend', () => clearTimeout(pressTimer));
-                                        btn.addEventListener('touchmove', () => clearTimeout(pressTimer));
-                                    }}
-                                    break;
-                                }}
                             }}
                         }});
                     }}
                     
-                    applyLongPress();
-                    setTimeout(applyLongPress, 500);
+                    cacherBoutons();
+                    setTimeout(cacherBoutons, 150);
+                    setTimeout(cacherBoutons, 400);
+                    
+                    # On installe le capteur de radar unique UNIQUEMENT s'il n'existe pas encore
+                    if (!window.parent.__gpFavsDelegationSetup) {{
+                        window.parent.__gpFavsDelegationSetup = true;
+                        
+                        const declencherActionSuppr = (e, targetBtn) => {{
+                            const text = targetBtn.innerText.trim();
+                            const currentMap = window.parent.__gpFavMap || {{}};
+                            
+                            let delLabel = null;
+                            for (const [btnLabel, dl] of Object.entries(currentMap)) {{
+                                if (text.includes(btnLabel)) {{
+                                    delLabel = dl;
+                                    break;
+                                }}
+                            }}
+                            
+                            if (delLabel) {{
+                                const delBtn = Array.from(d.querySelectorAll('button')).find(b => b.innerText.trim() === delLabel);
+                                if (delBtn) {{
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    delBtn.click();
+                                }}
+                            }}
+                        }};
+                        
+                        // 🖱️ Radar Clic droit global (PC)
+                        d.addEventListener('contextmenu', (e) => {{
+                            const btn = e.target.closest('button[kind="secondary"]');
+                            if (btn) declencherActionSuppr(e, btn);
+                        }});
+                        
+                        // 👆 Radar Appui long global (Mobile)
+                        let pressTimer;
+                        let currentBtn = null;
+                        
+                        d.addEventListener('touchstart', (e) => {{
+                            const btn = e.target.closest('button[kind="secondary"]');
+                            if (btn) {{
+                                currentBtn = btn;
+                                clearTimeout(pressTimer);
+                                pressTimer = window.setTimeout(() => {{
+                                    if (currentBtn === btn) declencherActionSuppr(e, btn);
+                                }}, 600);
+                            }}
+                        }});
+                        
+                        d.addEventListener('touchend', () => {{ clearTimeout(pressTimer); currentBtn = null; }});
+                        d.addEventListener('touchmove', () => {{ clearTimeout(pressTimer); currentBtn = null; }});
+                    }}
                 }})();
                 </script>
                 """
