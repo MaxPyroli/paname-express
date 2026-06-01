@@ -148,7 +148,6 @@ def afficher_sidebar():
             # En-tête : Titre à gauche (75%) + Bouton standard à droite (25%)
             col_titre, col_edit = st.columns([0.75, 0.25])
             with col_titre:
-                # Le marqueur active le centrage vertical parfait, et on enlève les marges du texte (margin: 0)
                 st.markdown("<div class='marker-fav-align'></div><h3 style='margin: 0px; padding: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
@@ -156,7 +155,6 @@ def afficher_sidebar():
                     texte_btn = "✅" if st.session_state.mode_edition_fav else "✏️"
                     if st.button(texte_btn, use_container_width=True, key="btn_toggle_edit"):
                         st.session_state.mode_edition_fav = not st.session_state.mode_edition_fav
-                        st.session_state.fav_confirm_delete = None
                         st.rerun()
             
             st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
@@ -170,38 +168,21 @@ def afficher_sidebar():
                     nom_joli = fav['name'].title()
                     
                     # ---------------------------------------------------------
-                    # ✏️ MODE ÉDITION (Les poubelles sont visibles)
+                    # ✏️ MODE ÉDITION (Suppression instantanée)
                     # ---------------------------------------------------------
                     if st.session_state.mode_edition_fav:
-                        
-                        # -> Cas A : On a cliqué sur la poubelle, on demande confirmation
-                        if st.session_state.get('fav_confirm_delete') == fav['id']:
-                            col_txt, col_yes, col_no = st.columns([0.5, 0.25, 0.25])
-                            with col_txt:
-                                st.markdown(f"<div style='margin-top: 8px; font-size: 0.9em; font-weight: bold; color: #e74c3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>🗑️ {nom_joli} ?</div>", unsafe_allow_html=True)
-                            with col_yes:
-                                if st.button("✅", key=f"conf_yes_{fav['id']}", use_container_width=True):
-                                    st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                                    st.session_state.trigger_save_favs = True
-                                    st.session_state.fav_confirm_delete = None
-                                    # Si on a supprimé le dernier favori, on quitte le mode édition
-                                    if not st.session_state.favorites:
-                                        st.session_state.mode_edition_fav = False
-                                    st.rerun()
-                            with col_no:
-                                if st.button("❌", key=f"conf_no_{fav['id']}", use_container_width=True):
-                                    st.session_state.fav_confirm_delete = None
-                                    st.rerun()
-                                    
-                        # -> Cas B : Affichage du bouton grisé + poubelle à droite
-                        else:
-                            col_btn, col_del = st.columns([0.8, 0.2])
-                            with col_btn:
-                                st.button(f"📍 {nom_joli}", key=f"edit_go_{fav['id']}", disabled=True, use_container_width=True)
-                            with col_del:
-                                if st.button("🗑️", key=f"edit_del_{fav['id']}", use_container_width=True):
-                                    st.session_state.fav_confirm_delete = fav['id']
-                                    st.rerun()
+                        col_btn, col_del = st.columns([0.8, 0.2])
+                        with col_btn:
+                            st.button(f"📍 {nom_joli}", key=f"edit_go_{fav['id']}", disabled=True, use_container_width=True)
+                        with col_del:
+                            if st.button("🗑️", key=f"edit_del_{fav['id']}", use_container_width=True):
+                                # On supprime le favori directement
+                                st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+                                st.session_state.trigger_save_favs = True
+                                # Si c'était le dernier favori, on quitte le mode édition automatiquement
+                                if not st.session_state.favorites:
+                                    st.session_state.mode_edition_fav = False
+                                st.rerun()
                                     
                     # ---------------------------------------------------------
                     # 📍 MODE NORMAL (Barre latérale aérée et propre)
@@ -213,7 +194,6 @@ def afficher_sidebar():
                             st.session_state.search_results = {}
                             st.session_state.last_query = ""
                             st.session_state.search_key += 1
-                            st.session_state.fav_confirm_delete = None
                             st.query_params["gare"] = fav['id']
                             st.session_state.fermer_sidebar = True 
                             st.rerun()
