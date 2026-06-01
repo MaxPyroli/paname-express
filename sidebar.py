@@ -135,10 +135,10 @@ def afficher_sidebar():
             st.session_state.mode_edition_fav = False
 
         with st.container(border=True):
-            # En-tête : Titre + Petit Bouton Émoji alignés
-            col_titre, col_edit = st.columns([0.8, 0.2])
+            # En-tête : Titre + Petit Bouton Émoji + Espace vide à droite
+            col_titre, col_edit, _ = st.columns([0.45, 0.2, 0.35])
             with col_titre:
-                st.markdown("<h3 style='margin-top: 5px; margin-bottom: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 style='margin-top: 5px; margin-bottom: 0px; font-size: 1.2rem; white-space: nowrap;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
                 if st.session_state.get('favorites'):
