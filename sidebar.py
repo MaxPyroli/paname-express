@@ -37,50 +37,6 @@ def initialiser_favoris():
         )
         st.session_state.trigger_save_favs = False
 
-@st.dialog("⚠️ Supprimer le favori ?")
-def afficher_dialog_suppression():
-    fav = st.session_state.get('fav_to_delete')
-    if not fav:
-        st.rerun()
-        
-    st.markdown(f"Voulez-vous vraiment retirer **{fav['name']}** de vos favoris ?")
-    
-    # 🪄 CSS Ninja pour mettre le bouton en rouge SANS utiliser "primary" (pour éviter d'appeler Pana)
-    st.markdown("""
-    <style>
-    div[data-testid="stElementContainer"]:has(.marker-del-popup) + div[data-testid="stElementContainer"] button {
-        background-color: rgba(231, 76, 60, 0.1) !important;
-        border: 1px solid rgba(231, 76, 60, 0.5) !important;
-        color: #e74c3c !important;
-        font-weight: bold !important;
-        transition: all 0.2s ease !important;
-    }
-    div[data-testid="stElementContainer"]:has(.marker-del-popup) + div[data-testid="stElementContainer"] button:hover {
-        background-color: rgba(231, 76, 60, 0.25) !important;
-        border: 1px solid #e74c3c !important;
-        transform: scale(1.02) !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("❌ Annuler", use_container_width=True):
-            del st.session_state['fav_to_delete']
-            st.rerun()
-            
-    with col2:
-        # Le marqueur secret qui applique le style rouge au bouton juste en dessous
-        st.markdown("<div class='marker-del-popup'></div>", unsafe_allow_html=True)
-        
-        # 🛠️ CORRECTION : Plus de type="primary" ici !
-        if st.button("🗑️ Supprimer", use_container_width=True):
-            st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-            st.session_state.trigger_save_favs = True
-            del st.session_state['fav_to_delete']
-            st.rerun()
-
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
     with st.sidebar:
@@ -178,7 +134,7 @@ def afficher_sidebar():
         with st.container(border=True):
             st.markdown("<h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>", unsafe_allow_html=True)
             
-            # 💡 La nouvelle ligne d'instruction
+            # 💡 Ligne d'instruction
             st.markdown(
                 "<div style='font-size: 0.85em; color: color-mix(in srgb, var(--text-color) 60%, transparent); margin-bottom: 15px; font-style: italic;'>"
                 "💡 Maintenez appuyé (ou clic droit) sur un favori pour le supprimer."
@@ -193,32 +149,56 @@ def afficher_sidebar():
             else:
                 fav_js_map = {}
                 for fav in st.session_state.favorites:
-                    nom_joli = fav['name'].title()
-                    btn_label = f"📍 {nom_joli}"
-                    del_label = f"DEL_{fav['id']}"
-                    fav_js_map[btn_label] = del_label
                     
-                    # 1. Le VRAI bouton visible de navigation (prend toute la largeur)
-                    if st.button(btn_label, key=f"go_fav_{fav['id']}", use_container_width=True):
-                        st.session_state.selected_stop = fav['id']
-                        st.session_state.selected_name = fav['full_name']
-                        st.session_state.search_results = {}
-                        st.session_state.last_query = ""
-                        st.session_state.search_key += 1
-                        st.query_params["gare"] = fav['id']
-                        st.session_state.fermer_sidebar = True 
-                        st.rerun()
-                    
-                    # 2. Le bouton CACHÉ pour la suppression
-                    if st.button(del_label, key=f"hide_del_{fav['id']}"):
-                        st.session_state.fav_to_delete = fav
-                        afficher_dialog_suppression()
+                    # ---------------------------------------------------------
+                    # 🗑️ MODE CONFIRMATION (Bouton transformé après appui long)
+                    # ---------------------------------------------------------
+                    if st.session_state.get('fav_confirm_delete') == fav['id']:
+                        col_txt, col_yes, col_no = st.columns([0.5, 0.25, 0.25])
+                        with col_txt:
+                            st.markdown(f"<div style='margin-top: 8px; font-size: 0.9em; font-weight: bold; color: #e74c3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>🗑️ {fav['name']} ?</div>", unsafe_allow_html=True)
+                        with col_yes:
+                            if st.button("✅", key=f"conf_yes_{fav['id']}", use_container_width=True):
+                                st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+                                st.session_state.trigger_save_favs = True
+                                st.session_state.fav_confirm_delete = None
+                                st.rerun()
+                        with col_no:
+                            if st.button("❌", key=f"conf_no_{fav['id']}", use_container_width=True):
+                                st.session_state.fav_confirm_delete = None
+                                st.rerun()
+                                
+                    # ---------------------------------------------------------
+                    # 📍 MODE NORMAL (Bouton de navigation classique)
+                    # ---------------------------------------------------------
+                    else:
+                        nom_joli = fav['name'].title()
+                        btn_label = f"📍 {nom_joli}"
+                        del_label = f"DEL_{fav['id']}"
+                        fav_js_map[btn_label] = del_label
+                        
+                        # 1. Le VRAI bouton visible de navigation
+                        if st.button(btn_label, key=f"go_fav_{fav['id']}", use_container_width=True):
+                            st.session_state.selected_stop = fav['id']
+                            st.session_state.selected_name = fav['full_name']
+                            st.session_state.search_results = {}
+                            st.session_state.last_query = ""
+                            st.session_state.search_key += 1
+                            st.query_params["gare"] = fav['id']
+                            st.session_state.fermer_sidebar = True 
+                            st.rerun()
+                        
+                        # 2. Le bouton CACHÉ pour déclencher la suppression (détecté par le JS)
+                        if st.button(del_label, key=f"hide_del_{fav['id']}"):
+                            st.session_state.fav_confirm_delete = fav['id']
+                            st.rerun()
                 
-                # Le bouton TOUT EFFACER qu'on garde à la fin
+                # Le bouton TOUT EFFACER
                 st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
                 if st.button("💥 Tout effacer", use_container_width=True):
                     st.session_state.favorites = []
                     st.session_state.trigger_save_favs = True
+                    st.session_state.fav_confirm_delete = None
                     st.rerun()
                 
                 # 🪄 Le script Javascript Magique pour l'appui long
@@ -232,7 +212,7 @@ def afficher_sidebar():
                         const buttons = Array.from(d.querySelectorAll('button[kind="secondary"]'));
                         let hiddenBtns = {{}};
                         
-                        // A. On repère les boutons DEL et on les cache
+                        // A. On cache les boutons de suppression invisibles
                         buttons.forEach(btn => {{
                             const text = btn.innerText.trim();
                             if (text.startsWith("DEL_")) {{
@@ -242,7 +222,7 @@ def afficher_sidebar():
                             }}
                         }});
                         
-                        // B. On relie nos événements d'appui long
+                        // B. On écoute l'appui long sur les boutons normaux
                         buttons.forEach(btn => {{
                             const text = btn.innerText;
                             
@@ -262,7 +242,7 @@ def afficher_sidebar():
                                         // 🖱️ Clic droit
                                         btn.addEventListener('contextmenu', triggerDel);
                                         
-                                        // 👆 Appui long
+                                        // 👆 Appui long (600ms)
                                         let pressTimer;
                                         btn.addEventListener('touchstart', (e) => {{
                                             pressTimer = window.setTimeout(() => {{
