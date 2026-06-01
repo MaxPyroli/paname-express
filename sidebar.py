@@ -129,63 +129,74 @@ def afficher_sidebar():
             st.rerun()
             
         # ==========================================
-        # 🗂️ CARTE 1 : MES FAVORIS
+        # 🗂️ CARTE 1 : MES FAVORIS (100% Natif Streamlit)
         # ==========================================
+        if 'mode_edition_fav' not in st.session_state:
+            st.session_state.mode_edition_fav = False
+
         with st.container(border=True):
-            # 🪄 CSS NINJA : Cache instantanément les boutons "DEL_" sans que l'écran ne clignote
-            st.markdown(
-                """
-                <style>
-                div[data-testid="stElementContainer"]:has(.marker-hide-del),
-                div[data-testid="stElementContainer"]:has(.marker-hide-del) + div[data-testid="stElementContainer"] {
-                    display: none !important;
-                }
-                </style>
-                <h3 style='margin-top: 0px; margin-bottom: 10px; font-size: 1.2rem;'>⭐ Mes Favoris</h3>
-                <div style='font-size: 0.85em; color: color-mix(in srgb, var(--text-color) 60%, transparent); margin-bottom: 15px; font-style: italic;'>
-                💡 Maintenez appuyé (ou clic droit) sur un favori pour le supprimer.
-                </div>
-                """, 
-                unsafe_allow_html=True
-            )
+            # En-tête : Titre + Bouton Modifier alignés
+            col_titre, col_edit = st.columns([0.65, 0.35])
+            with col_titre:
+                st.markdown("<h3 style='margin-top: 5px; margin-bottom: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
+            with col_edit:
+                # Le bouton Modifier n'apparaît que s'il y a des favoris
+                if st.session_state.get('favorites'):
+                    texte_btn = "✅ Fin" if st.session_state.mode_edition_fav else "✏️ Modifier"
+                    if st.button(texte_btn, use_container_width=True, key="btn_toggle_edit"):
+                        st.session_state.mode_edition_fav = not st.session_state.mode_edition_fav
+                        st.session_state.fav_confirm_delete = None
+                        st.rerun()
+            
+            st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
             if not st.session_state.get('favs_loaded', False):
                 st.info("🔄 Chargement des favoris...")
             elif not st.session_state.favorites:
                 st.info("Ajoutez des gares en cliquant sur l'étoile à côté de leur nom !")
             else:
-                fav_js_map = {}
                 for fav in st.session_state.favorites:
-                    
                     nom_joli = fav['name'].title()
-                    btn_label = f"📍 {nom_joli}"
-                    del_label = f"DEL_{fav['id']}"
-                    fav_js_map[btn_label] = del_label
                     
                     # ---------------------------------------------------------
-                    # 🗑️ MODE CONFIRMATION (Bouton transformé après appui long)
+                    # ✏️ MODE ÉDITION (Les poubelles sont visibles)
                     # ---------------------------------------------------------
-                    if st.session_state.get('fav_confirm_delete') == fav['id']:
-                        col_txt, col_yes, col_no = st.columns([0.5, 0.25, 0.25])
-                        with col_txt:
-                            st.markdown(f"<div style='margin-top: 8px; font-size: 0.9em; font-weight: bold; color: #e74c3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>🗑️ {fav['name']} ?</div>", unsafe_allow_html=True)
-                        with col_yes:
-                            if st.button("✅", key=f"conf_yes_{fav['id']}", use_container_width=True):
-                                st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-                                st.session_state.trigger_save_favs = True
-                                st.session_state.fav_confirm_delete = None
-                                st.rerun()
-                        with col_no:
-                            if st.button("❌", key=f"conf_no_{fav['id']}", use_container_width=True):
-                                st.session_state.fav_confirm_delete = None
-                                st.rerun()
-                                
+                    if st.session_state.mode_edition_fav:
+                        
+                        # -> Cas A : On a cliqué sur la poubelle, on demande confirmation
+                        if st.session_state.get('fav_confirm_delete') == fav['id']:
+                            col_txt, col_yes, col_no = st.columns([0.5, 0.25, 0.25])
+                            with col_txt:
+                                st.markdown(f"<div style='margin-top: 8px; font-size: 0.9em; font-weight: bold; color: #e74c3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>🗑️ {nom_joli} ?</div>", unsafe_allow_html=True)
+                            with col_yes:
+                                if st.button("✅", key=f"conf_yes_{fav['id']}", use_container_width=True):
+                                    st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+                                    st.session_state.trigger_save_favs = True
+                                    st.session_state.fav_confirm_delete = None
+                                    # Si on a supprimé le dernier favori, on quitte le mode édition
+                                    if not st.session_state.favorites:
+                                        st.session_state.mode_edition_fav = False
+                                    st.rerun()
+                            with col_no:
+                                if st.button("❌", key=f"conf_no_{fav['id']}", use_container_width=True):
+                                    st.session_state.fav_confirm_delete = None
+                                    st.rerun()
+                                    
+                        # -> Cas B : Affichage du bouton grisé + poubelle à droite
+                        else:
+                            col_btn, col_del = st.columns([0.8, 0.2])
+                            with col_btn:
+                                st.button(f"📍 {nom_joli}", key=f"edit_go_{fav['id']}", disabled=True, use_container_width=True)
+                            with col_del:
+                                if st.button("🗑️", key=f"edit_del_{fav['id']}", use_container_width=True):
+                                    st.session_state.fav_confirm_delete = fav['id']
+                                    st.rerun()
+                                    
                     # ---------------------------------------------------------
-                    # 📍 MODE NORMAL (Bouton de navigation classique)
+                    # 📍 MODE NORMAL (Barre latérale aérée et propre)
                     # ---------------------------------------------------------
                     else:
-                        # 1. Le VRAI bouton visible de navigation
-                        if st.button(btn_label, key=f"go_fav_{fav['id']}", use_container_width=True):
+                        if st.button(f"📍 {nom_joli}", key=f"go_fav_{fav['id']}", use_container_width=True):
                             st.session_state.selected_stop = fav['id']
                             st.session_state.selected_name = fav['full_name']
                             st.session_state.search_results = {}
@@ -195,86 +206,16 @@ def afficher_sidebar():
                             st.query_params["gare"] = fav['id']
                             st.session_state.fermer_sidebar = True 
                             st.rerun()
-                        
-                        # 2. Le bouton CACHÉ pour déclencher la suppression
-                        st.markdown("<div class='marker-hide-del'></div>", unsafe_allow_html=True)
-                        if st.button(del_label, key=f"hide_del_{fav['id']}"):
-                            st.session_state.fav_confirm_delete = fav['id']
-                            st.rerun()
                 
-                # Le bouton TOUT EFFACER
-                st.markdown("<div class='marker-clear-btn'></div>", unsafe_allow_html=True)
-                if st.button("💥 Tout effacer", use_container_width=True):
-                    st.session_state.favorites = []
-                    st.session_state.trigger_save_favs = True
-                    st.session_state.fav_confirm_delete = None
-                    st.rerun()
-                
-                # 🪄 Le script Javascript Blindé contre le recyclage de Streamlit
-                import time
-                js_code = f"""
-                <script id="fav-script-{time.time()}">
-                (function() {{
-                    const d = window.parent.document;
-                    const favMap = {json.dumps(fav_js_map)};
-                    
-                    function setupLongPress() {{
-                        const buttons = d.querySelectorAll('button');
-                        
-                        buttons.forEach(btn => {{
-                            const text = btn.textContent || "";
-                            
-                            for (const [btnLabel, delLabel] of Object.entries(favMap)) {{
-                                if (text.includes(btnLabel) && !text.includes("DEL_")) {{
-                                    
-                                    // 💡 L'ASTUCE EST LÀ : On écrase la cible secrète à chaque passage.
-                                    // Comme ça, même si Streamlit recycle le bouton pour une autre gare, 
-                                    // l'étiquette est mise à jour avec le bon identifiant de suppression !
-                                    btn.dataset.gpTargetId = delLabel;
-                                    
-                                    // On ne pose l'écouteur de clic qu'une seule fois
-                                    if (!btn.dataset.gpLp) {{
-                                        btn.dataset.gpLp = "true";
-                                        
-                                        const trigger = (e) => {{
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            
-                                            // On récupère la cible fraîchement mise à jour
-                                            const currentTarget = btn.dataset.gpTargetId;
-                                            const allBtns = Array.from(d.querySelectorAll('button'));
-                                            const delBtn = allBtns.find(b => (b.textContent || "").includes(currentTarget));
-                                            
-                                            if (delBtn) {{
-                                                delBtn.click();
-                                            }}
-                                        }};
-                                        
-                                        // 🖱️ Clic Droit
-                                        btn.addEventListener('contextmenu', trigger);
-                                        
-                                        // 👆 Appui Long
-                                        let timer;
-                                        btn.addEventListener('touchstart', (e) => {{
-                                            timer = setTimeout(() => trigger(e), 600);
-                                        }});
-                                        btn.addEventListener('touchend', () => clearTimeout(timer));
-                                        btn.addEventListener('touchmove', () => clearTimeout(timer));
-                                    }}
-                                }}
-                            }}
-                        }});
-                    }}
-                    
-                    setupLongPress();
-                    setTimeout(setupLongPress, 150);
-                    setTimeout(setupLongPress, 400);
-                    setTimeout(setupLongPress, 800);
-                }})();
-                </script>
-                """
-                import streamlit.components.v1 as components
-                components.html(js_code, height=0, width=0)
+                # Le bouton TOUT EFFACER est relégué uniquement au mode édition !
+                if st.session_state.mode_edition_fav:
+                    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+                    if st.button("💥 Tout effacer", use_container_width=True):
+                        st.session_state.favorites = []
+                        st.session_state.trigger_save_favs = True
+                        st.session_state.fav_confirm_delete = None
+                        st.session_state.mode_edition_fav = False
+                        st.rerun()
                 
         # ==========================================
         # 🗂️ CARTE 2 : INFORMATIONS
