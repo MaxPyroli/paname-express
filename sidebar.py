@@ -45,16 +45,41 @@ def afficher_dialog_suppression():
         
     st.markdown(f"Voulez-vous vraiment retirer **{fav['name']}** de vos favoris ?")
     
+    # 🪄 CSS Ninja pour mettre le bouton en rouge SANS utiliser "primary" (pour éviter d'appeler Pana)
+    st.markdown("""
+    <style>
+    div[data-testid="stElementContainer"]:has(.marker-del-popup) + div[data-testid="stElementContainer"] button {
+        background-color: rgba(231, 76, 60, 0.1) !important;
+        border: 1px solid rgba(231, 76, 60, 0.5) !important;
+        color: #e74c3c !important;
+        font-weight: bold !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stElementContainer"]:has(.marker-del-popup) + div[data-testid="stElementContainer"] button:hover {
+        background-color: rgba(231, 76, 60, 0.25) !important;
+        border: 1px solid #e74c3c !important;
+        transform: scale(1.02) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
-    if col1.button("❌ Annuler", use_container_width=True):
-        del st.session_state['fav_to_delete']
-        st.rerun()
+    
+    with col1:
+        if st.button("❌ Annuler", use_container_width=True):
+            del st.session_state['fav_to_delete']
+            st.rerun()
+            
+    with col2:
+        # Le marqueur secret qui applique le style rouge au bouton juste en dessous
+        st.markdown("<div class='marker-del-popup'></div>", unsafe_allow_html=True)
         
-    if col2.button("🗑️ Supprimer", type="primary", use_container_width=True):
-        st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
-        st.session_state.trigger_save_favs = True
-        del st.session_state['fav_to_delete']
-        st.rerun()
+        # 🛠️ CORRECTION : Plus de type="primary" ici !
+        if st.button("🗑️ Supprimer", use_container_width=True):
+            st.session_state.favorites = [f for f in st.session_state.favorites if f['id'] != fav['id']]
+            st.session_state.trigger_save_favs = True
+            del st.session_state['fav_to_delete']
+            st.rerun()
 
 def afficher_sidebar():
     """Gère l'affichage complet de la barre latérale."""
