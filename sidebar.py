@@ -139,29 +139,28 @@ def afficher_sidebar():
             st.markdown(
                 """
                 <style>
-                /* On force la ligne à rester horizontale quoi qu'il arrive */
+                /* On force la ligne à être un Flexbox naturel */
                 div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) {
                     display: flex !important;
                     align-items: center !important;
                     justify-content: flex-start !important;
                     gap: 12px !important;
-                    flex-wrap: nowrap !important; /* Interdit de plier ! */
+                    flex-wrap: nowrap !important; 
                 }
-                /* On dit aux colonnes de prendre JUSTE la taille dont elles ont besoin */
+                /* LE SECRET : On annule les largeurs forcées par Streamlit ! */
                 div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) > div[data-testid="column"] {
                     width: auto !important;
-                    flex: 0 1 auto !important;
-                    min-width: 0 !important;
+                    flex: none !important; /* Interdit de s'étirer ou de s'écraser */
                 }
-                /* On rend le bouton d'édition compact et élégant */
+                /* Le bouton devient parfaitement compact */
                 div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) button {
                     height: 32px !important;
                     min-height: 32px !important;
-                    padding: 0px 14px !important;
+                    padding: 0px 12px !important;
                     border-radius: 8px !important;
                     background-color: transparent !important;
                     border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent) !important;
-                    transition: all 0.2s ease !important;
+                    margin: 0 !important;
                 }
                 div[data-testid="stHorizontalBlock"]:has(.marker-fav-header) button:hover {
                     border-color: #f1c40f !important;
@@ -170,17 +169,15 @@ def afficher_sidebar():
                 </style>
                 """, unsafe_allow_html=True)
 
-            # En-tête : Titre + Petit Bouton Émoji (on utilise de fausses colonnes que le CSS va réparer)
+            # On met juste 2 colonnes, le CSS va écraser leur taille et les coller
             col_titre, col_edit = st.columns(2)
             
             with col_titre:
-                # Le marqueur secret qui active le CSS juste pour cette ligne-là
-                st.markdown("<div class='marker-fav-header' style='display: none;'></div><h3 style='margin-top: 0px; margin-bottom: 0px; font-size: 1.2rem; white-space: nowrap;'>⭐ Favoris</h3>", unsafe_allow_html=True)
+                st.markdown("<div class='marker-fav-header' style='display: none;'></div><h3 style='margin: 0; font-size: 1.2rem; white-space: nowrap;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
                 if st.session_state.get('favorites'):
                     texte_btn = "✅" if st.session_state.mode_edition_fav else "✏️"
-                    # Attention : On a ENLEVÉ "use_container_width=True" pour que le bouton prenne sa taille naturelle
                     if st.button(texte_btn, key="btn_toggle_edit"):
                         st.session_state.mode_edition_fav = not st.session_state.mode_edition_fav
                         st.session_state.fav_confirm_delete = None
