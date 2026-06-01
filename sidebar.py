@@ -135,11 +135,21 @@ def afficher_sidebar():
             st.session_state.mode_edition_fav = False
 
         with st.container(border=True):
+            # 🪄 CSS NINJA : Aligne verticalement la ligne (bouton + texte) au millimètre !
+            st.markdown(
+                """
+                <style>
+                div[data-testid="stHorizontalBlock"]:has(.marker-fav-align) {
+                    align-items: center !important; 
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
             # En-tête : Titre à gauche (75%) + Bouton standard à droite (25%)
             col_titre, col_edit = st.columns([0.75, 0.25])
             with col_titre:
-                # 🪄 CORRECTION : margin-top passé à 14px pour s'aligner parfaitement avec le centre du bouton
-                st.markdown("<h3 style='margin-top: 14px; margin-bottom: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
+                # Le marqueur active le centrage vertical parfait, et on enlève les marges du texte (margin: 0)
+                st.markdown("<div class='marker-fav-align'></div><h3 style='margin: 0px; padding: 0px; font-size: 1.2rem;'>⭐ Favoris</h3>", unsafe_allow_html=True)
             with col_edit:
                 # Le bouton Modifier n'apparaît que s'il y a des favoris
                 if st.session_state.get('favorites'):
