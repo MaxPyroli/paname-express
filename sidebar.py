@@ -157,7 +157,6 @@ def afficher_sidebar():
                 fav_js_map = {}
                 for fav in st.session_state.favorites:
                     
-                    # ✅ CORRECTION 1 : On déclare TOUJOURS la gare dans la mémoire JS (Même en mode confirmation)
                     nom_joli = fav['name'].title()
                     btn_label = f"📍 {nom_joli}"
                     del_label = f"DEL_{fav['id']}"
@@ -211,64 +210,58 @@ def afficher_sidebar():
                     st.session_state.fav_confirm_delete = None
                     st.rerun()
                 
-                # 🪄 Le script de Délégation Globale Infaillible
+                # 🪄 Le script Javascript Infaillible (Attachement Direct)
                 import time
                 js_code = f"""
                 <script>
                 (function() {{
                     const d = window.parent.document;
-                    
-                    // ✅ CORRECTION 2 : Le timestamp empêche le cache Streamlit de bloquer le script ! ({time.time()})
                     const favMap = {json.dumps(fav_js_map)};
-                    window.parent.__gpFavMap = favMap;
                     
-                    if (!window.parent.__gpFavsDelegationSetup) {{
-                        window.parent.__gpFavsDelegationSetup = true;
+                    function setupLongPress() {{
+                        const buttons = d.querySelectorAll('button');
                         
-                        const declencherActionSuppr = (e, targetBtn) => {{
-                            const text = targetBtn.textContent.trim(); 
-                            const currentMap = window.parent.__gpFavMap || {{}};
+                        buttons.forEach(btn => {{
+                            const text = btn.textContent || "";
                             
-                            let delLabel = null;
-                            for (const [btnLabel, dl] of Object.entries(currentMap)) {{
-                                if (text.includes(btnLabel)) {{
-                                    delLabel = dl;
-                                    break;
+                            for (const [btnLabel, delLabel] of Object.entries(favMap)) {{
+                                // On vérifie qu'on est sur le bouton normal et pas déjà configuré
+                                if (text.includes(btnLabel) && !text.includes("DEL_") && !btn.dataset.gpLp) {{
+                                    btn.dataset.gpLp = "true";
+                                    
+                                    const trigger = (e) => {{
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        
+                                        // 🔎 On cherche le bouton DEL à l'instant précis du clic !
+                                        const allBtns = Array.from(d.querySelectorAll('button'));
+                                        const delBtn = allBtns.find(b => (b.textContent || "").includes(delLabel));
+                                        
+                                        if (delBtn) {{
+                                            delBtn.click();
+                                        }}
+                                    }};
+                                    
+                                    // 🖱️ Clic Droit
+                                    btn.addEventListener('contextmenu', trigger);
+                                    
+                                    // 👆 Appui Long
+                                    let timer;
+                                    btn.addEventListener('touchstart', (e) => {{
+                                        timer = setTimeout(() => trigger(e), 600);
+                                    }});
+                                    btn.addEventListener('touchend', () => clearTimeout(timer));
+                                    btn.addEventListener('touchmove', () => clearTimeout(timer));
                                 }}
                             }}
-                            
-                            if (delLabel) {{
-                                const delBtn = Array.from(d.querySelectorAll('button')).find(b => b.textContent.trim() === delLabel);
-                                if (delBtn) {{
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    delBtn.click();
-                                }}
-                            }}
-                        }};
-                        
-                        d.addEventListener('contextmenu', (e) => {{
-                            const btn = e.target.closest('button[kind="secondary"]');
-                            if (btn) declencherActionSuppr(e, btn);
                         }});
-                        
-                        let pressTimer;
-                        let currentBtn = null;
-                        
-                        d.addEventListener('touchstart', (e) => {{
-                            const btn = e.target.closest('button[kind="secondary"]');
-                            if (btn) {{
-                                currentBtn = btn;
-                                clearTimeout(pressTimer);
-                                pressTimer = window.setTimeout(() => {{
-                                    if (currentBtn === btn) declencherActionSuppr(e, btn);
-                                }}, 600);
-                            }}
-                        }});
-                        
-                        d.addEventListener('touchend', () => {{ clearTimeout(pressTimer); currentBtn = null; }});
-                        d.addEventListener('touchmove', () => {{ clearTimeout(pressTimer); currentBtn = null; }});
                     }}
+                    
+                    // L'ID change à chaque rechargement pour forcer l'exécution ({time.time()})
+                    setupLongPress();
+                    setTimeout(setupLongPress, 150);
+                    setTimeout(setupLongPress, 400);
+                    setTimeout(setupLongPress, 800);
                 }})();
                 </script>
                 """
